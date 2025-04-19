@@ -1,16 +1,5 @@
 //exporting variables
 export const MESSAGES = {
-    branches: {
-        5: 'CSE',
-        23: 'AIDS',
-        7: 'MECH',
-        4: 'ECE',
-        2: 'EEE',
-        11: 'CIV',
-        22: 'IT',
-        32: 'CSE_DS',
-        33: 'CSE_AIML',
-    },
 
     GENERATING: 'Generating response...',
 
@@ -34,6 +23,18 @@ export const MESSAGES = {
         "<code>/help</code> - To know how to check Attendance and Midmarks\n\n" +
         "👉 <b>Ready to use me? Let's go!</b> 🚀",
 };
+
+export const BRANCHES: { [key: number]: string } = {
+    5: 'CSE',
+    23: 'AIDS',
+    7: 'MECH',
+    4: 'ECE',
+    2: 'EEE',
+    11: 'CIV',
+    22: 'IT',
+    32: 'CSE_DS',
+    33: 'CSE_AIML',
+}
 
 
 //exporting request urls

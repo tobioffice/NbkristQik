@@ -2,7 +2,8 @@
 // NO CHANGES REQUIRED
 //
 import { getStudent } from '../../db/student.model';
-import { urls, MESSAGES, headers as header } from '../../constants/index';
+import { urls, headers as header } from '../../constants/index';
+import { BRANCHES } from '../../constants/index';
 import {
     IAcadamic,
     MidmarksBySubjects,
@@ -20,7 +21,6 @@ import * as cheerio from 'cheerio';
 
 dotenv.config();
 
-const branches: { [key: string]: string } = MESSAGES.branches;
 const indianDate = "27-03-2030"; //maxed date for attendance
 const USERNAME = process.env.N_USERNAME || '';
 const PASSWORD = process.env.N_PASSWORD || '';
@@ -71,7 +71,11 @@ export class Acadamic implements IAcadamic {
                 const res = response.data;  // Assuming response data is a string
                 if (res.includes("<tr><td>User Name</td><td>:</td><td><input type=textbox name='username' id='username'")) {
                     await this.renewPassword();
-                    return this.getResponce(command);
+
+                    if (await this.isCookiesValid()) {
+                        return this.getResponce(command);
+                    }
+                    return "Error occurred";
                 }
                 return res;
             } catch (error) {
@@ -81,6 +85,29 @@ export class Acadamic implements IAcadamic {
         }
         catch (e) {
             return "Error occurred";
+        }
+    }
+
+    async isCookiesValid(): Promise<boolean> {
+
+        try {
+            const url = "http://103.203.175.90:94/attendance"
+
+            const headers = header('att');
+            headers.Cookie = `PHPSESSID=${cookie}`;
+
+            const resp = await axios.get(url, { headers });
+
+            if (resp.data.includes("function selectHour(obj)")) {
+                return true;
+            } else {
+                console.warn("Cookies are invalid or response is unexpected.");
+                return false;
+            }
+
+        } catch (error) {
+            console.error("Error validating cookies:", error);
+            return false;
         }
     }
 
@@ -140,8 +167,7 @@ export class Acadamic implements IAcadamic {
             //cleaning the data start
             lastUpdatedArray.shift();
             conductedArray.shift();
-            attendedArray.shift();
-            attendedArray.shift();
+            attendedArray.splice(0, 2);
 
 
             let deleted = 0;
@@ -182,7 +208,7 @@ export class Acadamic implements IAcadamic {
             //attendance object
             const attendance: Attendance = {
                 rollno: this.rollnumber,
-                year_branch_section: student.year.slice(0, 1) + "_" + branches[student.branch] + "_" + student.section,
+                year_branch_section: student.year.slice(0, 1) + "_" + BRANCHES[parseInt(student.branch)] + "_" + student.section,
                 percentage: parseFloat(percentage.split('(')[0].trim()),
                 totalClasses: {
                     attended: parseInt(totalClassesAttended.split('/')[0].trim()),
@@ -283,7 +309,7 @@ export class Acadamic implements IAcadamic {
             //midmarks object
             const midmarks: Midmarks = {
                 rollno: this.rollnumber,
-                year_branch_section: student.year.slice(0, 1) + "_" + branches[student.branch] + "_" + student.section,
+                year_branch_section: student.year.slice(0, 1) + "_" + BRANCHES[parseInt(student.branch)] + "_" + student.section,
                 subjects: midmarksList
             };
 
