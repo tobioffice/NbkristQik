@@ -1,4 +1,4 @@
-
+import { z } from 'zod';
 //Interfaces
 export interface IAcadamic {
     rollnumber: string;
@@ -53,3 +53,10 @@ export type Student = {
 }
 
 
+export const HistorySchema = z.object({
+    role: z.enum(['user', 'model', 'system']),
+    content: z.string(),
+    chat_id: z.number()
+});
+
+export type History = Omit<z.infer<typeof HistorySchema>, 'chat_id'>;

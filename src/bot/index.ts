@@ -17,3 +17,5 @@ setupBot(bot);
 
 // Import features
 import './features/academic.handler';
+
+import "../agent/handlers/mention.handler"
