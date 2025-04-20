@@ -41,7 +41,10 @@ const handleMentionMessage = async (message: Message): Promise<void> => {
 
     try {
         const response = await agent.chat(userMessage, userId, history);
-        await bot.sendMessage(message.chat.id, response);
+        await bot.sendMessage(message.chat.id, response, {
+            reply_to_message_id: message.message_id,
+            parse_mode: 'Markdown',
+        });
     } catch (err) {
         console.error('Mention handler error:', err);
         await bot.sendMessage(
@@ -55,8 +58,10 @@ const handleMentionMessage = async (message: Message): Promise<void> => {
 bot.on('message', async (msg) => {
     console.log('Received message:', msg);
 
-    if (!msg.text || !isBotMentioned(msg.text)) {
-        return;
+    if (msg.chat.type !== "private") {
+        if (!msg.text || !isBotMentioned(msg.text)) {
+            return;
+        }
     }
 
     await handleMentionMessage(msg);

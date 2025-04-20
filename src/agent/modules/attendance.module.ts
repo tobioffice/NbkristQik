@@ -1,6 +1,7 @@
 import { AIAgent } from "../ai.service";
 import { Type } from '@google/genai';
 import { ROLL_REGEX } from "../../constants";
+import { Acadamic } from "../../services/utils/Acadamic";
 
 export class AttendanceModule extends AIAgent {
     constructor() {
@@ -21,7 +22,7 @@ export class AttendanceModule extends AIAgent {
         });
     }
 
-    public get_attendance(args?: any): string {
+    public async get_attendance(args?: any): Promise<string> {
         const rollNo: string = args.rollNo || "";
 
         if (!rollNo) {
@@ -32,6 +33,10 @@ export class AttendanceModule extends AIAgent {
             return "Invalid roll number format.";
         }
 
-        return `Attendance for roll number ${rollNo} is 75%`;
+        const aca = new Acadamic(rollNo);
+
+        const attendance = await aca.getAttendanceJSON();
+        console.log(attendance);
+        return JSON.stringify(attendance) || "Attendance not found.";
     }
 }

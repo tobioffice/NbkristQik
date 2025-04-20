@@ -40,14 +40,14 @@ export class AIAgent {
         this.functionDeclarations.push(func);
     }
 
-    private executeFunction(name: string, args: any): any {
+    private async executeFunction(name: string, args: any): Promise<string> {
         const func = this.functionDeclarations.find(f => f.name === name);
         if (!func) {
             return `Function ${name} not found`;
         }
 
         const fn = (this as any)[func.name];
-        return fn ? fn(args) : `Function ${name} is not executable`;
+        return fn ? await fn(args) : `Function ${name} is not executable`;
     }
 
     async chat(prompt: string, chat_id: number, history?: History[]): Promise<string> {
@@ -94,7 +94,7 @@ export class AIAgent {
             if (response.functionCalls?.length) {
                 const call = response.functionCalls[0];
                 if (call.args && call.name) {
-                    const result = this.executeFunction(call.name as string, call.args);
+                    const result = await this.executeFunction(call.name as string, call.args);
                     conversationHistory.push({
                         role: 'model',
                         content: `Function ${call.name} result: ${result}`
