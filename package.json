@@ -1,0 +1,27 @@
+{
+  "name": "nbkristqik",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node dist/bot/index.js",
+    "build": "tsc",
+    "dev": "ts-node src/bot/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "axios": "^1.8.1",
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.4.7",
+    "moment-timezone": "^0.5.47",
+    "node-telegram-bot-api": "^0.66.0"
+  },
+  "devDependencies": {
+    "@types/node-telegram-bot-api": "^0.64.7",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2"
+  }
+}
