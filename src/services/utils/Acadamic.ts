@@ -41,8 +41,8 @@ export class Acadamic implements IAcadamic {
             let data;
             if (command === "mid") {
                 data = {
-                    acadYear: '2024-25',
-                    yearSem: student.year.slice(0, 1) + '2',
+                    acadYear: '2025-26',
+                    yearSem: student.year,
                     branch: student.branch,
                     section: student.section,
                     dateOfAttendance: indianDate,
@@ -54,8 +54,8 @@ export class Acadamic implements IAcadamic {
             }
             else {
                 data = {
-                    acadYear: '2024-25',
-                    yearSem: student.year.slice(0, 1) + '2',
+                    acadYear: '2025-26',
+                    yearSem: student.year,
                     branch: student.branch,
                     section: student.section,
                     dateOfAttendance: indianDate,
@@ -325,5 +325,3 @@ export class Acadamic implements IAcadamic {
     }
 
 }
-
-
