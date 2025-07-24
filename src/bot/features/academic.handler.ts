@@ -1,9 +1,34 @@
 import { bot } from "../index";
-import { sendAttendance, sendMidmarks } from "./utils/studentActions";
+import { sendAttendanceOrMidMarks } from "./utils/studentActions";
 import { ROLL_REGEX } from "../../constants/index";
+import { checkMembership } from "../../services/utils/checkMembership";
+import { CHANNEL_ID } from "../../config/environmentals";
+
+const sendJoinChannelMsg = async (chatId: number) => {
+    const channelName = CHANNEL_ID.slice(1)
+    await bot.sendMessage(chatId, "Join the channel to use in private ‼️", {
+        reply_markup: {
+            inline_keyboard: [
+                [
+                    {
+                        text: `Join @${channelName}`,
+                        url: `https://t.me/${channelName}`
+                    }
+                ]
+            ]
+        }
+    });
+};
 
 try {
     bot.onText(ROLL_REGEX, async (msg) => {
+        const isMember = await checkMembership(msg.from?.id || msg.chat.id)
+
+        if (!isMember && msg.chat.id != -1002435023187) {
+            await sendJoinChannelMsg(msg.from?.id || msg.chat.id);
+            return;
+        }
+
         const chatId = msg.chat.id;
         await bot.sendMessage(chatId, "Select an option:", {
             reply_markup: {
@@ -17,7 +42,6 @@ try {
     })
 } catch (error) {
     console.error('Error ', error);
-
 }
 
 //HANDLE CALLBACK QUERY
@@ -27,6 +51,13 @@ bot.on('callback_query', async (callbackQuery) => {
 
     if (!msg) return;
 
+    const isMember = await checkMembership(msg.from?.id || msg.chat.id)
+
+    if (!isMember && msg.chat.id != -1002435023187) {
+        await sendJoinChannelMsg(msg.from?.id || msg.chat.id);
+        return;
+    }
+
     try {
         await bot.deleteMessage(msg.chat.id, msg.message_id);
     }
@@ -35,11 +66,11 @@ bot.on('callback_query', async (callbackQuery) => {
     }
 
     if (data.startsWith('att_')) {
-        sendAttendance(bot, msg, data.split('_')[1]);
+        sendAttendanceOrMidMarks(bot, msg, data.split('_')[1], 'att');
     }
 
     else if (data.startsWith('mid_')) {
-        sendMidmarks(bot, msg, data.split('_')[1]);
+        sendAttendanceOrMidMarks(bot, msg, data.split('_')[1], 'mid');
     }
 
 

@@ -67,3 +67,4 @@ export const headers = (command: string) => {
 };
 
 export const ROLL_REGEX = /^\d{2}[a-zA-Z]{2}[a-zA-Z0-9]{6}$/;
+export type Signal = 'mid' | 'att';

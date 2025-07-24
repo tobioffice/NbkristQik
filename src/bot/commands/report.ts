@@ -12,7 +12,7 @@ bot.onText(/\/report$/, (msg) => {
 bot.onText(/\/report (.+)/, (msg, match) => {
     try {
         const reportMessage = match ? match[1] : 'No message provided';
-        const reporterName = msg.from?.username || msg.from?.first_name || 'Unknown user';
+        const reporterName = `<a href="tg://user?id=${msg.from?.id}">${msg.from?.first_name || `U-K`} </a>` || msg.from?.username || msg.from?.first_name || 'Unknown user';
         const formattedMessage = `📝 <b>New Report</b>\n\n` +
             `👤 <b>From:</b> ${reporterName}\n` +
             `💬 <b>Message:</b>\n${reportMessage}`;

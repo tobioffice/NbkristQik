@@ -9,6 +9,7 @@ const TURSO_AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN || '';
 const N_USERNAME = process.env.N_USERNAME || '';
 const N_PASSWORD = process.env.N_PASSWORD || '';
 const ADMIN_ID = Number(process.env.ADMIN_ID) || 0;
+const CHANNEL_ID = ((ENV === 'production') ? process.env.PROD_CHANNEL : process.env.TEST_CHANNEL) || '';
 
 export {
     ENV,
@@ -17,5 +18,6 @@ export {
     TURSO_AUTH_TOKEN,
     N_USERNAME,
     N_PASSWORD,
-    ADMIN_ID
+    ADMIN_ID,
+    CHANNEL_ID
 };
