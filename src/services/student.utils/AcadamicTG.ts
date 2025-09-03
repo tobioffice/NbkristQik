@@ -60,7 +60,7 @@ export class AcadamicTG extends Acadamic {
 
       const yourDataObject = await this.getAttendanceJSON();
 
-      console.log(yourDataObject);
+      // console.log(yourDataObject);
 
       if (yourDataObject === "Network Error") {
         return yourDataObject;
