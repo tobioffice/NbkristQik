@@ -1,55 +1,51 @@
-
 //Interfaces
 export interface IAcadamic {
-    rollnumber: string;
-    getAttendanceJSON(): Promise<Attendance>;
-    getMidmarksJSON(): Promise<Midmarks>;
+  rollnumber: string;
+  getAttendanceJSON(): Promise<Attendance | string>;
+  getMidmarksJSON(): Promise<Midmarks | string>;
 }
 
 //Types
 export type AttendanceBySubjects = {
-    subject: string;
-    attended: number;
-    conducted: number;
-    lastUpdated: string;
-}
+  subject: string;
+  attended: number;
+  conducted: number;
+  lastUpdated: string;
+};
 
 export type MidmarksBySubjects = {
-    subject: string;
-    M1: number | null;
-    M2: number | null;
-    avarage: number | null;
-    type: string;
-}
-
+  subject: string;
+  M1: number | null;
+  M2: number | null;
+  avarage: number | null;
+  type: string;
+};
 
 //exporting types
 export type StudentBase = {
-    rollno: string;
-    year_branch_section: string;
+  rollno: string;
+  year_branch_section: string;
 };
 
 export type Attendance = StudentBase & {
-    percentage: number;
+  percentage: number;
 
-    totalClasses: {
-        attended: number;
-        conducted: number;
-    };
+  totalClasses: {
+    attended: number;
+    conducted: number;
+  };
 
-    subjects: AttendanceBySubjects[];
-}
+  subjects: AttendanceBySubjects[];
+};
 
 export type Midmarks = StudentBase & {
-    subjects: MidmarksBySubjects[];
-}
+  subjects: MidmarksBySubjects[];
+};
 
 export type Student = {
-    roll_no: string;
-    name: string;
-    section: string;
-    branch: string;
-    year: string;
-}
-
-
+  roll_no: string;
+  name: string;
+  section: string;
+  branch: string;
+  year: string;
+};
