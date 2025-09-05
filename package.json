@@ -17,7 +17,8 @@
     "cheerio": "^1.0.0",
     "dotenv": "^16.4.7",
     "moment-timezone": "^0.5.47",
-    "node-telegram-bot-api": "^0.66.0"
+    "node-telegram-bot-api": "^0.66.0",
+    "typescript": "^5.9.2"
   },
   "devDependencies": {
     "@types/node-telegram-bot-api": "^0.64.7",

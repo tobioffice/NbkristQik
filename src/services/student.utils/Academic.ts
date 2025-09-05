@@ -2,16 +2,16 @@
 // NO CHANGES REQUIRED
 //
 import { getStudent } from "../../db/student.model";
-import { storeResponce, getResponce } from "../../db/fallback/responces.model";
+import { storeResponse, getResponse } from "../../db/fallback/responses.model";
 import { urls, headers as header } from "../../constants/index";
-import { BRANCHES } from "../../constants/index";
+import { BRANCHES } from "../../constants";
 import {
-  IAcadamic,
+  IAcademic,
   MidmarksBySubjects,
   AttendanceBySubjects,
   Attendance,
   Midmarks,
-} from "../../types/index";
+} from "../../types";
 
 import axios from "axios";
 import crypto from "crypto";
@@ -27,10 +27,10 @@ const loginUrl = urls.login;
 
 var cookie = "";
 
-export class Acadamic implements IAcadamic {
+export class Academic implements IAcademic {
   constructor(public rollnumber: string) {}
 
-  async getResponce(command: string): Promise<string> {
+  async getResponse(command: string): Promise<string> {
     const url = command === "mid" ? urls.midmarks : urls.attendance;
     const student = await getStudent(this.rollnumber);
 
@@ -74,7 +74,7 @@ export class Acadamic implements IAcadamic {
         await this.renewPassword();
 
         if (await this.isCookiesValid()) {
-          return this.getResponce(command);
+          return this.getResponse(command);
         }
         return "Network Error";
       }
@@ -137,34 +137,34 @@ export class Acadamic implements IAcadamic {
 
   async getAttendanceJSON(): Promise<Attendance | string> {
     try {
-      //stunde details
+      //student details
       const student = await getStudent(this.rollnumber);
 
-      let responce = await this.getResponce("att");
-      if (responce === "Network Error") {
-        const content = await getResponce(
+      let response = await this.getResponse("att");
+      if (response === "Network Error") {
+        const content = await getResponse(
           student.year,
           student.branch,
           student.section,
           "att"
         );
-        if (!content) return responce;
-        responce = content;
+        if (!content) return response;
+        response = content;
       } else {
-        await storeResponce(
+        await storeResponse(
           student.year,
           student.branch,
           student.section,
           "att",
-          responce
+          response
         );
       }
 
-      if (!responce.includes(this.rollnumber.toUpperCase()))
+      if (!response.includes(this.rollnumber.toUpperCase()))
         return "Student Not Found";
 
-      //using cheerio to get tageted data
-      const $ = cheerio.load(responce);
+      //using cheerio to get targeted data
+      const $ = cheerio.load(response);
       const studentTr = $(`tr[id=${this.rollnumber.toUpperCase()}]`);
       const percentage = studentTr.find("td[class=tdPercent]").text();
       const totalClassesAttended = percentage
@@ -222,7 +222,7 @@ export class Acadamic implements IAcadamic {
       });
       //cleaning the data end
 
-      //foramtting subjects objects
+      //formatting subjects objects
       const subjects: AttendanceBySubjects[] = [];
 
       nameArray.forEach((el, i) => {
@@ -259,31 +259,31 @@ export class Acadamic implements IAcadamic {
 
   async getMidmarksJSON(): Promise<Midmarks | string> {
     try {
-      //stunde details
+      //student details
       const student = await getStudent(this.rollnumber);
 
-      //using cheerio to get tageted data
-      let responce = await this.getResponce("mid");
-      if (responce === "Network Error") {
-        const content = await getResponce(
+      //using cheerio to get targeted data
+      let response = await this.getResponse("mid");
+      if (response === "Network Error") {
+        const content = await getResponse(
           student.year,
           student.branch,
           student.section,
           "mid"
         );
-        if (!content) return responce;
-        responce = content;
+        if (!content) return response;
+        response = content;
       } else {
-        await storeResponce(
+        await storeResponse(
           student.year,
           student.branch,
           student.section,
           "mid",
-          responce
+          response
         );
       }
 
-      const $ = cheerio.load(responce);
+      const $ = cheerio.load(response);
 
       const studentTr = $(`tr[id=${this.rollnumber.toUpperCase()}]`)
         .find("td")
@@ -293,7 +293,7 @@ export class Acadamic implements IAcadamic {
       const nameTr = $(`tr`).eq(1);
       const tds = nameTr.find("td");
 
-      //start seperating subjects and labs
+      //start separating subjects and labs
       const subjects: string[] = [];
       const labs: string[] = [];
 
@@ -306,7 +306,7 @@ export class Acadamic implements IAcadamic {
           labs.push($(element).text().trim());
         }
       });
-      //end seperating subjects and labs
+      //end separating subjects and labs
 
       //start formatting midmarks objects into MidmarksBySubjects List
       const midmarksList: MidmarksBySubjects[] = [];
@@ -321,7 +321,7 @@ export class Acadamic implements IAcadamic {
               subject: el,
               M1: parseInt(part1) || 0,
               M2: parseInt(part2?.split("(")[0]) || 0,
-              avarage: parseInt(part2?.split("(")[1]?.split(")")[0]) || 0,
+              average: parseInt(part2?.split("(")[1]?.split(")")[0]) || 0,
               type: subjects.includes(el) ? "Subject" : "Lab",
             });
           } else {
@@ -329,7 +329,7 @@ export class Acadamic implements IAcadamic {
               subject: el,
               M1: parseInt(studentMarksList[i]),
               M2: 0,
-              avarage: 0,
+              average: 0,
               type: subjects.includes(el) ? "Subject" : "Lab",
             });
           }
@@ -339,7 +339,7 @@ export class Acadamic implements IAcadamic {
             subject: el,
             M1: 0,
             M2: 0,
-            avarage: 0,
+            average: 0,
             type: subjects.includes(el) ? "Subject" : "Lab",
           });
         }

@@ -1,5 +1,5 @@
 //Interfaces
-export interface IAcadamic {
+export interface IAcademic {
   rollnumber: string;
   getAttendanceJSON(): Promise<Attendance | string>;
   getMidmarksJSON(): Promise<Midmarks | string>;
@@ -17,7 +17,7 @@ export type MidmarksBySubjects = {
   subject: string;
   M1: number | null;
   M2: number | null;
-  avarage: number | null;
+  average: number | null;
   type: string;
 };
 

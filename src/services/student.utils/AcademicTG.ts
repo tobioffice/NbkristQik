@@ -1,6 +1,6 @@
-import { Acadamic } from "./Acadamic";
+import { Academic } from "./Academic";
 
-export class AcadamicTG extends Acadamic {
+export class AcademicTG extends Academic {
   async getAttendanceMessage(): Promise<string> {
     try {
       function formatAttendanceMessage(data: any): string {
@@ -107,7 +107,7 @@ export class AcadamicTG extends Acadamic {
             ` ${sub.M1.toString().padStart(2)} ${sub.M2.toString().padStart(
               2
             )}` +
-            ` ${sub.avarage.toString().padStart(3)}\n`;
+            ` ${sub.average.toString().padStart(3)}\n`;
         }
 
         // Close pre tag

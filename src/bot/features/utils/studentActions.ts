@@ -1,4 +1,4 @@
-import { AcadamicTG } from "../../../services/student.utils/AcadamicTG";
+import { AcademicTG } from "../../../services/student.utils/AcademicTG";
 import TelegramBot from "node-telegram-bot-api";
 import { Signal } from "../../../constants";
 
@@ -10,7 +10,7 @@ export const sendAttendanceOrMidMarks = async (
 ) => {
   try {
     const chatId = msg.chat.id;
-    const student = new AcadamicTG(rollno);
+    const student = new AcademicTG(rollno);
     const message = await bot.sendMessage(
       chatId,
       `<code>Fetching ${

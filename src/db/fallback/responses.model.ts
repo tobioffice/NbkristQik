@@ -1,6 +1,6 @@
 import { turso } from "../db";
 
-export const storeResponce = (
+export const storeResponse = (
   year: string,
   branch: string,
   section: string,
@@ -9,12 +9,12 @@ export const storeResponce = (
 ) => {
   const id = `${year}-${branch}-${section}-${type}`;
   return turso.execute({
-    sql: `INSERT OR REPLACE INTO fallbackResponces (id, content) VALUES (?, ?)`,
+    sql: `INSERT OR REPLACE INTO fallbackResponses (id, content) VALUES (?, ?)`,
     args: [id, content],
   });
 };
 
-export const getResponce = async (
+export const getResponse = async (
   year: string,
   branch: string,
   section: string,
@@ -22,7 +22,7 @@ export const getResponce = async (
 ): Promise<string | null> => {
   const id = `${year}-${branch}-${section}-${type}`;
   const result = await turso.execute({
-    sql: `SELECT content FROM fallbackResponces WHERE id = ?`,
+    sql: `SELECT content FROM fallbackResponses WHERE id = ?`,
     args: [id],
   });
 
