@@ -6,7 +6,7 @@ export const checkMembership = async (userId: number): Promise<boolean> => {
     const member = await bot.getChatMember(CHANNEL_ID, userId);
     return ["member", "creator", "administrator"].includes(member.status);
   } catch (error) {
-    console.log("errror from checkMembership: " + error);
+    console.log("error from checkMembership: " + error);
     return false;
   }
 };

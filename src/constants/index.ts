@@ -47,7 +47,7 @@ export const urls = {
 };
 
 export const headers = (command: string) => {
-  const hdrs = {
+  const hdrs: Record<string, string> = {
     "Cache-Control": "max-age=0",
     "Upgrade-Insecure-Requests": "1",
     Origin: urls.base,

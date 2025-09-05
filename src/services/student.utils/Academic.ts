@@ -57,7 +57,7 @@ export class Academic implements IAcademic {
       };
     }
 
-    const heads: any = header(command);
+    const heads = header(command);
     heads.Cookie = "PHPSESSID=" + cookie;
 
     try {
@@ -68,7 +68,7 @@ export class Academic implements IAcademic {
       const res = response.data; // Assuming response data is a string
       if (
         res.includes(
-          "<tr><td>User Name</td><td>:</td><td><input type=textbox name='username' id='username'"
+          "<tr><td>User Name</td><td>:</td><td><input type=textbox name='username' id='username'",
         )
       ) {
         await this.renewPassword();
@@ -79,7 +79,8 @@ export class Academic implements IAcademic {
         return "Network Error";
       }
       return res;
-    } catch (_error) {
+    } catch (error) {
+      console.error("Error fetching response:", error);
       return "Network Error";
     }
   }
@@ -125,12 +126,14 @@ export class Academic implements IAcademic {
           },
         });
       } catch (error) {
+        console.log("Error during login request:", error);
         console.error("Error updating token:");
       }
       cookie = sessionToken;
       console.log("Password Renewed");
       return "Password Renewed";
-    } catch (e) {
+    } catch (error) {
+      console.error("Error in renewPassword:", error);
       return "Error occurred";
     }
   }
@@ -146,7 +149,7 @@ export class Academic implements IAcademic {
           student.year,
           student.branch,
           student.section,
-          "att"
+          "att",
         );
         if (!content) return response;
         response = content;
@@ -156,7 +159,7 @@ export class Academic implements IAcademic {
           student.branch,
           student.section,
           "att",
-          response
+          response,
         );
       }
 
@@ -252,7 +255,8 @@ export class Academic implements IAcademic {
       };
 
       return attendance;
-    } catch (e) {
+    } catch (error) {
+      console.log("Error in getAttendanceJSON:", error);
       return "Something went wrong";
     }
   }
@@ -269,7 +273,7 @@ export class Academic implements IAcademic {
           student.year,
           student.branch,
           student.section,
-          "mid"
+          "mid",
         );
         if (!content) return response;
         response = content;
@@ -279,7 +283,7 @@ export class Academic implements IAcademic {
           student.branch,
           student.section,
           "mid",
-          response
+          response,
         );
       }
 
@@ -359,7 +363,8 @@ export class Academic implements IAcademic {
       };
 
       return midmarks;
-    } catch (e) {
+    } catch (error) {
+      console.error("Error in getMidmarksJSON:", error);
       return {
         rollno: "Not Found",
         year_branch_section: "",

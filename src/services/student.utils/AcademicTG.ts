@@ -67,7 +67,8 @@ export class AcademicTG extends Academic {
       } else {
         return formatAttendanceMessage(yourDataObject);
       }
-    } catch (e) {
+    } catch (error) {
+      console.log(error);
       return "<code>Something went wrong..!</code>";
     }
   }
@@ -105,7 +106,7 @@ export class AcademicTG extends Academic {
           msg +=
             `${subjectName.padEnd(11)} │ ${type.padEnd(4)} │` +
             ` ${sub.M1.toString().padStart(2)} ${sub.M2.toString().padStart(
-              2
+              2,
             )}` +
             ` ${sub.average.toString().padStart(3)}\n`;
         }
@@ -123,7 +124,8 @@ export class AcademicTG extends Academic {
       } else {
         return formatMidMarksMessage(yourDataObject);
       }
-    } catch (e) {
+    } catch (error) {
+      console.log(error);
       return "<code>Something went wrong..!</code>";
     }
   }
