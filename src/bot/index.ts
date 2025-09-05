@@ -1,18 +1,26 @@
-import TelegramBot from "node-telegram-bot-api";
-import { TELEGRAM_BOT_TOKEN } from "../config/environmentals.js";
+import { bot } from "./bot.js";
 import { setupBot } from "./setup.js";
 
-const token = TELEGRAM_BOT_TOKEN || "";
+console.log("Starting bot initialization...");
 
-export const bot = new TelegramBot(token, { polling: true });
+async function startBot() {
+  try {
+    // Setup bot commands
+    setupBot(bot);
 
-// Import commands
-import "./commands/help";
-import "./commands/start";
-import "./commands/report";
+    // Import commands after bot is created
+    import("./commands/help.js");
+    import("./commands/start.js");
+    import("./commands/report.js");
 
-// Setup bot commands
-setupBot(bot);
+    // Import features
+    import("./features/bot.academic.js");
 
-// Import features
-import "./features/bot.academic";
+    console.log("Bot is ready!");
+  } catch (error) {
+    console.error("Error during bot initialization:", error);
+    process.exit(1);
+  }
+}
+
+startBot();

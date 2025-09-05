@@ -1,4 +1,4 @@
-import { bot } from "../index.js";
+import { bot } from "../bot.js";
 import { sendAttendanceOrMidMarks } from "./utils/studentActions.js";
 import { ROLL_REGEX } from "../../constants/index.js";
 import { checkMembership } from "../../services/student.utils/checkMembership.js";

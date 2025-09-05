@@ -1,4 +1,4 @@
-import { bot } from "../../bot/index.js";
+import { bot } from "../../bot/bot.js";
 import { CHANNEL_ID } from "../../config/environmentals.js";
 
 export const checkMembership = async (userId: number): Promise<boolean> => {
