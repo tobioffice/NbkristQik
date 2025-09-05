@@ -1,6 +1,6 @@
 import TelegramBot from "node-telegram-bot-api";
-import { TELEGRAM_BOT_TOKEN } from "../config/environmentals";
-import { setupBot } from "./setup";
+import { TELEGRAM_BOT_TOKEN } from "../config/environmentals.js";
+import { setupBot } from "./setup.js";
 
 const token = TELEGRAM_BOT_TOKEN || "";
 

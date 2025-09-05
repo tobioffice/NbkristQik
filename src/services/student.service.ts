@@ -1,4 +1,4 @@
-import { AcademicTG } from "./student.utils/AcademicTG";
+import { AcademicTG } from "./student.utils/AcademicTG.js";
 
 export const createAcademicTG = (rollNumber: string) => {
   const academicTG = new AcademicTG(rollNumber);

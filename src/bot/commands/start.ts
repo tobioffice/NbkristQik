@@ -1,4 +1,4 @@
-import { bot } from "..";
+import { bot } from "../index.js";
 
 bot.onText(/\/start/, (msg) => {
   try {
@@ -12,7 +12,7 @@ bot.onText(/\/start/, (msg) => {
     console.error("Error in /start command:", error);
     bot.sendMessage(
       msg.chat.id,
-      "An error occurred while processing your request. Please try again later."
+      "An error occurred while processing your request. Please try again later.",
     );
     return;
   }

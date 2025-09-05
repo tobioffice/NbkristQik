@@ -1,12 +1,12 @@
-import { AcademicTG } from "../../../services/student.utils/AcademicTG";
+import { AcademicTG } from "../../../services/student.utils/AcademicTG.js";
 import TelegramBot from "node-telegram-bot-api";
-import { Signal } from "../../../constants";
+import { Signal } from "../../../constants/index.js";
 
 export const sendAttendanceOrMidMarks = async (
   bot: TelegramBot,
   msg: any,
   rollno: string,
-  signal: Signal
+  signal: Signal,
 ) => {
   try {
     const chatId = msg.chat.id;
@@ -20,7 +20,7 @@ export const sendAttendanceOrMidMarks = async (
         parse_mode: "HTML",
         disable_notification: true,
         reply_to_message_id: msg.reply_to_message.message_id,
-      }
+      },
     );
 
     const finalMessage =
@@ -34,9 +34,10 @@ export const sendAttendanceOrMidMarks = async (
       parse_mode: "HTML",
     });
   } catch (error) {
+    console.log("Error in sendAttendanceOrMidMarks:", error);
     bot.sendMessage(
       msg.chat.id,
-      "An error occurred while processing your request. Please try again later."
+      "An error occurred while processing your request. Please try again later.",
     );
     return;
   }

@@ -1,4 +1,4 @@
-import { bot } from "..";
+import { bot } from "../index.js";
 
 bot.onText(/\/help/, (msg) => {
   try {
@@ -15,7 +15,7 @@ The system will automatically show your:
     console.error("Error in /help command:", error);
     bot.sendMessage(
       msg.chat.id,
-      "An error occurred while processing your request. Please try again later."
+      "An error occurred while processing your request. Please try again later.",
     );
   }
 });

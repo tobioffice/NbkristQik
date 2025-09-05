@@ -1,8 +1,8 @@
-import { bot } from "../index";
-import { sendAttendanceOrMidMarks } from "./utils/studentActions";
-import { ROLL_REGEX } from "../../constants/index";
-import { checkMembership } from "../../services/student.utils/checkMembership";
-import { CHANNEL_ID } from "../../config/environmentals";
+import { bot } from "../index.js";
+import { sendAttendanceOrMidMarks } from "./utils/studentActions.js";
+import { ROLL_REGEX } from "../../constants/index.js";
+import { checkMembership } from "../../services/student.utils/checkMembership.js";
+import { CHANNEL_ID } from "../../config/environmentals.js";
 
 const PROTECTED_CHAT_ID = -1002435023187;
 
@@ -45,7 +45,8 @@ const handleRollNumberMessage = async (msg: any): Promise<void> => {
       },
       reply_to_message_id: msg.message_id,
     });
-  } catch (err) {
+  } catch (error) {
+    console.log("Error sending options:", error);
     bot.sendMessage(msg.chat.id, "An error occurred. Please try again later.");
   }
 };

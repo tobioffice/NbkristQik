@@ -1,11 +1,11 @@
-import { turso } from "../db";
+import { turso } from "../db.js";
 
 export const storeResponse = (
   year: string,
   branch: string,
   section: string,
   type: "att" | "mid",
-  content: string
+  content: string,
 ) => {
   const id = `${year}-${branch}-${section}-${type}`;
   return turso.execute({
@@ -18,7 +18,7 @@ export const getResponse = async (
   year: string,
   branch: string,
   section: string,
-  type: "att" | "mid"
+  type: "att" | "mid",
 ): Promise<string | null> => {
   const id = `${year}-${branch}-${section}-${type}`;
   const result = await turso.execute({

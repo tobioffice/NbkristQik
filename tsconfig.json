@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
     /* Language and Environment */
-    "target": "ES6" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
+    "target": "es2020" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
 
     /* Modules */
-    "module": "commonjs" /* Specify what module code is generated. */,
+    "module": "nodenext" /* Specify what module code is generated. */,
 
-    /* JavaScript Support */
+    "moduleResolution": "nodenext",
 
     /* Emit */
     "outDir": "./dist" /* Specify an output folder for all emitted files. */,

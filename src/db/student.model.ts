@@ -1,5 +1,5 @@
-import { turso } from "./db";
-import { Student } from "../types/index";
+import { turso } from "./db.js";
+import { Student } from "../types/index.js";
 
 export const getStudent = async (rollno: string) => {
   try {

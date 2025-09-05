@@ -1,8 +1,8 @@
 {
   "name": "nbkristqik",
   "version": "1.0.0",
-  "type": "module",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "tsc && node dist/bot/index.js",
     "build": "tsc",

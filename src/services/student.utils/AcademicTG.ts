@@ -1,4 +1,4 @@
-import { Academic } from "./Academic";
+import { Academic } from "./Academic.js";
 
 export class AcademicTG extends Academic {
   async getAttendanceMessage(): Promise<string> {

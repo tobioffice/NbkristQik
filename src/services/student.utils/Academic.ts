@@ -1,17 +1,20 @@
 //
 // NO CHANGES REQUIRED
 //
-import { getStudent } from "../../db/student.model";
-import { storeResponse, getResponse } from "../../db/fallback/responses.model";
-import { urls, headers as header } from "../../constants/index";
-import { BRANCHES } from "../../constants";
+import { getStudent } from "../../db/student.model.js";
+import {
+  storeResponse,
+  getResponse,
+} from "../../db/fallback/responses.model.js";
+import { urls, headers as header } from "../../constants/index.js";
+import { BRANCHES } from "../../constants/index.js";
 import {
   IAcademic,
   MidmarksBySubjects,
   AttendanceBySubjects,
   Attendance,
   Midmarks,
-} from "../../types";
+} from "../../types/index.js";
 
 import axios from "axios";
 import crypto from "crypto";
