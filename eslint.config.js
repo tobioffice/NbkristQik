@@ -24,6 +24,10 @@ export default [
       ...tseslint.configs.recommended.rules,
       "@typescript-eslint/no-explicit-any": "off", // Allow 'any' datatype
       "prettier/prettier": "error",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
     },
   },
 ];

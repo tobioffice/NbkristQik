@@ -66,7 +66,7 @@ export class Academic implements IAcademic {
     try {
       const response = await axios.post(url, data, {
         headers: heads,
-        timeout: 5000,
+        timeout: 3000,
       });
       const res = response.data; // Assuming response data is a string
       if (
@@ -82,8 +82,7 @@ export class Academic implements IAcademic {
         return "Network Error";
       }
       return res;
-    } catch (error) {
-      console.error("Error fetching response:", error);
+    } catch (_error) {
       return "Network Error";
     }
   }
@@ -144,9 +143,51 @@ export class Academic implements IAcademic {
   async getAttendanceJSON(): Promise<Attendance | string> {
     try {
       //student details
+      const recentlyCheckedSection: {
+        [key: string]: { section: string; date: Date };
+      } = {};
+
+      let response;
+
       const student = await getStudent(this.rollnumber);
 
-      let response = await this.getResponse("att");
+      const section = `${student.year}_${student.branch}_${student.section}_att`;
+
+      // Check cache first
+      response = await getResponse(
+        student.year,
+        student.branch,
+        student.section,
+        "att",
+      );
+
+      // If no cached data or cache is expired (older than 10 minutes)
+      if (
+        !response ||
+        !recentlyCheckedSection[section] ||
+        new Date().getTime() - recentlyCheckedSection[section].date.getTime() >=
+          10 * 60 * 1000
+      ) {
+        // Fetch fresh data
+        response = await this.getResponse("att");
+
+        // Store in cache
+        if (response !== "Network Error") {
+          await storeResponse(
+            student.year,
+            student.branch,
+            student.section,
+            "att",
+            response,
+          );
+          recentlyCheckedSection[section] = {
+            section: student.section,
+            date: new Date(),
+          };
+        }
+      }
+
+      // Handle network errors
       if (response === "Network Error") {
         const content = await getResponse(
           student.year,
@@ -156,14 +197,6 @@ export class Academic implements IAcademic {
         );
         if (!content) return response;
         response = content;
-      } else {
-        await storeResponse(
-          student.year,
-          student.branch,
-          student.section,
-          "att",
-          response,
-        );
       }
 
       if (!response.includes(this.rollnumber.toUpperCase()))
@@ -267,10 +300,49 @@ export class Academic implements IAcademic {
   async getMidmarksJSON(): Promise<Midmarks | string> {
     try {
       //student details
+      const recentlyCheckedSection: {
+        [key: string]: { section: string; date: Date };
+      } = {};
+
+      let response;
+
       const student = await getStudent(this.rollnumber);
 
-      //using cheerio to get targeted data
-      let response = await this.getResponse("mid");
+      const section = `${student.year}_${student.branch}_${student.section}_mid`;
+
+      // Check cache first
+      response = await getResponse(
+        student.year,
+        student.branch,
+        student.section,
+        "mid",
+      );
+
+      // If no cached data or cache is expired (older than 10 minutes)
+      if (
+        !response ||
+        !recentlyCheckedSection[section] ||
+        new Date().getTime() - recentlyCheckedSection[section].date.getTime() >=
+          10 * 60 * 1000
+      ) {
+        // Fetch fresh data
+        response = await this.getResponse("mid");
+
+        // Store in cache
+        if (response !== "Network Error") {
+          await storeResponse(
+            student.year,
+            student.branch,
+            student.section,
+            "mid",
+            response,
+          );
+          recentlyCheckedSection[section] = {
+            section: student.section,
+            date: new Date(),
+          };
+        }
+      }
       if (response === "Network Error") {
         const content = await getResponse(
           student.year,
