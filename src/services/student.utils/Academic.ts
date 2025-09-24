@@ -32,7 +32,7 @@ const loginUrl = urls.login;
 var cookie = "";
 
 const recentlyCheckedSection: {
-  [key: string]: { section: string; time: number };
+  [key: string]: { time: number };
 } = {};
 
 export class Academic implements IAcademic {
@@ -185,7 +185,6 @@ export class Academic implements IAcademic {
             response,
           );
           recentlyCheckedSection[section] = {
-            section: student.section,
             time: new Date().getTime(),
           };
           console.log(recentlyCheckedSection);
@@ -339,7 +338,6 @@ export class Academic implements IAcademic {
             response,
           );
           recentlyCheckedSection[section] = {
-            section: student.section,
             time: new Date().getTime(),
           };
         }
