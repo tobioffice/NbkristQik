@@ -7,7 +7,8 @@ import {
   getResponse,
 } from "../../db/fallback/responses.model.js";
 import { urls, headers as header } from "../../constants/index.js";
-import { BRANCHES } from "../../constants/index.js";
+import { BRANCHES, BASE_URL } from "../../constants/index.js";
+
 import {
   IAcademic,
   MidmarksBySubjects,
@@ -89,7 +90,7 @@ export class Academic implements IAcademic {
 
   async isCookiesValid(): Promise<boolean> {
     try {
-      const url = "http://103.203.175.90:94/attendance";
+      const url = `${BASE_URL}/attendance`;
 
       const headers = header("att");
       headers.Cookie = `PHPSESSID=${cookie}`;
@@ -114,8 +115,7 @@ export class Academic implements IAcademic {
       const sessionToken = `ggpmgfj8dssskkp2q2h6db${randomString}0`;
       const headers = header("att");
       headers.Cookie = `PHPSESSID=${sessionToken}`;
-      headers.Referer =
-        "http://103.203.175.90:94/attendance/attendanceLogin.php";
+      headers.Referer = `${BASE_URL}/attendance/attendanceLogin.php`;
 
       const payload = `username=${USERNAME}&password=${PASSWORD}&captcha=`;
 

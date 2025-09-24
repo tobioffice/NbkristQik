@@ -37,7 +37,8 @@ export const BRANCHES: { [key: number]: string } = {
 };
 
 //exporting request urls
-const BASE_URL = "http://103.203.175.90:94";
+// const BASE_URL = "http://103.203.175.90:94";
+export const BASE_URL = "http://47.247.10.58";
 
 export const urls = {
   base: BASE_URL,
