@@ -47,8 +47,26 @@ jobs:
             else
               git pull origin main
             fi
-            which pnpm || npm install -g pnpm
+            # Load user environment to access npm/pnpm
+            source ~/.bashrc || source ~/.profile || true
+            export PATH="$HOME/.local/share/pnpm:$PATH"
+            export PATH="/usr/local/bin:$PATH"
+            
+            # Install pnpm if not available
+            if ! command -v pnpm &> /dev/null; then
+              if command -v npm &> /dev/null; then
+                npm install -g pnpm
+              else
+                curl -fsSL https://get.pnpm.io/install.sh | sh -
+                export PATH="$HOME/.local/share/pnpm:$PATH"
+              fi
+            fi
+            
             pnpm i
             pnpm build
-            # Assuming pm2 is used for process management
+            
+            # Install pm2 if not available and restart/start the app
+            if ! command -v pm2 &> /dev/null; then
+              npm install -g pm2
+            fi
             pm2 restart nbkristqik || pm2 start dist/bot/index.js --name nbkristqik
