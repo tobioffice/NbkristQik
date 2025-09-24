@@ -31,6 +31,10 @@ const loginUrl = urls.login;
 
 var cookie = "";
 
+const recentlyCheckedSection: {
+  [key: string]: { section: string; time: number };
+} = {};
+
 export class Academic implements IAcademic {
   constructor(public rollnumber: string) {}
 
@@ -143,9 +147,7 @@ export class Academic implements IAcademic {
   async getAttendanceJSON(): Promise<Attendance | string> {
     try {
       //student details
-      const recentlyCheckedSection: {
-        [key: string]: { section: string; date: Date };
-      } = {};
+      console.log(recentlyCheckedSection);
 
       let response;
 
@@ -165,14 +167,16 @@ export class Academic implements IAcademic {
       if (
         !response ||
         !recentlyCheckedSection[section] ||
-        new Date().getTime() - recentlyCheckedSection[section].date.getTime() >=
+        new Date().getTime() - recentlyCheckedSection[section].time >=
           10 * 60 * 1000
       ) {
+        console.log("Fetching fresh attendance data...");
         // Fetch fresh data
         response = await this.getResponse("att");
 
         // Store in cache
         if (response !== "Network Error") {
+          console.log("Storing fresh attendance data...");
           await storeResponse(
             student.year,
             student.branch,
@@ -182,8 +186,9 @@ export class Academic implements IAcademic {
           );
           recentlyCheckedSection[section] = {
             section: student.section,
-            date: new Date(),
+            time: new Date().getTime(),
           };
+          console.log(recentlyCheckedSection);
         }
       }
 
@@ -300,10 +305,6 @@ export class Academic implements IAcademic {
   async getMidmarksJSON(): Promise<Midmarks | string> {
     try {
       //student details
-      const recentlyCheckedSection: {
-        [key: string]: { section: string; date: Date };
-      } = {};
-
       let response;
 
       const student = await getStudent(this.rollnumber);
@@ -322,7 +323,7 @@ export class Academic implements IAcademic {
       if (
         !response ||
         !recentlyCheckedSection[section] ||
-        new Date().getTime() - recentlyCheckedSection[section].date.getTime() >=
+        new Date().getTime() - recentlyCheckedSection[section].time >=
           10 * 60 * 1000
       ) {
         // Fetch fresh data
@@ -339,7 +340,7 @@ export class Academic implements IAcademic {
           );
           recentlyCheckedSection[section] = {
             section: student.section,
-            date: new Date(),
+            time: new Date().getTime(),
           };
         }
       }

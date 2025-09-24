@@ -25,7 +25,7 @@ export default [
       "@typescript-eslint/no-explicit-any": "off", // Allow 'any' datatype
       "prettier/prettier": "error",
       "@typescript-eslint/no-unused-vars": [
-        "warn",
+        "Allow",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
     },
