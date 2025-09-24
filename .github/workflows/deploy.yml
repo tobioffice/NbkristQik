@@ -41,30 +41,46 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd ${{ secrets.SERVER_PATH }}/NbkristQik
+            # Set up proper environment
+            export HOME=$(eval echo ~$USER)
+            cd $HOME/NbkristQik
+
             if [ ! -d .git ]; then
               git clone https://github.com/tobioffice/NbkristQik .
             else
               git pull origin main
             fi
-            # Load user environment to access npm/pnpm
-            source ~/.bashrc || source ~/.profile || true
+
+            # Load user environment and set up paths
+            source ~/.bashrc 2>/dev/null || source ~/.profile 2>/dev/null || true
             export PATH="$HOME/.local/share/pnpm:$PATH"
+            export PATH="$HOME/.local/bin:$PATH"
             export PATH="/usr/local/bin:$PATH"
-            
+
+            # Check if Node.js is available, install if needed
+            if ! command -v node &> /dev/null; then
+              echo "Installing Node.js..."
+              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+
+            # Check if npm is available
+            if ! command -v npm &> /dev/null; then
+              echo "npm not found after Node.js installation"
+              exit 1
+            fi
+
             # Install pnpm if not available
             if ! command -v pnpm &> /dev/null; then
-              if command -v npm &> /dev/null; then
-                npm install -g pnpm
-              else
-                curl -fsSL https://get.pnpm.io/install.sh | sh -
-                export PATH="$HOME/.local/share/pnpm:$PATH"
-              fi
+              echo "Installing pnpm..."
+              npm install -g pnpm
+              export PATH="$HOME/.npm-global/bin:$PATH"
             fi
-            
+
+            # Install dependencies and build
             pnpm i
             pnpm build
-            
+
             # Install pm2 if not available and restart/start the app
             if ! command -v pm2 &> /dev/null; then
               npm install -g pm2
