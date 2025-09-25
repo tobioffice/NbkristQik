@@ -8,6 +8,7 @@ import {
 } from "../../db/fallback/responses.model.js";
 import { urls, headers as header } from "../../constants/index.js";
 import { BRANCHES, BASE_URL } from "../../constants/index.js";
+import { getClient } from "../redis/getRedisClient.js";
 
 import {
   IAcademic,
@@ -15,6 +16,7 @@ import {
   AttendanceBySubjects,
   Attendance,
   Midmarks,
+  Student,
 } from "../../types/index.js";
 
 import axios from "axios";
@@ -40,7 +42,7 @@ export class Academic implements IAcademic {
 
   async getResponse(command: string): Promise<string> {
     const url = command === "mid" ? urls.midmarks : urls.attendance;
-    const student = await getStudent(this.rollnumber);
+    const student = await this.getStudentCached();
 
     let data;
     if (command === "mid") {
@@ -151,7 +153,7 @@ export class Academic implements IAcademic {
 
       let response;
 
-      const student = await getStudent(this.rollnumber);
+      const student = await this.getStudentCached();
 
       const section = `${student.year}_${student.branch}_${student.section}_att`;
 
@@ -207,98 +209,123 @@ export class Academic implements IAcademic {
         return "Student Not Found";
 
       //using cheerio to get targeted data
-      const $ = cheerio.load(response);
-      const studentTr = $(`tr[id=${this.rollnumber.toUpperCase()}]`);
-      const percentage = studentTr.find("td[class=tdPercent]").text();
-      const totalClassesAttended = percentage
-        .split("(")[1]
-        .trim()
-        .replace(")", "");
-
-      const trList = $(`tr`);
-      const nameTr = trList.eq(1);
-      const lastUpdatedTr = trList.eq(2);
-      const conductedTr = trList.eq(3);
-
-      const nameArray = nameTr
-        .find("td")
-        .map((_, el) => $(el).text())
-        .get();
-      const lastUpdatedArray = lastUpdatedTr
-        .find("td")
-        .map((_, el) => $(el).text())
-        .get();
-      const attendedArray = studentTr
-        .find("td")
-        .map((_, el) => $(el).text())
-        .get();
-      const conductedArray = conductedTr
-        .find("td")
-        .map((_, el) => $(el).text())
-        .get();
-
-      //cleaning the data start
-      lastUpdatedArray.shift();
-      conductedArray.shift();
-      attendedArray.splice(0, 2);
-
-      let deleted = 0;
-      [...conductedArray].forEach((el, i) => {
-        const updated = parseInt(el);
-        if (updated === 0) {
-          nameArray.splice(i - deleted, 1);
-          lastUpdatedArray.splice(i - deleted, 1);
-          conductedArray.splice(i - deleted, 1);
-          attendedArray.splice(i - deleted, 1);
-          deleted++;
-        }
-        if (nameArray[i] === "%AGE") {
-          nameArray.splice(i);
-          lastUpdatedArray.splice(i);
-          conductedArray.splice(i);
-          attendedArray.splice(i);
-        }
-      });
-
-      lastUpdatedArray.forEach((el, i) => {
-        lastUpdatedArray[i] = el.split("(")[0];
-      });
-      //cleaning the data end
-
-      //formatting subjects objects
-      const subjects: AttendanceBySubjects[] = [];
-
-      nameArray.forEach((el, i) => {
-        subjects.push({
-          subject: el,
-          attended: parseInt(attendedArray[i]),
-          conducted: parseInt(conductedArray[i]),
-          lastUpdated: lastUpdatedArray[i],
-        });
-      });
-
-      //attendance object
-      const attendance: Attendance = {
-        rollno: this.rollnumber,
-        year_branch_section:
-          student.year.slice(0, 1) +
-          "_" +
-          BRANCHES[parseInt(student.branch)] +
-          "_" +
-          student.section,
-        percentage: parseFloat(percentage.split("(")[0].trim()),
-        totalClasses: {
-          attended: parseInt(totalClassesAttended.split("/")[0].trim()),
-          conducted: parseInt(totalClassesAttended.split("/")[1].trim()),
-        },
-        subjects: subjects,
-      };
-
-      return attendance;
+      return this.cleanAttDoc(response);
     } catch (error) {
       console.log("Error in getAttendanceJSON:", error);
       return "Something went wrong";
     }
+  }
+
+  async cleanAttDoc(doc: string): Promise<Attendance> {
+    const student = await this.getStudentCached();
+
+    const $ = cheerio.load(doc);
+    const studentTr = $(`tr[id=${this.rollnumber.toUpperCase()}]`);
+    const percentage = studentTr.find("td[class=tdPercent]").text();
+    const totalClassesAttended = percentage
+      .split("(")[1]
+      .trim()
+      .replace(")", "");
+
+    const trList = $(`tr`);
+    const nameTr = trList.eq(1);
+    const lastUpdatedTr = trList.eq(2);
+    const conductedTr = trList.eq(3);
+
+    const nameArray = nameTr
+      .find("td")
+      .map((_, el) => $(el).text())
+      .get();
+    const lastUpdatedArray = lastUpdatedTr
+      .find("td")
+      .map((_, el) => $(el).text())
+      .get();
+    const attendedArray = studentTr
+      .find("td")
+      .map((_, el) => $(el).text())
+      .get();
+    const conductedArray = conductedTr
+      .find("td")
+      .map((_, el) => $(el).text())
+      .get();
+
+    //cleaning the data start
+    lastUpdatedArray.shift();
+    conductedArray.shift();
+    attendedArray.splice(0, 2);
+
+    let deleted = 0;
+    [...conductedArray].forEach((el, i) => {
+      const updated = parseInt(el);
+      if (updated === 0) {
+        nameArray.splice(i - deleted, 1);
+        lastUpdatedArray.splice(i - deleted, 1);
+        conductedArray.splice(i - deleted, 1);
+        attendedArray.splice(i - deleted, 1);
+        deleted++;
+      }
+      if (nameArray[i] === "%AGE") {
+        nameArray.splice(i);
+        lastUpdatedArray.splice(i);
+        conductedArray.splice(i);
+        attendedArray.splice(i);
+      }
+    });
+
+    lastUpdatedArray.forEach((el, i) => {
+      lastUpdatedArray[i] = el.split("(")[0];
+    });
+    //cleaning the data end
+
+    //formatting subjects objects
+    const subjects: AttendanceBySubjects[] = [];
+
+    nameArray.forEach((el, i) => {
+      subjects.push({
+        subject: el,
+        attended: parseInt(attendedArray[i]),
+        conducted: parseInt(conductedArray[i]),
+        lastUpdated: lastUpdatedArray[i],
+      });
+    });
+
+    //attendance object
+    const attendance: Attendance = {
+      rollno: this.rollnumber,
+      year_branch_section:
+        student.year.slice(0, 1) +
+        "_" +
+        BRANCHES[parseInt(student.branch)] +
+        "_" +
+        student.section,
+      percentage: parseFloat(percentage.split("(")[0].trim()),
+      totalClasses: {
+        attended: parseInt(totalClassesAttended.split("/")[0].trim()),
+        conducted: parseInt(totalClassesAttended.split("/")[1].trim()),
+      },
+      subjects: subjects,
+    };
+
+    return attendance;
+  }
+
+  async getStudentCached() {
+    const redisClient = await getClient();
+
+    let student = (await redisClient.json.get(
+      `student:${this.rollnumber}`,
+    )) as Student;
+
+    if (!student) {
+      student = await getStudent(this.rollnumber);
+      if (student) {
+        await redisClient.json.set(`student:${this.rollnumber}`, "$", student);
+      }
+    } else {
+      console.log("got cashed student: ");
+    }
+
+    return student;
   }
 
   async getMidmarksJSON(): Promise<Midmarks | string> {
@@ -306,7 +333,7 @@ export class Academic implements IAcademic {
       //student details
       let response;
 
-      const student = await getStudent(this.rollnumber);
+      const student = await this.getStudentCached();
 
       const section = `${student.year}_${student.branch}_${student.section}_mid`;
 
@@ -361,82 +388,7 @@ export class Academic implements IAcademic {
         );
       }
 
-      const $ = cheerio.load(response);
-
-      const studentTr = $(`tr[id=${this.rollnumber.toUpperCase()}]`)
-        .find("td")
-        .slice(2);
-      const studentMarksList = studentTr.map((_, el) => $(el).text()).get();
-
-      const nameTr = $(`tr`).eq(1);
-      const tds = nameTr.find("td");
-
-      //start separating subjects and labs
-      const subjects: string[] = [];
-      const labs: string[] = [];
-
-      tds.each((_, element) => {
-        const isSubject = $(element).find("a").length > 0;
-
-        if (isSubject) {
-          subjects.push($(element).find("a").text().trim());
-        } else {
-          labs.push($(element).text().trim());
-        }
-      });
-      //end separating subjects and labs
-
-      //start formatting midmarks objects into MidmarksBySubjects List
-      const midmarksList: MidmarksBySubjects[] = [];
-
-      [...subjects, ...labs].forEach((el, i) => {
-        try {
-          if (i < subjects.length) {
-            const part1 = studentMarksList[i]?.split("/")[0];
-            const part2 = studentMarksList[i]?.split("/")[1];
-
-            midmarksList.push({
-              subject: el,
-              M1: parseInt(part1) || 0,
-              M2: parseInt(part2?.split("(")[0]) || 0,
-              average: parseInt(part2?.split("(")[1]?.split(")")[0]) || 0,
-              type: subjects.includes(el) ? "Subject" : "Lab",
-            });
-          } else {
-            midmarksList.push({
-              subject: el,
-              M1: parseInt(studentMarksList[i]),
-              M2: 0,
-              average: 0,
-              type: subjects.includes(el) ? "Subject" : "Lab",
-            });
-          }
-        } catch (e) {
-          console.error("Error parsing midmarks:", e);
-          midmarksList.push({
-            subject: el,
-            M1: 0,
-            M2: 0,
-            average: 0,
-            type: subjects.includes(el) ? "Subject" : "Lab",
-          });
-        }
-      });
-      //end formatting midmarks objects into MidmarksBySubjects List
-
-      //midmarks object
-      const midmarks: Midmarks = {
-        rollno: this.rollnumber,
-        year_branch_section:
-          student.year.slice(0, 1) +
-          "_" +
-          BRANCHES[parseInt(student.branch)] +
-          "_" +
-          student.section,
-        subjects: midmarksList,
-      };
-
-      return midmarks;
+      return await this.cleanMidDoc(response);
     } catch (error) {
       console.error("Error in getMidmarksJSON:", error);
       return {
@@ -445,5 +397,86 @@ export class Academic implements IAcademic {
         subjects: [],
       } as Midmarks;
     }
+  }
+
+  async cleanMidDoc(doc: string): Promise<Midmarks> {
+    const student = await this.getStudentCached();
+
+    const $ = cheerio.load(doc);
+
+    const studentTr = $(`tr[id=${this.rollnumber.toUpperCase()}]`)
+      .find("td")
+      .slice(2);
+    const studentMarksList = studentTr.map((_, el) => $(el).text()).get();
+
+    const nameTr = $(`tr`).eq(1);
+    const tds = nameTr.find("td");
+
+    //start separating subjects and labs
+    const subjects: string[] = [];
+    const labs: string[] = [];
+
+    tds.each((_, element) => {
+      const isSubject = $(element).find("a").length > 0;
+
+      if (isSubject) {
+        subjects.push($(element).find("a").text().trim());
+      } else {
+        labs.push($(element).text().trim());
+      }
+    });
+    //end separating subjects and labs
+
+    //start formatting midmarks objects into MidmarksBySubjects List
+    const midmarksList: MidmarksBySubjects[] = [];
+
+    [...subjects, ...labs].forEach((el, i) => {
+      try {
+        if (i < subjects.length) {
+          const part1 = studentMarksList[i]?.split("/")[0];
+          const part2 = studentMarksList[i]?.split("/")[1];
+
+          midmarksList.push({
+            subject: el,
+            M1: parseInt(part1) || 0,
+            M2: parseInt(part2?.split("(")[0]) || 0,
+            average: parseInt(part2?.split("(")[1]?.split(")")[0]) || 0,
+            type: subjects.includes(el) ? "Subject" : "Lab",
+          });
+        } else {
+          midmarksList.push({
+            subject: el,
+            M1: parseInt(studentMarksList[i]),
+            M2: 0,
+            average: 0,
+            type: subjects.includes(el) ? "Subject" : "Lab",
+          });
+        }
+      } catch (e) {
+        console.error("Error parsing midmarks:", e);
+        midmarksList.push({
+          subject: el,
+          M1: 0,
+          M2: 0,
+          average: 0,
+          type: subjects.includes(el) ? "Subject" : "Lab",
+        });
+      }
+    });
+    //end formatting midmarks objects into MidmarksBySubjects List
+
+    //midmarks object
+    const midmarks: Midmarks = {
+      rollno: this.rollnumber,
+      year_branch_section:
+        student.year.slice(0, 1) +
+        "_" +
+        BRANCHES[parseInt(student.branch)] +
+        "_" +
+        student.section,
+      subjects: midmarksList,
+    };
+
+    return midmarks;
   }
 }

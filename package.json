@@ -21,6 +21,7 @@
     "dotenv": "^16.4.7",
     "moment-timezone": "^0.5.47",
     "node-telegram-bot-api": "^0.66.0",
+    "redis": "^5.8.2",
     "typescript": "^5.9.2"
   },
   "devDependencies": {
