@@ -122,7 +122,6 @@ export class AcademicTG extends Academic {
       // Usage example:
       if (!yourDataObject) {
         throw new Error("Unable to get attendance !");
-        return null;
       }
       return formatMidMarksMessage(yourDataObject);
     } catch (error) {
