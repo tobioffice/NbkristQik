@@ -29,7 +29,7 @@ export const sendAttendanceOrMidMarks = async (
         : await student.getMidmarksMessage();
 
     if (!finalMessage) {
-      bot.sendMessage(message.message_id, "Something went wrong...");
+      bot.sendMessage(chatId, "Something went wrong...");
       return;
     }
 
