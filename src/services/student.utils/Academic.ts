@@ -155,9 +155,12 @@ export class Academic implements IAcademic {
     try {
       const redisClient = await getClient();
 
-      const attendance = (await redisClient.json.get(
+      const cachedAttendance = await redisClient.get(
         `attendance:${this.rollnumber.toUpperCase()}`,
-      )) as Attendance;
+      );
+      const attendance = cachedAttendance
+        ? (JSON.parse(cachedAttendance) as Attendance)
+        : null;
 
       if (attendance) {
         console.log("got cached attendance: ");
@@ -280,9 +283,12 @@ export class Academic implements IAcademic {
     try {
       const redisClient = await getClient();
 
-      const midMarks = (await redisClient.json.get(
+      const cachedMidMarks = await redisClient.get(
         `midmarks:${this.rollnumber.toUpperCase()}`,
-      )) as Midmarks;
+      );
+      const midMarks = cachedMidMarks
+        ? (JSON.parse(cachedMidMarks) as Midmarks)
+        : null;
 
       if (midMarks) {
         console.log("got cached midmarks");

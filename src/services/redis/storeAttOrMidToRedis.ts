@@ -12,12 +12,15 @@ export const storeAttendanceToRedis = async (doc: string) => {
 
     for (const rollnumber of rollNumbers) {
       const studentAttendance = await Academic.cleanAttDoc(doc, rollnumber);
-      await redisClient.json.set(
+
+      await redisClient.set(
         `attendance:${rollnumber.toUpperCase()}`,
-        "$",
-        studentAttendance,
+        JSON.stringify(studentAttendance),
       );
-      await redisClient.expire(`attendance:${rollnumber.toUpperCase()}`, 60 * 60);
+      await redisClient.expire(
+        `attendance:${rollnumber.toUpperCase()}`,
+        60 * 60,
+      );
     }
 
     console.log(`cached all student attendance for : `, rollNumbers);
@@ -36,10 +39,10 @@ export const storeMidMarksToRedis = async (doc: string) => {
 
     for (const rollnumber of rollNumbers) {
       const studentMidmarks = await Academic.cleanMidDoc(doc, rollnumber);
-      await redisClient.json.set(
+
+      await redisClient.set(
         `midmarks:${rollnumber.toUpperCase()}`,
-        "$",
-        studentMidmarks,
+        JSON.stringify(studentMidmarks),
       );
       await redisClient.expire(
         `midmarks:${rollnumber.toUpperCase()}`,
