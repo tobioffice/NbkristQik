@@ -1,11 +1,6 @@
 //
 // NO CHANGES REQUIRED
 //
-import { getStudent } from "../../db/student.model.js";
-import {
-  storeResponse,
-  getResponse,
-} from "../../db/fallback/responses.model.js";
 import { urls, headers as header } from "../../constants/index.js";
 import { BRANCHES, BASE_URL } from "../../constants/index.js";
 
@@ -15,12 +10,19 @@ import {
   AttendanceBySubjects,
   Attendance,
   Midmarks,
+  Student,
 } from "../../types/index.js";
 
 import axios from "axios";
 import crypto from "crypto";
 import dotenv from "dotenv";
 import * as cheerio from "cheerio";
+import { getStudentCached } from "../redis/utils.js";
+import {
+  storeAttendanceToRedis,
+  storeMidMarksToRedis,
+} from "../redis/storeAttOrMidToRedis.js";
+import { getClient } from "../redis/getRedisClient.js";
 
 dotenv.config();
 
@@ -31,16 +33,21 @@ const loginUrl = urls.login;
 
 var cookie = "";
 
-const recentlyCheckedSection: {
-  [key: string]: { time: number };
-} = {};
-
 export class Academic implements IAcademic {
+  public student: Student | null = null;
+
   constructor(public rollnumber: string) {}
 
-  async getResponse(command: string): Promise<string> {
+  async getCachedStudent() {
+    if (this.student) return this.student;
+    const student = await getStudentCached(this.rollnumber);
+    this.student = student;
+    return student;
+  }
+
+  async getResponse(command: string): Promise<string | null> {
     const url = command === "mid" ? urls.midmarks : urls.attendance;
-    const student = await getStudent(this.rollnumber);
+    const student = await this.getCachedStudent();
 
     let data;
     if (command === "mid") {
@@ -84,11 +91,11 @@ export class Academic implements IAcademic {
         if (await this.isCookiesValid()) {
           return this.getResponse(command);
         }
-        return "Network Error";
+        return null;
       }
       return res;
     } catch (_error) {
-      return "Network Error";
+      return null;
     }
   }
 
@@ -144,306 +151,233 @@ export class Academic implements IAcademic {
     }
   }
 
-  async getAttendanceJSON(): Promise<Attendance | string> {
+  async getAttendanceJSON(): Promise<Attendance | null> {
     try {
-      //student details
-      console.log(recentlyCheckedSection);
+      const redisClient = await getClient();
 
-      let response;
+      const attendance = (await redisClient.json.get(
+        `attendance:${this.rollnumber.toUpperCase()}`,
+      )) as Attendance;
 
-      const student = await getStudent(this.rollnumber);
-
-      const section = `${student.year}_${student.branch}_${student.section}_att`;
-
-      // Check cache first
-      response = await getResponse(
-        student.year,
-        student.branch,
-        student.section,
-        "att",
-      );
-
-      // If no cached data or cache is expired (older than 10 minutes)
-      if (
-        !response ||
-        !recentlyCheckedSection[section] ||
-        new Date().getTime() - recentlyCheckedSection[section].time >=
-          10 * 60 * 1000
-      ) {
-        console.log("Fetching fresh attendance data...");
-        // Fetch fresh data
-        response = await this.getResponse("att");
-
-        // Store in cache
-        if (response !== "Network Error") {
-          console.log("Storing fresh attendance data...");
-          await storeResponse(
-            student.year,
-            student.branch,
-            student.section,
-            "att",
-            response,
-          );
-          recentlyCheckedSection[section] = {
-            time: new Date().getTime(),
-          };
-          console.log(recentlyCheckedSection);
-        }
+      if (attendance) {
+        console.log("got cached attendance: ");
+        return attendance;
       }
 
-      // Handle network errors
-      if (response === "Network Error") {
-        const content = await getResponse(
-          student.year,
-          student.branch,
-          student.section,
-          "att",
-        );
-        if (!content) return response;
-        response = content;
-      }
+      // Fetch fresh data
+      const response = await this.getResponse("att");
 
-      if (!response.includes(this.rollnumber.toUpperCase()))
-        return "Student Not Found";
+      if (!response) return null;
+
+      console.log("Storing fresh attendance data...");
+      if (!response.includes(this.rollnumber.toUpperCase())) return null;
+
+      storeAttendanceToRedis(response);
 
       //using cheerio to get targeted data
-      const $ = cheerio.load(response);
-      const studentTr = $(`tr[id=${this.rollnumber.toUpperCase()}]`);
-      const percentage = studentTr.find("td[class=tdPercent]").text();
-      const totalClassesAttended = percentage
-        .split("(")[1]
-        .trim()
-        .replace(")", "");
-
-      const trList = $(`tr`);
-      const nameTr = trList.eq(1);
-      const lastUpdatedTr = trList.eq(2);
-      const conductedTr = trList.eq(3);
-
-      const nameArray = nameTr
-        .find("td")
-        .map((_, el) => $(el).text())
-        .get();
-      const lastUpdatedArray = lastUpdatedTr
-        .find("td")
-        .map((_, el) => $(el).text())
-        .get();
-      const attendedArray = studentTr
-        .find("td")
-        .map((_, el) => $(el).text())
-        .get();
-      const conductedArray = conductedTr
-        .find("td")
-        .map((_, el) => $(el).text())
-        .get();
-
-      //cleaning the data start
-      lastUpdatedArray.shift();
-      conductedArray.shift();
-      attendedArray.splice(0, 2);
-
-      let deleted = 0;
-      [...conductedArray].forEach((el, i) => {
-        const updated = parseInt(el);
-        if (updated === 0) {
-          nameArray.splice(i - deleted, 1);
-          lastUpdatedArray.splice(i - deleted, 1);
-          conductedArray.splice(i - deleted, 1);
-          attendedArray.splice(i - deleted, 1);
-          deleted++;
-        }
-        if (nameArray[i] === "%AGE") {
-          nameArray.splice(i);
-          lastUpdatedArray.splice(i);
-          conductedArray.splice(i);
-          attendedArray.splice(i);
-        }
-      });
-
-      lastUpdatedArray.forEach((el, i) => {
-        lastUpdatedArray[i] = el.split("(")[0];
-      });
-      //cleaning the data end
-
-      //formatting subjects objects
-      const subjects: AttendanceBySubjects[] = [];
-
-      nameArray.forEach((el, i) => {
-        subjects.push({
-          subject: el,
-          attended: parseInt(attendedArray[i]),
-          conducted: parseInt(conductedArray[i]),
-          lastUpdated: lastUpdatedArray[i],
-        });
-      });
-
-      //attendance object
-      const attendance: Attendance = {
-        rollno: this.rollnumber,
-        year_branch_section:
-          student.year.slice(0, 1) +
-          "_" +
-          BRANCHES[parseInt(student.branch)] +
-          "_" +
-          student.section,
-        percentage: parseFloat(percentage.split("(")[0].trim()),
-        totalClasses: {
-          attended: parseInt(totalClassesAttended.split("/")[0].trim()),
-          conducted: parseInt(totalClassesAttended.split("/")[1].trim()),
-        },
-        subjects: subjects,
-      };
-
-      return attendance;
+      return Academic.cleanAttDoc(response, this.rollnumber);
     } catch (error) {
       console.log("Error in getAttendanceJSON:", error);
-      return "Something went wrong";
+      return null;
     }
   }
 
-  async getMidmarksJSON(): Promise<Midmarks | string> {
-    try {
-      //student details
-      let response;
+  static async cleanAttDoc(
+    doc: string,
+    rollnumber: string,
+  ): Promise<Attendance> {
+    const { roll_no, branch, section, year } = await getStudentCached(
+      rollnumber,
+    );
 
-      const student = await getStudent(this.rollnumber);
+    const $ = cheerio.load(doc);
+    const studentTr = $(`tr[id=${roll_no.toUpperCase()}]`);
+    const percentage = studentTr.find("td[class=tdPercent]").text();
+    const totalClassesAttended = percentage
+      .split("(")[1]
+      .trim()
+      .replace(")", "");
 
-      const section = `${student.year}_${student.branch}_${student.section}_mid`;
+    const trList = $(`tr`);
+    const nameTr = trList.eq(1);
+    const lastUpdatedTr = trList.eq(2);
+    const conductedTr = trList.eq(3);
 
-      // Check cache first
-      response = await getResponse(
-        student.year,
-        student.branch,
-        student.section,
-        "mid",
-      );
+    const nameArray = nameTr
+      .find("td")
+      .map((_, el) => $(el).text())
+      .get();
+    const lastUpdatedArray = lastUpdatedTr
+      .find("td")
+      .map((_, el) => $(el).text())
+      .get();
+    const attendedArray = studentTr
+      .find("td")
+      .map((_, el) => $(el).text())
+      .get();
+    const conductedArray = conductedTr
+      .find("td")
+      .map((_, el) => $(el).text())
+      .get();
 
-      // If no cached data or cache is expired (older than 10 minutes)
-      if (
-        !response ||
-        !recentlyCheckedSection[section] ||
-        new Date().getTime() - recentlyCheckedSection[section].time >=
-          10 * 60 * 1000
-      ) {
-        // Fetch fresh data
-        response = await this.getResponse("mid");
+    //cleaning the data start
+    lastUpdatedArray.shift();
+    conductedArray.shift();
+    attendedArray.splice(0, 2);
 
-        // Store in cache
-        if (response !== "Network Error") {
-          await storeResponse(
-            student.year,
-            student.branch,
-            student.section,
-            "mid",
-            response,
-          );
-          recentlyCheckedSection[section] = {
-            time: new Date().getTime(),
-          };
-        }
+    let deleted = 0;
+    [...conductedArray].forEach((el, i) => {
+      const updated = parseInt(el);
+      if (updated === 0) {
+        nameArray.splice(i - deleted, 1);
+        lastUpdatedArray.splice(i - deleted, 1);
+        conductedArray.splice(i - deleted, 1);
+        attendedArray.splice(i - deleted, 1);
+        deleted++;
       }
-      if (response === "Network Error") {
-        const content = await getResponse(
-          student.year,
-          student.branch,
-          student.section,
-          "mid",
-        );
-        if (!content) return response;
-        response = content;
-      } else {
-        await storeResponse(
-          student.year,
-          student.branch,
-          student.section,
-          "mid",
-          response,
-        );
+      if (nameArray[i] === "%AGE") {
+        nameArray.splice(i);
+        lastUpdatedArray.splice(i);
+        conductedArray.splice(i);
+        attendedArray.splice(i);
       }
+    });
 
-      const $ = cheerio.load(response);
+    lastUpdatedArray.forEach((el, i) => {
+      lastUpdatedArray[i] = el.split("(")[0];
+    });
+    //cleaning the data end
 
-      const studentTr = $(`tr[id=${this.rollnumber.toUpperCase()}]`)
-        .find("td")
-        .slice(2);
-      const studentMarksList = studentTr.map((_, el) => $(el).text()).get();
+    //formatting subjects objects
+    const subjects: AttendanceBySubjects[] = [];
 
-      const nameTr = $(`tr`).eq(1);
-      const tds = nameTr.find("td");
-
-      //start separating subjects and labs
-      const subjects: string[] = [];
-      const labs: string[] = [];
-
-      tds.each((_, element) => {
-        const isSubject = $(element).find("a").length > 0;
-
-        if (isSubject) {
-          subjects.push($(element).find("a").text().trim());
-        } else {
-          labs.push($(element).text().trim());
-        }
+    nameArray.forEach((el, i) => {
+      subjects.push({
+        subject: el,
+        attended: parseInt(attendedArray[i]),
+        conducted: parseInt(conductedArray[i]),
+        lastUpdated: lastUpdatedArray[i],
       });
-      //end separating subjects and labs
+    });
 
-      //start formatting midmarks objects into MidmarksBySubjects List
-      const midmarksList: MidmarksBySubjects[] = [];
+    //attendance object
+    const attendance: Attendance = {
+      rollno: roll_no,
+      year_branch_section:
+        year.slice(0, 1) + "_" + BRANCHES[parseInt(branch)] + "_" + section,
+      percentage: parseFloat(percentage.split("(")[0].trim()),
+      totalClasses: {
+        attended: parseInt(totalClassesAttended.split("/")[0].trim()),
+        conducted: parseInt(totalClassesAttended.split("/")[1].trim()),
+      },
+      subjects: subjects,
+    };
 
-      [...subjects, ...labs].forEach((el, i) => {
-        try {
-          if (i < subjects.length) {
-            const part1 = studentMarksList[i]?.split("/")[0];
-            const part2 = studentMarksList[i]?.split("/")[1];
+    return attendance;
+  }
 
-            midmarksList.push({
-              subject: el,
-              M1: parseInt(part1) || 0,
-              M2: parseInt(part2?.split("(")[0]) || 0,
-              average: parseInt(part2?.split("(")[1]?.split(")")[0]) || 0,
-              type: subjects.includes(el) ? "Subject" : "Lab",
-            });
-          } else {
-            midmarksList.push({
-              subject: el,
-              M1: parseInt(studentMarksList[i]),
-              M2: 0,
-              average: 0,
-              type: subjects.includes(el) ? "Subject" : "Lab",
-            });
-          }
-        } catch (e) {
-          console.error("Error parsing midmarks:", e);
+  async getMidmarksJSON(): Promise<Midmarks | null> {
+    try {
+      const redisClient = await getClient();
+
+      const midMarks = (await redisClient.json.get(
+        `midmarks:${this.rollnumber.toUpperCase()}`,
+      )) as Midmarks;
+
+      if (midMarks) {
+        console.log("got cached midmarks");
+        // console.log(midMarks);
+        return midMarks;
+      }
+
+      const response = await this.getResponse("mid");
+
+      if (!response) return null;
+      if (!response.includes(this.rollnumber.toUpperCase())) return null;
+
+      storeMidMarksToRedis(response);
+
+      return await Academic.cleanMidDoc(response, this.rollnumber);
+    } catch (error) {
+      console.error("Error in getMidmarksJSON:", error);
+      return null;
+    }
+  }
+
+  static async cleanMidDoc(doc: string, rollnumber: string): Promise<Midmarks> {
+    const { roll_no, year, section, branch } = await getStudentCached(
+      rollnumber,
+    );
+
+    const $ = cheerio.load(doc);
+
+    const studentTr = $(`tr[id=${roll_no.toUpperCase()}]`).find("td").slice(2);
+    const studentMarksList = studentTr.map((_, el) => $(el).text()).get();
+
+    const nameTr = $(`tr`).eq(1);
+    const tds = nameTr.find("td");
+
+    //start separating subjects and labs
+    const subjects: string[] = [];
+    const labs: string[] = [];
+
+    tds.each((_, element) => {
+      const isSubject = $(element).find("a").length > 0;
+
+      if (isSubject) {
+        subjects.push($(element).find("a").text().trim());
+      } else {
+        labs.push($(element).text().trim());
+      }
+    });
+    //end separating subjects and labs
+
+    //start formatting midmarks objects into MidmarksBySubjects List
+    const midmarksList: MidmarksBySubjects[] = [];
+
+    [...subjects, ...labs].forEach((el, i) => {
+      try {
+        if (i < subjects.length) {
+          const part1 = studentMarksList[i]?.split("/")[0];
+          const part2 = studentMarksList[i]?.split("/")[1];
+
           midmarksList.push({
             subject: el,
-            M1: 0,
+            M1: parseInt(part1) || 0,
+            M2: parseInt(part2?.split("(")[0]) || 0,
+            average: parseInt(part2?.split("(")[1]?.split(")")[0]) || 0,
+            type: subjects.includes(el) ? "Subject" : "Lab",
+          });
+        } else {
+          midmarksList.push({
+            subject: el,
+            M1: parseInt(studentMarksList[i]),
             M2: 0,
             average: 0,
             type: subjects.includes(el) ? "Subject" : "Lab",
           });
         }
-      });
-      //end formatting midmarks objects into MidmarksBySubjects List
+      } catch (e) {
+        console.error("Error parsing midmarks:", e);
+        midmarksList.push({
+          subject: el,
+          M1: 0,
+          M2: 0,
+          average: 0,
+          type: subjects.includes(el) ? "Subject" : "Lab",
+        });
+      }
+    });
+    //end formatting midmarks objects into MidmarksBySubjects List
 
-      //midmarks object
-      const midmarks: Midmarks = {
-        rollno: this.rollnumber,
-        year_branch_section:
-          student.year.slice(0, 1) +
-          "_" +
-          BRANCHES[parseInt(student.branch)] +
-          "_" +
-          student.section,
-        subjects: midmarksList,
-      };
+    //midmarks object
+    const midmarks: Midmarks = {
+      rollno: roll_no,
+      year_branch_section:
+        year.slice(0, 1) + "_" + BRANCHES[parseInt(branch)] + "_" + section,
+      subjects: midmarksList,
+    };
 
-      return midmarks;
-    } catch (error) {
-      console.error("Error in getMidmarksJSON:", error);
-      return {
-        rollno: "Not Found",
-        year_branch_section: "",
-        subjects: [],
-      } as Midmarks;
-    }
+    return midmarks;
   }
 }

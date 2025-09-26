@@ -1,8 +1,8 @@
 //Interfaces
 export interface IAcademic {
   rollnumber: string;
-  getAttendanceJSON(): Promise<Attendance | string>;
-  getMidmarksJSON(): Promise<Midmarks | string>;
+  getAttendanceJSON(): Promise<Attendance | null>;
+  getMidmarksJSON(): Promise<Midmarks | null>;
 }
 
 //Types

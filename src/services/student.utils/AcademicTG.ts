@@ -1,7 +1,8 @@
+import { Midmarks } from "../../types/index.js";
 import { Academic } from "./Academic.js";
 
 export class AcademicTG extends Academic {
-  async getAttendanceMessage(): Promise<string> {
+  async getAttendanceMessage(): Promise<string | null> {
     try {
       function formatAttendanceMessage(data: any): string {
         // Header Section
@@ -62,8 +63,8 @@ export class AcademicTG extends Academic {
 
       // console.log(yourDataObject);
 
-      if (yourDataObject === "Network Error") {
-        return yourDataObject;
+      if (!yourDataObject) {
+        return null;
       } else {
         return formatAttendanceMessage(yourDataObject);
       }
@@ -73,9 +74,9 @@ export class AcademicTG extends Academic {
     }
   }
 
-  async getMidmarksMessage(): Promise<string> {
+  async getMidmarksMessage(): Promise<string | null> {
     try {
-      function formatMidMarksMessage(data: any): string {
+      function formatMidMarksMessage(data: Midmarks): string {
         // Header Section
         let msg =
           `<b>📊 Mid Marks Report</b>\n\n` +
@@ -105,10 +106,10 @@ export class AcademicTG extends Academic {
           // Format subject row with cleaner spacing
           msg +=
             `${subjectName.padEnd(11)} │ ${type.padEnd(4)} │` +
-            ` ${sub.M1.toString().padStart(2)} ${sub.M2.toString().padStart(
-              2,
-            )}` +
-            ` ${sub.average.toString().padStart(3)}\n`;
+            ` ${sub.M1 ? sub.M1.toString().padStart(2) : " "} ${
+              sub.M2 ? sub.M2.toString().padStart(2) : " "
+            }` +
+            ` ${sub.average ? sub.average.toString().padStart(3) : " "}\n`;
         }
 
         // Close pre tag
@@ -119,11 +120,10 @@ export class AcademicTG extends Academic {
 
       const yourDataObject = await this.getMidmarksJSON();
       // Usage example:
-      if (yourDataObject === "Network Error") {
-        return yourDataObject;
-      } else {
-        return formatMidMarksMessage(yourDataObject);
+      if (!yourDataObject) {
+        throw new Error("Unable to get attendance !");
       }
+      return formatMidMarksMessage(yourDataObject);
     } catch (error) {
       console.log(error);
       return "<code>Something went wrong..!</code>";

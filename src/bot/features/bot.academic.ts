@@ -4,6 +4,8 @@ import { ROLL_REGEX } from "../../constants/index.js";
 import { checkMembership } from "../../services/student.utils/checkMembership.js";
 import { CHANNEL_ID } from "../../config/environmentals.js";
 
+import { getClient } from "../../services/redis/getRedisClient.js";
+
 const PROTECTED_CHAT_ID = -1002435023187;
 
 const sendJoinChannelMsg = async (chatId: number): Promise<void> => {
@@ -28,7 +30,16 @@ const sendJoinChannelMsg = async (chatId: number): Promise<void> => {
 
 const handleRollNumberMessage = async (msg: any): Promise<void> => {
   const userId = msg.from?.id || msg.chat.id;
-  const isMember = await checkMembership(userId);
+
+  const redisClient = await getClient();
+  const cachedMembership = await redisClient.get(`isMember:${userId}`);
+  let isMember: boolean;
+
+  if (cachedMembership === "true") {
+    isMember = true;
+  } else {
+    isMember = await checkMembership(userId);
+  }
 
   if (!isMember && msg.chat.id !== PROTECTED_CHAT_ID) {
     await sendJoinChannelMsg(userId);
@@ -54,6 +65,7 @@ const handleRollNumberMessage = async (msg: any): Promise<void> => {
 bot.onText(ROLL_REGEX, async (msg) => {
   try {
     await handleRollNumberMessage(msg);
+    console.log("passes roll regex");
   } catch (error) {
     console.error("Error handling roll number message:", error);
   }
@@ -66,7 +78,18 @@ bot.on("callback_query", async (callbackQuery) => {
   if (!msg) return;
 
   const userId = callbackQuery.from?.id || msg.chat.id;
-  const isMember = await checkMembership(userId);
+  const redisClient = await getClient();
+  const cachedMembership = await redisClient.get(`isMember:${userId}`);
+  let isMember: boolean;
+
+  console.log("cached membership ", cachedMembership);
+
+  if (cachedMembership === "true") {
+    console.log("done a cached membership verification");
+    isMember = true;
+  } else {
+    isMember = await checkMembership(userId);
+  }
 
   if (!isMember && msg.chat.id !== -1002435023187) {
     await sendJoinChannelMsg(userId);
