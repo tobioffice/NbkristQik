@@ -15,7 +15,7 @@ export const getStudentCached = async (rollnumber: string) => {
       await redisClient.json.set(`student:${rollnumber}`, "$", student);
     }
   } else {
-    console.log("got cashed student: ");
+    console.log("got cached student: ");
   }
 
   return student;
