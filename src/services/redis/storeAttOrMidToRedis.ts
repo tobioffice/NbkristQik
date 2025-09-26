@@ -17,7 +17,7 @@ export const storeAttendanceToRedis = async (doc: string) => {
         "$",
         studentAttendance,
       );
-      await redisClient.expire(`attendance:${rollnumber}`, 60 * 60);
+      await redisClient.expire(`attendance:${rollnumber.toUpperCase()}`, 60 * 60);
     }
 
     console.log(`cached all student attendance for : `, rollNumbers);
