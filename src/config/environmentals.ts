@@ -17,6 +17,8 @@ const CHANNEL_ID =
     ? process.env.PROD_CHANNEL
     : process.env.TEST_CHANNEL) || "";
 
+const PORT = process.env.PORT || 5000;
+
 export {
   ENV,
   TELEGRAM_BOT_TOKEN,
@@ -26,4 +28,5 @@ export {
   N_PASSWORD,
   ADMIN_ID,
   CHANNEL_ID,
+  PORT,
 };

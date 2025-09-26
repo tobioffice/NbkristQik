@@ -15,10 +15,12 @@
   "license": "MIT",
   "description": "",
   "dependencies": {
-    "@libsql/client": "^0.14.0",
+    "@libsql/client": "^0.15.15",
+    "@types/express": "^5.0.3",
     "axios": "^1.8.1",
     "cheerio": "^1.0.0",
     "dotenv": "^16.4.7",
+    "express": "^5.1.0",
     "moment-timezone": "^0.5.47",
     "node-telegram-bot-api": "^0.66.0",
     "redis": "^5.8.2",
