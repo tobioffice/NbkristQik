@@ -1,14 +1,8 @@
 //
 // NO CHANGES REQUIRED
 //
-import { getStudent } from "../../db/student.model.js";
-import {
-  storeResponse,
-  getResponse,
-} from "../../db/fallback/responses.model.js";
 import { urls, headers as header } from "../../constants/index.js";
 import { BRANCHES, BASE_URL } from "../../constants/index.js";
-import { getClient } from "../redis/getRedisClient.js";
 
 import {
   IAcademic,
@@ -23,6 +17,12 @@ import axios from "axios";
 import crypto from "crypto";
 import dotenv from "dotenv";
 import * as cheerio from "cheerio";
+import { getStudentCached } from "../redis/utils.js";
+import {
+  storeAttendanceToRedis,
+  storeMidMarksToRedis,
+} from "../redis/storeAttOrMidToRedis.js";
+import { getClient } from "../redis/getRedisClient.js";
 
 dotenv.config();
 
@@ -33,16 +33,21 @@ const loginUrl = urls.login;
 
 var cookie = "";
 
-const recentlyCheckedSection: {
-  [key: string]: { time: number };
-} = {};
-
 export class Academic implements IAcademic {
+  public student: Student | null = null;
+
   constructor(public rollnumber: string) {}
 
-  async getResponse(command: string): Promise<string> {
+  async getCachedStudent() {
+    if (this.student) return this.student;
+    const student = await getStudentCached(this.rollnumber);
+    this.student = student;
+    return student;
+  }
+
+  async getResponse(command: string): Promise<string | null> {
     const url = command === "mid" ? urls.midmarks : urls.attendance;
-    const student = await this.getStudentCached();
+    const student = await this.getCachedStudent();
 
     let data;
     if (command === "mid") {
@@ -86,11 +91,11 @@ export class Academic implements IAcademic {
         if (await this.isCookiesValid()) {
           return this.getResponse(command);
         }
-        return "Network Error";
+        return null;
       }
       return res;
     } catch (_error) {
-      return "Network Error";
+      return null;
     }
   }
 
@@ -146,81 +151,47 @@ export class Academic implements IAcademic {
     }
   }
 
-  async getAttendanceJSON(): Promise<Attendance | string> {
+  async getAttendanceJSON(): Promise<Attendance | null> {
     try {
-      //student details
-      console.log(recentlyCheckedSection);
+      const redisClient = await getClient();
 
-      let response;
+      const attendance = (await redisClient.json.get(
+        `attendance:${this.rollnumber.toUpperCase()}`,
+      )) as Attendance;
 
-      const student = await this.getStudentCached();
-
-      const section = `${student.year}_${student.branch}_${student.section}_att`;
-
-      // Check cache first
-      response = await getResponse(
-        student.year,
-        student.branch,
-        student.section,
-        "att",
-      );
-
-      // If no cached data or cache is expired (older than 10 minutes)
-      if (
-        !response ||
-        !recentlyCheckedSection[section] ||
-        new Date().getTime() - recentlyCheckedSection[section].time >=
-          10 * 60 * 1000
-      ) {
-        console.log("Fetching fresh attendance data...");
-        // Fetch fresh data
-        response = await this.getResponse("att");
-
-        // Store in cache
-        if (response !== "Network Error") {
-          console.log("Storing fresh attendance data...");
-          await storeResponse(
-            student.year,
-            student.branch,
-            student.section,
-            "att",
-            response,
-          );
-          recentlyCheckedSection[section] = {
-            time: new Date().getTime(),
-          };
-          console.log(recentlyCheckedSection);
-        }
+      if (attendance) {
+        console.log("got cached attendance: ");
+        return attendance;
       }
 
-      // Handle network errors
-      if (response === "Network Error") {
-        const content = await getResponse(
-          student.year,
-          student.branch,
-          student.section,
-          "att",
-        );
-        if (!content) return response;
-        response = content;
-      }
+      // Fetch fresh data
+      const response = await this.getResponse("att");
 
-      if (!response.includes(this.rollnumber.toUpperCase()))
-        return "Student Not Found";
+      if (!response) return null;
+
+      console.log("Storing fresh attendance data...");
+      if (!response.includes(this.rollnumber.toUpperCase())) return null;
+
+      storeAttendanceToRedis(response);
 
       //using cheerio to get targeted data
-      return this.cleanAttDoc(response);
+      return Academic.cleanAttDoc(response, this.rollnumber);
     } catch (error) {
       console.log("Error in getAttendanceJSON:", error);
-      return "Something went wrong";
+      return null;
     }
   }
 
-  async cleanAttDoc(doc: string): Promise<Attendance> {
-    const student = await this.getStudentCached();
+  static async cleanAttDoc(
+    doc: string,
+    rollnumber: string,
+  ): Promise<Attendance> {
+    const { roll_no, branch, section, year } = await getStudentCached(
+      rollnumber,
+    );
 
     const $ = cheerio.load(doc);
-    const studentTr = $(`tr[id=${this.rollnumber.toUpperCase()}]`);
+    const studentTr = $(`tr[id=${roll_no.toUpperCase()}]`);
     const percentage = studentTr.find("td[class=tdPercent]").text();
     const totalClassesAttended = percentage
       .split("(")[1]
@@ -291,13 +262,9 @@ export class Academic implements IAcademic {
 
     //attendance object
     const attendance: Attendance = {
-      rollno: this.rollnumber,
+      rollno: roll_no,
       year_branch_section:
-        student.year.slice(0, 1) +
-        "_" +
-        BRANCHES[parseInt(student.branch)] +
-        "_" +
-        student.section,
+        year.slice(0, 1) + "_" + BRANCHES[parseInt(branch)] + "_" + section,
       percentage: parseFloat(percentage.split("(")[0].trim()),
       totalClasses: {
         attended: parseInt(totalClassesAttended.split("/")[0].trim()),
@@ -309,104 +276,42 @@ export class Academic implements IAcademic {
     return attendance;
   }
 
-  async getStudentCached() {
-    const redisClient = await getClient();
-
-    let student = (await redisClient.json.get(
-      `student:${this.rollnumber}`,
-    )) as Student;
-
-    if (!student) {
-      student = await getStudent(this.rollnumber);
-      if (student) {
-        await redisClient.json.set(`student:${this.rollnumber}`, "$", student);
-      }
-    } else {
-      console.log("got cashed student: ");
-    }
-
-    return student;
-  }
-
-  async getMidmarksJSON(): Promise<Midmarks | string> {
+  async getMidmarksJSON(): Promise<Midmarks | null> {
     try {
-      //student details
-      let response;
+      const redisClient = await getClient();
 
-      const student = await this.getStudentCached();
+      const midMarks = (await redisClient.json.get(
+        `midmarks:${this.rollnumber.toUpperCase()}`,
+      )) as Midmarks;
 
-      const section = `${student.year}_${student.branch}_${student.section}_mid`;
-
-      // Check cache first
-      response = await getResponse(
-        student.year,
-        student.branch,
-        student.section,
-        "mid",
-      );
-
-      // If no cached data or cache is expired (older than 10 minutes)
-      if (
-        !response ||
-        !recentlyCheckedSection[section] ||
-        new Date().getTime() - recentlyCheckedSection[section].time >=
-          10 * 60 * 1000
-      ) {
-        // Fetch fresh data
-        response = await this.getResponse("mid");
-
-        // Store in cache
-        if (response !== "Network Error") {
-          await storeResponse(
-            student.year,
-            student.branch,
-            student.section,
-            "mid",
-            response,
-          );
-          recentlyCheckedSection[section] = {
-            time: new Date().getTime(),
-          };
-        }
-      }
-      if (response === "Network Error") {
-        const content = await getResponse(
-          student.year,
-          student.branch,
-          student.section,
-          "mid",
-        );
-        if (!content) return response;
-        response = content;
-      } else {
-        await storeResponse(
-          student.year,
-          student.branch,
-          student.section,
-          "mid",
-          response,
-        );
+      if (midMarks) {
+        console.log("got cached midmarks");
+        // console.log(midMarks);
+        return midMarks;
       }
 
-      return await this.cleanMidDoc(response);
+      const response = await this.getResponse("mid");
+
+      if (!response) return null;
+      if (!response.includes(this.rollnumber.toUpperCase())) return null;
+
+      storeMidMarksToRedis(response);
+
+      return await Academic.cleanMidDoc(response, this.rollnumber);
     } catch (error) {
       console.error("Error in getMidmarksJSON:", error);
-      return {
-        rollno: "Not Found",
-        year_branch_section: "",
-        subjects: [],
-      } as Midmarks;
+      return null;
     }
   }
 
-  async cleanMidDoc(doc: string): Promise<Midmarks> {
-    const student = await this.getStudentCached();
+  static async cleanMidDoc(doc: string, rollnumber: string): Promise<Midmarks> {
+    const { roll_no, year, section, branch } = await getStudentCached(
+      rollnumber,
+    );
 
     const $ = cheerio.load(doc);
 
-    const studentTr = $(`tr[id=${this.rollnumber.toUpperCase()}]`)
-      .find("td")
-      .slice(2);
+    const studentTr = $(`tr[id=${roll_no.toUpperCase()}]`).find("td").slice(2);
     const studentMarksList = studentTr.map((_, el) => $(el).text()).get();
 
     const nameTr = $(`tr`).eq(1);
@@ -467,13 +372,9 @@ export class Academic implements IAcademic {
 
     //midmarks object
     const midmarks: Midmarks = {
-      rollno: this.rollnumber,
+      rollno: roll_no,
       year_branch_section:
-        student.year.slice(0, 1) +
-        "_" +
-        BRANCHES[parseInt(student.branch)] +
-        "_" +
-        student.section,
+        year.slice(0, 1) + "_" + BRANCHES[parseInt(branch)] + "_" + section,
       subjects: midmarksList,
     };
 

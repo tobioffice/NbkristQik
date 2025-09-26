@@ -65,6 +65,7 @@ const handleRollNumberMessage = async (msg: any): Promise<void> => {
 bot.onText(ROLL_REGEX, async (msg) => {
   try {
     await handleRollNumberMessage(msg);
+    console.log("passes roll regex");
   } catch (error) {
     console.error("Error handling roll number message:", error);
   }
@@ -80,6 +81,8 @@ bot.on("callback_query", async (callbackQuery) => {
   const redisClient = await getClient();
   const cachedMembership = await redisClient.get(`isMember:${userId}`);
   let isMember: boolean;
+
+  console.log("cached membership ", cachedMembership);
 
   if (cachedMembership === "true") {
     console.log("done a cashed membership verification");
