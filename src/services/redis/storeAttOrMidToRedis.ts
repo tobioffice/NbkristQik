@@ -41,7 +41,7 @@ export const storeMidMarksToRedis = async (doc: string) => {
         "$",
         studentMidmarks,
       );
-      await redisClient.expire(`midmarks:${rollnumber}`, 60 * 60 * 2);
+      await redisClient.expire(`midmarks:${rollnumber.toUpperCase()}`, 60 * 60 * 2);
     }
 
     console.log(`cached all student midmarks for : `, rollNumbers);
