@@ -85,7 +85,7 @@ bot.on("callback_query", async (callbackQuery) => {
   console.log("cached membership ", cachedMembership);
 
   if (cachedMembership === "true") {
-    console.log("done a cashed membership verification");
+    console.log("done a cached membership verification");
     isMember = true;
   } else {
     isMember = await checkMembership(userId);
