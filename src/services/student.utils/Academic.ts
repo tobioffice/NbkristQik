@@ -23,6 +23,10 @@ import {
   storeMidMarksToRedis,
 } from "../redis/storeAttOrMidToRedis.js";
 import { getClient } from "../redis/getRedisClient.js";
+import {
+  getResponse,
+  storeResponse,
+} from "../../db/fallback/response.model.js";
 
 dotenv.config();
 
@@ -45,7 +49,7 @@ export class Academic implements IAcademic {
     return student;
   }
 
-  async getResponse(command: string): Promise<string | null> {
+  async getResponse(command: "mid" | "att"): Promise<string | null> {
     const url = command === "mid" ? urls.midmarks : urls.attendance;
     const student = await this.getCachedStudent();
 
@@ -93,9 +97,21 @@ export class Academic implements IAcademic {
         }
         return null;
       }
+      storeResponse(
+        student.year,
+        student.branch,
+        student.section,
+        command,
+        res,
+      );
       return res;
-    } catch (_error) {
-      return null;
+    } catch {
+      return await getResponse(
+        student.year,
+        student.branch,
+        student.section,
+        command,
+      );
     }
   }
 
