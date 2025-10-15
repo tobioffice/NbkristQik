@@ -7,6 +7,7 @@ export const sendAttendanceOrMidMarks = async (
   msg: any,
   rollno: string,
   signal: Signal,
+  isMember: boolean,
 ) => {
   try {
     const chatId = msg.chat.id;
@@ -23,10 +24,12 @@ export const sendAttendanceOrMidMarks = async (
       },
     );
 
-    const finalMessage =
+    let finalMessage =
       signal == "att"
         ? await student.getAttendanceMessage()
         : await student.getMidmarksMessage();
+
+    if (!isMember) finalMessage += `\nJoin @nbkrist_qik for more updates !`;
 
     if (!finalMessage) {
       bot.sendMessage(chatId, "Something went wrong...");

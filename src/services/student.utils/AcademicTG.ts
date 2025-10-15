@@ -66,7 +66,7 @@ export class AcademicTG extends Academic {
 
         // Close pre tag and add legend
 
-        msg += `────────────────────────────</pre>`;
+        msg += `────────────────────────────</pre>\n`;
 
         return msg;
       }
@@ -125,7 +125,7 @@ export class AcademicTG extends Academic {
         }
 
         // Close pre tag
-        msg += `</pre>`;
+        msg += `</pre>\n`;
 
         return msg;
       }

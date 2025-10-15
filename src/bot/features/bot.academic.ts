@@ -1,5 +1,5 @@
 import { bot } from "../bot.js";
-import { sendAttendanceOrMidMarks } from "./utils/studentActions.js";
+import { sendAttendanceOrMidMarks } from "./utils/sendAttendanceOrMidMarks.js";
 import { ROLL_REGEX } from "../../constants/index.js";
 import { checkMembership } from "../../services/student.utils/checkMembership.js";
 import { CHANNEL_ID } from "../../config/environmentals.js";
@@ -82,7 +82,7 @@ bot.on("callback_query", async (callbackQuery) => {
   const cachedMembership = await redisClient.get(`isMember:${userId}`);
   let isMember: boolean;
 
-  console.log("cached membership ", cachedMembership);
+  // console.log("cached membership ", cachedMembership);
 
   if (cachedMembership === "true") {
     console.log("done a cached membership verification");
@@ -96,24 +96,22 @@ bot.on("callback_query", async (callbackQuery) => {
     return;
   }
 
+  const rollNumber = data.slice(4);
+
   // Delete the message and handle the callback action
   try {
     await Promise.allSettled([
       bot.deleteMessage(msg.chat.id, msg.message_id),
-      handleCallbackAction(data, msg),
+      sendAttendanceOrMidMarks(
+        bot,
+        msg,
+        rollNumber,
+        data.startsWith("att_") ? "att" : "mid",
+        isMember,
+      ),
       bot.answerCallbackQuery(callbackQuery.id),
     ]);
   } catch (err) {
     console.log(err);
   }
 });
-
-const handleCallbackAction = async (data: string, msg: any) => {
-  if (data.startsWith("att_")) {
-    const rollNumber = data.slice(4); // More efficient than split
-    await sendAttendanceOrMidMarks(bot, msg, rollNumber, "att");
-  } else if (data.startsWith("mid_")) {
-    const rollNumber = data.slice(4);
-    await sendAttendanceOrMidMarks(bot, msg, rollNumber, "mid");
-  }
-};
