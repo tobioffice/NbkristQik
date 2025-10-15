@@ -28,12 +28,24 @@ jobs:
       - name: Build project
         run: pnpm build
 
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-files
+          path: dist/
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
     if: success()
 
     steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-files
+          path: dist/
+
       - name: Deploy to Ubuntu server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -41,48 +53,44 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            # Set up proper environment
-            export HOME=$(eval echo ~$USER)
-            cd $HOME/NbkristQik
+            # Create directory if it doesn't exist
+            mkdir -p /home/ubuntu
 
-            if [ ! -d .git ]; then
-              git clone https://github.com/tobioffice/NbkristQik .
-            else
-              git pull origin main
-            fi
-
-            # Load user environment and set up paths
-            source ~/.bashrc 2>/dev/null || source ~/.profile 2>/dev/null || true
-            export PATH="$HOME/.local/share/pnpm:$PATH"
-            export PATH="$HOME/.local/bin:$PATH"
-            export PATH="/usr/local/bin:$PATH"
-
-            # Check if Node.js is available, install if needed
-            if ! command -v node &> /dev/null; then
-              echo "Installing Node.js..."
-              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-              sudo apt-get install -y nodejs
-            fi
-
-            # Check if npm is available
-            if ! command -v npm &> /dev/null; then
-              echo "npm not found after Node.js installation"
-              exit 1
-            fi
-
-            # Install pnpm if not available
-            if ! command -v pnpm &> /dev/null; then
-              echo "Installing pnpm..."
-              npm install -g pnpm
-              export PATH="$HOME/.npm-global/bin:$PATH"
-            fi
-
-            # Install dependencies and build
-            pnpm i
-            pnpm build
-
-            # Install pm2 if not available and restart/start the app
+            # Install pm2 if not available
             if ! command -v pm2 &> /dev/null; then
+              # Check if Node.js is available, install if needed
+              if ! command -v node &> /dev/null; then
+                echo "Installing Node.js..."
+                curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+                sudo apt-get install -y nodejs
+              fi
               sudo npm install -g pm2
             fi
-            sudo pm2 restart nbkristqik || sudo pm2 start dist/bot/index.js --name nbkristqik
+
+            # Install pm2 if not available and prepare for restart
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "dist/"
+          target: "/home/ubuntu/"
+          strip_components: 1
+
+      - name: Start application
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /home/ubuntu
+
+            # Restart the application with pm2 (or start if not exists)
+            sudo pm2 restart nbkristqik || sudo pm2 start bot/index.js --name nbkristqik
+
+            # Save pm2 configuration and setup startup
+            sudo pm2 save
+            sudo pm2 startup

@@ -1,32 +1,45 @@
-import { Midmarks } from "../../types/index.js";
+import { Attendance, Midmarks } from "../../types/index.js";
 import { Academic } from "./Academic.js";
 
 export class AcademicTG extends Academic {
   async getAttendanceMessage(): Promise<string | null> {
     try {
-      function formatAttendanceMessage(data: any): string {
+      function formatAttendanceMessage(data: Attendance): string {
         // Header Section
         let msg =
-          `<b>📊 Attendance Report</b>\n\n` +
-          `🧑‍🎓 <b>ID:</b> <code>${data.rollno}</code>\n` +
+          `🧑‍🎓 <b>ROLL:</b> <code>${data.rollno}</code>\n` +
           `🏫 <b>Branch:</b> <code>${data.year_branch_section}</code>\n` +
-          `📈 <b>Overall:</b> <code>${data.percentage.toFixed(2)}%</code>\n` +
-          `📚 <b>Classes:</b> <code>${data.totalClasses.attended}/${data.totalClasses.conducted}</code>\n\n`;
+          `📚 <b>Attended:</b> <code>${data.totalClasses.attended}/${data.totalClasses.conducted}</code>\n\n` +
+          `📈 <b>Percentage:</b> <b> ${data.percentage.toFixed(2)}%</b>\n`;
 
         // Subject Table Header - More compact for mobile
+        const blocks = {
+          green: "🟩",
+          yellow: "🟨",
+          red: "🟥",
+          white: "⬜",
+        };
+
+        const { percentage, subjects } = data;
+
+        const singleDigit = Math.floor(percentage / 10);
+
+        const whiteBlocks = blocks.white.repeat(10 - singleDigit);
+
+        msg += `${percentage >= 75 ? blocks.green.repeat(singleDigit) + whiteBlocks : percentage >= 50 ? blocks.yellow.repeat(singleDigit) + whiteBlocks : blocks.red.repeat(singleDigit) + whiteBlocks}`;
         msg +=
           `<pre>` +
           `SUBJ     │ ST │ATT/TOT│LAST\n` +
           `────────────────────────────\n`;
 
         // Process each subject
-        for (const sub of data.subjects) {
+        for (const sub of subjects) {
           // Calculate percentage
           const percentage = (sub.attended / sub.conducted) * 100;
 
           // Determine status emoji
           let status = "🔴";
-          if (percentage >= 60) status = "🟢";
+          if (percentage >= 75) status = "🟢";
           else if (percentage >= 50) status = "🟡";
 
           // Format last updated - more compact
@@ -52,9 +65,8 @@ export class AcademicTG extends Academic {
         }
 
         // Close pre tag and add legend
-        msg +=
-          `────────────────────────────</pre>\n\n` +
-          `<code>🟢 ≥60%  🟡 50-59%  🔴 &lt;50%</code>`;
+
+        msg += `────────────────────────────</pre>`;
 
         return msg;
       }

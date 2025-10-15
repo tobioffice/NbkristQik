@@ -205,9 +205,8 @@ export class Academic implements IAcademic {
     doc: string,
     rollnumber: string,
   ): Promise<Attendance> {
-    const { roll_no, branch, section, year } = await getStudentCached(
-      rollnumber,
-    );
+    const { roll_no, branch, section, year } =
+      await getStudentCached(rollnumber);
 
     const $ = cheerio.load(doc);
     const studentTr = $(`tr[id=${roll_no.toUpperCase()}]`);
@@ -327,9 +326,8 @@ export class Academic implements IAcademic {
   }
 
   static async cleanMidDoc(doc: string, rollnumber: string): Promise<Midmarks> {
-    const { roll_no, year, section, branch } = await getStudentCached(
-      rollnumber,
-    );
+    const { roll_no, year, section, branch } =
+      await getStudentCached(rollnumber);
 
     const $ = cheerio.load(doc);
 
