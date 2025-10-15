@@ -23,6 +23,10 @@ import {
   storeMidMarksToRedis,
 } from "../redis/storeAttOrMidToRedis.js";
 import { getClient } from "../redis/getRedisClient.js";
+import {
+  getResponse,
+  storeResponse,
+} from "../../db/fallback/response.model.js";
 
 dotenv.config();
 
@@ -45,7 +49,7 @@ export class Academic implements IAcademic {
     return student;
   }
 
-  async getResponse(command: string): Promise<string | null> {
+  async getResponse(command: "mid" | "att"): Promise<string | null> {
     const url = command === "mid" ? urls.midmarks : urls.attendance;
     const student = await this.getCachedStudent();
 
@@ -93,9 +97,21 @@ export class Academic implements IAcademic {
         }
         return null;
       }
+      storeResponse(
+        student.year,
+        student.branch,
+        student.section,
+        command,
+        res,
+      );
       return res;
-    } catch (_error) {
-      return null;
+    } catch {
+      return await getResponse(
+        student.year,
+        student.branch,
+        student.section,
+        command,
+      );
     }
   }
 
@@ -155,9 +171,12 @@ export class Academic implements IAcademic {
     try {
       const redisClient = await getClient();
 
-      const attendance = (await redisClient.json.get(
+      const cachedAttendance = await redisClient.get(
         `attendance:${this.rollnumber.toUpperCase()}`,
-      )) as Attendance;
+      );
+      const attendance = cachedAttendance
+        ? (JSON.parse(cachedAttendance) as Attendance)
+        : null;
 
       if (attendance) {
         console.log("got cached attendance: ");
@@ -186,9 +205,8 @@ export class Academic implements IAcademic {
     doc: string,
     rollnumber: string,
   ): Promise<Attendance> {
-    const { roll_no, branch, section, year } = await getStudentCached(
-      rollnumber,
-    );
+    const { roll_no, branch, section, year } =
+      await getStudentCached(rollnumber);
 
     const $ = cheerio.load(doc);
     const studentTr = $(`tr[id=${roll_no.toUpperCase()}]`);
@@ -280,9 +298,12 @@ export class Academic implements IAcademic {
     try {
       const redisClient = await getClient();
 
-      const midMarks = (await redisClient.json.get(
+      const cachedMidMarks = await redisClient.get(
         `midmarks:${this.rollnumber.toUpperCase()}`,
-      )) as Midmarks;
+      );
+      const midMarks = cachedMidMarks
+        ? (JSON.parse(cachedMidMarks) as Midmarks)
+        : null;
 
       if (midMarks) {
         console.log("got cached midmarks");
@@ -305,9 +326,8 @@ export class Academic implements IAcademic {
   }
 
   static async cleanMidDoc(doc: string, rollnumber: string): Promise<Midmarks> {
-    const { roll_no, year, section, branch } = await getStudentCached(
-      rollnumber,
-    );
+    const { roll_no, year, section, branch } =
+      await getStudentCached(rollnumber);
 
     const $ = cheerio.load(doc);
 
