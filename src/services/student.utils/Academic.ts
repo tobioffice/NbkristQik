@@ -54,6 +54,8 @@ export class Academic implements IAcademic {
     const url = command === "mid" ? urls.midmarks : urls.attendance;
     const student = this.student || (await this.getCachedStudent());
 
+    if (!student) throw new Error("Student not found");
+
     let data;
     if (command === "mid") {
       data = {
@@ -194,8 +196,10 @@ export class Academic implements IAcademic {
     doc: string,
     rollnumber: string,
   ): Promise<Attendance> {
-    const { roll_no, branch, section, year } =
-      await getStudentCached(rollnumber);
+    const student = await getStudentCached(rollnumber);
+
+    if (!student) throw new Error("Student not found");
+    const { roll_no, branch, section, year } = student;
 
     const $ = cheerio.load(doc);
     const studentTr = $(`tr[id=${roll_no.toUpperCase()}]`);
@@ -300,9 +304,10 @@ export class Academic implements IAcademic {
   }
 
   static async cleanMidDoc(doc: string, rollnumber: string): Promise<Midmarks> {
-    const { roll_no, year, section, branch } =
-      await getStudentCached(rollnumber);
+    const student = await getStudentCached(rollnumber);
+    if (!student) throw new Error("Student not found");
 
+    const { roll_no, year, section, branch } = student;
     const $ = cheerio.load(doc);
 
     const studentTr = $(`tr[id=${roll_no.toUpperCase()}]`).find("td").slice(2);

@@ -46,7 +46,7 @@ export class AttendaceAnyl implements IAttendaceAnyl {
 
     const responce = await academic.getResponse("att");
 
-    if (!responce) return null;
+    if (!responce) throw new Error("Failed to fetch attendance data");
 
     const $ = cheerio.load(responce);
     const rollNoTrs = $("tr[id]");
@@ -75,23 +75,28 @@ export class AttendaceAnyl implements IAttendaceAnyl {
       attendace: Attendance;
     }[]
   > {
-    const sundays = this.getLast7Sunadays();
-    const attendanceDataPromises = sundays.map(async (date) => {
-      const attendance = await this.getAttendaceForSpecificDate(date);
-      if (!attendance) return null;
-      return {
-        rollbumber: this.rollbumber,
-        attdate: date,
-        attendace: attendance,
-      };
-    });
+    try {
+      const sundays = this.getLast7Sunadays();
+      const attendanceDataPromises = sundays.map(async (date) => {
+        const attendance = await this.getAttendaceForSpecificDate(date);
+        if (!attendance) return null;
+        return {
+          rollbumber: this.rollbumber,
+          attdate: date,
+          attendace: attendance,
+        };
+      });
 
-    const results = await Promise.all(attendanceDataPromises);
+      const results = await Promise.all(attendanceDataPromises);
 
-    return results.filter((item) => item !== null) as {
-      rollbumber: string;
-      attdate: string;
-      attendace: Attendance;
-    }[];
+      return results.filter((item) => item !== null) as {
+        rollbumber: string;
+        attdate: string;
+        attendace: Attendance;
+      }[];
+    } catch (error) {
+      console.error("Error in getAnylData:", error);
+      return [];
+    }
   }
 }

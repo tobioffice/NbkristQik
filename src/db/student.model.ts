@@ -1,7 +1,7 @@
 import { turso } from "./db.js";
 import { Student } from "../types/index.js";
 
-export const getStudent = async (rollno: string) => {
+export const getStudent = async (rollno: string): Promise<Student | null> => {
   try {
     rollno = rollno.toUpperCase();
 
@@ -27,7 +27,7 @@ export const getStudent = async (rollno: string) => {
     return student;
   } catch (error) {
     console.error("Error fetching student:", error);
-    throw error;
+    return null;
   }
 };
 
