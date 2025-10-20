@@ -30,3 +30,21 @@ export const getStudent = async (rollno: string) => {
     throw error;
   }
 };
+
+export const getStudentsWithSameClass = async (student: Student) => {
+  try {
+    const studentSet = await turso.execute({
+      sql: `SELECT roll_no FROM studentsnew WHERE year = ? AND branch = ? AND section = ?`,
+      args: [student.year, student.branch, student.section],
+    });
+
+    const rollNumbers: string[] = studentSet.rows.map(
+      (row) => row.roll_no as string,
+    );
+
+    return rollNumbers;
+  } catch (error) {
+    console.error("Error fetching students with same class:", error);
+    throw error;
+  }
+};

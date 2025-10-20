@@ -22,7 +22,6 @@ import {
   storeAttendanceToRedis,
   storeMidMarksToRedis,
 } from "../redis/storeAttOrMidToRedis.js";
-import { getClient } from "../redis/getRedisClient.js";
 import {
   getResponse,
   storeResponse,
@@ -30,7 +29,6 @@ import {
 
 dotenv.config();
 
-const indianDate = "27-03-2030"; //maxed date for attendance
 const USERNAME = process.env.N_USERNAME || "";
 const PASSWORD = process.env.N_PASSWORD || "";
 const loginUrl = urls.login;
@@ -39,6 +37,7 @@ var cookie = "";
 
 export class Academic implements IAcademic {
   public student: Student | null = null;
+  public indianDate = "01-01-2030";
 
   constructor(public rollnumber: string) {}
 
@@ -49,9 +48,12 @@ export class Academic implements IAcademic {
     return student;
   }
 
-  async getResponse(command: "mid" | "att"): Promise<string | null> {
+  async getResponse(
+    command: "mid" | "att",
+    indianDate: string = this.indianDate,
+  ): Promise<string | null> {
     const url = command === "mid" ? urls.midmarks : urls.attendance;
-    const student = await this.getCachedStudent();
+    const student = this.student || (await this.getCachedStudent());
 
     let data;
     if (command === "mid") {
@@ -97,13 +99,15 @@ export class Academic implements IAcademic {
         }
         return null;
       }
-      storeResponse(
-        student.year,
-        student.branch,
-        student.section,
-        command,
-        res,
-      );
+
+      indianDate === "27-03-2030" &&
+        storeResponse(
+          student.year,
+          student.branch,
+          student.section,
+          command,
+          res,
+        );
       return res;
     } catch {
       return await getResponse(
@@ -169,20 +173,6 @@ export class Academic implements IAcademic {
 
   async getAttendanceJSON(): Promise<Attendance | null> {
     try {
-      const redisClient = await getClient();
-
-      const cachedAttendance = await redisClient.get(
-        `attendance:${this.rollnumber.toUpperCase()}`,
-      );
-      const attendance = cachedAttendance
-        ? (JSON.parse(cachedAttendance) as Attendance)
-        : null;
-
-      if (attendance) {
-        console.log("got cached attendance: ");
-        return attendance;
-      }
-
       // Fetch fresh data
       const response = await this.getResponse("att");
 
@@ -296,21 +286,6 @@ export class Academic implements IAcademic {
 
   async getMidmarksJSON(): Promise<Midmarks | null> {
     try {
-      const redisClient = await getClient();
-
-      const cachedMidMarks = await redisClient.get(
-        `midmarks:${this.rollnumber.toUpperCase()}`,
-      );
-      const midMarks = cachedMidMarks
-        ? (JSON.parse(cachedMidMarks) as Midmarks)
-        : null;
-
-      if (midMarks) {
-        console.log("got cached midmarks");
-        // console.log(midMarks);
-        return midMarks;
-      }
-
       const response = await this.getResponse("mid");
 
       if (!response) return null;

@@ -1,6 +1,6 @@
-import { AcademicTG } from "../../../services/student.utils/AcademicTG.js";
+import { AcademicTG } from "../../services/student.utils/AcademicTG.js";
 import TelegramBot from "node-telegram-bot-api";
-import { Signal } from "../../../constants/index.js";
+import { Signal } from "../../constants/index.js";
 
 export const sendAttendanceOrMidMarks = async (
   bot: TelegramBot,
@@ -29,12 +29,15 @@ export const sendAttendanceOrMidMarks = async (
         ? await student.getAttendanceMessage()
         : await student.getMidmarksMessage();
 
-    if (!isMember) finalMessage += `\nJoin @nbkrist_qik for more updates !`;
-
     if (!finalMessage) {
-      bot.sendMessage(chatId, "Something went wrong...");
+      bot.sendMessage(
+        chatId,
+        "Something went wrong. you can report it on @nbkrist_chit_chat",
+      );
       return;
     }
+
+    if (!isMember) finalMessage += `\nJoin @nbkrist_qik for more updates !`;
 
     bot.editMessageText(finalMessage, {
       chat_id: chatId,

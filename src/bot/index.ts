@@ -14,7 +14,7 @@ async function startBot() {
     import("./commands/report.js");
 
     // Import features
-    import("./features/bot.academic.js");
+    import("./handleAndSendmessages/handleRollNum.js");
 
     console.log("Bot is ready!");
   } catch (error) {

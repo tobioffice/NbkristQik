@@ -1,13 +1,14 @@
 // import TelegramBot from "node-telegram-bot-api";
-// import { TELEGRAM_BOT_TOKEN, PORT } from "../config/environmentals.js";
+// import { TELEGRAM_BOT_TOKEN } from "../config/environmentals.js";
 // import express from "express";
 
 // const TOKEN = TELEGRAM_BOT_TOKEN || "";
 
 // export const bot = new TelegramBot(TOKEN);
 
-// const url = "https://librarypro.tobioffice.dev";
-// const port = PORT || 5000;
+// const url = "https://bot.tobioffice.dev";
+// // const port = PORT || 5000;
+// const port = 5000;
 
 // bot.setWebHook(`${url}/bot${TOKEN}`);
 

@@ -1,7 +1,7 @@
 import { Attendance, Midmarks } from "../../types/index.js";
-import { Academic } from "./Academic.js";
+import { AcademicCashed } from "./AcadamicCashed.js";
 
-export class AcademicTG extends Academic {
+export class AcademicTG extends AcademicCashed {
   async getAttendanceMessage(): Promise<string | null> {
     try {
       function formatAttendanceMessage(data: Attendance): string {
@@ -71,7 +71,7 @@ export class AcademicTG extends Academic {
         return msg;
       }
 
-      const yourDataObject = await this.getAttendanceJSON();
+      const yourDataObject = await this.getAttendanceJSONCashed();
 
       // console.log(yourDataObject);
 
@@ -130,7 +130,7 @@ export class AcademicTG extends Academic {
         return msg;
       }
 
-      const yourDataObject = await this.getMidmarksJSON();
+      const yourDataObject = await this.getMidmarksJSONCashed();
       // Usage example:
       if (!yourDataObject) {
         throw new Error("Unable to get attendance !");
