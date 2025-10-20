@@ -37,9 +37,11 @@ var cookie = "";
 
 export class Academic implements IAcademic {
   public student: Student | null = null;
-  public indianDate = "01-01-2030";
 
-  constructor(public rollnumber: string) {}
+  constructor(
+    public rollnumber: string,
+    public indianDate: string = "01-01-2030",
+  ) {}
 
   async getCachedStudent() {
     if (this.student) return this.student;
@@ -48,10 +50,7 @@ export class Academic implements IAcademic {
     return student;
   }
 
-  async getResponse(
-    command: "mid" | "att",
-    indianDate: string = this.indianDate,
-  ): Promise<string | null> {
+  async getResponse(command: "mid" | "att"): Promise<string | null> {
     const url = command === "mid" ? urls.midmarks : urls.attendance;
     const student = this.student || (await this.getCachedStudent());
 
@@ -62,7 +61,7 @@ export class Academic implements IAcademic {
         yearSem: student.year,
         branch: student.branch,
         section: student.section,
-        dateOfAttendance: indianDate,
+        dateOfAttendance: this.indianDate,
         midsChosen: "mid1, mid2, mid3",
         hidProjectsType: "",
         typeOfProj: "",
@@ -74,7 +73,7 @@ export class Academic implements IAcademic {
         yearSem: student.year,
         branch: student.branch,
         section: student.section,
-        dateOfAttendance: indianDate,
+        dateOfAttendance: this.indianDate,
       };
     }
 
@@ -100,7 +99,7 @@ export class Academic implements IAcademic {
         return null;
       }
 
-      indianDate === "27-03-2030" &&
+      this.indianDate === "27-03-2030" &&
         storeResponse(
           student.year,
           student.branch,

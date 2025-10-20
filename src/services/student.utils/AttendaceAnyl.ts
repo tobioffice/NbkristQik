@@ -36,14 +36,13 @@ export class AttendaceAnyl implements IAttendaceAnyl {
     return sundays;
   }
 
-  async getAttendaceForSpecificDate(
-    date: string,
-    academic: Academic,
-  ): Promise<Attendance | null> {
+  async getAttendaceForSpecificDate(date: string): Promise<Attendance | null> {
     const cachedAttendance = await getAttendanceCache(this.rollbumber, date);
     if (cachedAttendance) {
       return cachedAttendance.attendance_data;
     }
+
+    const academic = new Academic(this.rollbumber, date);
 
     const responce = await academic.getResponse("att");
 
@@ -77,16 +76,22 @@ export class AttendaceAnyl implements IAttendaceAnyl {
     }[]
   > {
     const sundays = this.getLast7Sunadays();
-    const academic = new Academic(this.rollbumber);
     const attendanceDataPromises = sundays.map(async (date) => {
-      const attendance = await this.getAttendaceForSpecificDate(date, academic);
+      const attendance = await this.getAttendaceForSpecificDate(date);
+      if (!attendance) return null;
       return {
         rollbumber: this.rollbumber,
         attdate: date,
-        attendace: attendance!,
+        attendace: attendance,
       };
     });
 
-    return Promise.all(attendanceDataPromises);
+    const results = await Promise.all(attendanceDataPromises);
+
+    return results.filter((item) => item !== null) as {
+      rollbumber: string;
+      attdate: string;
+      attendace: Attendance;
+    }[];
   }
 }
