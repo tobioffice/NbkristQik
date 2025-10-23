@@ -36,13 +36,14 @@ export const sendAnalyticsMessage = async (
 
   for (const data of anylData) {
     // console.log(finalMessage);
-    const percenatageOutof5 =
+    const outOf = 5;
+    const percenatageOutof =
       minPercentage === maxPercentage
-        ? 5
+        ? outOf
         : Math.round(
             ((data.attendace.percentage - minPercentage) /
               (maxPercentage - minPercentage)) *
-              5,
+              outOf,
           );
 
     // console.log(percenatageOutof7);
@@ -55,9 +56,9 @@ export const sendAnalyticsMessage = async (
           : 3;
 
     const attBlocks =
-      BlockEmojis[appropriateBlockIndex].repeat(percenatageOutof5);
+      BlockEmojis[appropriateBlockIndex].repeat(percenatageOutof);
 
-    const whiteblocks = BlockEmojis[0].repeat(5 - percenatageOutof5);
+    const whiteblocks = BlockEmojis[0].repeat(outOf - percenatageOutof);
 
     finalMessage +=
       BlockEmojis[appropriateBlockIndex] +
