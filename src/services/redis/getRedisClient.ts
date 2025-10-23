@@ -21,3 +21,11 @@ export const getClient = async (): Promise<RedisClientType> => {
 
   return client;
 };
+
+export const closeClient = async (): Promise<void> => {
+  if (client) {
+    await client.quit();
+    client = null;
+    console.log("Redis connection closed");
+  }
+};

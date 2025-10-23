@@ -1,10 +1,14 @@
+import TelegramBot from "node-telegram-bot-api";
+import { sendAnalyticsMessage } from "./sendAnalyticsAtt.js";
+
+import { CHANNEL_ID } from "../../config/environmentals.js";
+import { ROLL_REGEX } from "../../constants/index.js";
+import { getClient } from "../../services/redis/getRedisClient.js";
+import { checkMembership } from "../../services/student.utils/checkMembership.js";
 import { bot } from "../bot.js";
 import { sendAttendanceOrMidMarks } from "./sendAttendanceOrMidMarks.js";
-import { ROLL_REGEX } from "../../constants/index.js";
-import { checkMembership } from "../../services/student.utils/checkMembership.js";
-import { CHANNEL_ID } from "../../config/environmentals.js";
 
-import { getClient } from "../../services/redis/getRedisClient.js";
+import { getStudent } from "../../db/student.model.js";
 
 const PROTECTED_CHAT_ID = -1002435023187;
 
@@ -54,8 +58,9 @@ const handleRollNumberMessage = async (msg: any): Promise<void> => {
     await bot.sendMessage(msg.chat.id, "Select an option:", {
       reply_markup: {
         inline_keyboard: [
-          [{ text: "Attendance 🚀", callback_data: `att_${msg.text}` }],
-          [{ text: "Mid Marks 📊", callback_data: `mid_${msg.text}` }],
+          [{ text: "Attendance 📚", callback_data: `att_${msg.text}` }],
+          [{ text: "Mid Marks 📝", callback_data: `mid_${msg.text}` }],
+          [{ text: "Analytics (beta) 📊", callback_data: `ana_${msg.text}` }],
         ],
       },
       reply_to_message_id: msg.message_id,
@@ -93,20 +98,33 @@ bot.on("callback_query", async (callbackQuery) => {
 
   const rollNumber = data.slice(4);
 
+  const student = await getStudent(rollNumber);
+
   // Delete the message and handle the callback action
   try {
     await Promise.allSettled([
       bot.deleteMessage(msg.chat.id, msg.message_id),
-      sendAttendanceOrMidMarks(
-        bot,
-        msg,
-        rollNumber,
-        data.startsWith("att_") ? "att" : "mid",
-        isMember,
-      ),
+      student
+        ? data.startsWith("ana_")
+          ? sendAnalyticsMessage(bot, msg, rollNumber, isMember)
+          : sendAttendanceOrMidMarks(
+              bot,
+              msg,
+              rollNumber,
+              data.startsWith("att_") ? "att" : "mid",
+              isMember,
+            )
+        : sendNotRegisteredMsg(bot, msg.chat.id),
       bot.answerCallbackQuery(callbackQuery.id),
     ]);
   } catch (err) {
     console.log(err);
   }
 });
+
+const sendNotRegisteredMsg = async (bot: TelegramBot, chat_id: number) => {
+  bot.sendMessage(
+    chat_id,
+    "Student not registered with our database. You can report it on @nbkrist_chit_chat (send a message with the issue you're facing).",
+  );
+};

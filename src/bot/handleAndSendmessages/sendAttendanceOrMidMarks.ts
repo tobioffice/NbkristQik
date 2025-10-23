@@ -4,7 +4,7 @@ import { Signal } from "../../constants/index.js";
 
 export const sendAttendanceOrMidMarks = async (
   bot: TelegramBot,
-  msg: any,
+  msg: TelegramBot.Message,
   rollno: string,
   signal: Signal,
   isMember: boolean,
@@ -20,7 +20,7 @@ export const sendAttendanceOrMidMarks = async (
       {
         parse_mode: "HTML",
         disable_notification: true,
-        reply_to_message_id: msg.reply_to_message.message_id,
+        reply_to_message_id: msg.reply_to_message?.message_id,
       },
     );
 

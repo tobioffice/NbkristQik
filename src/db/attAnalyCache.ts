@@ -50,7 +50,7 @@ export const getAttendanceCache = async (
       SELECT * FROM attendance_cache
       WHERE roll_no = ? AND last_updated = ?
     `,
-    args: [roll_no, last_updated],
+    args: [roll_no.toUpperCase(), last_updated],
   });
 
   if (result.rows.length === 0) {

@@ -1,4 +1,4 @@
-import { turso } from "./db.js";
+import { turso } from "../db.js";
 
 turso
   .execute(

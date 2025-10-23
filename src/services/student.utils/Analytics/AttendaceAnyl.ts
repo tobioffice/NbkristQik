@@ -1,10 +1,10 @@
-import { Academic } from "./Academic.js";
+import { Academic } from "../Academic.js";
 import * as cheerio from "cheerio";
-import { Attendance } from "../../types/index.js";
+import { Attendance } from "../../../types/index.js";
 import {
   upsertAttendanceCache,
   getAttendanceCache,
-} from "../../db/attAnalyCache.js";
+} from "../../../db/attAnalyCache.js";
 
 interface IAttendaceAnyl {
   rollbumber: string;
@@ -26,7 +26,7 @@ export class AttendaceAnyl implements IAttendaceAnyl {
     const dayOfWeek = today.getDay();
     const lastSunday = new Date(today);
     lastSunday.setDate(today.getDate() - dayOfWeek);
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 10; i++) {
       const sunday = new Date(lastSunday);
       sunday.setDate(lastSunday.getDate() - i * 7);
       const sundayDate = sunday.toISOString().split("T")[0];

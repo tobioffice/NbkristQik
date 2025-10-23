@@ -1,5 +1,6 @@
 import { bot } from "./bot.js";
 import { setupBot } from "./setup.js";
+import { getClient } from "../services/redis/getRedisClient.js";
 
 console.log("Starting bot initialization...");
 
@@ -15,6 +16,9 @@ async function startBot() {
 
     // Import features
     import("./handleAndSendmessages/handleRollNum.js");
+
+    //init redis client
+    await getClient();
 
     console.log("Bot is ready!");
   } catch (error) {
