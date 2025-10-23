@@ -15,6 +15,9 @@ export const sendAnalyticsMessage = async (
 
   const attendaceAnaly = new AttendaceAnylCached(rollno);
   const anylData = (await attendaceAnaly.getAnylDataCashed()).reverse();
+
+  // console.log(anylData);
+
   if (!anylData) {
     bot.sendMessage(chatId, "Analytics not available for now.");
     return;
@@ -27,51 +30,43 @@ export const sendAnalyticsMessage = async (
   const minPercentage = Math.min(
     ...anylData.map((data) => data.attendace.percentage),
   );
-  // console.log("max percentage ", maxPercentage);
-  // console.log("min percentage ", minPercentage);
+  console.log("max percentage ", maxPercentage);
+  console.log("min percentage ", minPercentage);
+  const BlockEmojis = ["⬜", "🟩", "🟨", "🟥"];
 
-  // const BlockEmojis = ["⬜", "🟩", "🟨", "🟧", "🟥"];
-  const whiteBlock = "⬜";
+  for (const data of anylData) {
+    // console.log(finalMessage);
+    const percenatageOutof5 =
+      minPercentage === maxPercentage
+        ? 5
+        : Math.round(
+            ((data.attendace.percentage - minPercentage) /
+              (maxPercentage - minPercentage)) *
+              5,
+          );
 
-  // finalMessage += `${maxPercentage}%\n`;
-  for (let i = 10; i >= 1; i--) {
-    let currLine = "";
+    // console.log(percenatageOutof7);
 
-    let gotHit = false;
-    let percentage = 0;
+    const appropriateBlockIndex =
+      data.attendace.percentage >= 74
+        ? 1
+        : data.attendace.percentage >= 50
+          ? 2
+          : 3;
 
-    for (const data of anylData) {
-      const percentageOutof10 = Math.round(
-        ((data.attendace.percentage - minPercentage) /
-          (maxPercentage - minPercentage)) *
-          10,
-      );
+    const attBlocks =
+      BlockEmojis[appropriateBlockIndex].repeat(percenatageOutof5);
 
-      if (i === percentageOutof10) {
-        if (!gotHit) {
-          gotHit = true;
-          percentage = data.attendace.percentage;
-        }
-      }
-      if (i <= percentageOutof10) {
-        currLine += "🟨";
-      } else {
-        currLine += whiteBlock;
-      }
-    }
-    if (gotHit) {
-      currLine += ` - ${percentage}%`;
-    }
-    finalMessage += `${currLine}\n`;
+    const whiteblocks = BlockEmojis[0].repeat(5 - percenatageOutof5);
+
+    finalMessage +=
+      BlockEmojis[appropriateBlockIndex] +
+      attBlocks +
+      whiteblocks +
+      ` - <code>${data.attendace.percentage.toFixed(1)}%</code> <b>(${data.attdate.substring(0, 5)})</b>\n`;
   }
 
-  for (const _ of anylData) {
-    finalMessage += "🟨";
-  }
-
-  finalMessage += ` - ${minPercentage}%` + "\n\n";
-  finalMessage +=
-    "Weekly Attendance data, the rightmost bar is the most recent week.\n";
+  finalMessage += "\n<b>Format:</b>\n[Visual Bar] - [Percentage] - [Date]\n";
 
   !isMember && (finalMessage += `\nJoin @nbkrist_qik for more updates !`);
   bot.editMessageText(finalMessage, {

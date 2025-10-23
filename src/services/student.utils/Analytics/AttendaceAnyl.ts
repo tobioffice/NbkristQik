@@ -55,6 +55,7 @@ export class AttendaceAnyl implements IAttendaceAnyl {
     let currentStudentAttendace = undefined;
 
     for (const rollnumber of rollNumbers) {
+      console.log(rollnumber);
       const studentAttendace = await Academic.cleanAttDoc(responce, rollnumber);
       if (rollnumber.toUpperCase() === this.rollbumber.toUpperCase()) {
         currentStudentAttendace = studentAttendace;
