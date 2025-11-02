@@ -112,7 +112,7 @@ bot.on("callback_query", async (callbackQuery) => {
               msg,
               rollNumber,
               data.startsWith("att_") ? "att" : "mid",
-              isMember,
+              isMember
             )
         : sendNotRegisteredMsg(bot, msg.chat.id),
       bot.answerCallbackQuery(callbackQuery.id),
@@ -125,6 +125,6 @@ bot.on("callback_query", async (callbackQuery) => {
 const sendNotRegisteredMsg = async (bot: TelegramBot, chat_id: number) => {
   bot.sendMessage(
     chat_id,
-    "Student not registered with our database. You can report it on @nbkrist_chit_chat (send a message with the issue you're facing).",
+    "Student not registered with our database. You can report it on @nbkrist_chit_chat (send a message with the issue you're facing)."
   );
 };

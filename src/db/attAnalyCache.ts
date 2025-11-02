@@ -30,7 +30,7 @@ export const createTableIfNotExists = async () => {
 export const upsertAttendanceCache = async (
   roll_no: string,
   attendance_data: string,
-  last_updated: string,
+  last_updated: string
 ) => {
   await turso.execute({
     sql: `
@@ -43,7 +43,7 @@ export const upsertAttendanceCache = async (
 
 export const getAttendanceCache = async (
   roll_no: string,
-  last_updated: string,
+  last_updated: string
 ): Promise<AttendanceAnalyCache | null> => {
   const result = await turso.execute({
     sql: `

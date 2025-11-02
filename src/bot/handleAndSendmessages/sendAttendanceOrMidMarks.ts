@@ -7,7 +7,7 @@ export const sendAttendanceOrMidMarks = async (
   msg: TelegramBot.Message,
   rollno: string,
   signal: Signal,
-  isMember: boolean,
+  isMember: boolean
 ) => {
   try {
     const chatId = msg.chat.id;
@@ -21,7 +21,7 @@ export const sendAttendanceOrMidMarks = async (
         parse_mode: "HTML",
         disable_notification: true,
         reply_to_message_id: msg.reply_to_message?.message_id,
-      },
+      }
     );
 
     let finalMessage =
@@ -32,7 +32,7 @@ export const sendAttendanceOrMidMarks = async (
     if (!finalMessage) {
       bot.sendMessage(
         chatId,
-        "Something went wrong. you can report it on @nbkrist_chit_chat",
+        "Something went wrong. you can report it on @nbkrist_chit_chat"
       );
       return;
     }
@@ -48,7 +48,7 @@ export const sendAttendanceOrMidMarks = async (
     console.log("Error in sendAttendanceOrMidMarks:", error);
     bot.sendMessage(
       msg.chat.id,
-      "An error occurred while processing your request. Please try again later.",
+      "An error occurred while processing your request. Please try again later."
     );
     return;
   }

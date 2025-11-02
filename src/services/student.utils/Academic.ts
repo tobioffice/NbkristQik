@@ -40,7 +40,7 @@ export class Academic implements IAcademic {
 
   constructor(
     public rollnumber: string,
-    public indianDate: string = "01-01-2030",
+    public indianDate: string = "01-01-2030"
   ) {}
 
   async getCachedStudent() {
@@ -90,7 +90,7 @@ export class Academic implements IAcademic {
       const res = response.data; // Assuming response data is a string
       if (
         res.includes(
-          "<tr><td>User Name</td><td>:</td><td><input type=textbox name='username' id='username'",
+          "<tr><td>User Name</td><td>:</td><td><input type=textbox name='username' id='username'"
         )
       ) {
         await this.renewPassword();
@@ -107,7 +107,7 @@ export class Academic implements IAcademic {
           student.branch,
           student.section,
           command,
-          res,
+          res
         );
       return res;
     } catch {
@@ -115,7 +115,7 @@ export class Academic implements IAcademic {
         student.year,
         student.branch,
         student.section,
-        command,
+        command
       );
     }
   }
@@ -194,7 +194,7 @@ export class Academic implements IAcademic {
 
   static async cleanAttDoc(
     doc: string,
-    rollnumber: string,
+    rollnumber: string
   ): Promise<Attendance> {
     const student = await getStudentCached(rollnumber);
 

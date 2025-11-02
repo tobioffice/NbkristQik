@@ -6,7 +6,7 @@ export const getStudent = async (rollno: string): Promise<Student | null> => {
     rollno = rollno.toUpperCase();
 
     const studentSet = await turso.execute({
-      sql: `SELECT * FROM studentsnew WHERE roll_no = ?`,
+      sql: `SELECT * FROM students WHERE roll_no = ?`,
       args: [rollno],
     });
 
@@ -34,7 +34,7 @@ export const getStudent = async (rollno: string): Promise<Student | null> => {
 export const getStudentsWithSameClass = async (student: Student) => {
   try {
     const studentSet = await turso.execute({
-      sql: `SELECT roll_no FROM studentsnew WHERE year = ? AND branch = ? AND section = ?`,
+      sql: `SELECT roll_no FROM students WHERE year = ? AND branch = ? AND section = ?`,
       args: [student.year, student.branch, student.section],
     });
 

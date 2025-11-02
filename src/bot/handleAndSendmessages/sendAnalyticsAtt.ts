@@ -5,7 +5,7 @@ export const sendAnalyticsMessage = async (
   bot: TelegramBot,
   msg: TelegramBot.Message,
   rollno: string,
-  isMember: boolean,
+  isMember: boolean
 ) => {
   const chatId = msg.chat.id;
 
@@ -24,11 +24,11 @@ export const sendAnalyticsMessage = async (
   }
   let finalMessage = `<b>Attendance Analytics for ${rollno}:</b>\n\n`;
   const maxPercentage = Math.max(
-    ...anylData.map((data) => data.attendace.percentage),
+    ...anylData.map((data) => data.attendace.percentage)
   );
 
   const minPercentage = Math.min(
-    ...anylData.map((data) => data.attendace.percentage),
+    ...anylData.map((data) => data.attendace.percentage)
   );
   console.log("max percentage ", maxPercentage);
   console.log("min percentage ", minPercentage);
@@ -43,7 +43,7 @@ export const sendAnalyticsMessage = async (
         : Math.round(
             ((data.attendace.percentage - minPercentage) /
               (maxPercentage - minPercentage)) *
-              outOf,
+              outOf
           );
 
     // console.log(percenatageOutof7);
@@ -52,8 +52,8 @@ export const sendAnalyticsMessage = async (
       data.attendace.percentage >= 74
         ? 1
         : data.attendace.percentage >= 50
-          ? 2
-          : 3;
+        ? 2
+        : 3;
 
     const attBlocks =
       BlockEmojis[appropriateBlockIndex].repeat(percenatageOutof);
@@ -64,7 +64,9 @@ export const sendAnalyticsMessage = async (
       BlockEmojis[appropriateBlockIndex] +
       attBlocks +
       whiteblocks +
-      ` - <code>${data.attendace.percentage.toFixed(1)}%</code> <b>(${data.attdate.substring(0, 5)})</b>\n`;
+      ` - <code>${data.attendace.percentage.toFixed(
+        1
+      )}%</code> <b>(${data.attdate.substring(0, 5)})</b>\n`;
   }
 
   finalMessage += "\n<b>Format:</b>\n[Visual Bar] - [Percentage] - [Date]\n";

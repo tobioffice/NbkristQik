@@ -26,7 +26,13 @@ export class AcademicTG extends AcademicCashed {
 
         const whiteBlocks = blocks.white.repeat(10 - singleDigit);
 
-        msg += `${percentage >= 75 ? blocks.green.repeat(singleDigit) + whiteBlocks : percentage >= 50 ? blocks.yellow.repeat(singleDigit) + whiteBlocks : blocks.red.repeat(singleDigit) + whiteBlocks}`;
+        msg += `${
+          percentage >= 75
+            ? blocks.green.repeat(singleDigit) + whiteBlocks
+            : percentage >= 50
+            ? blocks.yellow.repeat(singleDigit) + whiteBlocks
+            : blocks.red.repeat(singleDigit) + whiteBlocks
+        }`;
         msg +=
           `<pre>` +
           `SUBJ     │ ST │ATT/TOT│LAST\n` +
@@ -57,11 +63,11 @@ export class AcademicTG extends AcademicCashed {
           }
 
           // Format subject row with more compact spacing
-          msg += `${subjectName.padEnd(9)} │ ${status} │${sub.attended
-            .toString()
-            .padStart(2)}/${sub.conducted
-            .toString()
-            .padStart(2)} │${lastUpdated.padEnd(4)}\n`;
+          msg += `${subjectName.padEnd(9)} │ ${status} │${(
+            sub.attended?.toString() || "U-K"
+          ).padStart(2)}/${(sub.conducted?.toString() || "U-K").padStart(
+            2
+          )} │${lastUpdated.padEnd(4)}\n`;
         }
 
         // Close pre tag and add legend
