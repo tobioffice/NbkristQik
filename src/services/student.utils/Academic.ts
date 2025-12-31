@@ -23,7 +23,10 @@ import {
    storeMidMarksToRedis,
 } from "../redis/storeAttOrMidToRedis.js";
 import { getClient } from "../redis/getRedisClient.js";
-import { storeResponse } from "../../db/fallback/response.model.js";
+import {
+   storeResponse,
+   getResponse,
+} from "../../db/fallback/response.model.js";
 
 dotenv.config();
 
@@ -88,35 +91,44 @@ export class Academic implements IAcademic {
          headers: heads,
          timeout: 3000,
       });
-      const res = response.data; // Assuming response data is a string
-      if (
-         res.includes(
-            "<tr><td>User Name</td><td>:</td><td><input type=textbox name='username' id='username'"
-         )
-      ) {
-         await this.renewPassword();
+      try {
+         const res = response.data; // Assuming response data is a string
+         if (
+            res.includes(
+               "<tr><td>User Name</td><td>:</td><td><input type=textbox name='username' id='username'"
+            )
+         ) {
+            await this.renewPassword();
 
-         if (await this.isCookiesValid()) {
-            const res_temp = await this.getResponse(command);
-            if (res_temp?.includes("Blocked")) {
-               throw new Error("Report is Blocked by the Admin");
+            if (await this.isCookiesValid()) {
+               const res_temp = await this.getResponse(command);
+               if (res_temp?.includes("Blocked")) {
+                  throw new Error("Report is Blocked by the Admin");
+               }
+               return res_temp;
             }
-            return res_temp;
+            return null;
          }
-         return null;
-      }
-      storeResponse(
-         student.year,
-         student.branch,
-         student.section,
-         command,
-         res
-      );
+         storeResponse(
+            student.year,
+            student.branch,
+            student.section,
+            command,
+            res
+         );
 
-      if (res.includes("Blocked")) {
-         throw new Error("Report is Blocked by the Admin");
+         if (res.includes("Blocked")) {
+            throw new Error("Report is Blocked by the Admin");
+         }
+         return res;
+      } catch (error) {
+         return await getResponse(
+            student.year,
+            student.branch,
+            student.section,
+            command
+         );
       }
-      return res;
    }
 
    async isCookiesValid(): Promise<boolean> {
