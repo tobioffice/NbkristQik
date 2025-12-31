@@ -1,7 +1,7 @@
-import { AcademicTG } from "../../services/student.utils/AcademicTG.js";
 import TelegramBot from "node-telegram-bot-api";
 import { Signal } from "../../constants/index.js";
 import { CHANNEL_ID } from "../../config/environmentals.js";
+import { getMidMarks, getAttendance } from "../../services/student.service.js";
 
 import { bot } from "../bot.js";
 
@@ -13,7 +13,6 @@ export const sendAttendanceOrMidMarks = async (
 ) => {
    try {
       const chatId = msg.chat.id;
-      const student = new AcademicTG(rollno);
       const message = await bot.sendMessage(
          chatId,
          `<code>Fetching ${
@@ -28,8 +27,8 @@ export const sendAttendanceOrMidMarks = async (
 
       const finalMessage =
          signal == "att"
-            ? await student.getAttendanceMessage()
-            : await student.getMidmarksMessage();
+            ? await getAttendance(rollno)
+            : await getMidMarks(rollno);
 
       bot.editMessageText(finalMessage, {
          chat_id: chatId,

@@ -10,7 +10,6 @@ import {
    AttendanceBySubjects,
    Attendance,
    Midmarks,
-   Student,
 } from "../../types/index.js";
 
 import axios from "axios";
@@ -38,44 +37,26 @@ const loginUrl = urls.login;
 var cookie = "";
 
 export class Academic implements IAcademic {
-   public student: Student | null = null;
-
    constructor(public rollnumber: string) {}
 
-   async getCachedStudent() {
-      if (this.student) return this.student;
-      const student = await getStudentCached(this.rollnumber);
-      this.student = student;
-      return student;
-   }
-
-   async getResponse(command: "mid" | "att"): Promise<string | null> {
+   async getResponse(command: "mid" | "att"): Promise<string> {
       const url = command === "mid" ? urls.midmarks : urls.attendance;
-      const student = await this.getCachedStudent();
+      const student = await getStudentCached(this.rollnumber);
 
       let data;
       if (command === "mid") {
          data = {
             acadYear: "2025-26",
-            yearSem:
-               student.year === "11"
-                  ? student.year
-                  : student.year.slice(0, 1) + "2",
+            yearSem: student.year.slice(0, 1) + "2",
             branch: student.branch,
             section: student.section,
             dateOfAttendance: indianDate,
             midsChosen: "mid1, mid2, mid3",
-            hidProjectsType: "",
-            typeOfProj: "",
-            txtScaleMarksTo: "",
          };
       } else {
          data = {
             acadYear: "2025-26",
-            yearSem:
-               student.year === "11"
-                  ? student.year
-                  : student.year.slice(0, 1) + "2",
+            yearSem: student.year.slice(0, 1) + "2",
             branch: student.branch,
             section: student.section,
             dateOfAttendance: indianDate,
@@ -91,7 +72,7 @@ export class Academic implements IAcademic {
             headers: heads,
             timeout: 3000,
          });
-         const res = response.data; // Assuming response data is a string
+         const res = response.data;
          if (
             res.includes(
                "<tr><td>User Name</td><td>:</td><td><input type=textbox name='username' id='username'"
@@ -106,7 +87,6 @@ export class Academic implements IAcademic {
                }
                return res_temp;
             }
-            return null;
          }
          storeResponse(
             student.year,
@@ -167,7 +147,7 @@ export class Academic implements IAcademic {
       return "Password Renewed";
    }
 
-   async getAttendanceJSON(): Promise<Attendance | null> {
+   async getAttendanceJSON(): Promise<Attendance> {
       const redisClient = await getClient();
 
       const cachedAttendance = await redisClient.get(
@@ -185,14 +165,13 @@ export class Academic implements IAcademic {
       // Fetch fresh data
       const response = await this.getResponse("att");
 
-      if (!response) return null;
+      if (!response.includes(this.rollnumber.toUpperCase()))
+         throw new Error("No attendance data found !");
 
-      console.log("Storing fresh attendance data...");
-      if (!response.includes(this.rollnumber.toUpperCase())) return null;
+      // console.log("Storing fresh attendance data...");
 
       storeAttendanceToRedis(response);
 
-      //using cheerio to get targeted data
       return Academic.cleanAttDoc(response, this.rollnumber);
    }
 
@@ -290,7 +269,7 @@ export class Academic implements IAcademic {
       return attendance;
    }
 
-   async getMidmarksJSON(): Promise<Midmarks | null> {
+   async getMidmarksJSON(): Promise<Midmarks> {
       const redisClient = await getClient();
 
       const cachedMidMarks = await redisClient.get(

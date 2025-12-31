@@ -19,7 +19,7 @@ export const getResponse = async (
    branch: string,
    section: string,
    type: "att" | "mid"
-): Promise<string | null> => {
+): Promise<string> => {
    const id = `${year}-${branch}-${section}-${type}`;
    console.log("Fetching response for ID:", id); // Debug log
    const result = await turso.execute({
@@ -30,6 +30,6 @@ export const getResponse = async (
    if (result.rows.length > 0) {
       return result.rows[0].content as string;
    } else {
-      return null;
+      throw new Error("No fallback response found.");
    }
 };
