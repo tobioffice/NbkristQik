@@ -86,12 +86,11 @@ export class Academic implements IAcademic {
 
       const heads = header(command);
       heads.Cookie = "PHPSESSID=" + cookie;
-
-      const response = await axios.post(url, data, {
-         headers: heads,
-         timeout: 3000,
-      });
       try {
+         const response = await axios.post(url, data, {
+            headers: heads,
+            timeout: 3000,
+         });
          const res = response.data; // Assuming response data is a string
          if (
             res.includes(
