@@ -3,55 +3,47 @@ import { Academic } from "../student.utils/Academic.js";
 import { getClient } from "./getRedisClient.js";
 
 export const storeAttendanceToRedis = async (doc: string) => {
-  try {
-    const $ = cheerio.load(doc);
-    const rollNoTrs = $("tr[id]");
-    const rollNumbers = rollNoTrs.map((_, el) => $(el).attr("id")).get();
+   const $ = cheerio.load(doc);
+   const rollNoTrs = $("tr[id]");
+   const rollNumbers = rollNoTrs.map((_, el) => $(el).attr("id")).get();
 
-    const redisClient = await getClient();
+   const redisClient = await getClient();
 
-    for (const rollnumber of rollNumbers) {
+   for (const rollnumber of rollNumbers) {
       const studentAttendance = await Academic.cleanAttDoc(doc, rollnumber);
 
       await redisClient.set(
-        `attendance:${rollnumber.toUpperCase()}`,
-        JSON.stringify(studentAttendance),
+         `attendance:${rollnumber.toUpperCase()}`,
+         JSON.stringify(studentAttendance)
       );
       await redisClient.expire(
-        `attendance:${rollnumber.toUpperCase()}`,
-        60 * 60,
+         `attendance:${rollnumber.toUpperCase()}`,
+         60 * 60
       );
-    }
+   }
 
-    console.log(`cached all student attendance for : `, rollNumbers);
-  } catch (error) {
-    console.log("error Storing Attendance :", error);
-  }
+   console.log(`cached all student attendance for : `, rollNumbers);
 };
 
 export const storeMidMarksToRedis = async (doc: string) => {
-  try {
-    const $ = cheerio.load(doc);
-    const rollNoTrs = $("tr[id]");
-    const rollNumbers = rollNoTrs.map((_, el) => $(el).attr("id")).get();
+   const $ = cheerio.load(doc);
+   const rollNoTrs = $("tr[id]");
+   const rollNumbers = rollNoTrs.map((_, el) => $(el).attr("id")).get();
 
-    const redisClient = await getClient();
+   const redisClient = await getClient();
 
-    for (const rollnumber of rollNumbers) {
+   for (const rollnumber of rollNumbers) {
       const studentMidmarks = await Academic.cleanMidDoc(doc, rollnumber);
 
       await redisClient.set(
-        `midmarks:${rollnumber.toUpperCase()}`,
-        JSON.stringify(studentMidmarks),
+         `midmarks:${rollnumber.toUpperCase()}`,
+         JSON.stringify(studentMidmarks)
       );
       await redisClient.expire(
-        `midmarks:${rollnumber.toUpperCase()}`,
-        60 * 60 * 2,
+         `midmarks:${rollnumber.toUpperCase()}`,
+         60 * 60 * 2
       );
-    }
+   }
 
-    console.log(`cached all student midmarks for : `, rollNumbers);
-  } catch (error) {
-    console.log("error storing midmarks ", error);
-  }
+   console.log(`cached all student midmarks for : `, rollNumbers);
 };
