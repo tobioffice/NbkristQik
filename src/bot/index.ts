@@ -4,23 +4,23 @@ import { setupBot } from "./setup.js";
 console.log("Starting bot initialization...");
 
 async function startBot() {
-  try {
-    // Setup bot commands
-    setupBot(bot);
+   try {
+      // Setup bot commands
+      setupBot(bot);
 
-    // Import commands after bot is created
-    import("./commands/help.js");
-    import("./commands/start.js");
-    import("./commands/report.js");
+      // Import commands after bot is created
+      import("./commands/help.js");
+      import("./commands/start.js");
+      import("./commands/report.js");
 
-    // Import features
-    import("./features/bot.academic.js");
+      // Import features
+      import("./academics/academicHandler.js");
 
-    console.log("Bot is ready!");
-  } catch (error) {
-    console.error("Error during bot initialization:", error);
-    process.exit(1);
-  }
+      console.log("Bot is ready!");
+   } catch (error) {
+      console.error("Error during bot initialization:", error);
+      process.exit(1);
+   }
 }
 
 startBot();
