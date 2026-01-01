@@ -286,8 +286,8 @@ export class Academic implements IAcademic {
 
       const response = await this.getResponse("mid");
 
-      if (!response) return null;
-      if (!response.includes(this.rollnumber.toUpperCase())) return null;
+      if (!response.includes(this.rollnumber.toUpperCase()))
+         throw new Error("No midmarks data found !");
 
       storeMidMarksToRedis(response);
 
