@@ -4,20 +4,24 @@ A Telegram bot for students to check attendance and mid-term marks.
 
 ## Features
 
+### ✅ Already Implemented
 - Check attendance details
 - View mid-term examination marks  
-- AI-powered chat capabilities
-- Image generation commands
+- **🏆 Live Leaderboard (Telegram Web App)**
 - Admin controls
+
+### 🚀 Upcoming Features
+- 🔔 Automatic Notifications
+- AI-powered chat capabilities
+
 
 ## Technology Stack
 
-- TypeScript
-- Node.js
-- Telegram Bot API
-- Turso Database
-- Cheerio for web scraping
-- Axios for HTTP requests
+- **Backend**: Node.js, Express, TypeScript
+- **Database**: Turso (SQLite), Redis
+- **Frontend**: React, Vite, TailwindCSS
+- **Integration**: Telegram Bot API
+- **Scraping**: Cheerio, Axios
 
 ## Project Structure
 
@@ -70,7 +74,6 @@ pnpm start
 - `/start` - Initialize the bot
 - `/help` - Get usage instructions
 - `/ai [query]` - Interact with AI
-- `/img [prompt]` - Generate images
 - Check attendance and marks using roll number
 
 ## Environment Variables

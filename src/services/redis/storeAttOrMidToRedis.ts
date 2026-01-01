@@ -1,6 +1,7 @@
 import * as cheerio from "cheerio";
 import { Academic } from "../student.utils/Academic.js";
 import { getClient } from "./getRedisClient.js";
+import { updateAttendanceStat, updateMidMarkStat } from "../../db/student_stats.model.js";
 
 export const storeAttendanceToRedis = async (doc: string) => {
    const $ = cheerio.load(doc);
@@ -20,6 +21,9 @@ export const storeAttendanceToRedis = async (doc: string) => {
          `attendance:${rollnumber.toUpperCase()}`,
          60 * 60
       );
+
+      
+         await updateAttendanceStat(rollnumber.toUpperCase(), studentAttendance.percentage);
    }
 
    console.log(`cached all student attendance for : `, rollNumbers);
@@ -43,7 +47,11 @@ export const storeMidMarksToRedis = async (doc: string) => {
          `midmarks:${rollnumber.toUpperCase()}`,
          60 * 60 * 2
       );
-   }
+
+      const average = studentMidmarks.subjects.reduce((acc, sub) => acc + (((sub.M1 || 0) + (sub.M2 || 0)) / 2 || 0), 0) / studentMidmarks.subjects.length;
+
+      await updateMidMarkStat(rollnumber.toUpperCase(), average);
+      }
 
    console.log(`cached all student midmarks for : `, rollNumbers);
 };

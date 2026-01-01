@@ -48,7 +48,7 @@ export class Academic implements IAcademic {
       if (command === "mid") {
          data = {
             acadYear: "2025-26",
-            yearSem: student.year.slice(0, 1) + "2",
+            yearSem: student.year,
             branch: student.branch,
             section: student.section,
             dateOfAttendance: indianDate,

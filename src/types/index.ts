@@ -49,3 +49,10 @@ export type Student = {
    branch: string;
    year: string;
 };
+
+export interface StudentStat {
+   roll_no: string;
+   attendance_percentage: number | null;
+   mid_marks_avg: number | null;
+   last_updated: string;
+}

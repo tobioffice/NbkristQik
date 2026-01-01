@@ -15,6 +15,9 @@ async function startBot() {
 
       // Import features
       import("./academics/academicHandler.js");
+      
+      // Start API Server
+      import("../api/server.js").then(({ startServer }) => startServer());
 
       console.log("Bot is ready!");
    } catch (error) {

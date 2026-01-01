@@ -31,12 +31,12 @@ const handleRollNumberMessage = async (msg: any): Promise<void> => {
 
    const authorized = await isAuthorizedUser(msg.from.id, chatId);
    if (!authorized) return;
-
    await bot.sendMessage(chatId, "Select an option:", {
       reply_markup: {
          inline_keyboard: [
             [{ text: "Attendance 🚀", callback_data: `att_${msg.text}` }],
             [{ text: "Mid Marks 📊", callback_data: `mid_${msg.text}` }],
+            [{ text: "Leaderboard 🏆", url: "https://t.me/NbkristQik_bot/nbkristqik_leaderboard" }],
          ],
       },
       reply_to_message_id: msg.message_id,
