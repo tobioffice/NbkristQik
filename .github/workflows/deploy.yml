@@ -1,0 +1,58 @@
+name: CI/CD Pipeline
+
+on:
+   push:
+      branches: [main]
+
+jobs:
+   build-and-deploy:
+      runs-on: ubuntu-latest
+
+      steps:
+         - name: Checkout code
+           uses: actions/checkout@v4
+
+         - name: Setup Node.js
+           uses: actions/setup-node@v4
+           with:
+              node-version: "18"
+
+         - name: Install pnpm
+           uses: pnpm/action-setup@v4
+           with:
+              version: latest
+
+         - name: Install dependencies
+           run: pnpm install
+
+         - name: Build project
+           run: pnpm build
+
+         - name: Copy dist to server
+           uses: appleboy/scp-action@v0.1.7
+           with:
+              host: ${{ secrets.SERVER_HOST }}
+              username: ${{ secrets.SERVER_USER }}
+              key: ${{ secrets.SERVER_SSH_KEY }}
+              source: "dist/,package.json,pnpm-lock.yaml"
+              target: "/home/ubuntu/nbkristqik/"
+              strip_components: 1
+
+         - name: Restart application
+           if: ${{ !env.ACT }}
+           uses: appleboy/ssh-action@v1.0.3
+           with:
+              host: ${{ secrets.SERVER_HOST }}
+              username: ${{ secrets.SERVER_USER }}
+              key: ${{ secrets.SERVER_SSH_KEY }}
+              script: |
+                 cd /home/ubuntu/nbkristqik
+
+                 command -v pnpm > /dev/null 2>&1 || npm install -g pnpm
+                 pnpm install --pro
+
+                 command -v pm2 > /dev/null 2>&1 || npm install -g pm2 || true
+
+                 # Restart or start the application
+                 pm2 restart nbkr 2>/dev/null || pm2 start bot/index.js --name nbkr
+                 pm2 save
