@@ -26,17 +26,7 @@ export const MESSAGES = {
       "👉 <b>Ready to use me? Let's go!</b> 🚀",
 };
 
-export const BRANCHES: { [key: number]: string } = {
-   5: "CSE",
-   23: "AIDS",
-   7: "MECH",
-   4: "ECE",
-   2: "EEE",
-   11: "CIV",
-   22: "IT",
-   32: "CSE_DS",
-   33: "CSE_AIML",
-};
+
 
 //exporting request urls
 // const BASE_URL = "http://103.203.175.90:94";
@@ -70,3 +60,15 @@ export const headers = (command: string) => {
 
 export const ROLL_REGEX = /^\d{2}[a-zA-Z]{2}[a-zA-Z0-9]{6}$/;
 export type Signal = "mid" | "att";
+
+export const BRANCHES: { [key: number]: string } = {
+   5: "CSE",
+   23: "AIDS",
+   7: "MECH",
+   4: "ECE",
+   2: "EEE",
+   11: "CIV",
+   22: "IT",
+   32: "CSE_DS",
+   33: "CSE_AIML",
+};

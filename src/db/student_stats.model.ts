@@ -48,26 +48,50 @@ export const updateMidMarkStat = async (rollno: string, average: number) => {
 export const getLeaderboard = async (
    sortBy: "attendance" | "midmarks",
    limit: number,
-   offset: number
+   offset: number,
+   filters: {
+      year?: string;
+      branch?: string;
+      section?: string;
+   } = {}
 ) => {
    const column =
       sortBy === "attendance" ? "attendance_percentage" : "mid_marks_avg";
-   
-   // We join with student database to get names if needed, 
-   // but for now let's just return stats and we can fetch names if needed,
-   // OR we can JOIN existing studentsnew table if it exists.
-   // Let's assume we want to join to show Names on the leaderboard.
-   
+
+   const conditions: string[] = [`st.${column} IS NOT NULL`];
+   const args: any[] = [];
+
+   if (filters.year) {
+      conditions.push(`s.year = ?`);
+      args.push(filters.year);
+   }
+
+   if (filters.branch) {
+      conditions.push(`s.branch = ?`);
+      args.push(filters.branch);
+   }
+
+   if (filters.section && filters.section !== "all") {
+       // Assuming front-end sends "all" for no filter, but good to handle explicit logic
+       conditions.push(`s.section = ?`);
+       args.push(filters.section);
+   }
+
+   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+   // We need to add limit and offset to args at the end
+   args.push(limit, offset);
+
    const result = await turso.execute({
       sql: `
          SELECT s.roll_no, s.name, st.attendance_percentage, st.mid_marks_avg
          FROM student_stats st
          LEFT JOIN studentsnew s ON st.roll_no = s.roll_no
-         WHERE st.${column} IS NOT NULL
+         ${whereClause}
          ORDER BY st.${column} DESC
          LIMIT ? OFFSET ?
       `,
-      args: [limit, offset],
+      args: args,
    });
 
    return result.rows;

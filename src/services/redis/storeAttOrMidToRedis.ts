@@ -48,10 +48,21 @@ export const storeMidMarksToRedis = async (doc: string) => {
          60 * 60 * 2
       );
 
-      const average = studentMidmarks.subjects.reduce((acc, sub) => acc + (((sub.M1 || 0) + (sub.M2 || 0)) / 2 || 0), 0) / studentMidmarks.subjects.length;
+      const zeroMarkSubjects = studentMidmarks.subjects.filter(
+         (sub) => (sub.M1 || 0) === 0 && (sub.M2 || 0) === 0
+      ).length;
+
+      const average =
+         studentMidmarks.subjects.reduce((acc, sub) => {
+            const m1 = sub.M1 || 0;
+            const m2 = sub.M2 || 0;
+            // If M2 is present, take average of M1 and M2. Otherwise, just use M1.
+            const subjectScore = m2 > 0 ? (m1 + m2) / 2 : m1;
+            return acc + subjectScore;
+         }, 0) / (studentMidmarks.subjects.length - zeroMarkSubjects || 1);
 
       await updateMidMarkStat(rollnumber.toUpperCase(), average);
-      }
+   }
 
    console.log(`cached all student midmarks for : `, rollNumbers);
 };

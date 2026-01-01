@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { BRANCHES } from "../../constants/index";
 
 interface StudentStat {
     roll_no: string;
@@ -13,6 +14,9 @@ export default function Leaderboard() {
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
     const [sortBy, setSortBy] = useState<"attendance" | "midmarks">("attendance");
+    const [filterYear, setFilterYear] = useState<string>("all");
+    const [filterBranch, setFilterBranch] = useState<string>("all");
+    const [filterSection, setFilterSection] = useState<string>("all");
 
     const observer = useRef<IntersectionObserver | null>(null);
 
@@ -22,9 +26,15 @@ export default function Leaderboard() {
         setLoading(true);
         try {
             const baseUrl = import.meta.env.VITE_API_URL || "https://checker.tobioffice.dev";
-            const response = await fetch(
-                `${baseUrl}/api/leaderboard?page=${pageNum}&limit=20&sort=${sort}`
-            );
+            const queryParams = new URLSearchParams({
+                page: pageNum.toString(),
+                limit: "20",
+                sort: sort,
+                year: filterYear,
+                branch: filterBranch,
+                section: filterSection,
+            });
+            const response = await fetch(`${baseUrl}/api/leaderboard?${queryParams.toString()}`);
             const data = await response.json();
 
             if (data.data.length === 0) {
@@ -44,7 +54,7 @@ export default function Leaderboard() {
         setStats([]);
         setHasMore(true);
         fetchLeaderboard(1, sortBy);
-    }, [sortBy]);
+    }, [sortBy, filterYear, filterBranch, filterSection]);
 
     useEffect(() => {
         if (page > 1) {
@@ -117,6 +127,53 @@ export default function Leaderboard() {
                     >
                         Mid Marks
                     </button>
+                </div>
+
+                {/* Filters */}
+                <div className="grid grid-cols-3 gap-2 mb-8">
+                    {/* Year Filter */}
+                    <select
+                        value={filterYear}
+                        onChange={(e) => setFilterYear(e.target.value)}
+                        className="bg-slate-900/50 text-slate-300 text-xs md:text-sm rounded-lg p-2 border border-white/5 focus:outline-none focus:border-indigo-500/50"
+                    >
+                        <option value="all">All Years</option>
+                        <option value="11">1st Year</option>
+                        <option value="21">2nd Year</option>
+                        <option value="31">3rd Year</option>
+                        <option value="41">4th Year</option>
+                    </select>
+
+                    {/* Branch Filter */}
+                    <select
+                        value={filterBranch}
+                        onChange={(e) => setFilterBranch(e.target.value)}
+                        className="bg-slate-900/50 text-slate-300 text-xs md:text-sm rounded-lg p-2 border border-white/5 focus:outline-none focus:border-indigo-500/50"
+                    >
+                        <option value="all">All Branches</option>
+                        {Object.entries(BRANCHES).map(([id, name]) => (
+                            <option key={id} value={id}>
+                                {name}
+                            </option>
+                        ))}
+                    </select>
+
+                    {/* Section Filter */}
+                    <select
+                        value={filterSection}
+                        onChange={(e) => setFilterSection(e.target.value)}
+                        className="bg-slate-900/50 text-slate-300 text-xs md:text-sm rounded-lg p-2 border border-white/5 focus:outline-none focus:border-indigo-500/50"
+                    >
+                        <option value="all">All Sections</option>
+                        <option value="-">-</option>
+                        {Array.from({ length: 10 }, (_, i) => String.fromCharCode(65 + i)).map(
+                            (char) => (
+                                <option key={char} value={char}>
+                                    Section {char}
+                                </option>
+                            )
+                        )}
+                    </select>
                 </div>
 
                 {/* PODIUM SECTION */}
@@ -225,7 +282,9 @@ export default function Leaderboard() {
                                 <span className={`text-lg font-bold ${sortBy === "attendance" ? "text-indigo-400" : "text-emerald-400"}`}>
                                     {sortBy === "attendance" ? stat.attendance_percentage : stat.mid_marks_avg?.toFixed(1)}
                                 </span>
-                                <span className="text-xs text-slate-600 font-medium ml-0.5">%</span>
+                                <span className="text-xs text-slate-600 font-medium ml-0.5">
+                                    {sortBy === "attendance" ? "%" : ""}
+                                </span>
                             </div>
                         </div>
                     ))}
