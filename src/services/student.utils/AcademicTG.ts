@@ -62,9 +62,9 @@ export class AcademicTG extends Academic {
             }
 
             // Format subject row with more compact spacing
-            msg += `${subjectName.padEnd(9)} │ ${status} │${sub.attended
+            msg += `${subjectName.padEnd(9)} │ ${status} │${sub.attended || 0
                .toString()
-               .padStart(2)}/${sub.conducted
+               .padStart(2)}/${sub.conducted || 0
                .toString()
                .padStart(2)} │${lastUpdated.padEnd(4)}\n`;
          }
