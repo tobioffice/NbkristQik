@@ -3,11 +3,12 @@
 //
 import { urls, headers as header } from "../../constants/index.js";
 import { BRANCHES, BASE_URL } from "../../constants/index.js";
+import { N_USERNAME, N_PASSWORD } from "../../config/environmentals.js";
 
 import {
    IAcademic,
-   MidmarksBySubjects,
-   AttendanceBySubjects,
+   MidmarksBySubject,
+   AttendanceBySubject,
    Attendance,
    Midmarks,
 } from "../../types/index.js";
@@ -30,8 +31,8 @@ import {
 dotenv.config();
 
 const indianDate = "27-03-2030"; //maxed date for attendance
-const USERNAME = process.env.N_USERNAME || "";
-const PASSWORD = process.env.N_PASSWORD || "";
+const USERNAME = N_USERNAME;
+const PASSWORD = N_PASSWORD;
 const loginUrl = urls.login;
 
 var cookie = "";
@@ -168,8 +169,6 @@ export class Academic implements IAcademic {
       if (!response.includes(this.rollnumber.toUpperCase()))
          throw new Error("No attendance data found !");
 
-      // console.log("Storing fresh attendance data...");
-
       storeAttendanceToRedis(response);
 
       return Academic.cleanAttDoc(response, this.rollnumber);
@@ -242,7 +241,7 @@ export class Academic implements IAcademic {
       //cleaning the data end
 
       //formatting subjects objects
-      const subjects: AttendanceBySubjects[] = [];
+      const subjects: AttendanceBySubject[] = [];
 
       nameArray.forEach((el, i) => {
          subjects.push({
@@ -327,8 +326,8 @@ export class Academic implements IAcademic {
       });
       //end separating subjects and labs
 
-      //start formatting midmarks objects into MidmarksBySubjects List
-      const midmarksList: MidmarksBySubjects[] = [];
+      //start formatting midmarks objects into MidmarksBySubject List
+      const midmarksList: MidmarksBySubject[] = [];
 
       [...subjects, ...labs].forEach((el, i) => {
          if (i < subjects.length) {
@@ -352,7 +351,7 @@ export class Academic implements IAcademic {
             });
          }
       });
-      //end formatting midmarks objects into MidmarksBySubjects List
+      //end formatting midmarks objects into MidmarksBySubject List
 
       //midmarks object
       const midmarks: Midmarks = {
