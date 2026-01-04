@@ -1,13 +1,16 @@
 import { bot } from "../bot.js";
 
 bot.onText(/\/help/, (msg) => {
-   const helpMessage = `ℹ️ To check your attendance or mid-term marks:
-    
-Simply send your roll number (e.g., <code>23KB1A0599</code>) in the chat.
+   const helpMessage = `<b>How to use NbkristQik:</b>
 
-The system will automatically show your:
-• Attendance records
-• Mid-term marks`;
+1️⃣ <b>Send your Roll Number</b>
+   (Example: <code>23KB1A0599</code>)
+
+2️⃣ <b>Get Instant Results</b>
+   • Attendance 📊
+   • Mid-Marks 📝
+
+<i>That's it! No complex commands needed.</i>`;
 
    bot.sendMessage(msg.chat.id, helpMessage, { parse_mode: "HTML" });
 });

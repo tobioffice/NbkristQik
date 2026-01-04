@@ -5,22 +5,40 @@ import { getLeaderboard } from "../db/student_stats.model.js";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors({
-   origin: ["https://tobioffice.github.io", "http://localhost:5173"]
-}));
+app.use(
+   cors({
+      origin: ["https://tobioffice.github.io"],
+   })
+);
+
+// app.use(cors());
+
 app.use(express.json());
 
 // API Routes
 app.get("/api/leaderboard", async (req, res) => {
    try {
+      // const userId = req.query.userId
+      //    ? parseInt(req.query.userId as string)
+      //    : null;
+
+      // console.log("User ID:", userId);
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 50;
-      const sortBy = (req.query.sort as "attendance" | "midmarks") || "attendance";
-      
+      const sortBy =
+         (req.query.sort as "attendance" | "midmarks") || "attendance";
+
       const filters = {
-         year: req.query.year === "all" ? undefined : (req.query.year as string),
-         branch: req.query.branch === "all" ? undefined : (req.query.branch as string),
-         section: req.query.section === "all" ? undefined : (req.query.section as string),
+         year:
+            req.query.year === "all" ? undefined : (req.query.year as string),
+         branch:
+            req.query.branch === "all"
+               ? undefined
+               : (req.query.branch as string),
+         section:
+            req.query.section === "all"
+               ? undefined
+               : (req.query.section as string),
       };
 
       const offset = (page - 1) * limit;

@@ -12,10 +12,11 @@ async function startBot() {
       import("./commands/help.js");
       import("./commands/start.js");
       import("./commands/report.js");
+      import("./commands/leaderboard.js");
 
       // Import features
       import("./academics/academicHandler.js");
-      
+
       // Start API Server
       import("../api/server.js").then(({ startServer }) => startServer());
 

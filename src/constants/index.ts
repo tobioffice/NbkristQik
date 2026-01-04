@@ -26,11 +26,11 @@ export const MESSAGES = {
       "👉 <b>Ready to use me? Let's go!</b> 🚀",
 };
 
-
-
 //exporting request urls
-// const BASE_URL = "http://103.203.175.90:94";
+// export const BASE_URL = "http://103.203.175.90:96";
 export const BASE_URL = "http://47.247.10.58";
+
+// export const BASE_URL = "https://at.nbkrist.org";
 
 export const urls = {
    base: BASE_URL,

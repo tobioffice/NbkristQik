@@ -3,7 +3,8 @@ import { bot } from "../bot.js";
 bot.onText(/\/report$/, (msg) => {
    bot.sendMessage(
       msg.chat.id,
-      "⚠️ Please include your report message after /report\nExample: /report I found a bug here"
+      "⚠️ <b>Oops! You missed the message.</b>\n\nPlease use the command like this:\n<code>/report [your message]</code>\n\nExample:\n<code>/report I found a bug!</code>",
+      { parse_mode: "HTML" }
    );
 });
 
@@ -15,9 +16,10 @@ bot.onText(/\/report (.+)/, (msg, match) => {
         } </a>`
       : msg.from?.username || msg.from?.first_name || "Unknown user";
    const formattedMessage =
-      `📝 <b>New Report</b>\n\n` +
-      `👤 <b>From:</b> ${reporterName}\n` +
-      `💬 <b>Message:</b>\n${reportMessage}`;
+      `📢 <b>New Report Received</b>\n\n` +
+      `👤 <b>Sender:</b> ${reporterName}\n` +
+      `🆔 <b>User ID:</b> <code>${msg.from?.id}</code>\n\n` +
+      `📝 <b>Report:</b>\n<i>${reportMessage}</i>`;
 
    // Forward to personal chat
    bot.sendMessage(process.env.ADMIN_ID || "1329532701", formattedMessage, {
@@ -27,7 +29,7 @@ bot.onText(/\/report (.+)/, (msg, match) => {
    // Confirm to the user
    bot.sendMessage(
       msg.chat.id,
-      "✅ Thank you! Your report has been sent to the admin.",
+      "✅ <b>Thanks for reporting!</b>\n\nI've sent your message to the admin. We'll check it out soon!",
       { parse_mode: "HTML" }
    );
 });

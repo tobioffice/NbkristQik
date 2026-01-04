@@ -5,5 +5,6 @@ export function setupBot(bot: TelegramBot): void {
       { command: "/start", description: "Start the bot" },
       { command: "/report", description: "Report an issue" },
       { command: `/help`, description: "Get help" },
+      { command: `/leaderboard`, description: "View the leaderboard" },
    ]);
 }

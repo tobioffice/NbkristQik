@@ -2,6 +2,7 @@ import * as cheerio from "cheerio";
 import { Academic } from "../student.utils/Academic.js";
 import { getClient } from "./getRedisClient.js";
 import { updateAttendanceStat, updateMidMarkStat } from "../../db/student_stats.model.js";
+import { getStudentCached } from "./utils.js";
 
 export const storeAttendanceToRedis = async (doc: string) => {
    const $ = cheerio.load(doc);
@@ -38,6 +39,8 @@ export const storeMidMarksToRedis = async (doc: string) => {
 
    for (const rollnumber of rollNumbers) {
       const studentMidmarks = await Academic.cleanMidDoc(doc, rollnumber);
+      const student = await getStudentCached(rollnumber.toUpperCase());
+      if (!student) continue
 
       await redisClient.set(
          `midmarks:${rollnumber.toUpperCase()}`,
@@ -52,7 +55,7 @@ export const storeMidMarksToRedis = async (doc: string) => {
          (sub) => (sub.M1 || 0) === 0 && (sub.M2 || 0) === 0
       ).length;
 
-      const average =
+      let average =
          studentMidmarks.subjects.reduce((acc, sub) => {
             const m1 = sub.M1 || 0;
             const m2 = sub.M2 || 0;
@@ -60,6 +63,10 @@ export const storeMidMarksToRedis = async (doc: string) => {
             const subjectScore = m2 > 0 ? (m1 + m2) / 2 : m1;
             return acc + subjectScore;
          }, 0) / (studentMidmarks.subjects.length - zeroMarkSubjects || 1);
+
+      if (student.year ==="41"){
+         average = (average/40) * 30;
+      }
 
       await updateMidMarkStat(rollnumber.toUpperCase(), average);
    }
