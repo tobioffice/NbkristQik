@@ -5,7 +5,8 @@ describe('Constants', () => {
   describe('BRANCHES', () => {
     it('should have correct branch mappings', () => {
       expect(BRANCHES).toBeDefined();
-      expect(BRANCHES['05']).toBe('CSE');
+      // BRANCHES uses numeric keys, not string keys
+      expect(BRANCHES[5]).toBe('CSE');
     });
 
     it('should handle all branch codes', () => {

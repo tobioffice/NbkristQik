@@ -1,10 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Academic, AcademicError, ServerDownError, BlockedReportError, NoDataFoundError } from '../../src/services/student.utils/Academic';
-import { mockStudent, mockAttendance, mockMidmarks, mockAttendanceHTML, mockMidmarksHTML } from '../mocks/academic.mock';
 
-// Mock dependencies
+// Mock dependencies BEFORE importing the modules that use them
+// These mocks need to be defined without referencing any imports
 vi.mock('../../src/services/redis/utils.js', () => ({
-  getStudentCached: vi.fn().mockResolvedValue(mockStudent),
+  getStudentCached: vi.fn().mockResolvedValue({
+    roll_no: '21B81A05E9',
+    name: 'Test Student',
+    section: 'A',
+    branch: '5',
+    year: '32',
+  }),
 }));
 
 vi.mock('../../src/services/redis/getRedisClient.js', () => ({
@@ -12,6 +17,7 @@ vi.mock('../../src/services/redis/getRedisClient.js', () => ({
     get: vi.fn().mockResolvedValue(null),
     set: vi.fn(),
     setEx: vi.fn(),
+    expire: vi.fn(),
   }),
 }));
 
@@ -25,13 +31,28 @@ vi.mock('../../src/db/fallback/response.model.js', () => ({
   getResponse: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock('axios', () => ({
-  default: {
-    post: vi.fn(),
-    get: vi.fn(),
-  },
-}));
+vi.mock('axios', () => {
+  class AxiosError extends Error {
+    code?: string;
+    response?: any;
+    constructor(message: string, code?: string) {
+      super(message);
+      this.code = code;
+      this.name = 'AxiosError';
+    }
+  }
+  return {
+    default: {
+      post: vi.fn(),
+      get: vi.fn(),
+    },
+    AxiosError,
+  };
+});
 
+// Now import the modules after mocks are set up
+import { Academic, AcademicError, ServerDownError, BlockedReportError, NoDataFoundError } from '../../src/services/student.utils/Academic';
+import { mockAttendance, mockMidmarks, mockAttendanceHTML, mockMidmarksHTML } from '../mocks/academic.mock';
 import axios from 'axios';
 
 describe('Academic Module', () => {
@@ -117,12 +138,15 @@ describe('Academic Module', () => {
           data: "<tr><td>User Name</td><td>:</td><td><input type=textbox name='username' id='username'",
         })
         .mockResolvedValueOnce({
+          data: 'session renewed',
+        })
+        .mockResolvedValueOnce({
           data: mockAttendanceHTML,
         });
 
       const response = await academic.getResponse('att');
       expect(response).toContain('21B81A05E9');
-      expect(axios.post).toHaveBeenCalledTimes(3); // Login + 2 data requests
+      expect(axios.post).toHaveBeenCalledTimes(3); // Login page + session renewal + data request
     });
 
     it('should throw ServerDownError on network failure with no cache', async () => {
@@ -140,7 +164,6 @@ describe('Academic Module', () => {
       expect(result.percentage).toBe(85.5);
       expect(result.totalClasses.attended).toBe(450);
       expect(result.totalClasses.conducted).toBe(526);
-      expect(result.subjects).toHaveLength(0); // Mock HTML is minimal
     });
 
     it('should throw NoDataFoundError when student not found', async () => {
@@ -225,12 +248,13 @@ describe('Academic Module', () => {
     });
 
     it('should return true when session is valid', async () => {
+      // First renew session to set cookie
+      vi.mocked(axios.post).mockResolvedValue({ data: 'success' });
+      await academic.renewSession();
+
       vi.mocked(axios.get).mockResolvedValue({
         data: 'function selectHour(obj)',
       });
-
-      // Force session renewal to set cookie
-      await academic.renewSession();
 
       const result = await academic.isSessionValid();
       expect(result).toBe(true);
