@@ -65,9 +65,9 @@ bot.on("callback_query", async (callbackQuery) => {
 const handleCallbackAction = async (data: string, msg: any) => {
    if (data.startsWith("att_")) {
       const rollNumber = data.slice(4); // More efficient than split
-      await sendAttendanceOrMidMarks(bot, msg, rollNumber, "att");
+      await sendAttendanceOrMidMarks(msg, rollNumber, "att");
    } else if (data.startsWith("mid_")) {
       const rollNumber = data.slice(4);
-      await sendAttendanceOrMidMarks(bot, msg, rollNumber, "mid");
+      await sendAttendanceOrMidMarks(msg, rollNumber, "mid");
    }
 };

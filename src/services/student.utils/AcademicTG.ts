@@ -13,6 +13,7 @@ export class AcademicTG extends Academic {
          const data = await this.getAttendanceJSON();
          return AcademicTG.formatAttendanceMessage(data);
       } catch (error) {
+         console.error("[AcademicTG] Attendance error:", error);
          if (error instanceof AcademicError) {
             return `⚠️ <b>Error:</b> ${error.message}`;
          }
@@ -148,12 +149,12 @@ export class AcademicTG extends Academic {
     */
    private static formatLastUpdated(dateStr: string): string {
       const trimmed = dateStr.trim();
-      
+
       // If it's a date in DD-MM-YYYY format, show only DD-MM
       if (/^\d{2}-\d{2}-\d{4}$/.test(trimmed)) {
          return trimmed.slice(0, 5);
       }
-      
+
       return trimmed || "N/A";
    }
 

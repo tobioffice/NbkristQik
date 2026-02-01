@@ -12,7 +12,7 @@ export const storeAttendanceToRedis = async (doc: string) => {
    const redisClient = await getClient();
 
    for (const rollnumber of rollNumbers) {
-      const studentAttendance = await Academic.cleanAttDoc(doc, rollnumber);
+      const studentAttendance = await Academic.parseAttendanceResponse(doc, rollnumber);
 
       await redisClient.set(
          `attendance:${rollnumber.toUpperCase()}`,
@@ -23,8 +23,8 @@ export const storeAttendanceToRedis = async (doc: string) => {
          60 * 60
       );
 
-      
-         await updateAttendanceStat(rollnumber.toUpperCase(), studentAttendance.percentage);
+
+      await updateAttendanceStat(rollnumber.toUpperCase(), studentAttendance.percentage);
    }
 
    console.log(`cached all student attendance for : `, rollNumbers);
@@ -38,7 +38,7 @@ export const storeMidMarksToRedis = async (doc: string) => {
    const redisClient = await getClient();
 
    for (const rollnumber of rollNumbers) {
-      const studentMidmarks = await Academic.cleanMidDoc(doc, rollnumber);
+      const studentMidmarks = await Academic.parseMidmarksResponse(doc, rollnumber);
       const student = await getStudentCached(rollnumber.toUpperCase());
       if (!student) continue
 
@@ -64,8 +64,8 @@ export const storeMidMarksToRedis = async (doc: string) => {
             return acc + subjectScore;
          }, 0) / (studentMidmarks.subjects.length - zeroMarkSubjects || 1);
 
-      if (student.year ==="41"){
-         average = (average/40) * 30;
+      if (student.year === "41") {
+         average = (average / 40) * 30;
       }
 
       await updateMidMarkStat(rollnumber.toUpperCase(), average);

@@ -79,7 +79,7 @@ export class Academic implements IAcademic {
     */
    async getResponse(command: "mid" | "att", retryCount = 0): Promise<string> {
       const url = command === "mid" ? urls.midmarks : urls.attendance;
-      
+
       try {
          const student = await getStudentCached(this.rollnumber);
          const requestData = this.buildRequestData(command, student);
@@ -195,7 +195,7 @@ export class Academic implements IAcademic {
          throw error;
       }
 
-      const isNetworkError = error instanceof AxiosError && 
+      const isNetworkError = error instanceof AxiosError &&
          (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT" || !error.response);
 
       if (isNetworkError) {
@@ -236,9 +236,9 @@ export class Academic implements IAcademic {
          const headers = header("att");
          headers.Cookie = `PHPSESSID=${sessionCookie}`;
 
-         const response = await axios.get(url, { 
+         const response = await axios.get(url, {
             headers,
-            timeout: REQUEST_TIMEOUT 
+            timeout: REQUEST_TIMEOUT
          });
 
          return response.data.includes("function selectHour(obj)");
@@ -304,7 +304,7 @@ export class Academic implements IAcademic {
       // Store in Redis for future requests
       await storeAttendanceToRedis(response);
 
-      return Academic.parseAttendanceResponse(response, this.rollnumber);
+      return await Academic.parseAttendanceResponse(response, this.rollnumber);
    }
 
    /**
@@ -330,7 +330,7 @@ export class Academic implements IAcademic {
 
       const $ = cheerio.load(doc);
       const studentRow = $(`tr[id=${roll_no.toUpperCase()}]`);
-      
+
       if (!studentRow.length) {
          throw new NoDataFoundError("attendance");
       }
@@ -385,7 +385,7 @@ export class Academic implements IAcademic {
 
       for (let i = 0; i < conducted.length; i++) {
          const conductedCount = parseInt(conducted[i]) || 0;
-         
+
          // Skip subjects with no classes or percentage column
          if (conductedCount === 0 || names[i] === "%AGE") continue;
 
@@ -421,7 +421,7 @@ export class Academic implements IAcademic {
       // Store in Redis for future requests
       await storeMidMarksToRedis(response);
 
-      return Academic.parseMidmarksResponse(response, this.rollnumber);
+      return await Academic.parseMidmarksResponse(response, this.rollnumber);
    }
 
    /**
@@ -476,8 +476,8 @@ export class Academic implements IAcademic {
 
       nameRow.find("td").each((_, element) => {
          const hasLink = $(element).find("a").length > 0;
-         const text = hasLink 
-            ? $(element).find("a").text().trim() 
+         const text = hasLink
+            ? $(element).find("a").text().trim()
             : $(element).text().trim();
 
          if (text) {
