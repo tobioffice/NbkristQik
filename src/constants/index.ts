@@ -7,7 +7,7 @@ export const MESSAGES = {
    JOIN_GROUP: "🚫 Join NbkistQik to access this feature",
 
    CLG_SERVER_DOWN:
-      "⚠️ collage server is not responding. Please try again later.",
+      "⚠️ College server is not responding. Please try again later.",
 
    INVALID_ROLL: "⚠️ Invalid Roll Number ❗",
 

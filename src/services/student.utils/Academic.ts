@@ -1,5 +1,5 @@
 //
-// NO CHANGES REQUIRED
+// Academic Module - Improved version
 //
 import { urls, headers as header } from "../../constants/index.js";
 import { BRANCHES, BASE_URL } from "../../constants/index.js";
@@ -13,9 +13,8 @@ import {
    Midmarks,
 } from "../../types/index.js";
 
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import crypto from "crypto";
-import dotenv from "dotenv";
 import * as cheerio from "cheerio";
 import { getStudentCached } from "../redis/utils.js";
 import {
@@ -28,339 +27,499 @@ import {
    getResponse,
 } from "../../db/fallback/response.model.js";
 
-dotenv.config();
+// Constants
+const INDIAN_DATE = "27-03-2030"; // Max date for attendance
+const LOGIN_URL = urls.login;
+const REQUEST_TIMEOUT = 5000; // Increased timeout for reliability
+const MAX_RETRY_ATTEMPTS = 2;
 
-const indianDate = "27-03-2030"; //maxed date for attendance
-const USERNAME = N_USERNAME;
-const PASSWORD = N_PASSWORD;
-const loginUrl = urls.login;
+// Session cookie storage
+let sessionCookie = "";
 
-var cookie = "";
+// Custom error classes for better error handling
+export class AcademicError extends Error {
+   constructor(message: string, public code: string) {
+      super(message);
+      this.name = "AcademicError";
+   }
+}
+
+export class ServerDownError extends AcademicError {
+   constructor() {
+      super("College server is not responding. Please try again later.", "SERVER_DOWN");
+   }
+}
+
+export class BlockedReportError extends AcademicError {
+   constructor() {
+      super("Report is blocked by the Admin.", "REPORT_BLOCKED");
+   }
+}
+
+export class NoDataFoundError extends AcademicError {
+   constructor(type: "attendance" | "midmarks") {
+      super(`No ${type} data found for this roll number.`, "NO_DATA");
+   }
+}
+
+export class InvalidCredentialsError extends AcademicError {
+   constructor() {
+      super("Invalid credentials. Please contact admin.", "INVALID_CREDENTIALS");
+   }
+}
 
 export class Academic implements IAcademic {
-   constructor(public rollnumber: string) {}
+   constructor(public rollnumber: string) {
+      // Normalize roll number to uppercase
+      this.rollnumber = rollnumber.toUpperCase().trim();
+   }
 
-   async getResponse(command: "mid" | "att"): Promise<string> {
+   /**
+    * Fetches response from college server with retry logic
+    */
+   async getResponse(command: "mid" | "att", retryCount = 0): Promise<string> {
       const url = command === "mid" ? urls.midmarks : urls.attendance;
-      const student = await getStudentCached(this.rollnumber);
+      
+      try {
+         const student = await getStudentCached(this.rollnumber);
+         const requestData = this.buildRequestData(command, student);
+         const headers = this.buildHeaders(command);
 
-      let data;
+         console.log(`[Academic] Fetching ${command} for ${this.rollnumber}`, requestData);
+
+         const response = await axios.post(url, requestData, {
+            headers,
+            timeout: REQUEST_TIMEOUT,
+         });
+
+         const responseData = response.data;
+
+         // Check if session expired (login page returned)
+         if (this.isLoginPage(responseData)) {
+            console.log("[Academic] Session expired, renewing...");
+            await this.renewSession();
+
+            if (retryCount < MAX_RETRY_ATTEMPTS) {
+               return this.getResponse(command, retryCount + 1);
+            }
+            throw new InvalidCredentialsError();
+         }
+
+         // Check if report is blocked
+         if (this.isReportBlocked(responseData)) {
+            throw new BlockedReportError();
+         }
+
+         // Cache the successful response
+         await this.cacheResponse(student, command, responseData);
+
+         return responseData;
+      } catch (error) {
+         return this.handleRequestError(error, command);
+      }
+   }
+
+   /**
+    * Builds request data based on command type
+    */
+   private buildRequestData(command: "mid" | "att", student: any): Record<string, string> {
+      const baseData = {
+         acadYear: "2025-26",
+         branch: student.branch,
+         section: student.section,
+         dateOfAttendance: INDIAN_DATE,
+      };
+
       if (command === "mid") {
-         data = {
-            acadYear: "2025-26",
+         return {
+            ...baseData,
             yearSem: student.year,
-            branch: student.branch,
-            section: student.section,
-            dateOfAttendance: indianDate,
             midsChosen: "mid1, mid2, mid3",
-         };
-      } else {
-         data = {
-            acadYear: "2025-26",
-            yearSem: student.year.slice(0, 1) + "2",
-            branch: student.branch,
-            section: student.section,
-            dateOfAttendance: indianDate,
          };
       }
 
-      console.log(data);
+      return {
+         ...baseData,
+         yearSem: student.year.slice(0, 1) + "2",
+      };
+   }
 
-      const heads = header(command);
-      heads.Cookie = "PHPSESSID=" + cookie;
+   /**
+    * Builds request headers with session cookie
+    */
+   private buildHeaders(command: "mid" | "att"): Record<string, string> {
+      const headers = header(command);
+      headers.Cookie = `PHPSESSID=${sessionCookie}`;
+      return headers;
+   }
+
+   /**
+    * Checks if response is login page (session expired)
+    */
+   private isLoginPage(response: string): boolean {
+      return response.includes(
+         "<tr><td>User Name</td><td>:</td><td><input type=textbox name='username' id='username'"
+      );
+   }
+
+   /**
+    * Checks if report is blocked by admin
+    */
+   private isReportBlocked(response: string): boolean {
+      return response.includes("Blocked");
+   }
+
+   /**
+    * Caches successful response for fallback
+    */
+   private async cacheResponse(student: any, command: "mid" | "att", response: string): Promise<void> {
       try {
-         const response = await axios.post(url, data, {
-            headers: heads,
-            timeout: 3000,
-         });
-         const res = response.data;
-         if (
-            res.includes(
-               "<tr><td>User Name</td><td>:</td><td><input type=textbox name='username' id='username'"
-            )
-         ) {
-            await this.renewPassword();
-
-            if (await this.isCookiesValid()) {
-               const res_temp = await this.getResponse(command);
-               if (res_temp?.includes("Blocked")) {
-                  throw new Error("Report is Blocked by the Admin");
-               }
-               return res_temp;
-            }
-         }
-         storeResponse(
+         await storeResponse(
             student.year,
             student.branch,
             student.section,
             command,
-            res
+            response
          );
-
-         if (res.includes("Blocked")) {
-            throw new Error("Report is Blocked by the Admin");
-         }
-         return res;
       } catch (error) {
-         return await getResponse(
+         console.error("[Academic] Failed to cache response:", error);
+      }
+   }
+
+   /**
+    * Handles request errors with fallback to cached data
+    */
+   private async handleRequestError(error: unknown, command: "mid" | "att"): Promise<string> {
+      // Re-throw custom errors
+      if (error instanceof AcademicError) {
+         throw error;
+      }
+
+      const isNetworkError = error instanceof AxiosError && 
+         (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT" || !error.response);
+
+      if (isNetworkError) {
+         console.warn("[Academic] Network error, attempting fallback...");
+      } else {
+         console.error("[Academic] Request error:", error);
+      }
+
+      // Try to get cached response
+      try {
+         const student = await getStudentCached(this.rollnumber);
+         const cachedResponse = await getResponse(
             student.year,
             student.branch,
             student.section,
             command
          );
+
+         if (cachedResponse) {
+            console.log("[Academic] Using cached response");
+            return cachedResponse;
+         }
+      } catch (fallbackError) {
+         console.error("[Academic] Fallback failed:", fallbackError);
       }
+
+      throw new ServerDownError();
    }
 
-   async isCookiesValid(): Promise<boolean> {
-      const url = `${BASE_URL}/attendance`;
+   /**
+    * Validates if current session cookie is still valid
+    */
+   async isSessionValid(): Promise<boolean> {
+      if (!sessionCookie) return false;
 
-      const headers = header("att");
-      headers.Cookie = `PHPSESSID=${cookie}`;
+      try {
+         const url = `${BASE_URL}/attendance`;
+         const headers = header("att");
+         headers.Cookie = `PHPSESSID=${sessionCookie}`;
 
-      const resp = await axios.get(url, { headers });
+         const response = await axios.get(url, { 
+            headers,
+            timeout: REQUEST_TIMEOUT 
+         });
 
-      if (resp.data.includes("function selectHour(obj)")) {
-         return true;
-      } else {
-         console.warn("Cookies are invalid or response is unexpected.");
+         return response.data.includes("function selectHour(obj)");
+      } catch (error) {
+         console.warn("[Academic] Session validation failed:", error);
          return false;
       }
    }
 
-   async renewPassword(): Promise<string> {
-      const randomString = crypto.randomBytes(3).toString("hex");
-      const sessionToken = `ggpmgfj8dssskkp2q2h6db${randomString}0`;
+   /**
+    * Renews session by logging in again
+    */
+   async renewSession(): Promise<void> {
+      const sessionToken = this.generateSessionToken();
       const headers = header("att");
       headers.Cookie = `PHPSESSID=${sessionToken}`;
       headers.Referer = `${BASE_URL}/attendance/attendanceLogin.php`;
 
-      const payload = `username=${USERNAME}&password=${PASSWORD}&captcha=`;
+      const payload = `username=${N_USERNAME}&password=${N_PASSWORD}&captcha=`;
 
-      await axios.post(loginUrl, payload, {
-         headers,
-         maxRedirects: 0,
-         validateStatus: function (status) {
-            return status >= 200 && status < 303;
-         },
-      });
-      cookie = sessionToken;
-      console.log("Password Renewed");
-      return "Password Renewed";
+      try {
+         await axios.post(LOGIN_URL, payload, {
+            headers,
+            maxRedirects: 0,
+            timeout: REQUEST_TIMEOUT,
+            validateStatus: (status) => status >= 200 && status < 303,
+         });
+
+         sessionCookie = sessionToken;
+         console.log("[Academic] Session renewed successfully");
+      } catch (error) {
+         console.error("[Academic] Failed to renew session:", error);
+         throw new InvalidCredentialsError();
+      }
    }
 
+   /**
+    * Generates a random session token
+    */
+   private generateSessionToken(): string {
+      const randomString = crypto.randomBytes(3).toString("hex");
+      return `ggpmgfj8dssskkp2q2h6db${randomString}0`;
+   }
+
+   /**
+    * Gets attendance data as JSON with Redis caching
+    */
    async getAttendanceJSON(): Promise<Attendance> {
-      const redisClient = await getClient();
-
-      const cachedAttendance = await redisClient.get(
-         `attendance:${this.rollnumber.toUpperCase()}`
-      );
-      const attendance = cachedAttendance
-         ? (JSON.parse(cachedAttendance) as Attendance)
-         : null;
-
-      if (attendance) {
-         console.log("got cached attendance: ");
-         return attendance;
+      // Try Redis cache first
+      const cached = await this.getCachedAttendance();
+      if (cached) {
+         console.log("[Academic] Returning cached attendance");
+         return cached;
       }
 
       // Fetch fresh data
       const response = await this.getResponse("att");
 
-      if (!response.includes(this.rollnumber.toUpperCase()))
-         throw new Error("No attendance data found !");
-
-      storeAttendanceToRedis(response);
-
-      return Academic.cleanAttDoc(response, this.rollnumber);
-   }
-
-   static async cleanAttDoc(
-      doc: string,
-      rollnumber: string
-   ): Promise<Attendance> {
-      const { roll_no, branch, section, year } = await getStudentCached(
-         rollnumber
-      );
-
-      const $ = cheerio.load(doc);
-      const studentTr = $(`tr[id=${roll_no.toUpperCase()}]`);
-      const percentage = studentTr.find("td[class=tdPercent]").text();
-      const totalClassesAttended = percentage
-         .split("(")[1]
-         .trim()
-         .replace(")", "");
-
-      const trList = $(`tr`);
-      const nameTr = trList.eq(1);
-      const lastUpdatedTr = trList.eq(2);
-      const conductedTr = trList.eq(3);
-
-      const nameArray = nameTr
-         .find("td")
-         .map((_, el) => $(el).text())
-         .get();
-      const lastUpdatedArray = lastUpdatedTr
-         .find("td")
-         .map((_, el) => $(el).text())
-         .get();
-      const attendedArray = studentTr
-         .find("td")
-         .map((_, el) => $(el).text())
-         .get();
-      const conductedArray = conductedTr
-         .find("td")
-         .map((_, el) => $(el).text())
-         .get();
-
-      //cleaning the data start
-      lastUpdatedArray.shift();
-      conductedArray.shift();
-      attendedArray.splice(0, 2);
-
-      let deleted = 0;
-      [...conductedArray].forEach((el, i) => {
-         const updated = parseInt(el);
-         if (updated === 0) {
-            nameArray.splice(i - deleted, 1);
-            lastUpdatedArray.splice(i - deleted, 1);
-            conductedArray.splice(i - deleted, 1);
-            attendedArray.splice(i - deleted, 1);
-            deleted++;
-         }
-         if (nameArray[i] === "%AGE") {
-            nameArray.splice(i);
-            lastUpdatedArray.splice(i);
-            conductedArray.splice(i);
-            attendedArray.splice(i);
-         }
-      });
-
-      lastUpdatedArray.forEach((el, i) => {
-         lastUpdatedArray[i] = el.split("(")[0];
-      });
-      //cleaning the data end
-
-      //formatting subjects objects
-      const subjects: AttendanceBySubject[] = [];
-
-      nameArray.forEach((el, i) => {
-         subjects.push({
-            subject: el,
-            attended: parseInt(attendedArray[i]),
-            conducted: parseInt(conductedArray[i]),
-            lastUpdated: lastUpdatedArray[i],
-         });
-      });
-
-      //attendance object
-      const attendance: Attendance = {
-         rollno: roll_no,
-         year_branch_section:
-            year.slice(0, 1) + "_" + BRANCHES[parseInt(branch)] + "_" + section,
-         percentage: parseFloat(percentage.split("(")[0].trim()),
-         totalClasses: {
-            attended: parseInt(totalClassesAttended.split("/")[0].trim()),
-            conducted: parseInt(totalClassesAttended.split("/")[1].trim()),
-         },
-         subjects: subjects,
-      };
-
-      return attendance;
-   }
-
-   async getMidmarksJSON(): Promise<Midmarks> {
-      const redisClient = await getClient();
-
-      const cachedMidMarks = await redisClient.get(
-         `midmarks:${this.rollnumber.toUpperCase()}`
-      );
-      const midMarks = cachedMidMarks
-         ? (JSON.parse(cachedMidMarks) as Midmarks)
-         : null;
-
-      if (midMarks) {
-         console.log("got cached midmarks");
-         return midMarks;
+      if (!response.includes(this.rollnumber)) {
+         throw new NoDataFoundError("attendance");
       }
 
-      const response = await this.getResponse("mid");
+      // Store in Redis for future requests
+      await storeAttendanceToRedis(response);
 
-      if (!response.includes(this.rollnumber.toUpperCase()))
-         throw new Error("No midmarks data found !");
-
-      storeMidMarksToRedis(response);
-
-      return await Academic.cleanMidDoc(response, this.rollnumber);
+      return Academic.parseAttendanceResponse(response, this.rollnumber);
    }
 
-   static async cleanMidDoc(
-      doc: string,
-      rollnumber: string
-   ): Promise<Midmarks> {
-      const { roll_no, year, section, branch } = await getStudentCached(
-         rollnumber
-      );
+   /**
+    * Gets cached attendance from Redis
+    */
+   private async getCachedAttendance(): Promise<Attendance | null> {
+      try {
+         const redisClient = await getClient();
+         const cached = await redisClient.get(`attendance:${this.rollnumber}`);
+         return cached ? JSON.parse(cached) as Attendance : null;
+      } catch (error) {
+         console.warn("[Academic] Redis cache miss:", error);
+         return null;
+      }
+   }
+
+   /**
+    * Parses attendance HTML response into structured data
+    */
+   static async parseAttendanceResponse(doc: string, rollnumber: string): Promise<Attendance> {
+      const student = await getStudentCached(rollnumber);
+      const { roll_no, branch, section, year } = student;
 
       const $ = cheerio.load(doc);
+      const studentRow = $(`tr[id=${roll_no.toUpperCase()}]`);
+      
+      if (!studentRow.length) {
+         throw new NoDataFoundError("attendance");
+      }
 
-      const studentTr = $(`tr[id=${roll_no.toUpperCase()}]`)
-         .find("td")
-         .slice(2);
-      const studentMarksList = studentTr.map((_, el) => $(el).text()).get();
+      const percentageText = studentRow.find("td[class=tdPercent]").text();
+      const totalClassesMatch = percentageText.match(/\(([^)]+)\)/);
+      const totalClassesStr = totalClassesMatch ? totalClassesMatch[1].trim() : "0/0";
 
-      const nameTr = $(`tr`).eq(1);
-      const tds = nameTr.find("td");
+      const rows = $("tr");
+      const nameRow = rows.eq(1);
+      const lastUpdatedRow = rows.eq(2);
+      const conductedRow = rows.eq(3);
 
-      //start separating subjects and labs
+      // Extract data from rows
+      const names = nameRow.find("td").map((_, el) => $(el).text()).get();
+      const lastUpdated = lastUpdatedRow.find("td").map((_, el) => $(el).text()).get();
+      const attended = studentRow.find("td").map((_, el) => $(el).text()).get();
+      const conducted = conductedRow.find("td").map((_, el) => $(el).text()).get();
+
+      // Clean up arrays
+      lastUpdated.shift();
+      conducted.shift();
+      attended.splice(0, 2);
+
+      // Filter out empty subjects and format data
+      const subjects = Academic.buildSubjectList(names, attended, conducted, lastUpdated);
+
+      const [attendedTotal, conductedTotal] = totalClassesStr.split("/").map(s => parseInt(s.trim()) || 0);
+
+      return {
+         rollno: roll_no,
+         year_branch_section: `${year.slice(0, 1)}_${BRANCHES[parseInt(branch)]}_${section}`,
+         percentage: parseFloat(percentageText.split("(")[0].trim()) || 0,
+         totalClasses: {
+            attended: attendedTotal,
+            conducted: conductedTotal,
+         },
+         subjects,
+      };
+   }
+
+   /**
+    * Builds subject list from parsed data
+    */
+   private static buildSubjectList(
+      names: string[],
+      attended: string[],
+      conducted: string[],
+      lastUpdated: string[]
+   ): AttendanceBySubject[] {
+      const subjects: AttendanceBySubject[] = [];
+
+      for (let i = 0; i < conducted.length; i++) {
+         const conductedCount = parseInt(conducted[i]) || 0;
+         
+         // Skip subjects with no classes or percentage column
+         if (conductedCount === 0 || names[i] === "%AGE") continue;
+
+         subjects.push({
+            subject: names[i] || "Unknown",
+            attended: parseInt(attended[i]) || 0,
+            conducted: conductedCount,
+            lastUpdated: lastUpdated[i]?.split("(")[0]?.trim() || "N/A",
+         });
+      }
+
+      return subjects;
+   }
+
+   /**
+    * Gets mid-term marks as JSON with Redis caching
+    */
+   async getMidmarksJSON(): Promise<Midmarks> {
+      // Try Redis cache first
+      const cached = await this.getCachedMidmarks();
+      if (cached) {
+         console.log("[Academic] Returning cached midmarks");
+         return cached;
+      }
+
+      // Fetch fresh data
+      const response = await this.getResponse("mid");
+
+      if (!response.includes(this.rollnumber)) {
+         throw new NoDataFoundError("midmarks");
+      }
+
+      // Store in Redis for future requests
+      await storeMidMarksToRedis(response);
+
+      return Academic.parseMidmarksResponse(response, this.rollnumber);
+   }
+
+   /**
+    * Gets cached midmarks from Redis
+    */
+   private async getCachedMidmarks(): Promise<Midmarks | null> {
+      try {
+         const redisClient = await getClient();
+         const cached = await redisClient.get(`midmarks:${this.rollnumber}`);
+         return cached ? JSON.parse(cached) as Midmarks : null;
+      } catch (error) {
+         console.warn("[Academic] Redis cache miss:", error);
+         return null;
+      }
+   }
+
+   /**
+    * Parses midmarks HTML response into structured data
+    */
+   static async parseMidmarksResponse(doc: string, rollnumber: string): Promise<Midmarks> {
+      const student = await getStudentCached(rollnumber);
+      const { roll_no, year, section, branch } = student;
+
+      const $ = cheerio.load(doc);
+      const studentRow = $(`tr[id=${roll_no.toUpperCase()}]`);
+
+      if (!studentRow.length) {
+         throw new NoDataFoundError("midmarks");
+      }
+
+      const marksCells = studentRow.find("td").slice(2);
+      const marksList = marksCells.map((_, el) => $(el).text()).get();
+
+      const nameRow = $("tr").eq(1);
+      const { subjects, labs } = Academic.separateSubjectsAndLabs($, nameRow);
+
+      const midmarksList = Academic.buildMidmarksList([...subjects, ...labs], marksList, subjects);
+
+      return {
+         rollno: roll_no,
+         year_branch_section: `${year.slice(0, 1)}_${BRANCHES[parseInt(branch)]}_${section}`,
+         subjects: midmarksList,
+      };
+   }
+
+   /**
+    * Separates subjects and labs from header row
+    */
+   private static separateSubjectsAndLabs($: cheerio.CheerioAPI, nameRow: cheerio.Cheerio<any>): { subjects: string[]; labs: string[] } {
       const subjects: string[] = [];
       const labs: string[] = [];
 
-      tds.each((_, element) => {
-         const isSubject = $(element).find("a").length > 0;
+      nameRow.find("td").each((_, element) => {
+         const hasLink = $(element).find("a").length > 0;
+         const text = hasLink 
+            ? $(element).find("a").text().trim() 
+            : $(element).text().trim();
+
+         if (text) {
+            (hasLink ? subjects : labs).push(text);
+         }
+      });
+
+      return { subjects, labs };
+   }
+
+   /**
+    * Builds midmarks list from parsed data
+    */
+   private static buildMidmarksList(
+      allSubjects: string[],
+      marksList: string[],
+      subjectsOnly: string[]
+   ): MidmarksBySubject[] {
+      return allSubjects.map((subject, i) => {
+         const isSubject = subjectsOnly.includes(subject);
+         const marksStr = marksList[i] || "";
 
          if (isSubject) {
-            subjects.push($(element).find("a").text().trim());
-         } else {
-            labs.push($(element).text().trim());
-         }
-      });
-      //end separating subjects and labs
+            const [part1, part2] = marksStr.split("/");
+            const m2Match = part2?.match(/^(\d+)\((\d+)\)/);
 
-      //start formatting midmarks objects into MidmarksBySubject List
-      const midmarksList: MidmarksBySubject[] = [];
-
-      [...subjects, ...labs].forEach((el, i) => {
-         if (i < subjects.length) {
-            const part1 = studentMarksList[i]?.split("/")[0];
-            const part2 = studentMarksList[i]?.split("/")[1];
-
-            midmarksList.push({
-               subject: el,
+            return {
+               subject,
                M1: parseInt(part1) || 0,
-               M2: parseInt(part2?.split("(")[0]) || 0,
-               average: parseInt(part2?.split("(")[1]?.split(")")[0]) || 0,
-               type: subjects.includes(el) ? "Subject" : "Lab",
-            });
-         } else {
-            midmarksList.push({
-               subject: el,
-               M1: parseInt(studentMarksList[i]),
-               M2: 0,
-               average: 0,
-               type: subjects.includes(el) ? "Subject" : "Lab",
-            });
+               M2: m2Match ? parseInt(m2Match[1]) : 0,
+               average: m2Match ? parseInt(m2Match[2]) : 0,
+               type: "Subject",
+            };
          }
+
+         return {
+            subject,
+            M1: parseInt(marksStr) || 0,
+            M2: 0,
+            average: 0,
+            type: "Lab",
+         };
       });
-      //end formatting midmarks objects into MidmarksBySubject List
-
-      //midmarks object
-      const midmarks: Midmarks = {
-         rollno: roll_no,
-         year_branch_section:
-            year.slice(0, 1) + "_" + BRANCHES[parseInt(branch)] + "_" + section,
-         subjects: midmarksList,
-      };
-
-      return midmarks;
    }
 }
