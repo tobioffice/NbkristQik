@@ -6,7 +6,7 @@ import { getMidMarks, getAttendance } from "../../services/student.service.js";
 import { bot } from "../bot.js";
 
 export const sendAttendanceOrMidMarks = async (
-   bot: TelegramBot,
+   _bot: TelegramBot,
    msg: any,
    rollno: string,
    signal: Signal

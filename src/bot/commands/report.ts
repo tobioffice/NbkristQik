@@ -1,4 +1,5 @@
 import { bot } from "../bot.js";
+import { ADMIN_ID } from "../../config/environmentals.js";
 
 bot.onText(/\/report$/, (msg) => {
    bot.sendMessage(
@@ -22,7 +23,7 @@ bot.onText(/\/report (.+)/, (msg, match) => {
       `📝 <b>Report:</b>\n<i>${reportMessage}</i>`;
 
    // Forward to personal chat
-   bot.sendMessage(process.env.ADMIN_ID || "1329532701", formattedMessage, {
+   bot.sendMessage(ADMIN_ID || "1329532701", formattedMessage, {
       parse_mode: "HTML",
    }).catch((err) => console.error("Error forwarding report:", err));
 

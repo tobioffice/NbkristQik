@@ -1,4 +1,5 @@
 import { createClient, RedisClientType } from "redis";
+import { REDIS_URL } from "../../config/environmentals.js";
 
 let client: RedisClientType | null = null;
 
@@ -8,7 +9,7 @@ export const getClient = async (): Promise<RedisClientType> => {
   }
 
   client = createClient({
-    url: process.env.REDIS_URL,
+    url: REDIS_URL,
   });
 
   client.on("error", (err) => console.error("Redis Client Error", err));

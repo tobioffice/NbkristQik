@@ -17,6 +17,8 @@ const CHANNEL_ID =
       ? process.env.PROD_CHANNEL
       : process.env.TEST_CHANNEL) || "";
 
+const REDIS_URL = process.env.REDIS_URL || "";
+
 const PORT = process.env.PORT || 5000;
 
 export {
@@ -28,5 +30,6 @@ export {
    N_PASSWORD,
    ADMIN_ID,
    CHANNEL_ID,
+   REDIS_URL,
    PORT,
 };
