@@ -80,6 +80,37 @@ INSERT INTO studentsnew VALUES
 CREATE UNIQUE INDEX sqlite_autoindex_studentsnew_1 ON studentsnew(roll_no);
 ```
 
+> **⚠️ Data Type Mismatch Warning:**  
+> There is an intentional data type difference between `studentsnew.branch` (TEXT) and `student_stats.branch` (INTEGER).
+> 
+> - **`studentsnew.branch`**: Stored as **TEXT** (e.g., `'5'` for CSE)
+> - **`student_stats.branch`**: Stored as **INTEGER** (e.g., `5` for CSE)
+> 
+> **Why this matters:**
+> - When moving data from `studentsnew` to `student_stats`, you must convert the branch field
+> - Joins between these tables require type casting
+> - Filtering/querying may behave differently
+> 
+> **Code example showing required conversion:**
+> ```typescript
+> // When creating student_stats entry from studentsnew data
+> await turso.execute({
+>   sql: `INSERT INTO student_stats (..., branch, ...) VALUES (...)`,
+>   args: [
+>     ...,
+>     parseInt(student.branch),  // Convert TEXT to INTEGER
+>     ...
+>   ]
+> });
+> ```
+> 
+> **Recommendation:**
+> - **Option 1 (Preferred):** Migrate `studentsnew.branch` to INTEGER for consistency
+> - **Option 2:** Always use `parseInt(student.branch)` when moving data
+> - **Option 3:** Cast in queries: `CAST(studentsnew.branch AS INTEGER)`
+> 
+> See the [Update Student Stats](#update-student-stats) section for implementation examples.
+
 ---
 
 #### 2. `student_stats`
@@ -107,7 +138,7 @@ CREATE TABLE student_stats (
 | `roll_no` | TEXT | PRIMARY KEY, FK | References `studentsnew.roll_no` |
 | `student_name` | TEXT | NOT NULL | Full name (denormalized for performance) |
 | `year` | INTEGER | NOT NULL | Academic year |
-| `branch` | INTEGER | NOT NULL | Branch code as integer |
+| `branch` | INTEGER | NOT NULL | Branch code as integer ⚠️ *See data type mismatch note above* |
 | `section` | TEXT | NOT NULL | Section letter |
 | `attendance_percentage` | REAL | NULL | Attendance % (0-100), null if not fetched |
 | `midmarks_average` | REAL | NULL | Average midmarks (0-20), null if not fetched |
@@ -382,7 +413,7 @@ export const updateStudentStats = async (
       rollno,
       student.name,
       student.year,
-      parseInt(student.branch),
+      parseInt(student.branch),  // ⚠️ CRITICAL: Convert TEXT to INTEGER (studentsnew.branch → student_stats.branch)
       student.section,
       stats.attendancePercentage ?? null,
       stats.midmarksAverage ?? null,
@@ -391,6 +422,8 @@ export const updateStudentStats = async (
   });
 };
 ```
+
+> **💡 Note:** The `parseInt(student.branch)` conversion is **required** because `studentsnew.branch` is TEXT while `student_stats.branch` is INTEGER. Without this conversion, you'll get type mismatch errors or incorrect data. See the [data type mismatch warning](#1-studentsnew) for details.
 
 ---
 
