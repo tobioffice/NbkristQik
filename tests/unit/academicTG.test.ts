@@ -19,7 +19,8 @@ describe('AcademicTG Module', () => {
 
       expect(message).toContain('21B81A05E9');
       expect(message).toContain('3_CSE_A');
-      expect(message).toContain('85.5%');
+      // The percentage is formatted as 85.50% not 85.5%
+      expect(message).toContain('85.50%');
       expect(message).toContain('450/526');
       expect(message).toContain('<pre>');
       expect(message).toContain('</pre>');
@@ -33,13 +34,14 @@ describe('AcademicTG Module', () => {
       expect(message).toMatch(/[🟩🟨🟥⬜]/);
     });
 
-    it('should format subjects correctly', async () => {
+    it('should format subjects correctly (names are truncated to 8 chars)', async () => {
       vi.spyOn(academicTG, 'getAttendanceJSON').mockResolvedValue(mockAttendance);
 
       const message = await academicTG.getAttendanceMessage();
 
-      expect(message).toContain('Data Structures');
-      expect(message).toContain('Operating Systems');
+      // Subject names are truncated to 8 characters with ".." if longer
+      expect(message).toContain('Data S..');
+      expect(message).toContain('Operat..');
       expect(message).toContain('45/50');
       expect(message).toContain('40/45');
     });
@@ -80,14 +82,16 @@ describe('AcademicTG Module', () => {
       expect(message).toContain('</pre>');
     });
 
-    it('should format subjects with marks correctly', async () => {
+    it('should format subjects with marks correctly (names are truncated to 11 chars)', async () => {
       vi.spyOn(academicTG, 'getMidmarksJSON').mockResolvedValue(mockMidmarks);
 
       const message = await academicTG.getMidmarksMessage();
 
-      expect(message).toContain('Data Structures');
-      expect(message).toContain('Operating Systems');
-      expect(message).toContain('Subject');
+      // Subject names are truncated to 11 characters with ".." if longer
+      expect(message).toContain('Data Stru..');
+      expect(message).toContain('Operating..');
+      // Type is also truncated to 4 characters
+      expect(message).toContain('Su..');
       expect(message).toContain('Lab');
     });
 
