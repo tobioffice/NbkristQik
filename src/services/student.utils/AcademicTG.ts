@@ -46,8 +46,8 @@ export class AcademicTG extends Academic {
     */
    private formatErrorMessage(error: unknown, dataType: "attendance" | "midmarks"): string {
       const rollNo = this.rollnumber;
-      const timestamp = new Date().toLocaleTimeString("en-US", { 
-         hour: "2-digit", 
+      const timestamp = new Date().toLocaleTimeString("en-US", {
+         hour: "2-digit",
          minute: "2-digit",
          timeZone: "Asia/Kolkata"
       });
@@ -75,7 +75,7 @@ export class AcademicTG extends Academic {
    /**
     * Builds server down error message with retry guidance
     */
-   private buildServerDownMessage(dataType: string, timestamp: string): string {
+   private buildServerDownMessage(_dataType: string, timestamp: string): string {
       return (
          `⚠️ <b>College Server Temporarily Down</b>\n\n` +
          `🔄 <b>Status:</b> Server not responding\n` +

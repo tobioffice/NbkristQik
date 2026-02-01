@@ -1,4 +1,3 @@
-import TelegramBot from "node-telegram-bot-api";
 import { Signal } from "../../constants/index.js";
 import { CHANNEL_ID } from "../../config/environmentals.js";
 import { getMidMarks, getAttendance } from "../../services/student.service.js";
@@ -14,8 +13,7 @@ export const sendAttendanceOrMidMarks = async (
       const chatId = msg.chat.id;
       const message = await bot.sendMessage(
          chatId,
-         `<code>Fetching ${
-            signal == "att" ? "Attendance" : "Mid marks"
+         `<code>Fetching ${signal == "att" ? "Attendance" : "Mid marks"
          }...</code>`,
          {
             parse_mode: "HTML",
