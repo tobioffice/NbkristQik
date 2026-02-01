@@ -1,6 +1,11 @@
 import express from "express";
 import cors from "cors";
 import { getLeaderboard } from "../db/student_stats.model.js";
+import {
+  leaderboardSecurityMiddlewares,
+  apiSecurityMiddlewares,
+  securityLogger
+} from "../middleware/security.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,8 +20,13 @@ app.use(
 
 app.use(express.json());
 
+// Apply security middleware to all routes
+app.use(apiSecurityMiddlewares);
+
 // API Routes
-app.get("/api/leaderboard", async (req, res) => {
+app.get("/api/leaderboard",
+  leaderboardSecurityMiddlewares,
+  async (req, res) => {
   try {
     // const userId = req.query.userId
     //    ? parseInt(req.query.userId as string)
@@ -52,8 +62,18 @@ app.get("/api/leaderboard", async (req, res) => {
   }
 });
 
+// Health check endpoint (no rate limiting)
+app.get("/health", securityLogger, (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: '1.0.0'
+  });
+});
+
 export const startServer = () => {
   app.listen(PORT, () => {
-    console.log(`🚀 API Server running on port ${PORT}`);
+    console.log(`🚀 API Server running on port ${PORT} with security enabled`);
   });
 };
