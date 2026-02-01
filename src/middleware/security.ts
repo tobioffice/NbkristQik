@@ -102,10 +102,9 @@ export const sanitizeInput = (req: any, res: any, next: any) => {
   const sanitizeObject = (obj: any) => {
     for (const key in obj) {
       if (typeof obj[key] === 'string') {
-        // Remove potential XSS characters
+        // Remove potential XSS characters by stripping angle brackets
         obj[key] = obj[key]
-          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-          .replace(/<[^>]*>/g, '')
+          .replace(/[<>]/g, '')
           .trim();
       } else if (typeof obj[key] === 'object' && obj[key] !== null) {
         sanitizeObject(obj[key]);
