@@ -4,6 +4,7 @@
 import { urls, headers as header } from "../../constants/index.js";
 import { BRANCHES, BASE_URL } from "../../constants/index.js";
 import { N_USERNAME, N_PASSWORD } from "../../config/environmentals.js";
+import { logger } from "../../utils/logger.js";
 
 import {
    IAcademic,
@@ -85,7 +86,7 @@ export class Academic implements IAcademic {
          const requestData = this.buildRequestData(command, student);
          const headers = this.buildHeaders(command);
 
-         console.log(`[Academic] Fetching ${command} for ${this.rollnumber}`, requestData);
+         logger.debug(`Fetching ${command} data`, { rollNumber: this.rollnumber, command });
 
          const response = await axios.post(url, requestData, {
             headers,
@@ -96,7 +97,7 @@ export class Academic implements IAcademic {
 
          // Check if session expired (login page returned)
          if (this.isLoginPage(responseData)) {
-            console.log("[Academic] Session expired, renewing...");
+            logger.info("Session expired, renewing...");
             await this.renewSession();
 
             if (retryCount < MAX_RETRY_ATTEMPTS) {
@@ -182,7 +183,7 @@ export class Academic implements IAcademic {
             response
          );
       } catch (error) {
-         console.error("[Academic] Failed to cache response:", error);
+         logger.error("Failed to cache response", error);
       }
    }
 
@@ -199,9 +200,9 @@ export class Academic implements IAcademic {
          (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT" || !error.response);
 
       if (isNetworkError) {
-         console.warn("[Academic] Network error, attempting fallback...");
+         logger.warn("Network error, attempting fallback...");
       } else {
-         console.error("[Academic] Request error:", error);
+         logger.error("Request error", error);
       }
 
       // Try to get cached response
@@ -215,11 +216,11 @@ export class Academic implements IAcademic {
          );
 
          if (cachedResponse) {
-            console.log("[Academic] Using cached response");
+            logger.debug("Using cached response");
             return cachedResponse;
          }
       } catch (fallbackError) {
-         console.error("[Academic] Fallback failed:", fallbackError);
+         logger.error("Fallback failed", fallbackError);
       }
 
       throw new ServerDownError();
@@ -243,7 +244,7 @@ export class Academic implements IAcademic {
 
          return response.data.includes("function selectHour(obj)");
       } catch (error) {
-         console.warn("[Academic] Session validation failed:", error);
+         logger.warn("Session validation failed", error);
          return false;
       }
    }
@@ -268,9 +269,9 @@ export class Academic implements IAcademic {
          });
 
          sessionCookie = sessionToken;
-         console.log("[Academic] Session renewed successfully");
+         logger.info("Session renewed successfully");
       } catch (error) {
-         console.error("[Academic] Failed to renew session:", error);
+         logger.error("Failed to renew session", error);
          throw new InvalidCredentialsError();
       }
    }
@@ -290,7 +291,7 @@ export class Academic implements IAcademic {
       // Try Redis cache first
       const cached = await this.getCachedAttendance();
       if (cached) {
-         console.log("[Academic] Returning cached attendance");
+         logger.debug("Returning cached attendance");
          return cached;
       }
 
@@ -316,7 +317,7 @@ export class Academic implements IAcademic {
          const cached = await redisClient.get(`attendance:${this.rollnumber}`);
          return cached ? JSON.parse(cached) as Attendance : null;
       } catch (error) {
-         console.warn("[Academic] Redis cache miss:", error);
+         logger.warn("Redis cache miss", error);
          return null;
       }
    }
@@ -407,7 +408,7 @@ export class Academic implements IAcademic {
       // Try Redis cache first
       const cached = await this.getCachedMidmarks();
       if (cached) {
-         console.log("[Academic] Returning cached midmarks");
+         logger.debug("Returning cached midmarks");
          return cached;
       }
 
@@ -433,7 +434,7 @@ export class Academic implements IAcademic {
          const cached = await redisClient.get(`midmarks:${this.rollnumber}`);
          return cached ? JSON.parse(cached) as Midmarks : null;
       } catch (error) {
-         console.warn("[Academic] Redis cache miss:", error);
+         logger.warn("Redis cache miss", error);
          return null;
       }
    }

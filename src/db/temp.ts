@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger.js";
 import { turso } from "./db.js";
 
 turso
@@ -10,5 +11,5 @@ turso
 `,
   )
   .then((res) => {
-    console.log("Fallback Responses Table ensured", res);
+    logger.info("Fallback Responses Table ensured");
   });

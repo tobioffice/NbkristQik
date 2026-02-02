@@ -6,6 +6,7 @@ import {
   apiSecurityMiddlewares,
   securityLogger,
 } from "../middleware/security.js";
+import { logger } from "../utils/logger.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,11 +30,6 @@ app.get(
   leaderboardSecurityMiddlewares,
   async (req: Request, res: Response) => {
     try {
-      // const userId = req.query.userId
-      //    ? parseInt(req.query.userId as string)
-      //    : null;
-
-      // console.log("User ID:", userId);
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 50;
       const sortBy =
@@ -60,7 +56,7 @@ app.get(
         data,
       });
     } catch (error) {
-      console.error("Error fetching leaderboard:", error);
+      logger.error("Error fetching leaderboard:", error);
       res.status(500).json({ success: false, error: "Internal Server Error" });
     }
   },
@@ -78,6 +74,6 @@ app.get("/health", securityLogger, (_req: Request, res: Response) => {
 
 export const startServer = () => {
   app.listen(PORT, () => {
-    console.log(`🚀 API Server running on port ${PORT} with security enabled`);
+    logger.info(`🚀 API Server running on port ${PORT} with security enabled`);
   });
 };

@@ -1,8 +1,10 @@
+import { logger } from "../../utils/logger.js";
 import * as cheerio from "cheerio";
 import { Academic } from "../student.utils/Academic.js";
 import { getClient } from "./getRedisClient.js";
 import { updateAttendanceStat, updateMidMarkStat } from "../../db/student_stats.model.js";
 import { getStudentCached } from "./utils.js";
+import { logger } from "../../utils/logger.js";
 
 export const storeAttendanceToRedis = async (doc: string) => {
    const $ = cheerio.load(doc);
@@ -24,11 +26,11 @@ export const storeAttendanceToRedis = async (doc: string) => {
       );
 
 
-      await updateAttendanceStat(rollnumber.toUpperCase(), studentAttendance.percentage);
-   }
+       await updateAttendanceStat(rollnumber.toUpperCase(), studentAttendance.percentage);
+    }
 
-   console.log(`cached all student attendance for : `, rollNumbers);
-};
+    logger.debug(`cached all student attendance for : `, rollNumbers);
+ };
 
 export const storeMidMarksToRedis = async (doc: string) => {
    const $ = cheerio.load(doc);
@@ -68,8 +70,8 @@ export const storeMidMarksToRedis = async (doc: string) => {
          average = (average / 40) * 30;
       }
 
-      await updateMidMarkStat(rollnumber.toUpperCase(), average);
-   }
+       await updateMidMarkStat(rollnumber.toUpperCase(), average);
+    }
 
-   console.log(`cached all student midmarks for : `, rollNumbers);
-};
+    logger.debug(`cached all student midmarks for : `, rollNumbers);
+ };

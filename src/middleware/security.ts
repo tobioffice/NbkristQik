@@ -5,6 +5,7 @@ import {
   validationResult,
   FieldValidationError,
 } from "express-validator";
+import { logger } from "../utils/logger.js";
 
 // Rate limiting configurations
 export const createRateLimit = (
@@ -168,7 +169,7 @@ export const securityLogger = async (req: any, res: any, next: any) => {
   );
 
   if (isSuspicious) {
-    console.warn(`🚨 [SECURITY] Suspicious request detected:`, {
+    logger.security(`🚨 [SECURITY] Suspicious request detected:`, {
       timestamp,
       ip,
       method,
@@ -183,7 +184,7 @@ export const securityLogger = async (req: any, res: any, next: any) => {
   // Log rate limit hits
   res.on("finish", () => {
     if (res.statusCode === 429) {
-      console.warn(`🚫 [RATE LIMIT] Request blocked:`, {
+      logger.security(`🚫 [RATE LIMIT] Request blocked:`, {
         timestamp,
         ip,
         method,
@@ -230,7 +231,7 @@ export const createBotSecurityHandler = () => {
       }
 
       if (userData.count > maxRequests) {
-        console.warn(
+        logger.security(
           `🚫 [BOT SECURITY] User ${userId} exceeded rate limit for ${action}`,
         );
         return false;
@@ -239,7 +240,7 @@ export const createBotSecurityHandler = () => {
       userData.count++;
       return true;
     } catch (error) {
-      console.error("Bot security handler error:", error);
+      logger.error("Bot security handler error:", error);
       return true; // Allow request if security check fails
     }
   };

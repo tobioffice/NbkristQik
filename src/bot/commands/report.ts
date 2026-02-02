@@ -1,5 +1,6 @@
 import { bot } from "../bot.js";
 import { ADMIN_ID } from "../../config/environmentals.js";
+import { logger } from "../../utils/logger.js";
 
 bot.onText(/\/report$/, (msg) => {
    bot.sendMessage(
@@ -22,10 +23,10 @@ bot.onText(/\/report (.+)/, (msg, match) => {
       `🆔 <b>User ID:</b> <code>${msg.from?.id}</code>\n\n` +
       `📝 <b>Report:</b>\n<i>${reportMessage}</i>`;
 
-   // Forward to personal chat
-   bot.sendMessage(ADMIN_ID || 1329532701, formattedMessage, {
-      parse_mode: "HTML",
-   }).catch((err) => console.error("Error forwarding report:", err));
+    // Forward to personal chat
+    bot.sendMessage(ADMIN_ID || 1329532701, formattedMessage, {
+       parse_mode: "HTML",
+    }).catch((err) => logger.error("Error forwarding report:", err));
 
    // Confirm to the user
    bot.sendMessage(
