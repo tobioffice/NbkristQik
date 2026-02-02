@@ -1,5 +1,6 @@
 import { Attendance, Midmarks } from "../../types/index.js";
 import { Academic, AcademicError, ServerDownError, BlockedReportError, NoDataFoundError } from "./Academic.js";
+import { logger } from "../../utils/logger.js";
 
 /**
  * Error response with retry functionality
@@ -19,26 +20,26 @@ export class AcademicTG extends Academic {
     * Gets attendance data formatted for Telegram message
     */
    async getAttendanceMessage(): Promise<string> {
-      try {
-         const data = await this.getAttendanceJSON();
-         return AcademicTG.formatAttendanceMessage(data);
-      } catch (error) {
-         console.error("[AcademicTG] Attendance error:", error);
-         return this.formatErrorMessage(error, "attendance");
-      }
+       try {
+          const data = await this.getAttendanceJSON();
+          return AcademicTG.formatAttendanceMessage(data);
+       } catch (error) {
+          logger.error("[AcademicTG] Attendance error:", error);
+          return this.formatErrorMessage(error, "attendance");
+       }
    }
 
    /**
     * Gets midmarks data formatted for Telegram message
     */
    async getMidmarksMessage(): Promise<string> {
-      try {
-         const data = await this.getMidmarksJSON();
-         return AcademicTG.formatMidmarksMessage(data);
-      } catch (error) {
-         console.error("[AcademicTG] Midmarks error:", error);
-         return this.formatErrorMessage(error, "midmarks");
-      }
+       try {
+          const data = await this.getMidmarksJSON();
+          return AcademicTG.formatMidmarksMessage(data);
+       } catch (error) {
+          logger.error("[AcademicTG] Midmarks error:", error);
+          return this.formatErrorMessage(error, "midmarks");
+       }
    }
 
    /**

@@ -1,7 +1,8 @@
 import { bot } from "./bot.js";
 import { setupBot } from "./setup.js";
+import { logger } from "../utils/logger.js";
 
-console.log("Starting bot initialization...");
+logger.info("Starting bot initialization...");
 
 async function startBot() {
   try {
@@ -20,9 +21,9 @@ async function startBot() {
     // Start API Server
     import("../api/server.js").then(({ startServer }) => startServer());
 
-    console.log("Bot is ready!");
+    logger.info("Bot is ready!");
   } catch (error) {
-    console.error("Error during bot initialization:", error);
+    logger.error("Error during bot initialization", error);
     process.exit(1);
   }
 }

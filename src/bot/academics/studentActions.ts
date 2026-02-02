@@ -1,6 +1,7 @@
 import { Signal } from "../../constants/index.js";
 import { CHANNEL_ID } from "../../config/environmentals.js";
 import { getMidMarks, getAttendance } from "../../services/student.service.js";
+import { logger } from "../../utils/logger.js";
 
 import { bot } from "../bot.js";
 
@@ -31,15 +32,15 @@ export const sendAttendanceOrMidMarks = async (
          chat_id: chatId,
          message_id: message.message_id,
          parse_mode: "HTML",
-      });
-   } catch (error: any) {
-      console.log("Error in sendAttendanceOrMidMarks:", error);
-      bot.sendMessage(
-         msg.chat.id,
-         error.message || "An unexpected error occurred."
-      );
-      return;
-   }
+       });
+    } catch (error: any) {
+       logger.error("Error in sendAttendanceOrMidMarks:", error);
+       bot.sendMessage(
+          msg.chat.id,
+          error.message || "An unexpected error occurred."
+       );
+       return;
+    }
 };
 
 export const sendJoinChannelMsg = async (chatId: number): Promise<void> => {
