@@ -6,6 +6,13 @@ import {
   apiSecurityMiddlewares,
   securityLogger,
 } from "../middleware/security.js";
+import {
+  generateLeaderboardCacheKey,
+  getLeaderboardCache,
+  setLeaderboardCache,
+  getCacheAnalytics,
+} from "../services/redis/leaderboardCache.js";
+import { logger } from "../utils/logger.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,12 +35,9 @@ app.get(
   "/api/leaderboard",
   leaderboardSecurityMiddlewares,
   async (req: Request, res: Response) => {
-    try {
-      // const userId = req.query.userId
-      //    ? parseInt(req.query.userId as string)
-      //    : null;
+    const startTime = Date.now();
 
-      // console.log("User ID:", userId);
+    try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 50;
       const sortBy =
@@ -49,22 +53,66 @@ app.get(
             : (req.query.section as string),
       };
 
-      const offset = (page - 1) * limit;
+      // Generate cache key
+      const cacheKey = generateLeaderboardCacheKey(sortBy, page, limit, filters);
 
+      // Try to get from cache
+      const cached = await getLeaderboardCache(cacheKey, sortBy, filters);
+
+      if (cached) {
+        const duration = Date.now() - startTime;
+        logger.perf("Leaderboard served from cache", duration, { cacheKey });
+        
+        return res.json({
+          success: true,
+          page,
+          limit,
+          data: cached,
+          cached: true,
+          responseTime: duration,
+        });
+      }
+
+      // Cache miss - fetch from database
+      const offset = (page - 1) * limit;
       const data = await getLeaderboard(sortBy, limit, offset, filters);
+
+      // Store in cache
+      await setLeaderboardCache(cacheKey, data, sortBy, filters);
+
+      const duration = Date.now() - startTime;
+      logger.perf("Leaderboard served from DB", duration, { cacheKey });
 
       res.json({
         success: true,
         page,
         limit,
         data,
+        cached: false,
+        responseTime: duration,
       });
     } catch (error) {
-      console.error("Error fetching leaderboard:", error);
+      logger.error("Error fetching leaderboard", error);
       res.status(500).json({ success: false, error: "Internal Server Error" });
     }
   },
 );
+
+// Cache analytics endpoint (for monitoring)
+app.get("/api/cache/analytics", securityLogger, async (_req: Request, res: Response) => {
+  try {
+    const analytics = await getCacheAnalytics();
+    
+    res.json({
+      success: true,
+      analytics,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error("Error fetching cache analytics", error);
+    res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
 
 // Health check endpoint (no rate limiting)
 app.get("/health", securityLogger, (_req: Request, res: Response) => {
@@ -78,6 +126,6 @@ app.get("/health", securityLogger, (_req: Request, res: Response) => {
 
 export const startServer = () => {
   app.listen(PORT, () => {
-    console.log(`🚀 API Server running on port ${PORT} with security enabled`);
+    logger.info(`🚀 API Server running on port ${PORT} with security enabled`);
   });
 };

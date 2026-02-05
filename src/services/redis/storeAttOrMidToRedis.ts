@@ -3,6 +3,8 @@ import { Academic } from "../student.utils/Academic.js";
 import { getClient } from "./getRedisClient.js";
 import { updateAttendanceStat, updateMidMarkStat } from "../../db/student_stats.model.js";
 import { getStudentCached } from "./utils.js";
+import { logger } from "../../utils/logger.js";
+import { invalidateLeaderboardCache } from "./leaderboardCache.js";
 
 export const storeAttendanceToRedis = async (doc: string) => {
    const $ = cheerio.load(doc);
@@ -27,7 +29,10 @@ export const storeAttendanceToRedis = async (doc: string) => {
       await updateAttendanceStat(rollnumber.toUpperCase(), studentAttendance.percentage);
    }
 
-   console.log(`cached all student attendance for : `, rollNumbers);
+   logger.debug(`Cached all student attendance`, { count: rollNumbers.length });
+
+   // Invalidate attendance leaderboard caches
+   await invalidateLeaderboardCache("attendance");
 };
 
 export const storeMidMarksToRedis = async (doc: string) => {
@@ -71,5 +76,8 @@ export const storeMidMarksToRedis = async (doc: string) => {
       await updateMidMarkStat(rollnumber.toUpperCase(), average);
    }
 
-   console.log(`cached all student midmarks for : `, rollNumbers);
+   logger.debug(`Cached all student midmarks`, { count: rollNumbers.length });
+
+   // Invalidate midmarks leaderboard caches
+   await invalidateLeaderboardCache("midmarks");
 };
