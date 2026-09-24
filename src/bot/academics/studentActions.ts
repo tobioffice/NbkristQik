@@ -1,35 +1,16 @@
 import { Signal } from "../../constants/index.js";
 import { CHANNEL_ID } from "../../config/environmentals.js";
-import { getMidMarks, getAttendance } from "../../services/student.service.js";
-import { getStudentCached } from "../../services/redis/utils.js";
-import { upsertTgUser } from "../../db/student.model.js";
+import { getMidMarks, getAttendance, getBunkPlan } from "../../services/student.service.js";
 
 import { bot } from "../bot.js";
-
-/**
- * Remember userId→rollNo so the web leaderboard can show "You are #N".
- * Best-effort: never blocks or fails the user's request.
- */
-const rememberUserRoll = (userId: number, rollno: string): void => {
-   getStudentCached(rollno)
-      .then((student) => upsertTgUser(String(userId), student))
-      .catch((err) =>
-         console.warn("[studentActions] tgusers upsert failed:", err)
-      );
-};
 
 export const sendAttendanceOrMidMarks = async (
    msg: any,
    rollno: string,
-   signal: Signal,
-   requesterId?: number
+   signal: Signal
 ) => {
    try {
       const chatId = msg.chat.id;
-      // msg.from is the BOT on callback queries — the real requester must be
-      // passed explicitly (callbackQuery.from.id)
-      if (requesterId) rememberUserRoll(requesterId, rollno);
-
       const message = await bot.sendMessage(
          chatId,
          `<code>Fetching ${signal == "att" ? "Attendance" : "Mid marks"
@@ -53,6 +34,36 @@ export const sendAttendanceOrMidMarks = async (
       });
    } catch (error: any) {
       console.log("Error in sendAttendanceOrMidMarks:", error);
+      bot.sendMessage(
+         msg.chat.id,
+         error.message || "An unexpected error occurred."
+      );
+      return;
+   }
+};
+
+export const sendBunkPlan = async (msg: any, rollno: string) => {
+   try {
+      const chatId = msg.chat.id;
+      const message = await bot.sendMessage(
+         chatId,
+         `<code>Calculating bunk plan...</code>`,
+         {
+            parse_mode: "HTML",
+            disable_notification: true,
+            reply_to_message_id: msg.reply_to_message.message_id,
+         }
+      );
+
+      const finalMessage = await getBunkPlan(rollno);
+
+      bot.editMessageText(finalMessage, {
+         chat_id: chatId,
+         message_id: message.message_id,
+         parse_mode: "HTML",
+      });
+   } catch (error: any) {
+      console.log("Error in sendBunkPlan:", error);
       bot.sendMessage(
          msg.chat.id,
          error.message || "An unexpected error occurred."

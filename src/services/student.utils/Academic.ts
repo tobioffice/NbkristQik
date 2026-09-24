@@ -321,10 +321,13 @@ export class Academic implements IAcademic {
          throw new NoDataFoundError("attendance");
       }
 
-      // Store in Redis for future requests
-      await storeAttendanceToRedis(response);
+      // Parse requester first and reply fast; full-section cache happens in background
+      const mine = await Academic.parseAttendanceResponse(response, this.rollnumber);
+      void storeAttendanceToRedis(response).catch((e) =>
+         console.warn("[Academic] background attendance cache failed:", e)
+      );
 
-      return await Academic.parseAttendanceResponse(response, this.rollnumber);
+      return mine;
    }
 
    /**
@@ -438,10 +441,13 @@ export class Academic implements IAcademic {
          throw new NoDataFoundError("midmarks");
       }
 
-      // Store in Redis for future requests
-      await storeMidMarksToRedis(response);
+      // Parse requester first and reply fast; full-section cache happens in background
+      const mine = await Academic.parseMidmarksResponse(response, this.rollnumber);
+      void storeMidMarksToRedis(response).catch((e) =>
+         console.warn("[Academic] background midmarks cache failed:", e)
+      );
 
-      return await Academic.parseMidmarksResponse(response, this.rollnumber);
+      return mine;
    }
 
    /**

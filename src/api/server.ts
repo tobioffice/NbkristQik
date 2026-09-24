@@ -5,6 +5,11 @@ import {
   getStudentRank,
 } from "../db/student_stats.model.js";
 import { getTgUserRoll } from "../db/student.model.js";
+import { getClient } from "../services/redis/getRedisClient.js";
+import {
+  getUptimeSummary,
+  getUptimeDailyBuckets,
+} from "../db/student_stats.model.js";
 import {
   leaderboardSecurityMiddlewares,
   apiSecurityMiddlewares,
@@ -51,18 +56,45 @@ app.get(
           req.query.section === "all"
             ? undefined
             : (req.query.section as string),
+        search: req.query.search
+          ? String(req.query.search).trim().slice(0, 20)
+          : undefined,
       };
 
       const offset = (page - 1) * limit;
 
-      const data = await getLeaderboard(sortBy, limit, offset, filters);
+      // 60s Redis cache per unique query — protects Turso read quota
+      const cacheKey = `lb:${sortBy}:${page}:${limit}:${filters.year || "all"}:${filters.branch || "all"}:${filters.section || "all"}:${filters.search || ""}`;
+      try {
+        const cached = await getClient().then((c) => c.get(cacheKey));
+        if (cached) {
+          res.json(JSON.parse(cached));
+          return;
+        }
+      } catch (e) {
+        console.warn("[API] leaderboard cache read failed:", e);
+      }
 
-      res.json({
+      const { rows, total } = await getLeaderboard(sortBy, limit, offset, filters);
+
+      const payload = {
         success: true,
         page,
         limit,
-        data,
-      });
+        total,
+        data: rows,
+      };
+
+      // cache for 60 seconds (best-effort)
+      try {
+        await getClient().then((c) =>
+          c.set(cacheKey, JSON.stringify(payload), { EX: 60 })
+        );
+      } catch (e) {
+        console.warn("[API] leaderboard cache write failed:", e);
+      }
+
+      res.json(payload);
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
       res.status(500).json({ success: false, error: "Internal Server Error" });
@@ -118,6 +150,37 @@ app.get("/health", securityLogger, (_req: Request, res: Response) => {
     uptime: process.uptime(),
     version: "1.0.0",
   });
+});
+
+// Pro status page — 90-day uptime summary + daily bars
+app.get("/api/status", securityLogger, async (_req: Request, res: Response) => {
+  try {
+    const summary = await getUptimeSummary();
+    const components = await Promise.all(
+      summary.map(async (s) => {
+        const lastPingAgeSec = Math.floor(
+          (Date.now() - new Date(s.lastPing + "Z").getTime()) / 1000
+        );
+        // up = last ping < 15 min ago
+        const current: "up" | "down" = lastPingAgeSec < 15 * 60 ? "up" : "down";
+        return {
+          component: s.component,
+          uptimePct: s.uptimePct,
+          pings: s.pings,
+          lastPing: s.lastPing,
+          lastPingAgeSec,
+          avgLatencyMs: s.avgLatencyMs,
+          current,
+          buckets: await getUptimeDailyBuckets(s.component, 90),
+        };
+      })
+    );
+
+    res.json({ success: true, components });
+  } catch (error) {
+    console.error("Error in /api/status:", error);
+    res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
 });
 
 export const startServer = () => {

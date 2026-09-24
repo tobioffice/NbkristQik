@@ -16,6 +16,9 @@ async function startBot() {
 
     // Import features
     import("./academics/academicHandler.js");
+    import("./dailyCheckIn.js");
+    import("./syncdb.js").then(({ registerSyncDbCommand }) => registerSyncDbCommand());
+    import("../services/uptime.js").then(({ startUptimeMonitor }) => startUptimeMonitor());
 
     // Start API Server
     import("../api/server.js").then(({ startServer }) => startServer());

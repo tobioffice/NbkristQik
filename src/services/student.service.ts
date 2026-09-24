@@ -11,3 +11,6 @@ export const getAttendance = (rollNumber: string) =>
 
 export const getMidMarks = (rollNumber: string) =>
   createAcademicTG(rollNumber).getMidmarksMessage();
+
+export const getBunkPlan = (rollNumber: string) =>
+  createAcademicTG(rollNumber).getBunkPlanMessage();

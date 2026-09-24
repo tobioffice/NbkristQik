@@ -35,14 +35,14 @@ export const createRateLimit = (
 // API rate limiting - General API protection
 export const apiRateLimit = createRateLimit(
   15 * 60 * 1000, // 15 minutes
-  100, // 100 requests per window
+  600, // 600 requests per window (~40/min, comfortable for infinite scroll)
   "Too many API requests, please try again later.",
 );
 
 // Strict API rate limiting - For sensitive endpoints
 export const strictApiRateLimit = createRateLimit(
   15 * 60 * 1000, // 15 minutes
-  20, // 20 requests per window
+  60, // 60 requests per window
   "Too many requests to this endpoint, please try again later.",
 );
 
@@ -86,7 +86,7 @@ export const leaderboardValidation = [
 
   query("year")
     .optional()
-    .matches(/^(\d|all)$/)
+    .matches(/^(\d{1,2}|all)$/)
     .withMessage('Year must be a digit or "all"'),
 
   query("branch")
@@ -98,6 +98,12 @@ export const leaderboardValidation = [
     .optional()
     .matches(/^([A-Z]|all)$/i)
     .withMessage('Section must be a letter or "all"'),
+
+  query("search")
+    .optional()
+    .isLength({ min: 2, max: 20 })
+    .matches(/^[\w\s-]+$/)
+    .withMessage("Search must be 2-20 letters, digits, spaces or dashes"),
 ];
 
 // Input sanitization middleware

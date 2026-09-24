@@ -32,6 +32,22 @@ export class AcademicTG extends Academic {
    /**
     * Gets midmarks data formatted for Telegram message
     */
+   /**
+    * Gets bunk plan: how many classes can be skipped / must be attended
+    */
+   async getBunkPlanMessage(): Promise<string> {
+      try {
+         const data = await this.getAttendanceJSON();
+         return AcademicTG.formatBunkPlanMessage(data);
+      } catch (error) {
+         console.error("[AcademicTG] Bunk plan error:", error);
+         return this.formatErrorMessage(error, "attendance");
+      }
+   }
+
+   /**
+    * Gets midmarks data formatted for Telegram message
+    */
    async getMidmarksMessage(): Promise<string> {
       try {
          const data = await this.getMidmarksJSON();
@@ -324,5 +340,69 @@ export class AcademicTG extends Academic {
    private static truncateText(text: string, maxLength: number): string {
       if (text.length <= maxLength) return text;
       return text.substring(0, maxLength - 2) + "..";
+   }
+
+   /**
+    * Formats bunk plan: per-subject skip/attend analysis against a 75% target
+    * Math: to stay at >= TARGET after skipping X more classes (conducted grows):
+    *   attended / (conducted + X) >= TARGET  →  X <= attended/TARGET - conducted
+    * To recover by attending Y more classes:
+    *   (attended + Y) / (conducted + Y) >= TARGET  →  Y >= (TARGET*conducted - attended) / (1 - TARGET)
+    */
+   private static formatBunkPlanMessage(data: Attendance): string {
+      const { rollno, year_branch_section, percentage, totalClasses, subjects } = data;
+
+      const bunk = (att: number, cond: number) => Math.floor(att / 0.75 - cond);
+      const need = (att: number, cond: number) => Math.ceil((0.75 * cond - att) / 0.25);
+
+      const overallBunk = Math.max(0, bunk(totalClasses.attended, totalClasses.conducted));
+      const overallNeed = Math.max(0, need(totalClasses.attended, totalClasses.conducted));
+
+      let msg =
+         `🎯 <b>Bunk Plan for</b> <code>${rollno}</code>\n` +
+         `🏫 <b>Branch:</b> <code>${year_branch_section}</code>\n` +
+         `📈 <b>Current:</b> <b>${percentage.toFixed(2)}%</b> ` +
+         `(${totalClasses.attended}/${totalClasses.conducted})\n\n`;
+
+      if (overallBunk > 0) {
+         msg += `🟢 <b>You can bunk ${overallBunk} more class${overallBunk !== 1 ? "es" : ""}</b> and stay at 75%+\n\n`;
+      } else if (overallNeed > 0) {
+         msg += `🔴 <b>Attend next ${overallNeed} class${overallNeed !== 1 ? "es" : ""}</b> to get back to 75%+\n\n`;
+      } else {
+         msg += `🟢 You're exactly at the limit. Attend everything.\n\n`;
+      }
+
+      msg += `<pre>`;
+      msg += `SUBJ     │ NOW │ BUNK │ NEED\n`;
+      msg += `──────────────────────────────\n`;
+
+      for (const sub of subjects) {
+         const name = AcademicTG.truncateText(sub.subject, 8).padEnd(8);
+         const nowPct =
+            sub.conducted > 0
+               ? ((sub.attended / sub.conducted) * 100).toFixed(0).padStart(3)
+               : "  0";
+         const canBunk = sub.conducted > 0 ? Math.max(0, bunk(sub.attended, sub.conducted)) : 0;
+         const mustAttend = sub.conducted > 0 ? Math.max(0, need(sub.attended, sub.conducted)) : 0;
+
+         msg += `${name} │ ${nowPct}% │${String(canBunk).padStart(5)} │${String(mustAttend).padStart(5)}\n`;
+      }
+      msg += `──────────────────────────────</pre>\n\n`;
+
+      const risky = subjects.filter(
+         (s) => s.conducted > 0 && (s.attended / s.conducted) * 100 < 75
+      );
+      if (risky.length > 0) {
+         msg +=
+            `⚠️ <b>Below 75% in ${risky.length} subject${risky.length !== 1 ? "s" : ""}:</b> ` +
+            risky
+               .map((s) => `<code>${AcademicTG.truncateText(s.subject, 12)}</code>`)
+               .join(", ") +
+            `\n\n`;
+      }
+
+      msg += `<i>💡 BUNK = classes you can skip, NEED = classes to attend consecutively to reach 75%</i>`;
+
+      return msg;
    }
 }

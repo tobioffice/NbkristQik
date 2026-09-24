@@ -1,10 +1,13 @@
 export const PROTECTED_CHAT_ID = -1002435023187;
 
+// Chit chat group: bot is silent, deletes roll numbers only (keeps chat for chatting)
+export const CHIT_CHAT_ID = -1003179479637;
+
 //exporting variables
 export const MESSAGES = {
   GENERATING: "Generating response...",
 
-  JOIN_GROUP: "🚫 Join NbkistQik to access this feature",
+  JOIN_GROUP: "🚫 Join NbkistQik to access in private ‼️",
 
   CLG_SERVER_DOWN:
     "⚠️ College server is not responding. Please try again later.",
@@ -28,7 +31,8 @@ export const MESSAGES = {
 
 //exporting request urls
 // export const BASE_URL = "http://103.203.175.90:96";
-export const BASE_URL = "http://47.247.10.58";
+// export const BASE_URL = "http://47.247.10.58";
+export const BASE_URL = "http://103.203.175.91";
 
 // export const BASE_URL = "https://at.nbkrist.org";
 
