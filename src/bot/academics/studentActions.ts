@@ -21,12 +21,14 @@ const rememberUserRoll = (userId: number, rollno: string): void => {
 export const sendAttendanceOrMidMarks = async (
    msg: any,
    rollno: string,
-   signal: Signal
+   signal: Signal,
+   requesterId?: number
 ) => {
    try {
       const chatId = msg.chat.id;
-      const userId = msg.from?.id;
-      if (userId) rememberUserRoll(userId, rollno);
+      // msg.from is the BOT on callback queries — the real requester must be
+      // passed explicitly (callbackQuery.from.id)
+      if (requesterId) rememberUserRoll(requesterId, rollno);
 
       const message = await bot.sendMessage(
          chatId,

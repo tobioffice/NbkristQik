@@ -91,25 +91,25 @@ bot.on("callback_query", async (callbackQuery) => {
 
    await Promise.allSettled([
       bot.deleteMessage(msg.chat.id, msg.message_id),
-      handleCallbackAction(data, msg),
+      handleCallbackAction(data, msg, callbackQuery.from.id),
       bot.answerCallbackQuery(callbackQuery.id),
    ]);
 });
 
-const handleCallbackAction = async (data: string, msg: any) => {
+const handleCallbackAction = async (data: string, msg: any, requesterId: number) => {
    if (data.startsWith("att_")) {
       const rollNumber = data.slice(4); // More efficient than split
       if (!isValidRollNumber(rollNumber)) {
          await bot.sendMessage(msg.chat.id, '⚠️ Invalid roll number format!');
          return;
       }
-      await sendAttendanceOrMidMarks(msg, rollNumber, "att");
+      await sendAttendanceOrMidMarks(msg, rollNumber, "att", requesterId);
    } else if (data.startsWith("mid_")) {
       const rollNumber = data.slice(4);
       if (!isValidRollNumber(rollNumber)) {
          await bot.sendMessage(msg.chat.id, '⚠️ Invalid roll number format!');
          return;
       }
-      await sendAttendanceOrMidMarks(msg, rollNumber, "mid");
+      await sendAttendanceOrMidMarks(msg, rollNumber, "mid", requesterId);
    }
 };
