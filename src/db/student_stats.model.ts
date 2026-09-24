@@ -53,6 +53,7 @@ export const getLeaderboard = async (
     year?: string;
     branch?: string;
     section?: string;
+    search?: string;
   } = {},
 ) => {
   const column =
@@ -72,28 +73,179 @@ export const getLeaderboard = async (
   }
 
   if (filters.section && filters.section !== "all") {
-    // Assuming front-end sends "all" for no filter, but good to handle explicit logic
     conditions.push(`s.section = ?`);
     args.push(filters.section);
+  }
+
+  if (filters.search) {
+    // match roll number (case-insensitive) or name
+    conditions.push(
+      `(UPPER(st.roll_no) LIKE ? OR UPPER(COALESCE(s.name, '')) LIKE ?)`,
+    );
+    const pattern = `%${filters.search.toUpperCase()}%`;
+    args.push(pattern, pattern);
   }
 
   const whereClause =
     conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-  // We need to add limit and offset to args at the end
-  args.push(limit, offset);
+  // rank computed over the full filtered set, then paginated
+  const ranked = `
+      SELECT s.roll_no, s.name, st.attendance_percentage, st.mid_marks_avg,
+             ROW_NUMBER() OVER (ORDER BY st.${column} DESC) as rank
+      FROM student_stats st
+      LEFT JOIN studentsnew s ON st.roll_no = s.roll_no
+      ${whereClause}
+  `;
 
-  const result = await turso.execute({
+  // total count for the same filters (for "your rank" context)
+  const countResult = await turso.execute({
     sql: `
-         SELECT s.roll_no, s.name, st.attendance_percentage, st.mid_marks_avg
-         FROM student_stats st
-         LEFT JOIN studentsnew s ON st.roll_no = s.roll_no
-         ${whereClause}
-         ORDER BY st.${column} DESC
-         LIMIT ? OFFSET ?
-      `,
+      SELECT COUNT(*) as total
+      FROM student_stats st
+      LEFT JOIN studentsnew s ON st.roll_no = s.roll_no
+      ${whereClause}
+    `,
     args: args,
   });
 
-  return result.rows;
+  const args2 = [...args, limit, offset];
+
+  const result = await turso.execute({
+    sql: `
+      SELECT roll_no, name, attendance_percentage, mid_marks_avg, rank
+      FROM (${ranked})
+      ORDER BY rank ASC
+      LIMIT ? OFFSET ?
+    `,
+    args: args2,
+  });
+
+  return {
+    rows: result.rows,
+    total: Number(countResult.rows[0]?.total || 0),
+  };
+};
+
+/**
+ * Global rank of a single student for a given sort (no filters).
+ * ROW_NUMBER() over the whole table for that metric.
+ */
+export const getStudentRank = async (
+  rollNo: string,
+  sortBy: "attendance" | "midmarks",
+): Promise<{ rank: number; total: number } | null> => {
+  const column =
+    sortBy === "attendance" ? "attendance_percentage" : "mid_marks_avg";
+
+  const result = await turso.execute({
+    sql: `
+      WITH ranked AS (
+        SELECT roll_no,
+               ROW_NUMBER() OVER (ORDER BY ${column} DESC) as rank
+        FROM student_stats
+        WHERE ${column} IS NOT NULL
+      )
+      SELECT rank FROM ranked WHERE roll_no = ?
+    `,
+    args: [rollNo.toUpperCase()],
+  });
+
+  if (!result.rows[0]) return null;
+
+  const totalResult = await turso.execute({
+    sql: `SELECT COUNT(*) as total FROM student_stats WHERE ${column} IS NOT NULL`,
+  });
+
+  return {
+    rank: Number(result.rows[0].rank),
+    total: Number(totalResult.rows[0]?.total || 0),
+  };
+};
+
+/**
+ * Uptime heartbeat recorder — one row per ping per component.
+ * Pruned to last 95 days by the caller.
+ */
+export const recordHeartbeat = async (
+  component: string,
+  status: "up" | "down",
+  latencyMs: number | null,
+) => {
+  await turso.execute({
+    sql: `INSERT INTO uptime_log (component, status, latency_ms) VALUES (?, ?, ?)`,
+    args: [component, status, latencyMs],
+  });
+};
+
+export const initUptimeTable = async () => {
+  await turso.execute(`
+      CREATE TABLE IF NOT EXISTS uptime_log (
+         id INTEGER PRIMARY KEY AUTOINCREMENT,
+         component TEXT NOT NULL,
+         status TEXT NOT NULL,
+         latency_ms INTEGER,
+         created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+   `);
+  // index for fast aggregation
+  await turso.execute(`
+      CREATE INDEX IF NOT EXISTS idx_uptime_component_time
+      ON uptime_log (component, created_at);
+   `);
+};
+
+/**
+ * 90-day uptime summary: % up, incidents, current status per component.
+ */
+export const getUptimeSummary = async () => {
+  const result = await turso.execute(`
+      SELECT component,
+             COUNT(*) as pings,
+             SUM(CASE WHEN status = 'up' THEN 1 ELSE 0 END) as ups,
+             MAX(created_at) as last_ping,
+             AVG(CASE WHEN status = 'up' THEN latency_ms END) as avg_latency
+      FROM uptime_log
+      WHERE created_at >= datetime('now', '-90 days')
+      GROUP BY component
+      ORDER BY component
+  `);
+
+  return result.rows.map((r) => ({
+    component: String(r.component),
+    pings: Number(r.pings),
+    ups: Number(r.ups),
+    uptimePct: (Number(r.ups) / Number(r.pings)) * 100,
+    lastPing: String(r.last_ping),
+    avgLatencyMs: r.avg_latency != null ? Math.round(Number(r.avg_latency)) : null,
+  }));
+};
+
+/**
+ * Daily uptime buckets for status bars (last N days, one entry per day).
+ */
+export const getUptimeDailyBuckets = async (
+  component: string,
+  days: number = 90,
+) => {
+  const result = await turso.execute({
+    sql: `
+      SELECT date(created_at) as day,
+             COUNT(*) as pings,
+             SUM(CASE WHEN status = 'up' THEN 1 ELSE 0 END) as ups,
+             AVG(CASE WHEN status = 'up' THEN latency_ms END) as avg_latency
+      FROM uptime_log
+      WHERE component = ? AND created_at >= datetime('now', '-${days} days')
+      GROUP BY day
+      ORDER BY day
+    `,
+    args: [component],
+  });
+
+  return result.rows.map((r) => ({
+    day: String(r.day),
+    pings: Number(r.pings),
+    ups: Number(r.ups),
+    avgLatencyMs: r.avg_latency != null ? Math.round(Number(r.avg_latency)) : null,
+  }));
 };
