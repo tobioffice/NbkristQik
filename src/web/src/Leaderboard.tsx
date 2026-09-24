@@ -90,15 +90,18 @@ export default function Leaderboard() {
          if (!response.ok) throw new Error("API error");
 
          const data = await response.json();
-         setTotal(data.total || 0);
+         // API shape: { success, page, limit, data: { rows, total } }
+         const payload = data.data;
+         setTotal(payload?.total || 0);
 
-         if (data.data.length === 0) {
+         const rows = payload?.rows ?? [];
+         if (rows.length === 0) {
             setHasMore(false);
          } else {
             setStats((prev: StudentStat[]) =>
-               pageNum === 1 ? data.data : [...prev, ...data.data]
+               pageNum === 1 ? rows : [...prev, ...rows]
             );
-            setHasMore(data.data.length >= 20);
+            setHasMore(rows.length >= 20);
          }
       } catch (err) {
          console.error("Failed to fetch leaderboard", err);

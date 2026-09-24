@@ -1,6 +1,10 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
-import { getLeaderboard } from "../db/student_stats.model.js";
+import {
+  getLeaderboard,
+  getStudentRank,
+} from "../db/student_stats.model.js";
+import { getTgUserRoll } from "../db/student.model.js";
 import {
   leaderboardSecurityMiddlewares,
   apiSecurityMiddlewares,
@@ -62,6 +66,46 @@ app.get(
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
       res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+  },
+);
+
+// "You are #N" — rank lookup for the web leaderboard via tgusers mapping
+app.get(
+  "/api/me",
+  leaderboardSecurityMiddlewares,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.query.userId as string;
+      if (!userId || !/^\d{1,20}$/.test(userId)) {
+        res.status(400).json({ found: false, error: "userId required" });
+        return;
+      }
+
+      const rollNo = await getTgUserRoll(userId);
+      if (!rollNo) {
+        res.json({ found: false });
+        return;
+      }
+
+      const [attendance, midmarks] = await Promise.all([
+        getStudentRank(rollNo, "attendance"),
+        getStudentRank(rollNo, "midmarks"),
+      ]);
+
+      res.json({
+        found: true,
+        roll_no: rollNo,
+        attendance: attendance
+          ? { rank: attendance.rank, total: attendance.total }
+          : null,
+        midmarks: midmarks
+          ? { rank: midmarks.rank, total: midmarks.total }
+          : null,
+      });
+    } catch (error) {
+      console.error("Error fetching /api/me:", error);
+      res.status(500).json({ found: false, error: "Internal Server Error" });
     }
   },
 );

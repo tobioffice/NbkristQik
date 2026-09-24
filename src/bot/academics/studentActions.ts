@@ -1,8 +1,22 @@
 import { Signal } from "../../constants/index.js";
 import { CHANNEL_ID } from "../../config/environmentals.js";
 import { getMidMarks, getAttendance } from "../../services/student.service.js";
+import { getStudentCached } from "../../services/redis/utils.js";
+import { upsertTgUser } from "../../db/student.model.js";
 
 import { bot } from "../bot.js";
+
+/**
+ * Remember userId→rollNo so the web leaderboard can show "You are #N".
+ * Best-effort: never blocks or fails the user's request.
+ */
+const rememberUserRoll = (userId: number, rollno: string): void => {
+   getStudentCached(rollno)
+      .then((student) => upsertTgUser(String(userId), student))
+      .catch((err) =>
+         console.warn("[studentActions] tgusers upsert failed:", err)
+      );
+};
 
 export const sendAttendanceOrMidMarks = async (
    msg: any,
@@ -11,6 +25,9 @@ export const sendAttendanceOrMidMarks = async (
 ) => {
    try {
       const chatId = msg.chat.id;
+      const userId = msg.from?.id;
+      if (userId) rememberUserRoll(userId, rollno);
+
       const message = await bot.sendMessage(
          chatId,
          `<code>Fetching ${signal == "att" ? "Attendance" : "Mid marks"

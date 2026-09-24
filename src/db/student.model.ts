@@ -1,6 +1,40 @@
 import { turso } from "./db.js";
 import { Student } from "../types/index.js";
 
+/**
+ * Persist userId→rollNo mapping for "You are #N" on the web leaderboard.
+ * Fire-and-forget from the bot flow; failures must never break the user.
+ */
+export const upsertTgUser = async (
+  userId: string,
+  student: Student,
+): Promise<void> => {
+  await turso.execute({
+    sql: `INSERT INTO tgusers (userId, rollNo, semester, department, section)
+          VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT(userId) DO UPDATE SET
+            rollNo = excluded.rollNo,
+            semester = excluded.semester,
+            department = excluded.department,
+            section = excluded.section`,
+    args: [
+      userId,
+      student.roll_no.toUpperCase(),
+      student.year,
+      student.branch,
+      student.section,
+    ],
+  });
+};
+
+export const getTgUserRoll = async (userId: string): Promise<string | null> => {
+  const result = await turso.execute({
+    sql: `SELECT rollNo FROM tgusers WHERE userId = ?`,
+    args: [userId],
+  });
+  return result.rows[0] ? String(result.rows[0].rollNo) : null;
+};
+
 export const getStudent = async (rollno: string) => {
   rollno = rollno.toUpperCase();
 
