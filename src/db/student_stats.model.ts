@@ -59,8 +59,40 @@ export const getLeaderboard = async (
   const column =
     sortBy === "attendance" ? "attendance_percentage" : "mid_marks_avg";
 
+  /*
+   * RANKING — read this before touching the SQL.
+   *
+   * Bug history (Sep 2026): students with identical displayed scores
+   * (e.g. 30.0 mid avg) got different ranks that reshuffled between
+   * refreshes. Root causes, in order of discovery:
+   *
+   * 1. ROW_NUMBER() assigns a unique rank per row regardless of score
+   *    ties. Fix: RANK() (competition ranking) — ties share a rank,
+   *    next distinct score jumps (e.g. #1,#1,#1,#4).
+   *
+   * 2. Ranking on raw decimals while the UI displays rounded values
+   *    (29.96 and 30.04 both render as "30.0" but ranked apart).
+   *    Fix: rank on the same ROUND(score, N) the UI shows.
+   *
+   * 3. THE NON-OBVIOUS ONE: adding a tiebreaker INSIDE the window
+   *    ORDER BY (`RANK() OVER (ORDER BY score DESC, roll_no ASC)`)
+   *    makes Turso/libsql compute RANK over the full (score, roll_no)
+   *    composite — every row becomes unique again, ties silently die.
+   *    Verified by direct SQL tests on Turso: plain `RANK() OVER
+   *    (ORDER BY ROUND(x,1) DESC)` ties correctly, but adding any
+   *    secondary sort key inside the window collapses them to
+   *    1,2,3,4... (works "correctly" in stock SQLite, breaks on Turso's
+   *    engine — do not assume compatibility here).
+   *    Fix: window ORDER BY contains ONLY the score; deterministic
+   *    ordering within a tie is applied in the OUTER query's ORDER BY
+   *    (`ORDER BY rank ASC, roll_no ASC`), which sorts display order
+   *    without affecting the computed rank.
+   *
+   * Result: identical scores always share the same stable rank,
+   * consistent between the leaderboard list and /api/me "You are #N".
+   */
+
   // rank on the ROUNDED score that's actually displayed (2dp attendance, 1dp mid)
-  // + deterministic roll_no tiebreaker → ties share rank, stable order
   const scoreExpr =
     sortBy === "attendance"
       ? "ROUND(st.attendance_percentage, 2)"
@@ -139,7 +171,9 @@ export const getLeaderboard = async (
 
 /**
  * Global rank of a single student for a given sort (no filters).
- * ROW_NUMBER() over the whole table for that metric.
+ * Uses the same RANK() + rounded-score scheme as getLeaderboard above —
+ * see the ranking notes there (esp: no tiebreaker inside the window
+ * ORDER BY, Turso breaks ties otherwise).
  */
 export const getStudentRank = async (
   rollNo: string,
