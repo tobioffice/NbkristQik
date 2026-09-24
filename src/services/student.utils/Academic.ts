@@ -115,6 +115,17 @@ export class Academic implements IAcademic {
 
          return responseData;
       } catch (error) {
+         // Transient network failure? retry once with 1.5s backoff before
+         // falling back to the section-level cached response
+         const isTransient = error instanceof AxiosError &&
+            (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT" || !error.response || error.code === "ECONNREFUSED");
+
+         if (isTransient && retryCount < 1) {
+            console.warn(`[Academic] Transient network error (${error instanceof AxiosError ? error.code : "unknown"}), retrying in 1.5s...`);
+            await new Promise((r) => setTimeout(r, 1500));
+            return this.getResponse(command, retryCount + 1);
+         }
+
          return this.handleRequestError(error, command);
       }
    }

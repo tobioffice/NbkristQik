@@ -1,5 +1,6 @@
 import { Attendance, Midmarks } from "../../types/index.js";
 import { Academic, AcademicError, ServerDownError, BlockedReportError, NoDataFoundError } from "./Academic.js";
+import { StudentNotFoundError } from "../redis/utils.js";
 
 /**
  * Error response with retry functionality
@@ -60,6 +61,10 @@ export class AcademicTG extends Academic {
          return this.buildNoDataMessage(rollNo, dataType);
       }
 
+      if (error instanceof StudentNotFoundError) {
+         return this.buildStudentNotFoundMessage(error);
+      }
+
       if (error instanceof BlockedReportError) {
          return this.buildBlockedReportMessage();
       }
@@ -102,6 +107,28 @@ export class AcademicTG extends Academic {
          `• You're registered for this semester\n\n` +
          `<i>If issue persists, contact your faculty.</i>`
       );
+   }
+
+   /**
+    * Roll number not in college records — with "did you mean" suggestions
+    */
+   private buildStudentNotFoundMessage(error: StudentNotFoundError): string {
+      const { rollnumber, suggestions } = error;
+
+      let msg =
+         `❌ <b>Roll number not found</b>\n\n` +
+         `<code>${rollnumber}</code> isn't in college records.\n\n`;
+
+      if (suggestions.length > 0) {
+         msg += `🤔 <b>Did you mean:</b>\n`;
+         for (const s of suggestions) {
+            msg += `• <code>${s}</code>\n`;
+         }
+         msg += `\nTap a suggestion and send it.\n\n`;
+      }
+
+      msg += `<i>Sure it's correct? Use /report and I'll add it.</i>`;
+      return msg;
    }
 
    /**
