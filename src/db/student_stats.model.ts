@@ -59,6 +59,13 @@ export const getLeaderboard = async (
   const column =
     sortBy === "attendance" ? "attendance_percentage" : "mid_marks_avg";
 
+  // rank on the ROUNDED score that's actually displayed (2dp attendance, 1dp mid)
+  // + deterministic roll_no tiebreaker → ties share rank, stable order
+  const scoreExpr =
+    sortBy === "attendance"
+      ? "ROUND(st.attendance_percentage, 2)"
+      : "ROUND(st.mid_marks_avg, 1)";
+
   const conditions: string[] = [`st.${column} IS NOT NULL`];
   const args: any[] = [];
 
@@ -92,7 +99,7 @@ export const getLeaderboard = async (
   // rank computed over the full filtered set, then paginated
   const ranked = `
       SELECT s.roll_no, s.name, st.attendance_percentage, st.mid_marks_avg,
-             ROW_NUMBER() OVER (ORDER BY st.${column} DESC) as rank
+             RANK() OVER (ORDER BY ${scoreExpr} DESC, st.roll_no ASC) as rank
       FROM student_stats st
       LEFT JOIN studentsnew s ON st.roll_no = s.roll_no
       ${whereClause}
@@ -115,7 +122,7 @@ export const getLeaderboard = async (
     sql: `
       SELECT roll_no, name, attendance_percentage, mid_marks_avg, rank
       FROM (${ranked})
-      ORDER BY rank ASC
+      ORDER BY rank ASC, roll_no ASC
       LIMIT ? OFFSET ?
     `,
     args: args2,
@@ -138,11 +145,16 @@ export const getStudentRank = async (
   const column =
     sortBy === "attendance" ? "attendance_percentage" : "mid_marks_avg";
 
+  const scoreExpr =
+    sortBy === "attendance"
+      ? "ROUND(attendance_percentage, 2)"
+      : "ROUND(mid_marks_avg, 1)";
+
   const result = await turso.execute({
     sql: `
       WITH ranked AS (
         SELECT roll_no,
-               ROW_NUMBER() OVER (ORDER BY ${column} DESC) as rank
+               RANK() OVER (ORDER BY ${scoreExpr} DESC, roll_no ASC) as rank
         FROM student_stats
         WHERE ${column} IS NOT NULL
       )
