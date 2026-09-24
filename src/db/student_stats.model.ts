@@ -96,10 +96,13 @@ export const getLeaderboard = async (
   const whereClause =
     conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-  // rank computed over the full filtered set, then paginated
+  // rank computed over the full filtered set, then paginated.
+  // NOTE: tiebreaker (roll_no) must NOT be inside the window ORDER BY —
+  // Turso computes RANK over the full composite, killing ties.
+  // Tiebreak in the outer ORDER BY instead.
   const ranked = `
       SELECT s.roll_no, s.name, st.attendance_percentage, st.mid_marks_avg,
-             RANK() OVER (ORDER BY ${scoreExpr} DESC, st.roll_no ASC) as rank
+             RANK() OVER (ORDER BY ${scoreExpr} DESC) as rank
       FROM student_stats st
       LEFT JOIN studentsnew s ON st.roll_no = s.roll_no
       ${whereClause}
@@ -154,7 +157,7 @@ export const getStudentRank = async (
     sql: `
       WITH ranked AS (
         SELECT roll_no,
-               RANK() OVER (ORDER BY ${scoreExpr} DESC, roll_no ASC) as rank
+               RANK() OVER (ORDER BY ${scoreExpr} DESC) as rank
         FROM student_stats
         WHERE ${column} IS NOT NULL
       )
