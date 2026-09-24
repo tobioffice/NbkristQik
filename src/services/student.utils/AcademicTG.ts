@@ -110,24 +110,26 @@ export class AcademicTG extends Academic {
    }
 
    /**
-    * Roll number not in college records — with "did you mean" suggestions
+    * Roll number not in college records. Not framed as a typo — the roll is
+    * often simply new/unloaded in the DB (e.g. fresh 1st-year batches).
     */
    private buildStudentNotFoundMessage(error: StudentNotFoundError): string {
       const { rollnumber, suggestions } = error;
 
       let msg =
          `❌ <b>Roll number not found</b>\n\n` +
-         `<code>${rollnumber}</code> isn't in college records.\n\n`;
+         `<code>${rollnumber}</code> isn't in college records yet.\n` +
+         `<i>New admissions sometimes take time to appear here.</i>\n\n`;
 
       if (suggestions.length > 0) {
-         msg += `🤔 <b>Did you mean:</b>\n`;
+         msg += `🔎 <b>Nearby rolls in records:</b>\n`;
          for (const s of suggestions) {
             msg += `• <code>${s}</code>\n`;
          }
          msg += `\nTap a suggestion and send it.\n\n`;
       }
 
-      msg += `<i>Sure it's correct? Use /report and I'll add it.</i>`;
+      msg += `<i>Missing? Use /report and I'll add it.</i>`;
       return msg;
    }
 

@@ -16,7 +16,10 @@ import {
 import axios, { AxiosError } from "axios";
 import crypto from "crypto";
 import * as cheerio from "cheerio";
-import { getStudentCached } from "../redis/utils.js";
+import {
+   getStudentCached,
+   StudentNotFoundError,
+} from "../redis/utils.js";
 import {
    storeAttendanceToRedis,
    storeMidMarksToRedis,
@@ -203,6 +206,12 @@ export class Academic implements IAcademic {
    private async handleRequestError(error: unknown, command: "mid" | "att"): Promise<string> {
       // Re-throw custom errors
       if (error instanceof AcademicError) {
+         throw error;
+      }
+
+      // Student genuinely not in college records — must not be masked as a
+      // server outage. Propagate so the user gets "not found" + suggestions.
+      if (error instanceof StudentNotFoundError) {
          throw error;
       }
 
