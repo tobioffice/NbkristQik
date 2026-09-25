@@ -17,8 +17,12 @@ import {
   securityLogger,
 } from "../middleware/security.js";
 
-const app = express();
+export const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Behind nginx on oracle3: trust the single proxy hop so req.ip and
+// express-rate-limit see the real client IP, not 127.0.0.1.
+app.set("trust proxy", 1);
 
 app.use(
   cors({
