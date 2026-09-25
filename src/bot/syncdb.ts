@@ -23,6 +23,7 @@ import { bot } from "./bot.js";
 import { ADMIN_ID, N_USERNAME, N_PASSWORD } from "../config/environmentals.js";
 import { getClient } from "../services/redis/getRedisClient.js";
 import { turso } from "../db/db.js";
+import { buildStudentRow, StudentRow } from "../db/student.model.js";
 import * as cheerio from "cheerio";
 import axios from "axios";
 
@@ -181,8 +182,7 @@ export const registerSyncDbCommand = () => {
          const branchIds = Object.keys(BRANCHES);
          const sections = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "-"];
 
-         interface StudentRow { roll_no: string; name: string | null; section: string; branch: string; year: string }
-         const students = new Map<string, StudentRow>();
+          const students = new Map<string, StudentRow>();
 
          const combos: Array<{ yearSem: string; branch: string; section: string }> = [];
          for (const yearSem of yearSems) {
@@ -232,18 +232,12 @@ export const registerSyncDbCommand = () => {
                   .map((id) => (id || "").replace(/^./, ""))
                   .filter(Boolean);
 
-               for (const roll of rolls) {
-                  const key = roll.toUpperCase();
-                  if (!students.has(key)) {
-                     students.set(key, {
-                        roll_no: key,
-                        name: null,
-                        section: section === "-" ? "" : section,
-                        branch: BRANCHES[branch],
-                        year: yearSem,
-                     });
-                  }
-               }
+                for (const roll of rolls) {
+                   const key = roll.toUpperCase();
+                   if (!students.has(key)) {
+                      students.set(key, buildStudentRow(yearSem, branch, section, roll));
+                   }
+                }
             } catch {
                /* combo not offered — skip */
             }

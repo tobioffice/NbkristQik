@@ -39,14 +39,15 @@ export const isDailyUnlocked = async (userId: number): Promise<boolean> => {
 
 /** Deep link to the pinned check-in post, or channel root as fallback. */
 export const getCheckInLink = async (): Promise<string> => {
+   const channel = (CHANNEL_ID || "").replace("@", "");
+   if (!channel) return "https://t.me/NbkristQik_bot";
    try {
       const redis = await getClient();
       const msgId = await redis.get(MSG_ID_KEY);
-      const channel = (CHANNEL_ID || "").replace("@", "");
       return msgId ? `https://t.me/${channel}/${msgId}` : `https://t.me/${channel}`;
    } catch (e) {
       console.error("[dailyCheckIn] getCheckInLink error:", e);
-      return `https://t.me/${(CHANNEL_ID || "").replace("@", "")}`;
+      return `https://t.me/${channel}`;
    }
 };
 

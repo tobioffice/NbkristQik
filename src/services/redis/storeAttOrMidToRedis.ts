@@ -65,7 +65,13 @@ export const storeMidMarksToRedis = async (doc: string) => {
       const studentMidmarks = parsed[i];
       if (!studentMidmarks) continue;
       const roll = rollNumbers[i].toUpperCase();
-      const student = await getStudentCached(roll);
+      let student;
+      try {
+         student = await getStudentCached(roll);
+      } catch (e) {
+         console.warn(`[cache] skipping ${roll}: student lookup failed`, e);
+         continue;
+      }
       if (!student) continue;
 
       const zeroMarkSubjects = studentMidmarks.subjects.filter(

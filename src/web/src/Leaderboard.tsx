@@ -26,7 +26,9 @@ export default function Leaderboard() {
    const [myRoll, setMyRoll] = useState<string | null>(null);
    const [myRank, setMyRank] = useState<{ attendance: number | null; midmarks: number | null } | null>(null);
 
-   const observer = useRef<IntersectionObserver | null>(null);
+    const observer = useRef<IntersectionObserver | null>(null);
+    const abortRef = useRef<AbortController | null>(null);
+    const reqIdRef = useRef(0);
 
    // debounced search -> triggers refetch via effect deps
    useEffect(() => {
@@ -60,18 +62,30 @@ export default function Leaderboard() {
       }
    }, []);
 
-   const myRankNow = myRoll
-      ? sortBy === "attendance"
-         ? myRank?.attendance
-         : myRank?.midmarks
-      : null;
+    const myRankNow = myRoll
+       ? sortBy === "attendance"
+          ? myRank?.attendance
+          : myRank?.midmarks
+       : null;
 
-   const fetchLeaderboard = async (pageNum: number, sort: string) => {
-      if (loading && pageNum !== 1) return;
+    const isFiltered =
+       search !== "" ||
+       filterYear !== "all" ||
+       filterBranch !== "all" ||
+       filterSection !== "all";
 
-      setLoading(true);
-      setError(false);
-      try {
+    const fetchLeaderboard = async (pageNum: number, sort: string) => {
+       if (loading && pageNum !== 1) return;
+
+       abortRef.current?.abort();
+       const controller = new AbortController();
+       abortRef.current = controller;
+       const reqId = ++reqIdRef.current;
+       const timeout = setTimeout(() => controller.abort(), 15000);
+
+       setLoading(true);
+       setError(false);
+       try {
          const baseUrl =
             import.meta.env.VITE_API_URL || "https://checker.tobioffice.dev";
          const queryParams = new URLSearchParams({
@@ -84,10 +98,11 @@ export default function Leaderboard() {
          });
          if (search) queryParams.set("search", search);
 
-         const response = await fetch(
-            `${baseUrl}/api/leaderboard?${queryParams.toString()}`
-         );
-         if (!response.ok) throw new Error("API error");
+          const response = await fetch(
+             `${baseUrl}/api/leaderboard?${queryParams.toString()}`,
+             { signal: controller.signal }
+          );
+          if (!response.ok) throw new Error("API error");
 
          const data = await response.json();
          const payload = Array.isArray(data.data)
@@ -104,13 +119,20 @@ export default function Leaderboard() {
             );
             setHasMore(rows.length >= 20);
          }
-      } catch (err) {
-         console.error("Failed to fetch leaderboard", err);
-         setError(true);
-      } finally {
-         setLoading(false);
-         setInitialLoading(false);
-      }
+       } catch (err) {
+          if (reqId !== reqIdRef.current) return;
+          if ((err as Error)?.name === "AbortError") {
+             console.error("Leaderboard request timed out", err);
+          } else {
+             console.error("Failed to fetch leaderboard", err);
+          }
+          setError(true);
+       } finally {
+          if (reqId !== reqIdRef.current) return;
+          clearTimeout(timeout);
+          setLoading(false);
+          setInitialLoading(false);
+       }
    };
 
    useEffect(() => {
@@ -235,8 +257,8 @@ export default function Leaderboard() {
                )}
             </div>
 
-            {/* You are #N banner */}
-            {myRoll && myRankNow != null && !initialLoading && !error && (
+             {/* You are #N banner (global rank — only when unfiltered) */}
+             {myRoll && myRankNow != null && !initialLoading && !error && !isFiltered && (
                <div className="flex items-center justify-center mb-4">
                   <span className="text-xs font-semibold text-indigo-300 bg-indigo-500/10 border border-indigo-500/30 rounded-full px-4 py-2">
                      🎯 You're #{myRankNow} of {total.toLocaleString()} · {myRoll}

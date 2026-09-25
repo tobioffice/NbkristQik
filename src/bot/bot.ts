@@ -31,3 +31,7 @@ import { TELEGRAM_BOT_TOKEN } from "../config/environmentals.js";
 const token = TELEGRAM_BOT_TOKEN || "";
 
 export const bot = new TelegramBot(token, { polling: true });
+
+bot.on("polling_error", (error) => {
+   console.warn("[bot] polling error:", error?.message ?? error);
+});

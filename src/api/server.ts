@@ -3,6 +3,7 @@ import cors from "cors";
 import {
   getLeaderboard,
   getStudentRank,
+  initLeaderboardIndexes,
 } from "../db/student_stats.model.js";
 import { getTgUserRoll } from "../db/student.model.js";
 import { getClient } from "../services/redis/getRedisClient.js";
@@ -184,6 +185,9 @@ app.get("/api/status", securityLogger, async (_req: Request, res: Response) => {
 });
 
 export const startServer = () => {
+  initLeaderboardIndexes().catch((e) =>
+    console.warn("[API] leaderboard index init failed:", e),
+  );
   app.listen(PORT, () => {
     console.log(`🚀 API Server running on port ${PORT} with security enabled`);
   });

@@ -224,6 +224,12 @@ export const createBotSecurityHandler = () => {
       const windowMs = 60 * 1000; // 1 minute
       const maxRequests = 10; // 10 requests per minute
 
+      if (userRequestCounts.size > 5000) {
+        for (const [id, entry] of userRequestCounts) {
+          if (now > entry.resetTime) userRequestCounts.delete(id);
+        }
+      }
+
       const userData = userRequestCounts.get(userId);
 
       if (!userData || now > userData.resetTime) {
@@ -235,7 +241,7 @@ export const createBotSecurityHandler = () => {
         return true;
       }
 
-      if (userData.count > maxRequests) {
+      if (userData.count >= maxRequests) {
         console.warn(
           `🚫 [BOT SECURITY] User ${userId} exceeded rate limit for ${action}`,
         );

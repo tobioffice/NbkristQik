@@ -91,3 +91,24 @@ export const findSimilarRolls = async (rollno: string, limit = 3): Promise<strin
 
   return scored;
 };
+
+export interface StudentRow {
+  roll_no: string;
+  name: string | null;
+  section: string;
+  branch: string;
+  year: string;
+}
+
+export const buildStudentRow = (
+  yearSem: string,
+  branch: string,
+  section: string,
+  roll: string,
+): StudentRow => ({
+  roll_no: roll.toUpperCase(),
+  name: null,
+  section,
+  branch,
+  year: yearSem,
+});

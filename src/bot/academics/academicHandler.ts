@@ -116,7 +116,9 @@ bot.onText(ROLL_REGEX, (msg) => {
          .catch(() => {});
       return;
    }
-   handleRollNumberMessage(msg);
+   handleRollNumberMessage(msg).catch((e) => {
+      console.error("[academicHandler] roll message failed:", e);
+   });
 });
 
 //HANDLE CALLBACK QUERY

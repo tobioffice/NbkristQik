@@ -14,6 +14,13 @@ export default [
       globals: {
         console: "readonly",
         process: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        setInterval: "readonly",
+        clearInterval: "readonly",
+        URLSearchParams: "readonly",
+        URL: "readonly",
+        fetch: "readonly",
       },
     },
     plugins: {

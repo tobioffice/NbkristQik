@@ -132,41 +132,38 @@ export const getLeaderboard = async (
   // NOTE: tiebreaker (roll_no) must NOT be inside the window ORDER BY —
   // Turso computes RANK over the full composite, killing ties.
   // Tiebreak in the outer ORDER BY instead.
+  // COUNT(*) OVER() returns the filtered total alongside each row so the
+  // count and page come from a single round trip.
   const ranked = `
       SELECT s.roll_no, s.name, st.attendance_percentage, st.mid_marks_avg,
-             RANK() OVER (ORDER BY ${scoreExpr} DESC) as rank
+              RANK() OVER (ORDER BY ${scoreExpr} DESC) as rank,
+              COUNT(*) OVER() as total
       FROM student_stats st
       LEFT JOIN studentsnew s ON st.roll_no = s.roll_no
       ${whereClause}
   `;
 
-  // total count for the same filters (for "your rank" context)
-  const countResult = await turso.execute({
-    sql: `
-      SELECT COUNT(*) as total
-      FROM student_stats st
-      LEFT JOIN studentsnew s ON st.roll_no = s.roll_no
-      ${whereClause}
-    `,
-    args: args,
-  });
-
-  const args2 = [...args, limit, offset];
-
   const result = await turso.execute({
     sql: `
-      SELECT roll_no, name, attendance_percentage, mid_marks_avg, rank
+      SELECT roll_no, name, attendance_percentage, mid_marks_avg, rank, total
       FROM (${ranked})
       ORDER BY rank ASC, roll_no ASC
       LIMIT ? OFFSET ?
     `,
-    args: args2,
+    args: [...args, limit, offset],
   });
 
   return {
-    rows: result.rows,
-    total: Number(countResult.rows[0]?.total || 0),
+    rows: result.rows.map(({ total: _total, ...row }) => row),
+    total: Number(result.rows[0]?.total || 0),
   };
+};
+
+export const initLeaderboardIndexes = async () => {
+  await turso.execute(`
+    CREATE INDEX IF NOT EXISTS idx_studentsnew_filters
+    ON studentsnew (year, branch, section)
+  `);
 };
 
 /**

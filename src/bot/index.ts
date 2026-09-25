@@ -1,6 +1,10 @@
 import { bot } from "./bot.js";
 import { setupBot } from "./setup.js";
 
+process.on("unhandledRejection", (reason) => {
+   console.error("[bot] unhandled rejection:", reason);
+});
+
 console.log("Starting bot initialization...");
 
 async function startBot() {

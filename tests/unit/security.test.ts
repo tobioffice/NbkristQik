@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   isValidRollNumber,
   createRateLimit,
+  createBotSecurityHandler,
   botSecurityHandler
 } from '../../src/middleware/security.js';
 
@@ -49,16 +50,17 @@ describe('Security Middleware', () => {
     });
 
     it('should block excessive requests', async () => {
-      const userId = 12345;
+      const handler = createBotSecurityHandler();
+      const userId = 99999;
 
       // Make 10 requests (should all be allowed)
       for (let i = 0; i < 10; i++) {
-        const allowed = await botSecurityHandler(userId, 'message');
+        const allowed = await handler(userId, 'message');
         expect(allowed).toBe(true);
       }
 
       // 11th request should be blocked
-      const blocked = await botSecurityHandler(userId, 'message');
+      const blocked = await handler(userId, 'message');
       expect(blocked).toBe(false);
     });
   });
