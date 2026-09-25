@@ -419,12 +419,12 @@ export default function Leaderboard() {
                         </div>
                      </div>
                   )}
-                  {/* tie note under podium */}
-                  {first && first.rank === second?.rank && (
-                     <p className="col-span-3 text-center text-[11px] text-slate-500 -mt-4">
-                        {stats.filter((s) => s.rank === first.rank).length} students tied at #{first.rank}
-                     </p>
-                  )}
+                   {/* tie note under podium */}
+                   {first && first.rank === second?.rank && (
+                      <p className="col-span-3 order-4 text-center text-[11px] text-slate-500 mt-2">
+                         {stats.filter((s) => s.rank === first.rank).length} students tied at #{first.rank}
+                      </p>
+                   )}
                </div>
             )}
 
