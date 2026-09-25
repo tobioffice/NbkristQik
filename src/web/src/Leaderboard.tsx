@@ -90,9 +90,10 @@ export default function Leaderboard() {
          if (!response.ok) throw new Error("API error");
 
          const data = await response.json();
-         // API shape: { success, page, limit, data: { rows, total } }
-         const payload = data.data;
-         setTotal(payload?.total || 0);
+         const payload = Array.isArray(data.data)
+            ? { rows: data.data, total: data.total }
+            : data.data;
+         setTotal(payload?.total ?? data.total ?? 0);
 
          const rows = payload?.rows ?? [];
          if (rows.length === 0) {

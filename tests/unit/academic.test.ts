@@ -10,6 +10,7 @@ vi.mock('../../src/services/redis/utils.js', () => ({
     branch: '5',
     year: '32',
   }),
+  StudentNotFoundError: class StudentNotFoundError extends Error {},
 }));
 
 vi.mock('../../src/services/redis/getRedisClient.js', () => ({
@@ -51,7 +52,7 @@ vi.mock('axios', () => {
 });
 
 // Now import the modules after mocks are set up
-import { Academic, AcademicError, ServerDownError, BlockedReportError, NoDataFoundError } from '../../src/services/student.utils/Academic';
+import { Academic, AcademicError, ServerDownError, BlockedReportError, NoDataFoundError, getAcadYearForDate } from '../../src/services/student.utils/Academic';
 import { mockAttendance, mockMidmarks, mockAttendanceHTML, mockMidmarksHTML } from '../mocks/academic.mock';
 import axios from 'axios';
 
@@ -103,6 +104,22 @@ describe('Academic Module', () => {
     });
   });
 
+  describe('Academic year', () => {
+    it('should use the next calendar year for the odd semester', () => {
+      expect(getAcadYearForDate(new Date('2026-09-25T00:00:00+05:30'))).toBe('2026-27');
+      expect(getAcadYearForDate(new Date('2026-07-01T00:00:00+05:30'))).toBe('2026-27');
+    });
+
+    it('should use the previous calendar year for the even semester', () => {
+      expect(getAcadYearForDate(new Date('2026-01-15T00:00:00+05:30'))).toBe('2025-26');
+      expect(getAcadYearForDate(new Date('2026-06-30T23:59:59+05:30'))).toBe('2025-26');
+    });
+
+    it('should use Asia/Kolkata for the semester boundary', () => {
+      expect(getAcadYearForDate(new Date('2026-06-30T20:00:00Z'))).toBe('2026-27');
+    });
+  });
+
   describe('getResponse', () => {
     it('should fetch attendance successfully', async () => {
       vi.mocked(axios.post).mockResolvedValue({
@@ -112,6 +129,18 @@ describe('Academic Module', () => {
       const response = await academic.getResponse('att');
       expect(response).toContain('21B81A05E9');
       expect(axios.post).toHaveBeenCalled();
+    });
+
+    it('should request the student’s active session and current academic year', async () => {
+      vi.mocked(axios.post).mockResolvedValue({
+        data: mockAttendanceHTML,
+      });
+
+      await academic.getResponse('att');
+
+      const payload = vi.mocked(axios.post).mock.calls[0][1] as Record<string, string>;
+      expect(payload.yearSem).toBe('32');
+      expect(payload.acadYear).toBe(getAcadYearForDate());
     });
 
     it('should fetch midmarks successfully', async () => {

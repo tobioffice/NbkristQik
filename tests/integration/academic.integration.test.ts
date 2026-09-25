@@ -20,6 +20,7 @@ vi.mock('../../src/services/redis/utils.js', () => ({
     branch: '5',
     year: '32',
   }),
+  StudentNotFoundError: class StudentNotFoundError extends Error {},
 }));
 vi.mock('../../src/db/fallback/response.model.js', () => ({
   storeResponse: vi.fn().mockResolvedValue(undefined),

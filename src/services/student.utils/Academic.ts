@@ -71,6 +71,18 @@ export class InvalidCredentialsError extends AcademicError {
    }
 }
 
+export const getAcadYearForDate = (now: Date = new Date()): string => {
+   const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "numeric",
+   }).formatToParts(now);
+   const year = Number(parts.find((part) => part.type === "year")?.value);
+   const month = Number(parts.find((part) => part.type === "month")?.value);
+   const startYear = month >= 7 ? year : year - 1;
+   return `${startYear}-${String(startYear + 1).slice(-2)}`;
+};
+
 export class Academic implements IAcademic {
    constructor(public rollnumber: string) {
       // Normalize roll number to uppercase
@@ -138,7 +150,7 @@ export class Academic implements IAcademic {
     */
    private buildRequestData(command: "mid" | "att", student: any): Record<string, string> {
       const baseData = {
-         acadYear: "2025-26",
+         acadYear: getAcadYearForDate(),
          branch: student.branch,
          section: student.section,
          dateOfAttendance: INDIAN_DATE,
@@ -154,7 +166,7 @@ export class Academic implements IAcademic {
 
       return {
          ...baseData,
-         yearSem: student.year.slice(0, 1) + "2",
+         yearSem: student.year,
       };
    }
 
