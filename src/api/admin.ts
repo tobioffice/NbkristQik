@@ -53,6 +53,29 @@ const tooManyAttempts = (ip: string): boolean => {
   return entry.count > MAX_LOGIN_ATTEMPTS;
 };
 
+// The panel polls; every request must not become a Turso query (read quota
+// + a low-RAM server). Short-TTL in-memory cache sits in front of the
+// read-heavy endpoints — staleness of a few seconds is fine here.
+const responseCache = new Map<string, { at: number; payload: unknown }>();
+
+const cached = async <T>(
+  key: string,
+  ttlMs: number,
+  produce: () => Promise<T>,
+): Promise<T> => {
+  const hit = responseCache.get(key);
+  if (hit && Date.now() - hit.at < ttlMs) return hit.payload as T;
+  const value = await produce();
+  responseCache.set(key, { at: Date.now(), payload: value });
+  if (responseCache.size > 200) {
+    const oldest = [...responseCache.entries()].sort(
+      (a, b) => a[1].at - b[1].at,
+    )[0];
+    if (oldest) responseCache.delete(oldest[0]);
+  }
+  return value;
+};
+
 export const registerAdminRoutes = (app: Express): void => {
   const secretPath = process.env.ADMIN_PANEL_PATH?.replace(/^\/+|\/+$/g, "");
   const password = process.env.ADMIN_PANEL_PASSWORD;
@@ -159,11 +182,13 @@ export const registerAdminRoutes = (app: Express): void => {
   });
 
   // ---- overview: totals, 30-day pulse, surface split, top actions ----
+  // cached for 60s — the panel re-requests it on every visit
   app.get(
     `${base}/api/overview`,
     requireAdmin,
     async (_req: Request, res: Response) => {
       try {
+        const data = await cached("overview", 60_000, async () => {
         const results = await turso.batch(
           [
             { sql: `SELECT COUNT(*) n FROM botusers`, args: [] },
@@ -205,6 +230,15 @@ export const registerAdminRoutes = (app: Express): void => {
                     GROUP BY action ORDER BY n DESC LIMIT 8`,
               args: [],
             },
+            {
+              sql: `SELECT strftime('%H', created_at) h, COUNT(*) actions,
+                           COUNT(DISTINCT user_id) users,
+                           SUM(CASE WHEN action = 'daily_checkin' THEN 1 ELSE 0 END) checkins
+                    FROM activity_log
+                    WHERE created_at >= datetime('now', 'start of day')
+                    GROUP BY h ORDER BY h`,
+              args: [],
+            },
           ],
           "read",
         );
@@ -217,6 +251,7 @@ export const registerAdminRoutes = (app: Express): void => {
           dailyQ,
           surfaceQ,
           topQ,
+          hourlyQ,
         ] = results;
 
         const surfaces: Record<string, number> = {};
@@ -224,7 +259,7 @@ export const registerAdminRoutes = (app: Express): void => {
           surfaces[String(row.surface)] = Number(row.n);
         }
 
-        res.json({
+        return {
           totals: {
             users: Number(usersQ.rows[0]?.n || 0),
             activeToday: Number(todayQ.rows[0]?.n || 0),
@@ -238,12 +273,21 @@ export const registerAdminRoutes = (app: Express): void => {
             users: Number(r.users),
             checkins: Number(r.checkins || 0),
           })),
+          hourly: hourlyQ.rows.map((r) => ({
+            h: String(r.h),
+            actions: Number(r.actions),
+            users: Number(r.users),
+            checkins: Number(r.checkins || 0),
+          })),
           surfaces,
           topActions: topQ.rows.map((r) => ({
             action: String(r.action),
             count: Number(r.n),
           })),
+        };
         });
+
+        res.json(data);
       } catch (e) {
         logger.error("[admin] overview failed:", e);
         res.status(500).json({ error: "Internal Server Error" });
@@ -274,32 +318,41 @@ export const registerAdminRoutes = (app: Express): void => {
         const orderBy =
           sort === "total" ? "u.total_actions DESC" : "u.last_seen DESC";
 
-        const result = await turso.execute({
-          sql: `SELECT u.user_id, u.username, u.first_name, u.first_seen, u.last_seen,
-                       u.private_actions, u.channel_actions, u.group_actions,
-                       u.total_actions, t.rollNo
-                FROM botusers u
-                LEFT JOIN tgusers t ON t.userId = CAST(u.user_id AS TEXT)
-                ${where}
-                ORDER BY ${orderBy}
-                LIMIT ?`,
-          args: q ? [like, like, like, like, limit] : [limit],
-        });
+        // every keystroke lands here (debounced client-side) — 20s per query
+        const data = await cached(
+          `users:${q}:${sort}:${limit}`,
+          20_000,
+          async () => {
+            const result = await turso.execute({
+              sql: `SELECT u.user_id, u.username, u.first_name, u.first_seen, u.last_seen,
+                           u.private_actions, u.channel_actions, u.group_actions,
+                           u.total_actions, t.rollNo
+                    FROM botusers u
+                    LEFT JOIN tgusers t ON t.userId = CAST(u.user_id AS TEXT)
+                    ${where}
+                    ORDER BY ${orderBy}
+                    LIMIT ?`,
+              args: q ? [like, like, like, like, limit] : [limit],
+            });
 
-        res.json({
-          users: result.rows.map((r) => ({
-            userId: Number(r.user_id),
-            username: r.username ? String(r.username) : null,
-            firstName: r.first_name ? String(r.first_name) : null,
-            rollNo: r.rollNo ? String(r.rollNo) : null,
-            firstSeen: String(r.first_seen),
-            lastSeen: String(r.last_seen),
-            privateActions: Number(r.private_actions),
-            channelActions: Number(r.channel_actions),
-            groupActions: Number(r.group_actions),
-            totalActions: Number(r.total_actions),
-          })),
-        });
+            return {
+              users: result.rows.map((r) => ({
+                userId: Number(r.user_id),
+                username: r.username ? String(r.username) : null,
+                firstName: r.first_name ? String(r.first_name) : null,
+                rollNo: r.rollNo ? String(r.rollNo) : null,
+                firstSeen: String(r.first_seen),
+                lastSeen: String(r.last_seen),
+                privateActions: Number(r.private_actions),
+                channelActions: Number(r.channel_actions),
+                groupActions: Number(r.group_actions),
+                totalActions: Number(r.total_actions),
+              })),
+            };
+          },
+        );
+
+        res.json(data);
       } catch (e) {
         logger.error("[admin] users query failed:", e);
         res.status(500).json({ error: "Internal Server Error" });
@@ -390,28 +443,33 @@ export const registerAdminRoutes = (app: Express): void => {
           Math.max(parseInt(String(req.query.limit)) || 50, 1),
           200,
         );
-        const result = await turso.execute({
-          sql: `SELECT a.id, a.user_id, a.chat_type, a.action, a.detail, a.created_at,
-                       COALESCE(u.first_name, u.username) AS name, u.username
-                FROM activity_log a
-                LEFT JOIN botusers u ON u.user_id = a.user_id
-                ORDER BY a.id DESC
-                LIMIT ?`,
-          args: [limit],
+        // polled every 10s — a 5s cache halves the DB load with no visible lag
+        const data = await cached(`recent:${limit}`, 5_000, async () => {
+          const result = await turso.execute({
+            sql: `SELECT a.id, a.user_id, a.chat_type, a.action, a.detail, a.created_at,
+                         COALESCE(u.first_name, u.username) AS name, u.username
+                  FROM activity_log a
+                  LEFT JOIN botusers u ON u.user_id = a.user_id
+                  ORDER BY a.id DESC
+                  LIMIT ?`,
+            args: [limit],
+          });
+
+          return {
+            events: result.rows.map((r) => ({
+              id: Number(r.id),
+              userId: Number(r.user_id),
+              name: r.name ? String(r.name) : null,
+              username: r.username ? String(r.username) : null,
+              chatType: String(r.chat_type),
+              action: String(r.action),
+              detail: r.detail ? String(r.detail) : null,
+              at: String(r.created_at),
+            })),
+          };
         });
 
-        res.json({
-          events: result.rows.map((r) => ({
-            id: Number(r.id),
-            userId: Number(r.user_id),
-            name: r.name ? String(r.name) : null,
-            username: r.username ? String(r.username) : null,
-            chatType: String(r.chat_type),
-            action: String(r.action),
-            detail: r.detail ? String(r.detail) : null,
-            at: String(r.created_at),
-          })),
-        });
+        res.json(data);
       } catch (e) {
         logger.error("[admin] recent feed failed:", e);
         res.status(500).json({ error: "Internal Server Error" });
@@ -425,18 +483,22 @@ export const registerAdminRoutes = (app: Express): void => {
     requireAdmin,
     async (_req: Request, res: Response) => {
       try {
-        const summary = await getUptimeSummary();
-        const components = await Promise.all(
-          summary.map(async (s) => ({
-            component: s.component,
-            uptimePct: s.uptimePct,
-            pings: s.pings,
-            lastPing: s.lastPing,
-            avgLatencyMs: s.avgLatencyMs,
-            buckets: await getUptimeDailyBuckets(s.component, 90),
-          })),
-        );
-        res.json({ components });
+        // uptime data only changes on the 5-min probe
+        const data = await cached("health", 300_000, async () => {
+          const summary = await getUptimeSummary();
+          const components = await Promise.all(
+            summary.map(async (s) => ({
+              component: s.component,
+              uptimePct: s.uptimePct,
+              pings: s.pings,
+              lastPing: s.lastPing,
+              avgLatencyMs: s.avgLatencyMs,
+              buckets: await getUptimeDailyBuckets(s.component, 90),
+            })),
+          );
+          return { components };
+        });
+        res.json(data);
       } catch (e) {
         logger.error("[admin] health failed:", e);
         res.status(500).json({ error: "Internal Server Error" });

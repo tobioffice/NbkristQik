@@ -93,8 +93,7 @@ main { max-width: 1060px; margin: 0 auto; padding: 36px 28px 80px; }
 .now .label { color: var(--text-2); margin-top: 8px; font-size: 15px; }
 .now .sub { color: var(--text-3); font-size: 13.5px; margin-top: 4px; }
 .pulse { flex: 1; min-width: 320px; }
-.pulse-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
-.pulse-head .t { color: var(--text-3); font-size: 13px; }
+.pulse-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .pulse-head .legend { color: var(--text-3); font-size: 12.5px; }
 .pulse-head .legend b { color: var(--cyan); font-weight: 500; }
 
@@ -165,6 +164,8 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
 .seg { display: flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
 .seg button { padding: 8px 14px; font-size: 13px; color: var(--text-3); }
 .seg button[aria-selected="true"] { background: var(--raised-2); color: var(--text); }
+.seg-sm { display: inline-flex; }
+.seg-sm button { padding: 4px 11px; font-size: 12.5px; }
 
 /* ---------- live feed ---------- */
 .feed { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
@@ -250,6 +251,16 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
 .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 7px; animation: blink 2.4s ease infinite; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
+/* motion: one orchestrated entrance, view transitions, fresh-row cue */
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes viewfade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+.reveal { animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+.reveal.d1 { animation-delay: 0.07s; }
+.reveal.d2 { animation-delay: 0.14s; }
+.reveal.d3 { animation-delay: 0.21s; }
+.view.active { animation: viewfade 0.22s ease; }
+.feedrow.fresh { box-shadow: inset 2px 0 0 var(--amber); }
+
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
@@ -288,7 +299,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
 <main id="app" style="display:none">
 
   <section class="view active" id="view-overview">
-    <div class="hero">
+    <div class="hero reveal">
       <div class="now">
         <div class="big" id="ov-active-today">&ndash;</div>
         <div class="label">students active today</div>
@@ -296,14 +307,17 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
       </div>
       <div class="pulse">
         <div class="pulse-head">
-          <span class="t">Last 30 days</span>
+          <div class="seg seg-sm" id="pulseseq" role="tablist">
+            <button aria-selected="true" data-range="30d">30 days</button>
+            <button aria-selected="false" data-range="24h">Today</button>
+          </div>
           <span class="legend"><b>&mdash;</b> actions &nbsp;&nbsp;<b style="color:var(--amber)">&mdash;</b> check-ins &nbsp;&nbsp; distinct students</span>
         </div>
-        <svg id="pulse" viewBox="0 0 640 120" width="100%" height="120" preserveAspectRatio="none" aria-label="Daily activity, last 30 days"></svg>
+        <svg id="pulse" viewBox="0 0 640 120" width="100%" height="120" preserveAspectRatio="none" aria-label="Activity chart"></svg>
       </div>
     </div>
 
-    <div class="statline">
+    <div class="statline reveal d1">
       <div class="stat"><div class="n" id="ov-users">&ndash;</div><div class="l">students seen</div></div>
       <div class="stat"><div class="n" id="ov-active7">&ndash;</div><div class="l">active this week</div></div>
       <div class="stat"><div class="n" id="ov-active30">&ndash;</div><div class="l">active this month</div></div>
@@ -311,7 +325,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
       <div class="stat"><div class="n" style="color:var(--amber)" id="ov-checkins">&ndash;</div><div class="l">check-ins today</div></div>
     </div>
 
-    <div class="section">
+    <div class="section reveal d2">
       <div class="section-head">
         <h2>Where students are</h2>
         <span class="hint">last 30 days</span>
@@ -320,7 +334,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
       <div class="legend-row" id="surfacelegend"></div>
     </div>
 
-    <div class="section">
+    <div class="section reveal d3">
       <div class="section-head">
         <h2>What they do</h2>
         <span class="hint">last 7 days</span>
@@ -458,6 +472,13 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
 
   /* ---------- navigation ---------- */
   var current = "overview";
+  // don't re-query on every tab switch — each view refetches only when its
+  // client-side copy goes stale (mirrors the server-side cache TTLs)
+  var lastLoad = {};
+  var STALE_MS = { overview: 60000, students: 30000, live: 0, health: 300000 };
+  var isStale = function (name) {
+    return !lastLoad[name] || Date.now() - lastLoad[name] > STALE_MS[name];
+  };
   var switchView = function (name) {
     current = name;
     var tabs = document.querySelectorAll(".nav button");
@@ -466,46 +487,74 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
     var views = document.querySelectorAll(".view");
     for (var j = 0; j < views.length; j++)
       views[j].classList.toggle("active", views[j].id === "view-" + name);
-    if (name === "overview") loadOverview();
-    if (name === "students") loadUsers();
+    if (name === "overview" && isStale("overview")) loadOverview();
+    if (name === "students" && isStale("students")) loadUsers();
     if (name === "live") loadFeed();
-    if (name === "health") loadHealth();
+    if (name === "health" && isStale("health")) loadHealth();
   };
   var tabs = document.querySelectorAll(".nav button");
   for (var i = 0; i < tabs.length; i++)
     tabs[i].addEventListener("click", function () { switchView(this.dataset.view); });
 
   /* ---------- overview ---------- */
-  var drawPulse = function (daily) {
+  var overviewData = null;
+  var pulseRange = "30d";
+
+  // zero-fills the selected window from the cached overview payload, so
+  // switching between monthly and daily costs no extra request
+  var buildPulsePoints = function () {
+    if (!overviewData) return [];
+    var out = [];
+    if (pulseRange === "24h") {
+      var byHour = {};
+      var hourly = overviewData.hourly || [];
+      for (var i = 0; i < hourly.length; i++) byHour[hourly[i].h] = hourly[i];
+      for (var h = 0; h < 24; h++) {
+        var hh = (h < 10 ? "0" : "") + h;
+        var rec = byHour[hh];
+        out.push({
+          label: hh + ":00",
+          actions: rec ? rec.actions : 0,
+          users: rec ? rec.users : 0,
+          checkins: rec ? rec.checkins || 0 : 0,
+        });
+      }
+    } else {
+      var byDay = {};
+      var daily = overviewData.daily || [];
+      for (var j = 0; j < daily.length; j++) byDay[daily[j].day] = daily[j];
+      var now = new Date();
+      for (var d = 29; d >= 0; d--) {
+        var dt = new Date(now.getTime() - d * 86400000);
+        var key = dt.toISOString().slice(0, 10);
+        var rec2 = byDay[key];
+        out.push({
+          label: key,
+          actions: rec2 ? rec2.actions : 0,
+          users: rec2 ? rec2.users : 0,
+          checkins: rec2 ? rec2.checkins || 0 : 0,
+        });
+      }
+    }
+    return out;
+  };
+
+  var drawPulse = function (points) {
     var svg = $("pulse");
+    if (!points.length) return;
     var W = 640, H = 120, pad = 4;
-    var byDay = {};
-    for (var i = 0; i < daily.length; i++) byDay[daily[i].day] = daily[i];
-    var days = [];
-    var now = new Date();
-    for (var d = 29; d >= 0; d--) {
-      var dt = new Date(now.getTime() - d * 86400000);
-      var key = dt.toISOString().slice(0, 10);
-      days.push({
-        key: key,
-        actions: byDay[key] ? byDay[key].actions : 0,
-        users: byDay[key] ? byDay[key].users : 0,
-        checkins: byDay[key] ? byDay[key].checkins || 0 : 0
-      });
-    }
     var max = 1, hasCheckins = false;
-    for (var k = 0; k < days.length; k++) {
-      max = Math.max(max, days[k].actions);
-      if (days[k].checkins > 0) hasCheckins = true;
+    for (var k = 0; k < points.length; k++) {
+      max = Math.max(max, points[k].actions);
+      if (points[k].checkins > 0) hasCheckins = true;
     }
-    var step = (W - pad * 2) / (days.length - 1);
+    var step = (W - pad * 2) / (points.length - 1);
     var y = function (v) { return H - pad - (v / max) * (H - pad * 2 - 8); };
     var pts = [];
-    for (var p = 0; p < days.length; p++) pts.push([pad + p * step, y(days[p].actions)]);
+    for (var p = 0; p < points.length; p++) pts.push([pad + p * step, y(points[p].actions)]);
     var line = "";
     for (var q = 0; q < pts.length; q++) line += (q ? " L" : "M") + pts[q][0].toFixed(1) + " " + pts[q][1].toFixed(1);
     var area = line + " L" + (W - pad) + " " + H + " L" + pad + " " + H + " Z";
-    var last = days[days.length - 1];
     var svgHtml =
       '<defs><linearGradient id="pulsefill" x1="0" y1="0" x2="0" y2="1">' +
       '<stop offset="0" stop-color="#22d3ee" stop-opacity="0.28"/>' +
@@ -515,21 +564,22 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
       '<line x1="' + pts[pts.length - 1][0] + '" y1="' + pts[pts.length - 1][1] + '" x2="' + pts[pts.length - 1][0] + '" y2="' + H + '" stroke="#22d3ee" stroke-opacity="0.35" stroke-dasharray="2 3"/>';
     if (hasCheckins) {
       var cline = "";
-      for (var c = 0; c < days.length; c++) {
-        cline += (c ? " L" : "M") + (pad + c * step).toFixed(1) + " " + y(days[c].checkins).toFixed(1);
+      for (var c = 0; c < points.length; c++) {
+        cline += (c ? " L" : "M") + (pad + c * step).toFixed(1) + " " + y(points[c].checkins).toFixed(1);
       }
-      svgHtml += '<path d="' + cline + '" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="1 0"/>';
+      svgHtml += '<path d="' + cline + '" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
     }
-    for (var r = 0; r < days.length; r += 1) {
-      var cx = pad + r * step, cy = y(days[r].actions);
-      svgHtml += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="7" fill="transparent" data-d="' + days[r].key + '" data-a="' + days[r].actions + '" data-u="' + days[r].users + '"><title>' + days[r].key + ": " + days[r].actions + " actions, " + days[r].users + " students, " + days[r].checkins + " check-ins</title></circle>";
+    for (var r = 0; r < points.length; r += 1) {
+      var cx = pad + r * step, cy = y(points[r].actions);
+      svgHtml += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="7" fill="transparent"><title>' + points[r].label + ": " + points[r].actions + " actions, " + points[r].users + " students, " + points[r].checkins + " check-ins</title></circle>";
     }
     svg.innerHTML = svgHtml;
     svg.onmousemove = function (ev) {
       var rect = svg.getBoundingClientRect();
-      var idx = Math.round(((ev.clientX - rect.left) / rect.width * (days.length - 1)));
-      idx = Math.max(0, Math.min(days.length - 1, idx));
-      var day = days[idx];
+      var idx = Math.round(((ev.clientX - rect.left) / rect.width * (points.length - 1)));
+      idx = Math.max(0, Math.min(points.length - 1, idx));
+      var pt = points[idx];
+      var lab = pulseRange === "24h" ? pt.label : pt.label.slice(5);
       var tip = document.getElementById("pctip");
       if (!tip) {
         tip = document.createElement("div");
@@ -537,7 +587,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
         tip.style.cssText = "position:fixed;pointer-events:none;font-size:12px;background:#1b1d24;border:1px solid rgba(148,163,184,.2);padding:5px 9px;border-radius:7px;z-index:30;font-family:" + "var(--mono)" + ";white-space:nowrap";
         document.body.appendChild(tip);
       }
-      tip.textContent = day.key.slice(5) + " · " + day.actions + " actions · " + day.users + " students · " + day.checkins + " check-ins";
+      tip.textContent = lab + " · " + pt.actions + " actions · " + pt.users + " students · " + pt.checkins + " check-ins";
       tip.style.left = (ev.clientX + 12) + "px";
       tip.style.top = (ev.clientY - 30) + "px";
       tip.style.display = "block";
@@ -548,22 +598,39 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
     };
   };
 
+  var pulseBtns = document.querySelectorAll("#pulseseq button");
+  for (var pb = 0; pb < pulseBtns.length; pb++)
+    pulseBtns[pb].addEventListener("click", function () {
+      pulseRange = this.dataset.range;
+      for (var k = 0; k < pulseBtns.length; k++)
+        pulseBtns[k].setAttribute("aria-selected", String(pulseBtns[k] === this));
+      drawPulse(buildPulsePoints());
+    });
+
   var drawSurfaces = function (surfaces) {
     var total = 0;
     for (var key in surfaces) total += surfaces[key];
     var bar = $("surfaceline"), legend = $("surfacelegend");
     if (!total) { bar.innerHTML = ""; legend.innerHTML = '<span class="hint">No activity recorded yet.</span>'; return; }
+    var widths = [];
     var barHtml = "", legendHtml = "";
     for (var s = 0; s < SURFACES.length; s++) {
       var n = surfaces[SURFACES[s].key] || 0;
       if (!n) continue;
       var pct = (n / total) * 100;
-      barHtml += '<div style="width:' + pct + '%;background:' + SURFACES[s].color + ';opacity:.8"></div>';
+      widths.push(pct.toFixed(2) + "%");
+      barHtml += '<div style="width:0;background:' + SURFACES[s].color + ';opacity:.8"></div>';
       legendHtml += '<span class="item"><span class="dot" style="background:' + SURFACES[s].color + '"></span>' +
         SURFACES[s].label + ' <span class="n">' + fmt(n) + '</span> <span class="dim">' + Math.round(pct) + '%</span></span>';
     }
     bar.innerHTML = barHtml;
     legend.innerHTML = legendHtml;
+    // paint at 0 first so the CSS transition animates the segments in
+    requestAnimationFrame(function () {
+      var segs = bar.children;
+      for (var i = 0; i < segs.length && i < widths.length; i++)
+        segs[i].style.width = widths[i];
+    });
   };
 
   var drawWeights = function (topActions) {
@@ -580,17 +647,40 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
     wrap.innerHTML = html || '<div class="empty">Nothing recorded in the last 7 days.</div>';
   };
 
+  // count-up on the stat numbers — one entrance, skipped for reduced motion
+  var reducedMotion =
+    window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var countUp = function (el, target) {
+    var from = Number(el.dataset.v || 0);
+    el.dataset.v = String(target);
+    if (reducedMotion || !isFinite(target) || from === target) {
+      el.textContent = fmt(target);
+      return;
+    }
+    var t0 = null;
+    var step = function (ts) {
+      if (!t0) t0 = ts;
+      var k = Math.min(1, (ts - t0) / 650);
+      var eased = 1 - Math.pow(1 - k, 3);
+      el.textContent = fmt(Math.round(from + (target - from) * eased));
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+
   var loadOverview = function () {
+    lastLoad.overview = Date.now();
     api("overview").then(function (d) {
-      $("ov-active-today").textContent = fmt(d.totals.activeToday);
+      overviewData = d;
+      countUp($("ov-active-today"), d.totals.activeToday);
       $("ov-sub").textContent = fmt(d.totals.totalActions) + " actions recorded all time";
-      $("ov-users").textContent = fmt(d.totals.users);
-      $("ov-active7").textContent = fmt(d.totals.active7d);
-      $("ov-active30").textContent = fmt(d.totals.active30d);
-      $("ov-actions").textContent = fmt(d.totals.totalActions);
+      countUp($("ov-users"), d.totals.users);
+      countUp($("ov-active7"), d.totals.active7d);
+      countUp($("ov-active30"), d.totals.active30d);
+      countUp($("ov-actions"), d.totals.totalActions);
       var dailyList = d.daily || [];
-      $("ov-checkins").textContent = fmt(dailyList.length ? dailyList[dailyList.length - 1].checkins : 0);
-      drawPulse(dailyList);
+      countUp($("ov-checkins"), dailyList.length ? dailyList[dailyList.length - 1].checkins : 0);
+      drawPulse(buildPulsePoints());
       drawSurfaces(d.surfaces || {});
       drawWeights(d.topActions || []);
     }).catch(function () {});
@@ -599,6 +689,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
   /* ---------- students ---------- */
   var userQuery = "", userSort = "recent";
   var loadUsers = function () {
+    lastLoad.students = Date.now();
     api("users?q=" + encodeURIComponent(userQuery) + "&sort=" + userSort).then(function (d) {
       var rows = $("userrows");
       var html = "";
@@ -640,7 +731,9 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
 
   /* ---------- live ---------- */
   var feedRow = function (e) {
-    return '<div class="feedrow">' +
+    var ts = Date.parse(e.at + "Z");
+    var isFresh = !isNaN(ts) && Date.now() - ts < 120000;
+    return '<div class="feedrow' + (isFresh ? " fresh" : "") + '">' +
       '<span class="when">' + e.at.slice(11, 16) + "</span>" +
       '<span class="what"><span class="badge">' + esc(actionLabel(e.action)) + "</span>" +
       esc(e.name || e.username || "ID " + e.userId) +
@@ -649,6 +742,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
       "</div>";
   };
   var loadFeed = function () {
+    lastLoad.live = Date.now();
     api("recent?limit=60").then(function (d) {
       $("feed").innerHTML = d.events.length
         ? d.events.map(feedRow).join("")
@@ -661,6 +755,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
 
   /* ---------- health ---------- */
   var loadHealth = function () {
+    lastLoad.health = Date.now();
     api("health").then(function (d) {
       var html = "";
       for (var i = 0; i < d.components.length; i++) {
