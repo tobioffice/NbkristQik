@@ -3,38 +3,10 @@ export const PROTECTED_CHAT_ID = -1002435023187;
 // Chit chat group: bot is silent, deletes roll numbers only (keeps chat for chatting)
 export const CHIT_CHAT_ID = -1003179479637;
 
-//exporting variables
-export const MESSAGES = {
-  GENERATING: "Generating response...",
-
-  JOIN_GROUP: "🚫 Join NbkistQik to access in private ‼️",
-
-  CLG_SERVER_DOWN:
-    "⚠️ College server is not responding. Please try again later.",
-
-  INVALID_ROLL: "⚠️ Invalid Roll Number ❗",
-
-  CMDS_MESSAGE:
-    "<b>Welcome to the Bot!</b> Here's how you can interact:\n\n" +
-    "🧠 <code>/ai [query]</code> - Ask anything. <em>E.g., /ai What's the capital of France?</em>\n\n" +
-    "🎨 <code>/img [prompt]</code> - Generate an image. <em>E.g., /img Sunset over the ocean</em>\n\n" +
-    "👉 <b>Ready to use me? Let's go!</b> 🚀",
-
-  START_CMD:
-    "Hello! 👋 I'm Tobi, your AI-powered assistant.\n\n" +
-    "<b>What I can do for you:</b>\n\n" +
-    "<code>/ai</code> - Ask me anything or interact with AI-powered responses.\n" +
-    "<code>/cmds</code> - to see how to use them.\n" +
-    "<code>/help</code> - To know how to check Attendance and Midmarks\n\n" +
-    "👉 <b>Ready to use me? Let's go!</b> 🚀",
-};
-
-//exporting request urls
-// export const BASE_URL = "http://103.203.175.90:96";
-// export const BASE_URL = "http://47.247.10.58";
-export const BASE_URL = "http://103.203.175.91";
-
-// export const BASE_URL = "https://at.nbkrist.org";
+// College portal base URL. The portal is served over plain HTTP by default —
+// set PORTAL_BASE_URL to the HTTPS host in .env if/when the portal supports it,
+// since login credentials are POSTed to `${PORTAL_BASE_URL}/attendance/attendanceLogin.php`.
+export const BASE_URL = process.env.PORTAL_BASE_URL || "http://103.203.175.91";
 
 export const urls = {
   base: BASE_URL,

@@ -1,14 +1,14 @@
 export const mockStudent = {
-  roll_no: '21B81A05E9',
-  name: 'Test Student',
-  section: 'A',
-  branch: '05',
-  year: '3-2',
+  roll_no: "21B81A05E9",
+  name: "Test Student",
+  section: "A",
+  branch: "05",
+  year: "3-2",
 };
 
 export const mockAttendance = {
-  rollno: '21B81A05E9',
-  year_branch_section: '3_CSE_A',
+  rollno: "21B81A05E9",
+  year_branch_section: "3_CSE_A",
   percentage: 85.5,
   totalClasses: {
     attended: 450,
@@ -16,44 +16,44 @@ export const mockAttendance = {
   },
   subjects: [
     {
-      subject: 'Data Structures',
+      subject: "Data Structures",
       attended: 45,
       conducted: 50,
-      lastUpdated: '01-02-2026',
+      lastUpdated: "01-02-2026",
     },
     {
-      subject: 'Operating Systems',
+      subject: "Operating Systems",
       attended: 40,
       conducted: 45,
-      lastUpdated: '01-02-2026',
+      lastUpdated: "01-02-2026",
     },
   ],
 };
 
 export const mockMidmarks = {
-  rollno: '21B81A05E9',
-  year_branch_section: '3_CSE_A',
+  rollno: "21B81A05E9",
+  year_branch_section: "3_CSE_A",
   subjects: [
     {
-      subject: 'Data Structures',
+      subject: "Data Structures",
       M1: 23,
       M2: 25,
       average: 24,
-      type: 'Subject',
+      type: "Subject",
     },
     {
-      subject: 'Operating Systems',
+      subject: "Operating Systems",
       M1: 22,
       M2: 24,
       average: 23,
-      type: 'Subject',
+      type: "Subject",
     },
     {
-      subject: 'DS Lab',
+      subject: "DS Lab",
       M1: 25,
       M2: 0,
       average: 0,
-      type: 'Lab',
+      type: "Lab",
     },
   ],
 };

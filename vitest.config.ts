@@ -6,6 +6,10 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: ['./tests/setup.ts'],
+    // never let a stray real TURSO_DATABASE_URL point tests at production
+    env: {
+      TURSO_DATABASE_URL: 'file::memory:',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

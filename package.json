@@ -7,8 +7,11 @@
         "start": "node dist/bot/index.js",
         "build": "tsc",
         "dev": "node --loader ts-node/esm src/bot/index.ts",
-        "lint": "eslint src/**/*.ts",
-        "lint:fix": "eslint src/**/*.ts --fix",
+        "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
+        "lint:fix": "eslint \"src/**/*.ts\" \"tests/**/*.ts\" --fix",
+        "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+        "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
+        "typecheck": "tsc --noEmit",
         "test": "vitest",
         "test:ui": "vitest --ui",
         "test:coverage": "vitest --coverage"
@@ -19,8 +22,6 @@
     "description": "",
     "dependencies": {
         "@libsql/client": "^0.15.15",
-        "@types/cors": "^2.8.19",
-        "@types/express": "^5.0.3",
         "axios": "^1.8.1",
         "cheerio": "^1.0.0",
         "cors": "^2.8.5",
@@ -28,13 +29,13 @@
         "express": "^5.1.0",
         "express-rate-limit": "^8.2.1",
         "express-validator": "^7.3.1",
-        "moment-timezone": "^0.5.47",
         "node-telegram-bot-api": "^0.66.0",
-        "redis": "^5.8.2",
-        "typescript": "^5.9.2"
+        "redis": "^5.8.2"
     },
     "devDependencies": {
         "@eslint/js": "^9.34.0",
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.3",
         "@types/node-telegram-bot-api": "^0.64.7",
         "@typescript-eslint/eslint-plugin": "^8.42.0",
         "@typescript-eslint/parser": "^8.42.0",
@@ -44,8 +45,9 @@
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-prettier": "^5.5.4",
         "happy-dom": "^15.11.7",
-        "nodemon": "^3.1.9",
+        "prettier": "^3.6.2",
         "ts-node": "^10.9.2",
+        "typescript": "^5.9.2",
         "vitest": "^2.1.9"
     }
 }

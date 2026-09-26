@@ -3,22 +3,21 @@ import cors from "cors";
 import {
   getLeaderboard,
   getStudentRank,
-  initLeaderboardIndexes,
-} from "../db/student_stats.model.js";
-import { getTgUserRoll } from "../db/student.model.js";
-import { getClient } from "../services/redis/getRedisClient.js";
-import {
   getUptimeSummary,
   getUptimeDailyBuckets,
 } from "../db/student_stats.model.js";
+import { getTgUserRoll } from "../db/student.model.js";
+import { getClient } from "../services/redis/getRedisClient.js";
+import { verifyInitData } from "../services/telegramAuth.js";
 import {
   leaderboardSecurityMiddlewares,
   apiSecurityMiddlewares,
   securityLogger,
 } from "../middleware/security.js";
+import { PORT, ENV } from "../config/environmentals.js";
+import { logger } from "../config/logger.js";
 
 export const app = express();
-const PORT = process.env.PORT || 3000;
 
 // Behind nginx on oracle3: trust the single proxy hop so req.ip and
 // express-rate-limit see the real client IP, not 127.0.0.1.
@@ -29,8 +28,6 @@ app.use(
     origin: ["https://tobioffice.github.io"],
   }),
 );
-
-// app.use(cors());
 
 app.use(express.json());
 
@@ -43,11 +40,6 @@ app.get(
   leaderboardSecurityMiddlewares,
   async (req: Request, res: Response) => {
     try {
-      // const userId = req.query.userId
-      //    ? parseInt(req.query.userId as string)
-      //    : null;
-
-      // console.log("User ID:", userId);
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 50;
       const sortBy =
@@ -77,10 +69,15 @@ app.get(
           return;
         }
       } catch (e) {
-        console.warn("[API] leaderboard cache read failed:", e);
+        logger.warn("[API] leaderboard cache read failed:", e);
       }
 
-      const { rows, total } = await getLeaderboard(sortBy, limit, offset, filters);
+      const { rows, total } = await getLeaderboard(
+        sortBy,
+        limit,
+        offset,
+        filters,
+      );
 
       const payload = {
         success: true,
@@ -93,29 +90,50 @@ app.get(
       // cache for 60 seconds (best-effort)
       try {
         await getClient().then((c) =>
-          c.set(cacheKey, JSON.stringify(payload), { EX: 60 })
+          c.set(cacheKey, JSON.stringify(payload), { EX: 60 }),
         );
       } catch (e) {
-        console.warn("[API] leaderboard cache write failed:", e);
+        logger.warn("[API] leaderboard cache write failed:", e);
       }
 
       res.json(payload);
     } catch (error) {
-      console.error("Error fetching leaderboard:", error);
+      logger.error("Error fetching leaderboard:", error);
       res.status(500).json({ success: false, error: "Internal Server Error" });
     }
   },
 );
 
-// "You are #N" — rank lookup for the web leaderboard via tgusers mapping
+// "You are #N" — rank lookup for the web leaderboard via tgusers mapping.
+// The caller must prove it's the Telegram client it claims to be: userId is
+// only trusted when it comes signed inside Telegram WebApp initData.
 app.get(
   "/api/me",
   leaderboardSecurityMiddlewares,
   async (req: Request, res: Response) => {
     try {
-      const userId = req.query.userId as string;
-      if (!userId || !/^\d{1,20}$/.test(userId)) {
-        res.status(400).json({ found: false, error: "userId required" });
+      let userId: string | null = null;
+
+      const initData = req.query.initData as string | undefined;
+      if (initData) {
+        const user = verifyInitData(initData);
+        if (!user) {
+          res
+            .status(401)
+            .json({ found: false, error: "Invalid Telegram signature" });
+          return;
+        }
+        userId = String(user.id);
+      } else if (ENV !== "production") {
+        // Dev convenience: a browser outside Telegram may pass userId directly.
+        const raw = req.query.userId as string | undefined;
+        if (raw && /^\d{1,20}$/.test(raw)) userId = raw;
+      }
+
+      if (!userId) {
+        res
+          .status(401)
+          .json({ found: false, error: "Telegram initData required" });
         return;
       }
 
@@ -141,7 +159,7 @@ app.get(
           : null,
       });
     } catch (error) {
-      console.error("Error fetching /api/me:", error);
+      logger.error("Error fetching /api/me:", error);
       res.status(500).json({ found: false, error: "Internal Server Error" });
     }
   },
@@ -157,14 +175,24 @@ app.get("/health", securityLogger, (_req: Request, res: Response) => {
   });
 });
 
-// Pro status page — 90-day uptime summary + daily bars
+// Pro status page — 90-day uptime summary + daily bars.
+// The underlying data only changes on the 5-min probe, so the assembled
+// payload is cached in-memory for 5 minutes instead of rebuilt per request.
+const STATUS_TTL_MS = 5 * 60 * 1000;
+let statusCache: { at: number; payload: string } | null = null;
+
 app.get("/api/status", securityLogger, async (_req: Request, res: Response) => {
   try {
+    if (statusCache && Date.now() - statusCache.at < STATUS_TTL_MS) {
+      res.type("json").send(statusCache.payload);
+      return;
+    }
+
     const summary = await getUptimeSummary();
     const components = await Promise.all(
       summary.map(async (s) => {
         const lastPingAgeSec = Math.floor(
-          (Date.now() - new Date(s.lastPing + "Z").getTime()) / 1000
+          (Date.now() - new Date(s.lastPing + "Z").getTime()) / 1000,
         );
         // up = last ping < 15 min ago
         const current: "up" | "down" = lastPingAgeSec < 15 * 60 ? "up" : "down";
@@ -178,21 +206,26 @@ app.get("/api/status", securityLogger, async (_req: Request, res: Response) => {
           current,
           buckets: await getUptimeDailyBuckets(s.component, 90),
         };
-      })
+      }),
     );
 
-    res.json({ success: true, components });
+    statusCache = {
+      at: Date.now(),
+      payload: JSON.stringify({ success: true, components }),
+    };
+    res.type("json").send(statusCache.payload);
   } catch (error) {
-    console.error("Error in /api/status:", error);
+    logger.error("Error in /api/status:", error);
     res.status(500).json({ success: false, error: "Internal Server Error" });
   }
 });
 
 export const startServer = () => {
-  initLeaderboardIndexes().catch((e) =>
-    console.warn("[API] leaderboard index init failed:", e),
-  );
-  app.listen(PORT, () => {
-    console.log(`🚀 API Server running on port ${PORT} with security enabled`);
+  const server = app.listen(PORT, () => {
+    logger.info(`🚀 API Server running on port ${PORT} with security enabled`);
   });
+  server.on("error", (e) => {
+    logger.error("[API] server error:", e);
+  });
+  return server;
 };

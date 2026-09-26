@@ -64,7 +64,10 @@ export const getStudent = async (rollno: string) => {
  * Finds similar roll numbers in DB for "did you mean" suggestions.
  * Matches: same branch+entry-year with nearby sequence numbers, or prefix matches.
  */
-export const findSimilarRolls = async (rollno: string, limit = 3): Promise<string[]> => {
+export const findSimilarRolls = async (
+  rollno: string,
+  limit = 3,
+): Promise<string[]> => {
   rollno = rollno.toUpperCase();
 
   // try prefix (first 8 chars = year+branch code) with wildcard suffix

@@ -1,7 +1,7 @@
 import { bot } from "../bot.js";
 
 bot.onText(/\/start/, (msg) => {
-   const message = `
+  const message = `
 👋 <b>Hey there! Welcome to NbkristQik!</b>
 
 I can help you check your college stats instantly.
@@ -15,5 +15,5 @@ I'll fetch your:
 
 <i>Tap /help if you're stuck!</i>`;
 
-   bot.sendMessage(msg.chat.id, message, { parse_mode: "HTML" });
+  bot.sendMessage(msg.chat.id, message, { parse_mode: "HTML" });
 });

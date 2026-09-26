@@ -1,24 +1,34 @@
-import { createClient, RedisClientType } from "redis";
+import { createClient } from "redis";
 import { REDIS_URL } from "../../config/environmentals.js";
+import { logger } from "../../config/logger.js";
 
-let client: RedisClientType | null = null;
+// Cache the connect promise, not the client: concurrent first callers get a
+// single client (no double connect), and a failed connect isn't pinned —
+// the next caller retries.
+let clientPromise: ReturnType<typeof createRedisClient> | null = null;
 
-export const getClient = async (): Promise<RedisClientType> => {
-  if (client) {
-    return client;
-  }
-
-  client = createClient({
+async function createRedisClient() {
+  const client = createClient({
     url: REDIS_URL,
+    // bound the reconnect loop: if Redis stays down, connect() settles with
+    // an error so callers can fall back (e.g. leaderboard serves from DB)
+    socket: {
+      reconnectStrategy: (retries) => {
+        if (retries > 3) {
+          return new Error("Redis unreachable after 4 reconnect attempts");
+        }
+        return Math.min(retries * 200, 1000);
+      },
+    },
   });
 
-  client.on("error", (err) => console.error("Redis Client Error", err));
-
+  client.on("error", (err) => logger.error("Redis Client Error", err));
   client.on("connect", () => {
-    console.log("Connected to Redis");
+    logger.info("Connected to Redis");
   });
 
   await client.connect();
-
   return client;
-};
+}
+
+export const getClient = () => (clientPromise ??= createRedisClient());

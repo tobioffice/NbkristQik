@@ -20,13 +20,13 @@
     "noUnusedParameters": true /* Raise an error when a function parameter isn't read. */,
     "noImplicitReturns": true /* Enable error reporting for codepaths that do not explicitly return in a function. */,
     "noImplicitOverride": true /* Ensure overriding members in derived classes are marked with an override modifier. */,
-    "allowUnreachableCode": true /* Disable error reporting for unreachable code. */,
     /* Completeness */
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
   "exclude": [
     "node_modules",
     "src/web",
-    "tests"
+    "tests",
+    "vitest.config.ts"
   ]
 }

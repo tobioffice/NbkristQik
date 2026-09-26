@@ -1,17 +1,19 @@
 import rateLimit from "express-rate-limit";
+import type { NextFunction, Request, Response } from "express";
 import {
-  body,
   query,
   validationResult,
   FieldValidationError,
 } from "express-validator";
+import { logger } from "../config/logger.js";
+import { ROLL_REGEX } from "../constants/index.js";
 
 // Rate limiting configurations
 export const createRateLimit = (
   windowMs: number,
   max: number,
   message: string,
-  keyGenerator?: (req: any) => string,
+  keyGenerator?: (req: Request) => string,
 ) => {
   return rateLimit({
     windowMs,
@@ -24,11 +26,7 @@ export const createRateLimit = (
     standardHeaders: true,
     legacyHeaders: false,
     // Use default IP-based key generator (handles IPv6 properly)
-    keyGenerator: keyGenerator || undefined,
-    skip: (_req) => {
-      // Skip rate limiting for admin requests (can be extended)
-      return false;
-    },
+    keyGenerator,
   });
 };
 
@@ -38,34 +36,6 @@ export const apiRateLimit = createRateLimit(
   600, // 600 requests per window (~40/min, comfortable for infinite scroll)
   "Too many API requests, please try again later.",
 );
-
-// Strict API rate limiting - For sensitive endpoints
-export const strictApiRateLimit = createRateLimit(
-  15 * 60 * 1000, // 15 minutes
-  60, // 60 requests per window
-  "Too many requests to this endpoint, please try again later.",
-);
-
-// Bot rate limiting - Track user requests to prevent spam
-export const botRateLimit = createRateLimit(
-  60 * 1000, // 1 minute
-  10, // 10 requests per minute
-  "Too many bot requests, please slow down.",
-  (req) => req.body?.message?.from?.id?.toString() || "unknown",
-);
-
-// Roll number validation
-export const rollNumberValidation = [
-  body("rollNumber")
-    .optional()
-    .matches(/^\d{2}[a-zA-Z]{2}[a-zA-Z0-9]{6}$/)
-    .withMessage("Invalid roll number format"),
-
-  query("rollNumber")
-    .optional()
-    .matches(/^\d{2}[a-zA-Z]{2}[a-zA-Z0-9]{6}$/)
-    .withMessage("Invalid roll number format"),
-];
 
 // API parameter validation for leaderboard
 export const leaderboardValidation = [
@@ -107,31 +77,42 @@ export const leaderboardValidation = [
 ];
 
 // Input sanitization middleware
-export const sanitizeInput = (req: any, _res: any, next: any) => {
-  // Sanitize strings in request body, query, and params
-  const sanitizeObject = (obj: any) => {
+// Only req.body is mutated: under Express 5 req.query/req.params come from
+// getters, so in-place edits there are unreliable. Query input is already
+// constrained by the allowlist validators above.
+export const sanitizeInput = (
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) => {
+  const sanitizeObject = (obj: object) => {
     for (const key in obj) {
-      if (typeof obj[key] === "string") {
+      const value = (obj as Record<string, unknown>)[key];
+      if (typeof value === "string") {
         // Remove potential XSS characters by stripping angle brackets
-        obj[key] = obj[key].replace(/[<>]/g, "").trim();
-      } else if (typeof obj[key] === "object" && obj[key] !== null) {
-        sanitizeObject(obj[key]);
+        (obj as Record<string, unknown>)[key] = value
+          .replace(/[<>]/g, "")
+          .trim();
+      } else if (typeof value === "object" && value !== null) {
+        sanitizeObject(value as object);
       }
     }
   };
 
   if (req.body) sanitizeObject(req.body);
-  if (req.query) sanitizeObject(req.query);
-  if (req.params) sanitizeObject(req.params);
 
   next();
 };
 
 // Validation error handler
-export const handleValidationErrors = (req: any, res: any, next: any) => {
+export const handleValidationErrors = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       error: "Validation failed",
       details: errors.array().map((err) => {
@@ -143,14 +124,19 @@ export const handleValidationErrors = (req: any, res: any, next: any) => {
         };
       }),
     });
+    return;
   }
   next();
 };
 
 // Security logging middleware
-export const securityLogger = async (req: any, res: any, next: any) => {
+export const securityLogger = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   const timestamp = new Date().toISOString();
-  const ip = req.ip || req.connection.remoteAddress;
+  const ip = req.ip || req.socket.remoteAddress;
   const userAgent = req.get("User-Agent") || "Unknown";
   const method = req.method;
   const url = req.url;
@@ -166,7 +152,6 @@ export const securityLogger = async (req: any, res: any, next: any) => {
   const requestData = JSON.stringify({
     body: req.body,
     query: req.query,
-    params: req.params,
   });
 
   const isSuspicious = suspiciousPatterns.some(
@@ -174,7 +159,7 @@ export const securityLogger = async (req: any, res: any, next: any) => {
   );
 
   if (isSuspicious) {
-    console.warn(`🚨 [SECURITY] Suspicious request detected:`, {
+    logger.warn(`🚨 [SECURITY] Suspicious request detected:`, {
       timestamp,
       ip,
       method,
@@ -182,14 +167,12 @@ export const securityLogger = async (req: any, res: any, next: any) => {
       userAgent,
       requestData: requestData.substring(0, 200) + "...",
     });
-
-    // Could implement IP blocking here in the future
   }
 
   // Log rate limit hits
   res.on("finish", () => {
     if (res.statusCode === 429) {
-      console.warn(`🚫 [RATE LIMIT] Request blocked:`, {
+      logger.warn(`🚫 [RATE LIMIT] Request blocked:`, {
         timestamp,
         ip,
         method,
@@ -202,10 +185,9 @@ export const securityLogger = async (req: any, res: any, next: any) => {
   next();
 };
 
-// Roll number format validator (standalone function)
+// Roll number format validator (shared with the bot's ROLL_REGEX)
 export const isValidRollNumber = (rollNumber: string): boolean => {
-  const rollRegex = /^\d{2}[a-zA-Z0-9]{2}[a-zA-Z0-9]{6}$/;
-  return rollRegex.test(rollNumber.toUpperCase().trim());
+  return ROLL_REGEX.test(rollNumber.toUpperCase().trim());
 };
 
 // Bot-specific security middleware
@@ -242,7 +224,7 @@ export const createBotSecurityHandler = () => {
       }
 
       if (userData.count >= maxRequests) {
-        console.warn(
+        logger.warn(
           `🚫 [BOT SECURITY] User ${userId} exceeded rate limit for ${action}`,
         );
         return false;
@@ -251,7 +233,7 @@ export const createBotSecurityHandler = () => {
       userData.count++;
       return true;
     } catch (error) {
-      console.error("Bot security handler error:", error);
+      logger.error("Bot security handler error:", error);
       return true; // Allow request if security check fails
     }
   };

@@ -1,5 +1,11 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { BRANCHES } from "../../constants/index";
+import { BRANCHES } from "./constants";
+
+// Centralized API origin. Dev builds default to same-origin so the vite
+// proxy forwards /api to the local backend; prod builds need the real origin.
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? "" : "https://checker.tobioffice.dev");
 
 interface StudentStat {
    roll_no: string;
@@ -36,16 +42,18 @@ export default function Leaderboard() {
       return () => clearTimeout(t);
    }, [searchInput]);
 
-   // "You are #N" — resolve telegram user -> their roll + global ranks via API
+   // "You are #N" — resolve telegram user -> their roll + global ranks via API.
+   // Sends Telegram WebApp initData so the server can verify the caller's
+   // identity (HMAC-signed); without it the API rejects in production.
    useEffect(() => {
       try {
          const tg = (window as any).Telegram?.WebApp;
          const tgUser = tg?.initDataUnsafe?.user?.id;
          if (!tgUser) return;
 
-         const baseUrl =
-            import.meta.env.VITE_API_URL || "https://checker.tobioffice.dev";
-         fetch(`${baseUrl}/api/me?userId=${tgUser}`)
+         const params = new URLSearchParams({ userId: String(tgUser) });
+         if (tg?.initData) params.set("initData", tg.initData);
+         fetch(`${API_BASE}/api/me?${params.toString()}`)
             .then((r) => r.json())
             .then((d) => {
                if (d.found) {
@@ -56,7 +64,9 @@ export default function Leaderboard() {
                   });
                }
             })
-            .catch(() => {});
+            .catch((e) =>
+               console.warn("You-are-#N lookup failed:", e)
+            );
       } catch {
          // outside telegram webview — no "you" to find
       }
@@ -86,8 +96,6 @@ export default function Leaderboard() {
        setLoading(true);
        setError(false);
        try {
-         const baseUrl =
-            import.meta.env.VITE_API_URL || "https://checker.tobioffice.dev";
          const queryParams = new URLSearchParams({
             page: pageNum.toString(),
             limit: "20",
@@ -99,7 +107,7 @@ export default function Leaderboard() {
          if (search) queryParams.set("search", search);
 
           const response = await fetch(
-             `${baseUrl}/api/leaderboard?${queryParams.toString()}`,
+             `${API_BASE}/api/leaderboard?${queryParams.toString()}`,
              { signal: controller.signal }
           );
           if (!response.ok) throw new Error("API error");

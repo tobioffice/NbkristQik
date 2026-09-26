@@ -6,7 +6,7 @@ import prettierPlugin from "eslint-plugin-prettier";
 export default [
   js.configs.recommended,
   {
-    files: ["src/**/*.ts"],
+    files: ["src/**/*.ts", "tests/**/*.ts"],
     languageOptions: {
       parser: tsparser,
       ecmaVersion: 2020,
@@ -29,7 +29,7 @@ export default [
     },
     rules: {
       ...tseslint.configs.recommended.rules,
-      "@typescript-eslint/no-explicit-any": "off", // Allow 'any' datatype
+      "@typescript-eslint/no-explicit-any": "warn",
       "prettier/prettier": "error",
       "@typescript-eslint/no-unused-vars": [
         "warn",

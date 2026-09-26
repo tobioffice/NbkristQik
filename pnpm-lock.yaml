@@ -11,12 +11,6 @@ importers:
       '@libsql/client':
         specifier: ^0.15.15
         version: 0.15.15
-      '@types/cors':
-        specifier: ^2.8.19
-        version: 2.8.19
-      '@types/express':
-        specifier: ^5.0.3
-        version: 5.0.3
       axios:
         specifier: ^1.8.1
         version: 1.8.3
@@ -38,22 +32,22 @@ importers:
       express-validator:
         specifier: ^7.3.1
         version: 7.3.1
-      moment-timezone:
-        specifier: ^0.5.47
-        version: 0.5.47
       node-telegram-bot-api:
         specifier: ^0.66.0
         version: 0.66.0(request@2.88.2)
       redis:
         specifier: ^5.8.2
         version: 5.8.2
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.2
     devDependencies:
       '@eslint/js':
         specifier: ^9.34.0
         version: 9.34.0
+      '@types/cors':
+        specifier: ^2.8.19
+        version: 2.8.19
+      '@types/express':
+        specifier: ^5.0.3
+        version: 5.0.3
       '@types/node-telegram-bot-api':
         specifier: ^0.64.7
         version: 0.64.7
@@ -81,12 +75,15 @@ importers:
       happy-dom:
         specifier: ^15.11.7
         version: 15.11.7
-      nodemon:
-        specifier: ^3.1.9
-        version: 3.1.9
+      prettier:
+        specifier: ^3.6.2
+        version: 3.6.2
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@22.13.10)(typescript@5.9.2)
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
       vitest:
         specifier: ^2.1.9
         version: 2.1.9(@types/node@22.13.10)(@vitest/ui@2.1.9)(happy-dom@15.11.7)

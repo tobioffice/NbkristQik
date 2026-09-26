@@ -5,8 +5,10 @@
  */
 import axios from "axios";
 import { recordHeartbeat, initUptimeTable } from "../db/student_stats.model.js";
+import { PORT } from "../config/environmentals.js";
+import { logger } from "../config/logger.js";
 
-const PROBE_URL = "http://127.0.0.1:3000/health";
+const PROBE_URL = `http://127.0.0.1:${PORT}/health`;
 const COMPONENT = "api";
 const INTERVAL_MS = 5 * 60 * 1000;
 const RETENTION_DAYS = 95;
@@ -29,20 +31,22 @@ const probe = async () => {
   try {
     await recordHeartbeat(COMPONENT, status, latency);
   } catch (e) {
-    console.warn("[uptime] heartbeat write failed:", e);
+    logger.warn("[uptime] heartbeat write failed:", e);
   }
 
-  console.log(`[uptime] ${COMPONENT}: ${status} (${latency ?? "timeout"}ms)`);
+  logger.debug(`[uptime] ${COMPONENT}: ${status} (${latency ?? "timeout"}ms)`);
 };
 
 const prune = async () => {
   try {
     const { turso } = await import("../db/db.js");
+    // RETENTION_DAYS is a module constant (not user input), so interpolating
+    // the integer into the datetime() modifier is safe
     await turso.execute(
-      `DELETE FROM uptime_log WHERE created_at < datetime('now', '-${RETENTION_DAYS} days')`
+      `DELETE FROM uptime_log WHERE created_at < datetime('now', '-${RETENTION_DAYS} days')`,
     );
   } catch (e) {
-    console.warn("[uptime] prune failed:", e);
+    logger.warn("[uptime] prune failed:", e);
   }
 };
 
@@ -53,7 +57,7 @@ export const startUptimeMonitor = async () => {
   try {
     await initUptimeTable();
   } catch (e) {
-    console.warn("[uptime] table init failed:", e);
+    logger.warn("[uptime] table init failed:", e);
   }
 
   // initial probe after short delay (let API server bind first)
@@ -62,5 +66,5 @@ export const startUptimeMonitor = async () => {
   // prune once a day
   setInterval(prune, 24 * 60 * 60 * 1000);
 
-  console.log("[uptime] monitor started (5min interval, 90d retention)");
+  logger.info("[uptime] monitor started (5min interval, 90d retention)");
 };

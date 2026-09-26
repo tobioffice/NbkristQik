@@ -4,9 +4,9 @@ Comprehensive test suite for the NbkristQik Telegram bot.
 
 ## Setup
 
-Install dependencies:
+Install dependencies (pnpm is the package manager):
 ```bash
-npm install
+pnpm install
 ```
 
 ## Running Tests
@@ -37,12 +37,13 @@ npm test -- --watch
 tests/
 ├── setup.ts                           # Global test setup
 ├── mocks/                             # Mock data and utilities
-│   ├── academic.mock.ts               # Academic module mocks
-│   ├── redis.mock.ts                  # Redis client mocks
-│   └── axios.mock.ts                  # HTTP request mocks
+│   └── academic.mock.ts               # Academic module mocks
 ├── unit/                              # Unit tests
 │   ├── academic.test.ts               # Academic module tests
 │   ├── academicTG.test.ts             # AcademicTG formatting tests
+│   ├── student_stats.test.ts          # Leaderboard/rank SQL tests
+│   ├── syncdb.test.ts                 # syncdb helpers
+│   ├── security.test.ts               # Security middleware tests
 │   └── constants.test.ts              # Constants validation
 └── integration/                       # Integration tests
     └── academic.integration.test.ts   # End-to-end flow tests

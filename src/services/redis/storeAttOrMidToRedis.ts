@@ -1,9 +1,13 @@
 import * as cheerio from "cheerio";
 import { Academic } from "../student.utils/Academic.js";
 import { getClient } from "./getRedisClient.js";
-import { updateAttendanceStat, updateMidMarkStat } from "../../db/student_stats.model.js";
+import {
+  updateAttendanceStat,
+  updateMidMarkStat,
+} from "../../db/student_stats.model.js";
 import { getStudentCached } from "./utils.js";
 import { Midmarks } from "../../types/index.js";
+import { logger } from "../../config/logger.js";
 
 /**
  * Caches a whole section's attendance in the background.
@@ -11,97 +15,103 @@ import { Midmarks } from "../../types/index.js";
  * takes ~2 round-trip batches instead of ~120 serial ones.
  */
 export const storeAttendanceToRedis = async (doc: string) => {
-   const $ = cheerio.load(doc);
-   const rollNumbers = $("tr[id]")
-      .map((_, el) => $(el).attr("id"))
-      .get();
+  const $ = cheerio.load(doc);
+  const rollNumbers = $("tr[id]")
+    .map((_, el) => $(el).attr("id"))
+    .get();
 
-   const redisClient = await getClient();
+  const redisClient = await getClient();
 
-   const parsed = await Promise.all(
-      rollNumbers.map((rollnumber) =>
-         Academic.parseAttendanceResponse(doc, rollnumber).catch(() => null)
-      )
-   );
+  const parsed = await Promise.all(
+    rollNumbers.map((rollnumber) =>
+      Academic.parseAttendanceResponse(doc, rollnumber).catch(() => null),
+    ),
+  );
 
-   const valid = parsed.filter(
-      (s): s is NonNullable<typeof s> => s !== null
-   );
+  const valid = parsed.filter((s): s is NonNullable<typeof s> => s !== null);
 
-   await Promise.all(
-      valid.map((studentAttendance) => {
-         const roll = studentAttendance.rollno.toUpperCase();
-         return Promise.all([
-            redisClient.set(`attendance:${roll}`, JSON.stringify(studentAttendance), { EX: 60 * 60 }),
-            updateAttendanceStat(roll, studentAttendance.percentage).catch(() => {}),
-         ]);
-      })
-   );
+  await Promise.all(
+    valid.map((studentAttendance) => {
+      const roll = studentAttendance.rollno.toUpperCase();
+      return Promise.all([
+        redisClient.set(
+          `attendance:${roll}`,
+          JSON.stringify(studentAttendance),
+          { EX: 60 * 60 },
+        ),
+        updateAttendanceStat(roll, studentAttendance.percentage).catch(
+          () => {},
+        ),
+      ]);
+    }),
+  );
 
-   console.log(`cached all student attendance for : `, rollNumbers);
+  logger.debug(`cached all student attendance for : `, rollNumbers);
 };
 
 export const storeMidMarksToRedis = async (doc: string) => {
-   const $ = cheerio.load(doc);
-   const rollNumbers = $("tr[id]")
-      .map((_, el) => $(el).attr("id"))
-      .get();
+  const $ = cheerio.load(doc);
+  const rollNumbers = $("tr[id]")
+    .map((_, el) => $(el).attr("id"))
+    .get();
 
-   const redisClient = await getClient();
+  const redisClient = await getClient();
 
-   const parsed = await Promise.all(
-      rollNumbers.map((rollnumber) =>
-         Academic.parseMidmarksResponse(doc, rollnumber).catch(() => null)
-      )
-   );
+  const parsed = await Promise.all(
+    rollNumbers.map((rollnumber) =>
+      Academic.parseMidmarksResponse(doc, rollnumber).catch(() => null),
+    ),
+  );
 
-   const valid: Array<{
-      roll: string;
-      studentMidmarks: Midmarks;
-      average: number;
-   }> = [];
+  const valid: Array<{
+    roll: string;
+    studentMidmarks: Midmarks;
+    average: number;
+  }> = [];
 
-   for (let i = 0; i < parsed.length; i++) {
-      const studentMidmarks = parsed[i];
-      if (!studentMidmarks) continue;
-      const roll = rollNumbers[i].toUpperCase();
-      let student;
-      try {
-         student = await getStudentCached(roll);
-      } catch (e) {
-         console.warn(`[cache] skipping ${roll}: student lookup failed`, e);
-         continue;
-      }
-      if (!student) continue;
+  for (let i = 0; i < parsed.length; i++) {
+    const studentMidmarks = parsed[i];
+    if (!studentMidmarks) continue;
+    const roll = rollNumbers[i].toUpperCase();
+    let student;
+    try {
+      student = await getStudentCached(roll);
+    } catch (e) {
+      logger.warn(`[cache] skipping ${roll}: student lookup failed`, e);
+      continue;
+    }
+    if (!student) continue;
 
-      const zeroMarkSubjects = studentMidmarks.subjects.filter(
-         (sub) => (sub.M1 || 0) === 0 && (sub.M2 || 0) === 0
-      ).length;
+    const zeroMarkSubjects = studentMidmarks.subjects.filter(
+      (sub) => (sub.M1 || 0) === 0 && (sub.M2 || 0) === 0,
+    ).length;
 
-      let average =
-         studentMidmarks.subjects.reduce((acc, sub) => {
-            const m1 = sub.M1 || 0;
-            const m2 = sub.M2 || 0;
-            // If M2 is present, take average of M1 and M2. Otherwise, just use M1.
-            const subjectScore = m2 > 0 ? (m1 + m2) / 2 : m1;
-            return acc + subjectScore;
-         }, 0) / (studentMidmarks.subjects.length - zeroMarkSubjects || 1);
+    let average =
+      studentMidmarks.subjects.reduce((acc, sub) => {
+        const m1 = sub.M1 || 0;
+        const m2 = sub.M2 || 0;
+        // If M2 is present, take average of M1 and M2. Otherwise, just use M1.
+        const subjectScore = m2 > 0 ? (m1 + m2) / 2 : m1;
+        return acc + subjectScore;
+      }, 0) / (studentMidmarks.subjects.length - zeroMarkSubjects || 1);
 
-      if (student.year === "41") {
-         average = (average / 40) * 30;
-      }
+    if (student.year === "41") {
+      average = (average / 40) * 30;
+    }
 
-      valid.push({ roll, studentMidmarks, average });
-   }
+    valid.push({ roll, studentMidmarks, average });
+  }
 
-   await Promise.all(
-      valid.map(({ roll, studentMidmarks, average }) =>
-         Promise.all([
-            redisClient.set(`midmarks:${roll}`, JSON.stringify(studentMidmarks), { EX: 60 * 60 * 2 }),
-            updateMidMarkStat(roll, average).catch(() => {}),
-         ])
-      )
-   );
+  await Promise.all(
+    valid.map(({ roll, studentMidmarks, average }) =>
+      Promise.all([
+        redisClient.set(`midmarks:${roll}`, JSON.stringify(studentMidmarks), {
+          EX: 60 * 60 * 2,
+        }),
+        updateMidMarkStat(roll, average).catch(() => {}),
+      ]),
+    ),
+  );
 
-   console.log(`cached all student midmarks for : `, rollNumbers);
+  logger.debug(`cached all student midmarks for : `, rollNumbers);
 };

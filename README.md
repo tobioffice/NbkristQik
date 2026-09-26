@@ -27,15 +27,18 @@ A Telegram bot for students to check attendance and mid-term marks.
 
 ```
 src/
+├── api/               # Express API server (leaderboard, status)
 ├── bot/
+│   ├── academics/     # Roll-number + callback flows
 │   ├── commands/      # Bot command handlers
-│   ├── features/      # Core bot features
 │   └── setup.ts       # Bot initialization
 ├── config/            # Configuration files
-├── constants/         # Constant values and messages
-├── db/               # Database models
-├── services/         # Business logic services
-└── types/            # TypeScript type definitions
+├── constants/         # Constant values
+├── db/                # Database models + schema init
+├── middleware/        # API security middleware
+├── services/          # Business logic services (scraping, redis, uptime)
+├── types/             # TypeScript type definitions
+└── web/               # Leaderboard React app (Telegram Web App)
 ```
 
 ## Setup
@@ -73,8 +76,9 @@ pnpm start
 
 - `/start` - Initialize the bot
 - `/help` - Get usage instructions
-- `/ai [query]` - Interact with AI
-- Check attendance and marks using roll number
+- `/report [message]` - Report an issue to the admin
+- `/leaderboard` - Open the live leaderboard
+- Check attendance and marks by sending your roll number
 
 ## Environment Variables
 
@@ -84,9 +88,14 @@ TELEGRAM_BOT_TOKEN_DEV=your_dev_bot_token
 TELEGRAM_BOT_TOKEN=your_production_bot_token
 TURSO_DATABASE_URL=your_database_url
 TURSO_AUTH_TOKEN=your_auth_token
+REDIS_URL=your_redis_url
 N_USERNAME=your_username
 N_PASSWORD=your_password
 ADMIN_ID=your_admin_id
+PROD_CHANNEL=your_prod_channel
+TEST_CHANNEL=your_test_channel
+# Optional: override the college portal base (portal is plain HTTP by default)
+PORTAL_BASE_URL=http://103.203.175.91
 ```
 
 ## Development

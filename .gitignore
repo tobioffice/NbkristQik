@@ -1,5 +1,6 @@
 /node_modules
 /dist
+/coverage
 /__tests__/
 testing
 .env
@@ -8,3 +9,4 @@ testing
 .env*
 package-lock.json
 src/web/package-lock.json
+src/web/dist

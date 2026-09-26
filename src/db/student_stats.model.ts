@@ -99,7 +99,7 @@ export const getLeaderboard = async (
       : "ROUND(st.mid_marks_avg, 1)";
 
   const conditions: string[] = [`st.${column} IS NOT NULL`];
-  const args: any[] = [];
+  const args: (string | number)[] = [];
 
   if (filters.year) {
     conditions.push(`s.year = ?`);
@@ -153,6 +153,21 @@ export const getLeaderboard = async (
     args: [...args, limit, offset],
   });
 
+  // Page beyond the end: rows are empty so COUNT(*) OVER() is gone with them.
+  // Fall back to a plain COUNT so the UI keeps its "N students" banner.
+  if (result.rows.length === 0) {
+    const countResult = await turso.execute({
+      sql: `
+        SELECT COUNT(*) as total
+        FROM student_stats st
+        LEFT JOIN studentsnew s ON st.roll_no = s.roll_no
+        ${whereClause}
+      `,
+      args,
+    });
+    return { rows: [], total: Number(countResult.rows[0]?.total || 0) };
+  }
+
   return {
     rows: result.rows.map(({ total: _total, ...row }) => row),
     total: Number(result.rows[0]?.total || 0),
@@ -184,28 +199,26 @@ export const getStudentRank = async (
       ? "ROUND(attendance_percentage, 2)"
       : "ROUND(mid_marks_avg, 1)";
 
+  // Single round trip: rank + COUNT(*) OVER() over the same filtered set.
   const result = await turso.execute({
     sql: `
       WITH ranked AS (
         SELECT roll_no,
-               RANK() OVER (ORDER BY ${scoreExpr} DESC) as rank
+               RANK() OVER (ORDER BY ${scoreExpr} DESC) as rank,
+               COUNT(*) OVER() as total
         FROM student_stats
         WHERE ${column} IS NOT NULL
       )
-      SELECT rank FROM ranked WHERE roll_no = ?
+      SELECT rank, total FROM ranked WHERE roll_no = ?
     `,
     args: [rollNo.toUpperCase()],
   });
 
   if (!result.rows[0]) return null;
 
-  const totalResult = await turso.execute({
-    sql: `SELECT COUNT(*) as total FROM student_stats WHERE ${column} IS NOT NULL`,
-  });
-
   return {
     rank: Number(result.rows[0].rank),
-    total: Number(totalResult.rows[0]?.total || 0),
+    total: Number(result.rows[0].total || 0),
   };
 };
 
@@ -263,7 +276,8 @@ export const getUptimeSummary = async () => {
     ups: Number(r.ups),
     uptimePct: (Number(r.ups) / Number(r.pings)) * 100,
     lastPing: String(r.last_ping),
-    avgLatencyMs: r.avg_latency != null ? Math.round(Number(r.avg_latency)) : null,
+    avgLatencyMs:
+      r.avg_latency != null ? Math.round(Number(r.avg_latency)) : null,
   }));
 };
 
@@ -274,6 +288,8 @@ export const getUptimeDailyBuckets = async (
   component: string,
   days: number = 90,
 ) => {
+  // clamp to a plain integer — it's interpolated into a datetime() modifier
+  const safeDays = Math.max(1, Math.min(365, Math.floor(Number(days) || 90)));
   const result = await turso.execute({
     sql: `
       SELECT date(created_at) as day,
@@ -281,7 +297,7 @@ export const getUptimeDailyBuckets = async (
              SUM(CASE WHEN status = 'up' THEN 1 ELSE 0 END) as ups,
              AVG(CASE WHEN status = 'up' THEN latency_ms END) as avg_latency
       FROM uptime_log
-      WHERE component = ? AND created_at >= datetime('now', '-${days} days')
+      WHERE component = ? AND created_at >= datetime('now', '-${safeDays} days')
       GROUP BY day
       ORDER BY day
     `,
@@ -292,6 +308,7 @@ export const getUptimeDailyBuckets = async (
     day: String(r.day),
     pings: Number(r.pings),
     ups: Number(r.ups),
-    avgLatencyMs: r.avg_latency != null ? Math.round(Number(r.avg_latency)) : null,
+    avgLatencyMs:
+      r.avg_latency != null ? Math.round(Number(r.avg_latency)) : null,
   }));
 };
