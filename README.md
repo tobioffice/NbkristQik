@@ -112,6 +112,19 @@ where — private chat, group or channel — and how often) plus service health.
   Students (searchable activity table + per-student drill-down), Live (10s feed),
   Health (90-day uptime).
 
+## Deployment
+
+The bot runs as the `nbkristqik` systemd service on the production server.
+Builds happen locally (the server has very little RAM) and only `dist/` is
+shipped:
+
+```bash
+scripts/deploy.sh
+```
+
+Requires the `oracle3` ssh alias, rsync, and sudo rights for
+`systemctl restart nbkristqik` on the server.
+
 ## Development
 
 ```bash
