@@ -184,21 +184,24 @@ export const registerAdminRoutes = (app: Express): void => {
               args: [],
             },
             {
-              sql: `SELECT date(created_at) d, COUNT(*) actions, COUNT(DISTINCT user_id) users
+              sql: `SELECT date(created_at) d, COUNT(*) actions, COUNT(DISTINCT user_id) users,
+                           SUM(CASE WHEN action = 'daily_checkin' THEN 1 ELSE 0 END) checkins
                     FROM activity_log
                     WHERE created_at >= datetime('now', '-30 days')
                     GROUP BY d ORDER BY d`,
               args: [],
             },
             {
-              sql: `SELECT chat_type, COUNT(*) n FROM activity_log
+              sql: `SELECT CASE WHEN chat_type = 'supergroup' THEN 'group' ELSE chat_type END AS surface,
+                           COUNT(*) n
+                    FROM activity_log
                     WHERE created_at >= datetime('now', '-30 days')
-                    GROUP BY chat_type`,
+                    GROUP BY surface`,
               args: [],
             },
             {
               sql: `SELECT action, COUNT(*) n FROM activity_log
-                    WHERE created_at >= datetime('now', '-7 days')
+                    WHERE created_at >= datetime('now', '-7 days') AND action != 'roll_lookup'
                     GROUP BY action ORDER BY n DESC LIMIT 8`,
               args: [],
             },
@@ -218,7 +221,7 @@ export const registerAdminRoutes = (app: Express): void => {
 
         const surfaces: Record<string, number> = {};
         for (const row of surfaceQ.rows) {
-          surfaces[String(row.chat_type)] = Number(row.n);
+          surfaces[String(row.surface)] = Number(row.n);
         }
 
         res.json({
@@ -233,6 +236,7 @@ export const registerAdminRoutes = (app: Express): void => {
             day: String(r.d),
             actions: Number(r.actions),
             users: Number(r.users),
+            checkins: Number(r.checkins || 0),
           })),
           surfaces,
           topActions: topQ.rows.map((r) => ({

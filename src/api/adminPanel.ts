@@ -297,7 +297,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
       <div class="pulse">
         <div class="pulse-head">
           <span class="t">Last 30 days</span>
-          <span class="legend"><b>&mdash;</b> actions &nbsp;&nbsp; distinct students</span>
+          <span class="legend"><b>&mdash;</b> actions &nbsp;&nbsp;<b style="color:var(--amber)">&mdash;</b> check-ins &nbsp;&nbsp; distinct students</span>
         </div>
         <svg id="pulse" viewBox="0 0 640 120" width="100%" height="120" preserveAspectRatio="none" aria-label="Daily activity, last 30 days"></svg>
       </div>
@@ -308,6 +308,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
       <div class="stat"><div class="n" id="ov-active7">&ndash;</div><div class="l">active this week</div></div>
       <div class="stat"><div class="n" id="ov-active30">&ndash;</div><div class="l">active this month</div></div>
       <div class="stat"><div class="n" id="ov-actions">&ndash;</div><div class="l">actions all time</div></div>
+      <div class="stat"><div class="n" style="color:var(--amber)" id="ov-checkins">&ndash;</div><div class="l">check-ins today</div></div>
     </div>
 
     <div class="section">
@@ -485,10 +486,18 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
     for (var d = 29; d >= 0; d--) {
       var dt = new Date(now.getTime() - d * 86400000);
       var key = dt.toISOString().slice(0, 10);
-      days.push({ key: key, actions: byDay[key] ? byDay[key].actions : 0, users: byDay[key] ? byDay[key].users : 0 });
+      days.push({
+        key: key,
+        actions: byDay[key] ? byDay[key].actions : 0,
+        users: byDay[key] ? byDay[key].users : 0,
+        checkins: byDay[key] ? byDay[key].checkins || 0 : 0
+      });
     }
-    var max = 1;
-    for (var k = 0; k < days.length; k++) max = Math.max(max, days[k].actions);
+    var max = 1, hasCheckins = false;
+    for (var k = 0; k < days.length; k++) {
+      max = Math.max(max, days[k].actions);
+      if (days[k].checkins > 0) hasCheckins = true;
+    }
     var step = (W - pad * 2) / (days.length - 1);
     var y = function (v) { return H - pad - (v / max) * (H - pad * 2 - 8); };
     var pts = [];
@@ -504,9 +513,16 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
       '<path d="' + area + '" fill="url(#pulsefill)"/>' +
       '<path d="' + line + '" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
       '<line x1="' + pts[pts.length - 1][0] + '" y1="' + pts[pts.length - 1][1] + '" x2="' + pts[pts.length - 1][0] + '" y2="' + H + '" stroke="#22d3ee" stroke-opacity="0.35" stroke-dasharray="2 3"/>';
+    if (hasCheckins) {
+      var cline = "";
+      for (var c = 0; c < days.length; c++) {
+        cline += (c ? " L" : "M") + (pad + c * step).toFixed(1) + " " + y(days[c].checkins).toFixed(1);
+      }
+      svgHtml += '<path d="' + cline + '" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="1 0"/>';
+    }
     for (var r = 0; r < days.length; r += 1) {
       var cx = pad + r * step, cy = y(days[r].actions);
-      svgHtml += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="7" fill="transparent" data-d="' + days[r].key + '" data-a="' + days[r].actions + '" data-u="' + days[r].users + '"><title>' + days[r].key + ": " + days[r].actions + " actions, " + days[r].users + " students</title></circle>";
+      svgHtml += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="7" fill="transparent" data-d="' + days[r].key + '" data-a="' + days[r].actions + '" data-u="' + days[r].users + '"><title>' + days[r].key + ": " + days[r].actions + " actions, " + days[r].users + " students, " + days[r].checkins + " check-ins</title></circle>";
     }
     svg.innerHTML = svgHtml;
     svg.onmousemove = function (ev) {
@@ -521,7 +537,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
         tip.style.cssText = "position:fixed;pointer-events:none;font-size:12px;background:#1b1d24;border:1px solid rgba(148,163,184,.2);padding:5px 9px;border-radius:7px;z-index:30;font-family:" + "var(--mono)" + ";white-space:nowrap";
         document.body.appendChild(tip);
       }
-      tip.textContent = day.key.slice(5) + " · " + day.actions + " actions · " + day.users + " students";
+      tip.textContent = day.key.slice(5) + " · " + day.actions + " actions · " + day.users + " students · " + day.checkins + " check-ins";
       tip.style.left = (ev.clientX + 12) + "px";
       tip.style.top = (ev.clientY - 30) + "px";
       tip.style.display = "block";
@@ -572,7 +588,9 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
       $("ov-active7").textContent = fmt(d.totals.active7d);
       $("ov-active30").textContent = fmt(d.totals.active30d);
       $("ov-actions").textContent = fmt(d.totals.totalActions);
-      drawPulse(d.daily || []);
+      var dailyList = d.daily || [];
+      $("ov-checkins").textContent = fmt(dailyList.length ? dailyList[dailyList.length - 1].checkins : 0);
+      drawPulse(dailyList);
       drawSurfaces(d.surfaces || {});
       drawWeights(d.topActions || []);
     }).catch(function () {});

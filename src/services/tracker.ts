@@ -69,7 +69,7 @@ const record = async (event: ActivityEvent): Promise<void> => {
               VALUES (?, ?, ?, ?)`,
         args: [
           event.userId,
-          event.chatType,
+          surface,
           event.action,
           event.detail ?? null,
         ],
