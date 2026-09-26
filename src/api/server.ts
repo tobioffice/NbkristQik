@@ -9,6 +9,7 @@ import {
 import { getTgUserRoll } from "../db/student.model.js";
 import { getClient } from "../services/redis/getRedisClient.js";
 import { verifyInitData } from "../services/telegramAuth.js";
+import { trackActivity } from "../services/tracker.js";
 import {
   leaderboardSecurityMiddlewares,
   apiSecurityMiddlewares,
@@ -16,6 +17,7 @@ import {
 } from "../middleware/security.js";
 import { PORT, ENV } from "../config/environmentals.js";
 import { logger } from "../config/logger.js";
+import { registerAdminRoutes } from "./admin.js";
 
 export const app = express();
 
@@ -30,6 +32,11 @@ app.use(
 );
 
 app.use(express.json());
+
+// Admin panel first: it must not run through the global body sanitizer
+// (which strips angle brackets — it would mangle passwords containing them)
+// and has its own auth + login rate limiting instead.
+registerAdminRoutes(app);
 
 // Apply security middleware to all routes
 app.use(apiSecurityMiddlewares);
@@ -165,6 +172,14 @@ app.get(
         res.status(401).json({ found: false, error: resolved.error });
         return;
       }
+
+      // a verified initData call means the student opened the leaderboard
+      // web app — worth counting even if they have no roll mapped yet
+      trackActivity({
+        userId: Number(resolved.userId),
+        chatType: "unknown",
+        action: "leaderboard_webapp",
+      });
 
       const rollNo = await getTgUserRoll(resolved.userId);
       if (!rollNo) {

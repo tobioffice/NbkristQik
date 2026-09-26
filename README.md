@@ -98,6 +98,20 @@ TEST_CHANNEL=your_test_channel
 PORTAL_BASE_URL=http://103.203.175.91
 ```
 
+## Admin Panel
+
+A private dashboard for tracking student activity (who's using the bot, from
+where — private chat, group or channel — and how often) plus service health.
+
+- **Access**: served at `https://<your-domain>/<ADMIN_PANEL_PATH>` — set both
+  `ADMIN_PANEL_PATH` (an unguessable path segment) and `ADMIN_PANEL_PASSWORD`
+  in `.env`. If either is unset the panel is disabled entirely.
+- **Auth**: password sign-in issues a 24h session cookie (HttpOnly, SameSite=Strict).
+  Changing the password invalidates all sessions instantly; login is rate-limited.
+- **Views**: Overview (30-day activity pulse, surface split, top actions),
+  Students (searchable activity table + per-student drill-down), Live (10s feed),
+  Health (90-day uptime).
+
 ## Development
 
 ```bash

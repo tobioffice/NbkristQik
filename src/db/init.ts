@@ -36,6 +36,42 @@ export const initDatabase = async () => {
         year TEXT
     );
   `);
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS botusers (
+        user_id INTEGER PRIMARY KEY,
+        username TEXT,
+        first_name TEXT,
+        first_seen TEXT NOT NULL DEFAULT (datetime('now')),
+        last_seen TEXT NOT NULL DEFAULT (datetime('now')),
+        private_actions INTEGER NOT NULL DEFAULT 0,
+        channel_actions INTEGER NOT NULL DEFAULT 0,
+        group_actions INTEGER NOT NULL DEFAULT 0,
+        total_actions INTEGER NOT NULL DEFAULT 0
+    );
+  `);
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS activity_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        chat_type TEXT NOT NULL,
+        action TEXT NOT NULL,
+        detail TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS admin_sessions (
+        token_hash TEXT PRIMARY KEY,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        expires_at TEXT NOT NULL
+    );
+  `);
+  await turso.execute(
+    `CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_log (created_at);`,
+  );
+  await turso.execute(
+    `CREATE INDEX IF NOT EXISTS idx_activity_user ON activity_log (user_id, created_at);`,
+  );
   await initStatsTable();
   await initUptimeTable();
   await initLeaderboardIndexes();

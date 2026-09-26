@@ -22,6 +22,7 @@ import {
 } from "../../middleware/security.js";
 import { ADMIN_ID } from "../../config/environmentals.js";
 import { logger } from "../../config/logger.js";
+import { trackActivity, ChatSurface } from "../../services/tracker.js";
 import { isDailyUnlocked, getCheckInLink } from "../dailyCheckIn.js";
 
 const getCachedMembership = async (userId: number) => {
@@ -104,8 +105,9 @@ const sendRollOptions = (
 
 const handleRollNumberMessage = async (msg: Message): Promise<void> => {
   const chatId = msg.chat.id;
-  const userId = msg.from?.id;
-  if (!userId || !msg.text) return;
+  const from = msg.from;
+  if (!from || !msg.text) return;
+  const userId = from.id;
   const rollNumber = msg.text.trim().toUpperCase();
 
   persistRollMapping(userId, rollNumber);
@@ -131,6 +133,15 @@ const handleRollNumberMessage = async (msg: Message): Promise<void> => {
 
   const authorized = await isAuthorizedUser(userId, chatId);
   if (!authorized) return;
+
+  trackActivity({
+    userId,
+    username: from.username,
+    firstName: from.first_name,
+    chatType: msg.chat.type as ChatSurface,
+    action: "roll_lookup",
+    detail: rollNumber,
+  });
 
   await sendRollOptions(chatId, rollNumber, msg.message_id);
 };
@@ -206,6 +217,26 @@ bot.on("callback_query", async (callbackQuery) => {
       show_alert: true,
     });
     return;
+  }
+
+  // the tapped button tells us what they wanted; in channels msg.from is
+  // the channel itself, so the actor is always callbackQuery.from
+  const callbackAction = data.startsWith("att_")
+    ? "attendance"
+    : data.startsWith("mid_")
+      ? "midmarks"
+      : data.startsWith("bunk_")
+        ? "bunk"
+        : null;
+  if (callbackAction && callbackQuery.from) {
+    trackActivity({
+      userId: callbackQuery.from.id,
+      username: callbackQuery.from.username,
+      firstName: callbackQuery.from.first_name,
+      chatType: msg.chat.type as ChatSurface,
+      action: callbackAction,
+      detail: data.slice(data.indexOf("_") + 1),
+    });
   }
 
   await Promise.allSettled([

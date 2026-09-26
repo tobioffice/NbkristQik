@@ -1,6 +1,7 @@
 import { bot } from "../bot.js";
 import { ADMIN_ID } from "../../config/environmentals.js";
 import { logger } from "../../config/logger.js";
+import { trackMessage } from "../../services/tracker.js";
 
 // Telegram HTML parse_mode: these three must be escaped in user content
 const escapeHtml = (text: string) =>
@@ -16,6 +17,7 @@ bot.onText(/\/report$/, (msg) => {
 
 bot.onText(/\/report (.+)/, (msg, match) => {
   const reportMessage = match ? match[1] : "No message provided";
+  trackMessage(msg, "report", reportMessage.slice(0, 100));
   const reporterName = msg.from?.id
     ? `<a href="tg://user?id=${msg.from.id}">${escapeHtml(
         msg.from.first_name || `U-K`,

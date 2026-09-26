@@ -1,6 +1,8 @@
 import { bot } from "../bot.js";
+import { trackMessage } from "../../services/tracker.js";
 
 bot.onText(/\/leaderboard/, (msg) => {
+  trackMessage(msg, "command:leaderboard");
   const helpMessage = "Click on the button below to view the leaderboard";
 
   bot.sendMessage(msg.chat.id, helpMessage, {

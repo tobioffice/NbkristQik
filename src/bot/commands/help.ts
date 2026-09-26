@@ -1,6 +1,8 @@
 import { bot } from "../bot.js";
+import { trackMessage } from "../../services/tracker.js";
 
 bot.onText(/\/help/, (msg) => {
+  trackMessage(msg, "command:help");
   const helpMessage = `<b>How to use NbkristQik:</b>
 
 1️⃣ <b>Send your Roll Number</b>

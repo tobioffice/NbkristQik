@@ -1,6 +1,8 @@
 import { bot } from "../bot.js";
+import { trackMessage } from "../../services/tracker.js";
 
 bot.onText(/\/start/, (msg) => {
+  trackMessage(msg, "command:start");
   const message = `
 👋 <b>Hey there! Welcome to NbkristQik!</b>
 

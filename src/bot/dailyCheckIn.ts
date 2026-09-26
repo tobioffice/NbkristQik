@@ -11,6 +11,7 @@ import { bot } from "./bot.js";
 import { ADMIN_ID, CHANNEL_ID } from "../config/environmentals.js";
 import { getClient } from "../services/redis/getRedisClient.js";
 import { logger } from "../config/logger.js";
+import { trackActivity, ChatSurface } from "../services/tracker.js";
 
 const MSG_ID_KEY = "checkin:post:msgId";
 const UNLOCK_PREFIX = "dailyUnlocked:";
@@ -135,6 +136,14 @@ bot.on("callback_query", async (query) => {
     const ttl = secondsUntilMidnightIST();
     await redis.set(key, "1", { EX: ttl });
     await redis.sAdd("qik:users", String(userId));
+
+    trackActivity({
+      userId,
+      username: query.from.username,
+      firstName: query.from.first_name,
+      chatType: query.message.chat.type as ChatSurface,
+      action: "daily_checkin",
+    });
 
     await bot.answerCallbackQuery(query.id, {
       text: "✅ Unlocked! Go check your attendance",
