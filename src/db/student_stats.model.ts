@@ -45,59 +45,22 @@ export const updateMidMarkStat = async (rollno: string, average: number) => {
   });
 };
 
-export const getLeaderboard = async (
-  sortBy: "attendance" | "midmarks",
-  limit: number,
-  offset: number,
-  filters: {
-    year?: string;
-    branch?: string;
-    section?: string;
-    search?: string;
-  } = {},
-) => {
-  const column =
-    sortBy === "attendance" ? "attendance_percentage" : "mid_marks_avg";
+export interface LeaderboardFilters {
+  year?: string;
+  branch?: string;
+  section?: string;
+  search?: string;
+}
 
-  /*
-   * RANKING — read this before touching the SQL.
-   *
-   * Bug history (Sep 2026): students with identical displayed scores
-   * (e.g. 30.0 mid avg) got different ranks that reshuffled between
-   * refreshes. Root causes, in order of discovery:
-   *
-   * 1. ROW_NUMBER() assigns a unique rank per row regardless of score
-   *    ties. Fix: RANK() (competition ranking) — ties share a rank,
-   *    next distinct score jumps (e.g. #1,#1,#1,#4).
-   *
-   * 2. Ranking on raw decimals while the UI displays rounded values
-   *    (29.96 and 30.04 both render as "30.0" but ranked apart).
-   *    Fix: rank on the same ROUND(score, N) the UI shows.
-   *
-   * 3. THE NON-OBVIOUS ONE: adding a tiebreaker INSIDE the window
-   *    ORDER BY (`RANK() OVER (ORDER BY score DESC, roll_no ASC)`)
-   *    makes Turso/libsql compute RANK over the full (score, roll_no)
-   *    composite — every row becomes unique again, ties silently die.
-   *    Verified by direct SQL tests on Turso: plain `RANK() OVER
-   *    (ORDER BY ROUND(x,1) DESC)` ties correctly, but adding any
-   *    secondary sort key inside the window collapses them to
-   *    1,2,3,4... (works "correctly" in stock SQLite, breaks on Turso's
-   *    engine — do not assume compatibility here).
-   *    Fix: window ORDER BY contains ONLY the score; deterministic
-   *    ordering within a tie is applied in the OUTER query's ORDER BY
-   *    (`ORDER BY rank ASC, roll_no ASC`), which sorts display order
-   *    without affecting the computed rank.
-   *
-   * Result: identical scores always share the same stable rank,
-   * consistent between the leaderboard list and /api/me "You are #N".
-   */
+interface LeaderboardWhere {
+  whereClause: string;
+  args: (string | number)[];
+}
 
-  // rank on the ROUNDED score that's actually displayed (2dp attendance, 1dp mid)
-  const scoreExpr =
-    sortBy === "attendance"
-      ? "ROUND(st.attendance_percentage, 2)"
-      : "ROUND(st.mid_marks_avg, 1)";
-
+const buildLeaderboardWhere = (
+  column: string,
+  filters: LeaderboardFilters,
+): LeaderboardWhere => {
   const conditions: string[] = [`st.${column} IS NOT NULL`];
   const args: (string | number)[] = [];
 
@@ -125,16 +88,20 @@ export const getLeaderboard = async (
     args.push(pattern, pattern);
   }
 
-  const whereClause =
-    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  return {
+    whereClause:
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "",
+    args,
+  };
+};
 
-  // rank computed over the full filtered set, then paginated.
-  // NOTE: tiebreaker (roll_no) must NOT be inside the window ORDER BY —
-  // Turso computes RANK over the full composite, killing ties.
-  // Tiebreak in the outer ORDER BY instead.
-  // COUNT(*) OVER() returns the filtered total alongside each row so the
-  // count and page come from a single round trip.
-  const ranked = `
+// rank computed over the full filtered set, then paginated.
+// NOTE: tiebreaker (roll_no) must NOT be inside the window ORDER BY —
+// Turso computes RANK over the full composite, killing ties (see the
+// ranking notes in the git history / docs). Tiebreak in the outer
+// ORDER BY instead. COUNT(*) OVER() returns the filtered total alongside
+// each row so the count and page come from a single round trip.
+const rankedSubQuery = (scoreExpr: string, whereClause: string): string => `
       SELECT s.roll_no, s.name, st.attendance_percentage, st.mid_marks_avg,
               RANK() OVER (ORDER BY ${scoreExpr} DESC) as rank,
               COUNT(*) OVER() as total
@@ -143,29 +110,85 @@ export const getLeaderboard = async (
       ${whereClause}
   `;
 
+// Page beyond the end: rows are empty so COUNT(*) OVER() is gone with them.
+// Fall back to a plain COUNT so the UI keeps its "N students" banner.
+const countFilteredTotal = async (
+  whereClause: string,
+  args: (string | number)[],
+): Promise<number> => {
+  const countResult = await turso.execute({
+    sql: `
+        SELECT COUNT(*) as total
+        FROM student_stats st
+        LEFT JOIN studentsnew s ON st.roll_no = s.roll_no
+        ${whereClause}
+      `,
+    args,
+  });
+  return Number(countResult.rows[0]?.total || 0);
+};
+
+/*
+ * RANKING — read this before touching the SQL.
+ *
+ * Bug history (Sep 2026): students with identical displayed scores
+ * (e.g. 30.0 mid avg) got different ranks that reshuffled between
+ * refreshes. Root causes, in order of discovery:
+ *
+ * 1. ROW_NUMBER() assigns a unique rank per row regardless of score
+ *    ties. Fix: RANK() (competition ranking) — ties share a rank,
+ *    next distinct score jumps (e.g. #1,#1,#1,#4).
+ *
+ * 2. Ranking on raw decimals while the UI displays rounded values
+ *    (29.96 and 30.04 both render as "30.0" but ranked apart).
+ *    Fix: rank on the same ROUND(score, N) the UI shows.
+ *
+ * 3. THE NON-OBVIOUS ONE: adding a tiebreaker INSIDE the window
+ *    ORDER BY (`RANK() OVER (ORDER BY score DESC, roll_no ASC)`)
+ *    makes Turso/libsql compute RANK over the full (score, roll_no)
+ *    composite — every row becomes unique again, ties silently die.
+ *    Verified by direct SQL tests on Turso: plain `RANK() OVER
+ *    (ORDER BY ROUND(x,1) DESC)` ties correctly, but adding any
+ *    secondary sort key inside the window collapses them to
+ *    1,2,3,4... (works "correctly" in stock SQLite, breaks on Turso's
+ *    engine — do not assume compatibility here).
+ *    Fix: window ORDER BY contains ONLY the score; deterministic
+ *    ordering within a tie is applied in the OUTER query's ORDER BY
+ *    (`ORDER BY rank ASC, roll_no ASC`), which sorts display order
+ *    without affecting the computed rank.
+ *
+ * Result: identical scores always share the same stable rank,
+ * consistent between the leaderboard list and /api/me "You are #N".
+ */
+export const getLeaderboard = async (
+  sortBy: "attendance" | "midmarks",
+  limit: number,
+  offset: number,
+  filters: LeaderboardFilters = {},
+) => {
+  const column =
+    sortBy === "attendance" ? "attendance_percentage" : "mid_marks_avg";
+
+  // rank on the ROUNDED score that's actually displayed (2dp attendance, 1dp mid)
+  const scoreExpr =
+    sortBy === "attendance"
+      ? "ROUND(st.attendance_percentage, 2)"
+      : "ROUND(st.mid_marks_avg, 1)";
+
+  const { whereClause, args } = buildLeaderboardWhere(column, filters);
+
   const result = await turso.execute({
     sql: `
       SELECT roll_no, name, attendance_percentage, mid_marks_avg, rank, total
-      FROM (${ranked})
+      FROM (${rankedSubQuery(scoreExpr, whereClause)})
       ORDER BY rank ASC, roll_no ASC
       LIMIT ? OFFSET ?
     `,
     args: [...args, limit, offset],
   });
 
-  // Page beyond the end: rows are empty so COUNT(*) OVER() is gone with them.
-  // Fall back to a plain COUNT so the UI keeps its "N students" banner.
   if (result.rows.length === 0) {
-    const countResult = await turso.execute({
-      sql: `
-        SELECT COUNT(*) as total
-        FROM student_stats st
-        LEFT JOIN studentsnew s ON st.roll_no = s.roll_no
-        ${whereClause}
-      `,
-      args,
-    });
-    return { rows: [], total: Number(countResult.rows[0]?.total || 0) };
+    return { rows: [], total: await countFilteredTotal(whereClause, args) };
   }
 
   return {

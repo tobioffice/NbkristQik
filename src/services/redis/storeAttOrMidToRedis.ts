@@ -6,8 +6,41 @@ import {
   updateMidMarkStat,
 } from "../../db/student_stats.model.js";
 import { getStudentCached } from "./utils.js";
-import { Midmarks } from "../../types/index.js";
+import { Attendance, Midmarks } from "../../types/index.js";
 import { logger } from "../../config/logger.js";
+
+const extractRollNumbers = (doc: string): string[] => {
+  const $ = cheerio.load(doc);
+  return $("tr[id]")
+    .map((_, el) => $(el).attr("id"))
+    .get();
+};
+
+interface SectionWrite<T> {
+  roll: string;
+  payload: T;
+  value: number; // attendance % or mid average persisted to student_stats
+}
+
+/** Writes each student's payload to Redis + their stat to Turso in parallel. */
+const persistSectionWrites = async <T>(
+  writes: SectionWrite<T>[],
+  cachePrefix: string,
+  ttlSeconds: number,
+  writeStat: (roll: string, value: number) => Promise<void>,
+) => {
+  const redisClient = await getClient();
+  await Promise.all(
+    writes.map(({ roll, payload, value }) =>
+      Promise.all([
+        redisClient.set(`${cachePrefix}:${roll}`, JSON.stringify(payload), {
+          EX: ttlSeconds,
+        }),
+        writeStat(roll, value).catch(() => {}),
+      ]),
+    ),
+  );
+};
 
 /**
  * Caches a whole section's attendance in the background.
@@ -15,12 +48,7 @@ import { logger } from "../../config/logger.js";
  * takes ~2 round-trip batches instead of ~120 serial ones.
  */
 export const storeAttendanceToRedis = async (doc: string) => {
-  const $ = cheerio.load(doc);
-  const rollNumbers = $("tr[id]")
-    .map((_, el) => $(el).attr("id"))
-    .get();
-
-  const redisClient = await getClient();
+  const rollNumbers = extractRollNumbers(doc);
 
   const parsed = await Promise.all(
     rollNumbers.map((rollnumber) =>
@@ -28,34 +56,26 @@ export const storeAttendanceToRedis = async (doc: string) => {
     ),
   );
 
-  const valid = parsed.filter((s): s is NonNullable<typeof s> => s !== null);
+  const writes: SectionWrite<Attendance>[] = parsed
+    .filter((s): s is Attendance => s !== null)
+    .map((attendance) => ({
+      roll: attendance.rollno.toUpperCase(),
+      payload: attendance,
+      value: attendance.percentage,
+    }));
 
-  await Promise.all(
-    valid.map((studentAttendance) => {
-      const roll = studentAttendance.rollno.toUpperCase();
-      return Promise.all([
-        redisClient.set(
-          `attendance:${roll}`,
-          JSON.stringify(studentAttendance),
-          { EX: 60 * 60 },
-        ),
-        updateAttendanceStat(roll, studentAttendance.percentage).catch(
-          () => {},
-        ),
-      ]);
-    }),
+  await persistSectionWrites(
+    writes,
+    "attendance",
+    60 * 60,
+    updateAttendanceStat,
   );
 
   logger.debug(`cached all student attendance for : `, rollNumbers);
 };
 
 export const storeMidMarksToRedis = async (doc: string) => {
-  const $ = cheerio.load(doc);
-  const rollNumbers = $("tr[id]")
-    .map((_, el) => $(el).attr("id"))
-    .get();
-
-  const redisClient = await getClient();
+  const rollNumbers = extractRollNumbers(doc);
 
   const parsed = await Promise.all(
     rollNumbers.map((rollnumber) =>
@@ -63,12 +83,7 @@ export const storeMidMarksToRedis = async (doc: string) => {
     ),
   );
 
-  const valid: Array<{
-    roll: string;
-    studentMidmarks: Midmarks;
-    average: number;
-  }> = [];
-
+  const writes: SectionWrite<Midmarks>[] = [];
   for (let i = 0; i < parsed.length; i++) {
     const studentMidmarks = parsed[i];
     if (!studentMidmarks) continue;
@@ -99,18 +114,14 @@ export const storeMidMarksToRedis = async (doc: string) => {
       average = (average / 40) * 30;
     }
 
-    valid.push({ roll, studentMidmarks, average });
+    writes.push({ roll, payload: studentMidmarks, value: average });
   }
 
-  await Promise.all(
-    valid.map(({ roll, studentMidmarks, average }) =>
-      Promise.all([
-        redisClient.set(`midmarks:${roll}`, JSON.stringify(studentMidmarks), {
-          EX: 60 * 60 * 2,
-        }),
-        updateMidMarkStat(roll, average).catch(() => {}),
-      ]),
-    ),
+  await persistSectionWrites(
+    writes,
+    "midmarks",
+    60 * 60 * 2,
+    updateMidMarkStat,
   );
 
   logger.debug(`cached all student midmarks for : `, rollNumbers);

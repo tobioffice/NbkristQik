@@ -72,17 +72,43 @@ const isAuthorizedUser = async (
   return true;
 };
 
+// persist userId→roll for "You are #N" in the leaderboard web app
+// (best-effort — never block the menu on it)
+const persistRollMapping = (userId: number, rollNumber: string): void => {
+  void getStudentCached(rollNumber)
+    .then((student) => upsertTgUser(String(userId), student))
+    .catch((e) => logger.debug("tg user upsert skipped:", e?.message ?? e));
+};
+
+const sendRollOptions = (
+  chatId: number,
+  rollNumber: string,
+  replyToMessageId: number,
+) =>
+  bot.sendMessage(chatId, "Select an option:", {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "Attendance 🚀", callback_data: `att_${rollNumber}` }],
+        [{ text: "Mid Marks 📊", callback_data: `mid_${rollNumber}` }],
+        [{ text: "Bunk Plan 🎯", callback_data: `bunk_${rollNumber}` }],
+        [
+          {
+            text: "Leaderboard 🏆",
+            url: "https://t.me/NbkristQik_bot/nbkristqik_leaderboard",
+          },
+        ],
+      ],
+    },
+    reply_to_message_id: replyToMessageId,
+  });
+
 const handleRollNumberMessage = async (msg: Message): Promise<void> => {
   const chatId = msg.chat.id;
   const userId = msg.from?.id;
   if (!userId || !msg.text) return;
   const rollNumber = msg.text.trim().toUpperCase();
 
-  // persist userId→roll for "You are #N" in the leaderboard web app
-  // (best-effort — never block the menu on it)
-  void getStudentCached(rollNumber)
-    .then((student) => upsertTgUser(String(userId), student))
-    .catch((e) => logger.debug("tg user upsert skipped:", e?.message ?? e));
+  persistRollMapping(userId, rollNumber);
 
   // Check rate limit first
   const rateLimitAllowed = await botSecurityHandler(userId, "roll_number");
@@ -106,40 +132,29 @@ const handleRollNumberMessage = async (msg: Message): Promise<void> => {
   const authorized = await isAuthorizedUser(userId, chatId);
   if (!authorized) return;
 
-  await bot.sendMessage(chatId, "Select an option:", {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "Attendance 🚀", callback_data: `att_${rollNumber}` }],
-        [{ text: "Mid Marks 📊", callback_data: `mid_${rollNumber}` }],
-        [{ text: "Bunk Plan 🎯", callback_data: `bunk_${rollNumber}` }],
-        [
-          {
-            text: "Leaderboard 🏆",
-            url: "https://t.me/NbkristQik_bot/nbkristqik_leaderboard",
-          },
-        ],
-      ],
-    },
-    reply_to_message_id: msg.message_id,
-  });
+  await sendRollOptions(chatId, rollNumber, msg.message_id);
+};
+
+// chit chat group: delete roll numbers, brief in-group notice that self-deletes
+const handleChitChatRoll = (msg: Message) => {
+  bot.deleteMessage(msg.chat.id, msg.message_id).catch(() => {});
+  bot
+    .sendMessage(
+      msg.chat.id,
+      "🤖 Roll numbers don't work here, DM @NbkristQik_bot to check attendance",
+      { disable_notification: true },
+    )
+    .then((notice: Message) => {
+      setTimeout(() => {
+        bot.deleteMessage(msg.chat.id, notice.message_id).catch(() => {});
+      }, 15000);
+    })
+    .catch(() => {});
 };
 
 bot.onText(ROLL_REGEX, (msg) => {
-  // chit chat group: delete roll numbers, brief in-group notice that self-deletes
   if (msg.chat.id === CHIT_CHAT_ID) {
-    bot.deleteMessage(msg.chat.id, msg.message_id).catch(() => {});
-    bot
-      .sendMessage(
-        msg.chat.id,
-        "🤖 Roll numbers don't work here, DM @NbkristQik_bot to check attendance",
-        { disable_notification: true },
-      )
-      .then((notice: Message) => {
-        setTimeout(() => {
-          bot.deleteMessage(msg.chat.id, notice.message_id).catch(() => {});
-        }, 15000);
-      })
-      .catch(() => {});
+    handleChitChatRoll(msg);
     return;
   }
   handleRollNumberMessage(msg).catch((e) => {
@@ -148,19 +163,23 @@ bot.onText(ROLL_REGEX, (msg) => {
 });
 
 //HANDLE CALLBACK QUERY
+// chit chat group: bot never responds there
+const handleChitChatCallback = async (callbackQueryId: string) => {
+  await bot
+    .answerCallbackQuery(callbackQueryId, {
+      text: "🤖 Bot doesn't work here — DM @NbkristQik_bot instead",
+      show_alert: true,
+    })
+    .catch(() => {});
+};
+
 bot.on("callback_query", async (callbackQuery) => {
   const { data = "", message: msg } = callbackQuery;
 
   if (!msg) return;
 
-  // chit chat group: bot never responds there
   if (msg.chat.id === CHIT_CHAT_ID) {
-    await bot
-      .answerCallbackQuery(callbackQuery.id, {
-        text: "🤖 Bot doesn't work here — DM @NbkristQik_bot instead",
-        show_alert: true,
-      })
-      .catch(() => {});
+    await handleChitChatCallback(callbackQuery.id);
     return;
   }
 

@@ -1,26 +1,23 @@
 import { turso } from "../db.js";
 
-export const storeResponse = (
+export type ResponseType = "att" | "mid";
+
+/** fallbackResponses primary key: "<year>-<branch>-<section>-<type>" */
+export const buildResponseId = (
   year: string,
   branch: string,
   section: string,
-  type: "att" | "mid",
-  content: string,
-) => {
-  const id = `${year}-${branch}-${section}-${type}`;
+  type: ResponseType,
+): string => `${year}-${branch}-${section}-${type}`;
+
+export const storeResponse = (id: string, content: string) => {
   return turso.execute({
     sql: `INSERT OR REPLACE INTO fallbackResponses (id, content) VALUES (?, ?)`,
     args: [id, content],
   });
 };
 
-export const getResponse = async (
-  year: string,
-  branch: string,
-  section: string,
-  type: "att" | "mid",
-): Promise<string> => {
-  const id = `${year}-${branch}-${section}-${type}`;
+export const getResponse = async (id: string): Promise<string> => {
   const result = await turso.execute({
     sql: `SELECT content FROM fallbackResponses WHERE id = ?`,
     args: [id],

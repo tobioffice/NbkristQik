@@ -34,67 +34,91 @@ app.use(express.json());
 // Apply security middleware to all routes
 app.use(apiSecurityMiddlewares);
 
+interface LeaderboardQuery {
+  page: number;
+  limit: number;
+  sortBy: "attendance" | "midmarks";
+  filters: {
+    year?: string;
+    branch?: string;
+    section?: string;
+    search?: string;
+  };
+}
+
+const parseLeaderboardQuery = (req: Request): LeaderboardQuery => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 50;
+  const sortBy = (req.query.sort as "attendance" | "midmarks") || "attendance";
+
+  const filters = {
+    year: req.query.year === "all" ? undefined : (req.query.year as string),
+    branch:
+      req.query.branch === "all" ? undefined : (req.query.branch as string),
+    section:
+      req.query.section === "all" ? undefined : (req.query.section as string),
+    search: req.query.search
+      ? String(req.query.search).trim().slice(0, 20)
+      : undefined,
+  };
+  return { page, limit, sortBy, filters };
+};
+
+const leaderboardCacheKey = (q: LeaderboardQuery): string =>
+  `lb:${q.sortBy}:${q.page}:${q.limit}:${q.filters.year || "all"}:${q.filters.branch || "all"}:${q.filters.section || "all"}:${q.filters.search || ""}`;
+
+// 60s Redis cache per unique query — protects Turso read quota (best-effort)
+const getCachedLeaderboard = async (
+  cacheKey: string,
+): Promise<string | null> => {
+  try {
+    return await getClient().then((c) => c.get(cacheKey));
+  } catch (e) {
+    logger.warn("[API] leaderboard cache read failed:", e);
+    return null;
+  }
+};
+
+const cacheLeaderboard = async (cacheKey: string, payload: object) => {
+  try {
+    await getClient().then((c) =>
+      c.set(cacheKey, JSON.stringify(payload), { EX: 60 }),
+    );
+  } catch (e) {
+    logger.warn("[API] leaderboard cache write failed:", e);
+  }
+};
+
 // API Routes
 app.get(
   "/api/leaderboard",
   leaderboardSecurityMiddlewares,
   async (req: Request, res: Response) => {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 50;
-      const sortBy =
-        (req.query.sort as "attendance" | "midmarks") || "attendance";
+      const query = parseLeaderboardQuery(req);
+      const cacheKey = leaderboardCacheKey(query);
 
-      const filters = {
-        year: req.query.year === "all" ? undefined : (req.query.year as string),
-        branch:
-          req.query.branch === "all" ? undefined : (req.query.branch as string),
-        section:
-          req.query.section === "all"
-            ? undefined
-            : (req.query.section as string),
-        search: req.query.search
-          ? String(req.query.search).trim().slice(0, 20)
-          : undefined,
-      };
-
-      const offset = (page - 1) * limit;
-
-      // 60s Redis cache per unique query — protects Turso read quota
-      const cacheKey = `lb:${sortBy}:${page}:${limit}:${filters.year || "all"}:${filters.branch || "all"}:${filters.section || "all"}:${filters.search || ""}`;
-      try {
-        const cached = await getClient().then((c) => c.get(cacheKey));
-        if (cached) {
-          res.json(JSON.parse(cached));
-          return;
-        }
-      } catch (e) {
-        logger.warn("[API] leaderboard cache read failed:", e);
+      const cached = await getCachedLeaderboard(cacheKey);
+      if (cached) {
+        res.json(JSON.parse(cached));
+        return;
       }
 
       const { rows, total } = await getLeaderboard(
-        sortBy,
-        limit,
-        offset,
-        filters,
+        query.sortBy,
+        query.limit,
+        (query.page - 1) * query.limit,
+        query.filters,
       );
 
       const payload = {
         success: true,
-        page,
-        limit,
+        page: query.page,
+        limit: query.limit,
         total,
         data: rows,
       };
-
-      // cache for 60 seconds (best-effort)
-      try {
-        await getClient().then((c) =>
-          c.set(cacheKey, JSON.stringify(payload), { EX: 60 }),
-        );
-      } catch (e) {
-        logger.warn("[API] leaderboard cache write failed:", e);
-      }
+      await cacheLeaderboard(cacheKey, payload);
 
       res.json(payload);
     } catch (error) {
@@ -107,37 +131,42 @@ app.get(
 // "You are #N" — rank lookup for the web leaderboard via tgusers mapping.
 // The caller must prove it's the Telegram client it claims to be: userId is
 // only trusted when it comes signed inside Telegram WebApp initData.
+const resolveUserId = (
+  req: Request,
+): { userId: string; error?: string } | null => {
+  const initData = req.query.initData as string | undefined;
+  if (initData) {
+    const user = verifyInitData(initData);
+    if (!user) return { userId: "", error: "Invalid Telegram signature" };
+    return { userId: String(user.id) };
+  }
+
+  // Dev convenience: a browser outside Telegram may pass userId directly.
+  if (ENV !== "production") {
+    const raw = req.query.userId as string | undefined;
+    if (raw && /^\d{1,20}$/.test(raw)) return { userId: raw };
+  }
+  return null;
+};
+
 app.get(
   "/api/me",
   leaderboardSecurityMiddlewares,
   async (req: Request, res: Response) => {
     try {
-      let userId: string | null = null;
-
-      const initData = req.query.initData as string | undefined;
-      if (initData) {
-        const user = verifyInitData(initData);
-        if (!user) {
-          res
-            .status(401)
-            .json({ found: false, error: "Invalid Telegram signature" });
-          return;
-        }
-        userId = String(user.id);
-      } else if (ENV !== "production") {
-        // Dev convenience: a browser outside Telegram may pass userId directly.
-        const raw = req.query.userId as string | undefined;
-        if (raw && /^\d{1,20}$/.test(raw)) userId = raw;
-      }
-
-      if (!userId) {
+      const resolved = resolveUserId(req);
+      if (!resolved) {
         res
           .status(401)
           .json({ found: false, error: "Telegram initData required" });
         return;
       }
+      if (resolved.error) {
+        res.status(401).json({ found: false, error: resolved.error });
+        return;
+      }
 
-      const rollNo = await getTgUserRoll(userId);
+      const rollNo = await getTgUserRoll(resolved.userId);
       if (!rollNo) {
         res.json({ found: false });
         return;
@@ -181,6 +210,29 @@ app.get("/health", securityLogger, (_req: Request, res: Response) => {
 const STATUS_TTL_MS = 5 * 60 * 1000;
 let statusCache: { at: number; payload: string } | null = null;
 
+const computeStatusComponents = async () => {
+  const summary = await getUptimeSummary();
+  return Promise.all(
+    summary.map(async (s) => {
+      const lastPingAgeSec = Math.floor(
+        (Date.now() - new Date(s.lastPing + "Z").getTime()) / 1000,
+      );
+      // up = last ping < 15 min ago
+      const current: "up" | "down" = lastPingAgeSec < 15 * 60 ? "up" : "down";
+      return {
+        component: s.component,
+        uptimePct: s.uptimePct,
+        pings: s.pings,
+        lastPing: s.lastPing,
+        lastPingAgeSec,
+        avgLatencyMs: s.avgLatencyMs,
+        current,
+        buckets: await getUptimeDailyBuckets(s.component, 90),
+      };
+    }),
+  );
+};
+
 app.get("/api/status", securityLogger, async (_req: Request, res: Response) => {
   try {
     if (statusCache && Date.now() - statusCache.at < STATUS_TTL_MS) {
@@ -188,27 +240,7 @@ app.get("/api/status", securityLogger, async (_req: Request, res: Response) => {
       return;
     }
 
-    const summary = await getUptimeSummary();
-    const components = await Promise.all(
-      summary.map(async (s) => {
-        const lastPingAgeSec = Math.floor(
-          (Date.now() - new Date(s.lastPing + "Z").getTime()) / 1000,
-        );
-        // up = last ping < 15 min ago
-        const current: "up" | "down" = lastPingAgeSec < 15 * 60 ? "up" : "down";
-        return {
-          component: s.component,
-          uptimePct: s.uptimePct,
-          pings: s.pings,
-          lastPing: s.lastPing,
-          lastPingAgeSec,
-          avgLatencyMs: s.avgLatencyMs,
-          current,
-          buckets: await getUptimeDailyBuckets(s.component, 90),
-        };
-      }),
-    );
-
+    const components = await computeStatusComponents();
     statusCache = {
       at: Date.now(),
       payload: JSON.stringify({ success: true, components }),

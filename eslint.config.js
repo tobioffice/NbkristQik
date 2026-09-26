@@ -4,6 +4,8 @@ import tsparser from "@typescript-eslint/parser";
 import prettierPlugin from "eslint-plugin-prettier";
 
 export default [
+  // src/web has its own eslint config (react hooks, browser globals)
+  { ignores: ["src/web/**"] },
   js.configs.recommended,
   {
     files: ["src/**/*.ts", "tests/**/*.ts"],

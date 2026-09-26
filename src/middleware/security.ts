@@ -130,41 +130,33 @@ export const handleValidationErrors = (
 };
 
 // Security logging middleware
+const requestMeta = (req: Request) => ({
+  timestamp: new Date().toISOString(),
+  ip: req.ip || req.socket.remoteAddress,
+  userAgent: req.get("User-Agent") || "Unknown",
+  method: req.method,
+  url: req.url,
+});
+
+// Log suspicious patterns: traversal, XSS, SQL injection, code injection
+const SUSPICIOUS_PATTERNS = [/\.\./, /<script/i, /union.*select/i, /eval\(/i];
+
+const isSuspiciousRequest = (req: Request): boolean => {
+  const requestData = JSON.stringify({ body: req.body, query: req.query });
+  return SUSPICIOUS_PATTERNS.some(
+    (pattern) => pattern.test(requestData) || pattern.test(req.url),
+  );
+};
+
 export const securityLogger = (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  const timestamp = new Date().toISOString();
-  const ip = req.ip || req.socket.remoteAddress;
-  const userAgent = req.get("User-Agent") || "Unknown";
-  const method = req.method;
-  const url = req.url;
-
-  // Log suspicious patterns
-  const suspiciousPatterns = [
-    /\.\./, // Directory traversal
-    /<script/i, // XSS attempts
-    /union.*select/i, // SQL injection attempts
-    /eval\(/i, // Code injection
-  ];
-
-  const requestData = JSON.stringify({
-    body: req.body,
-    query: req.query,
-  });
-
-  const isSuspicious = suspiciousPatterns.some(
-    (pattern) => pattern.test(requestData) || pattern.test(url),
-  );
-
-  if (isSuspicious) {
+  if (isSuspiciousRequest(req)) {
+    const requestData = JSON.stringify({ body: req.body, query: req.query });
     logger.warn(`🚨 [SECURITY] Suspicious request detected:`, {
-      timestamp,
-      ip,
-      method,
-      url,
-      userAgent,
+      ...requestMeta(req),
       requestData: requestData.substring(0, 200) + "...",
     });
   }
@@ -172,13 +164,7 @@ export const securityLogger = (
   // Log rate limit hits
   res.on("finish", () => {
     if (res.statusCode === 429) {
-      logger.warn(`🚫 [RATE LIMIT] Request blocked:`, {
-        timestamp,
-        ip,
-        method,
-        url,
-        userAgent,
-      });
+      logger.warn(`🚫 [RATE LIMIT] Request blocked:`, requestMeta(req));
     }
   });
 
@@ -191,11 +177,24 @@ export const isValidRollNumber = (rollNumber: string): boolean => {
 };
 
 // Bot-specific security middleware
+const pruneStaleEntries = (
+  counts: Map<number, { count: number; resetTime: number }>,
+  now: number,
+) => {
+  if (counts.size <= 5000) return;
+  for (const [id, entry] of counts) {
+    if (now > entry.resetTime) counts.delete(id);
+  }
+};
+
 export const createBotSecurityHandler = () => {
   const userRequestCounts = new Map<
     number,
     { count: number; resetTime: number }
   >();
+
+  const WINDOW_MS = 60 * 1000; // 1 minute
+  const MAX_REQUESTS = 10; // 10 requests per minute
 
   return async (
     userId: number,
@@ -203,14 +202,7 @@ export const createBotSecurityHandler = () => {
   ): Promise<boolean> => {
     try {
       const now = Date.now();
-      const windowMs = 60 * 1000; // 1 minute
-      const maxRequests = 10; // 10 requests per minute
-
-      if (userRequestCounts.size > 5000) {
-        for (const [id, entry] of userRequestCounts) {
-          if (now > entry.resetTime) userRequestCounts.delete(id);
-        }
-      }
+      pruneStaleEntries(userRequestCounts, now);
 
       const userData = userRequestCounts.get(userId);
 
@@ -218,12 +210,12 @@ export const createBotSecurityHandler = () => {
         // First request or window expired
         userRequestCounts.set(userId, {
           count: 1,
-          resetTime: now + windowMs,
+          resetTime: now + WINDOW_MS,
         });
         return true;
       }
 
-      if (userData.count >= maxRequests) {
+      if (userData.count >= MAX_REQUESTS) {
         logger.warn(
           `🚫 [BOT SECURITY] User ${userId} exceeded rate limit for ${action}`,
         );

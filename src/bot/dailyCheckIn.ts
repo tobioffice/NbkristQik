@@ -64,44 +64,55 @@ export const getCheckInLink = async (): Promise<string> => {
   }
 };
 
+// remove previous pinned check-in post if it exists
+const deletePreviousPost = async (
+  redis: Awaited<ReturnType<typeof getClient>>,
+) => {
+  const oldMsgId = await redis.get(MSG_ID_KEY);
+  if (oldMsgId) {
+    await bot.deleteMessage(CHANNEL_ID, Number(oldMsgId)).catch(() => {});
+  }
+};
+
+const createCheckInPost = async (
+  redis: Awaited<ReturnType<typeof getClient>>,
+): Promise<number> => {
+  const sent = await bot.sendMessage(
+    CHANNEL_ID,
+    `🤖 <b>Prove you're human!</b>\n\n👇 Tap the button below to unlock the bot for today`,
+    {
+      parse_mode: "HTML",
+      disable_notification: true,
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🤖 I'm not a robot 👇", callback_data: "dailycheck" }],
+        ],
+      },
+    },
+  );
+
+  await bot
+    .pinChatMessage(CHANNEL_ID, sent.message_id, {
+      disable_notification: true,
+    })
+    .catch(() => {});
+  await redis.set(MSG_ID_KEY, String(sent.message_id));
+  return sent.message_id;
+};
+
 // --- /postcheckin (admin only) ---
 bot.onText(/\/postcheckin/, async (msg) => {
   if (msg.from?.id !== ADMIN_ID) return;
 
   try {
     const redis = await getClient();
-
-    // remove previous pinned check-in post if it exists
-    const oldMsgId = await redis.get(MSG_ID_KEY);
-    if (oldMsgId) {
-      await bot.deleteMessage(CHANNEL_ID, Number(oldMsgId)).catch(() => {});
-    }
-
-    const sent = await bot.sendMessage(
-      CHANNEL_ID,
-      `🤖 <b>Prove you're human!</b>\n\n👇 Tap the button below to unlock the bot for today`,
-      {
-        parse_mode: "HTML",
-        disable_notification: true,
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "🤖 I'm not a robot 👇", callback_data: "dailycheck" }],
-          ],
-        },
-      },
-    );
-
-    await bot
-      .pinChatMessage(CHANNEL_ID, sent.message_id, {
-        disable_notification: true,
-      })
-      .catch(() => {});
-    await redis.set(MSG_ID_KEY, String(sent.message_id));
+    await deletePreviousPost(redis);
+    const messageId = await createCheckInPost(redis);
 
     const channel = (CHANNEL_ID || "").replace("@", "");
     await bot.sendMessage(
       msg.chat.id,
-      `✅ Check-in post created and pinned: https://t.me/${channel}/${sent.message_id}\n<i>Gate is now ACTIVE for all users (until midnight IST).</i>`,
+      `✅ Check-in post created and pinned: https://t.me/${channel}/${messageId}\n<i>Gate is now ACTIVE for all users (until midnight IST).</i>`,
       { parse_mode: "HTML" },
     );
   } catch (e) {
