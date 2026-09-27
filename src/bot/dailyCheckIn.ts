@@ -146,8 +146,8 @@ bot.on("callback_query", async (query) => {
     });
 
     await bot.answerCallbackQuery(query.id, {
-      text: "✅ Unlocked! Go check your attendance",
-      show_alert: true,
+      text: "✅ Unlocked for today!",
+      url: "https://t.me/NbkristQik_bot?start=unlocked",
     });
   } catch (e) {
     logger.error("[dailyCheckIn] callback error:", e);

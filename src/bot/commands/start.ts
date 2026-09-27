@@ -1,8 +1,18 @@
 import { bot } from "../bot.js";
 import { trackMessage } from "../../services/tracker.js";
 
-bot.onText(/\/start/, (msg) => {
+bot.onText(/\/start(?:\s+(.+))?/, (msg, match) => {
   trackMessage(msg, "command:start");
+
+  if (match?.[1] === "unlocked") {
+    bot.sendMessage(
+      msg.chat.id,
+      `✅ <b>You're unlocked for today!</b>\n\n🆔 Just send me your <b>Roll Number</b> and I'll fetch your attendance & mid marks.`,
+      { parse_mode: "HTML" },
+    );
+    return;
+  }
+
   const message = `
 👋 <b>Hey there! Welcome to NbkristQik!</b>
 
