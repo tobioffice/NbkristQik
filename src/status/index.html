@@ -76,8 +76,10 @@
   </div>
 
   <script>
-    const fmtDay = (d) => new Date(d + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-    const fmtTime = (iso) => new Date(iso + "Z").toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+    const IST = "Asia/Kolkata";
+    const fmtDay = (d) => new Date(d + "T00:00:00+05:30").toLocaleDateString("en-GB", { timeZone: IST, day: "numeric", month: "short" });
+    const fmtTime = (iso) => new Date(String(iso).replace(" ", "T") + "Z").toLocaleTimeString("en-GB", { timeZone: IST, hour: "2-digit", minute: "2-digit" });
+    const istDayFmt = new Intl.DateTimeFormat("en-CA", { timeZone: IST, year: "numeric", month: "2-digit", day: "2-digit" });
     // bar color: up if >=99% of pings that day were up, degraded if some failed, down if all failed
     const dayClass = (b) => {
       if (!b || b.pings === 0) return "";
@@ -95,6 +97,7 @@
         const anyDown = comps.some((c) => c.current === "down");
 
         const banner = document.getElementById("banner");
+        banner.style.display = "flex";
         const title = document.getElementById("banner-title");
         const sub = document.getElementById("banner-sub");
         if (anyDown) {
@@ -114,12 +117,11 @@
         wrap.className = "";
         wrap.innerHTML = "";
 
-        // build 90-day calendar for bar alignment
+        // build 90-day calendar in IST to match the IST bucket days from the API
         const days = [];
-        const now = new Date();
+        const nowMs = Date.now();
         for (let i = 89; i >= 0; i--) {
-          const d = new Date(now.getTime() - i * 86400000);
-          days.push(d.toISOString().slice(0, 10));
+          days.push(istDayFmt.format(new Date(nowMs - i * 86400000)));
         }
 
         for (const c of comps) {
@@ -149,7 +151,7 @@
                 <svg class="dot" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="${dotColor}"/></svg>
                 ${c.component.charAt(0).toUpperCase() + c.component.slice(1)}
               </span>
-              <span class="comp-uptime"><b>${upPct}%</b> uptime</span>
+              <span class="comp-uptime"><b>${upPct}%</b> uptime · last check ${fmtTime(c.lastPing)} IST</span>
             </div>
             <div class="bars">${barsHtml}</div>
           `;

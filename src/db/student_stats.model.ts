@@ -315,10 +315,10 @@ export const getUptimeDailyBuckets = async (
   const safeDays = Math.max(1, Math.min(365, Math.floor(Number(days) || 90)));
   const result = await turso.execute({
     sql: `
-      SELECT date(created_at) as day,
-             COUNT(*) as pings,
-             SUM(CASE WHEN status = 'up' THEN 1 ELSE 0 END) as ups,
-             AVG(CASE WHEN status = 'up' THEN latency_ms END) as avg_latency
+      SELECT date(created_at, '+330 minutes') as day,
+              COUNT(*) as pings,
+              SUM(CASE WHEN status = 'up' THEN 1 ELSE 0 END) as ups,
+              AVG(CASE WHEN status = 'up' THEN latency_ms END) as avg_latency
       FROM uptime_log
       WHERE component = ? AND created_at >= datetime('now', '-${safeDays} days')
       GROUP BY day

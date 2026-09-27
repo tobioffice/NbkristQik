@@ -3,6 +3,8 @@ import { turso } from "../../src/db/db";
 import {
   getLeaderboard,
   initLeaderboardIndexes,
+  initUptimeTable,
+  getUptimeDailyBuckets,
 } from "../../src/db/student_stats.model";
 
 beforeAll(async () => {
@@ -65,5 +67,24 @@ describe("initLeaderboardIndexes", () => {
       "SELECT name FROM sqlite_master WHERE type = 'index' AND name = 'idx_studentsnew_filters'",
     );
     expect(result.rows).toHaveLength(1);
+  });
+});
+
+describe("getUptimeDailyBuckets", () => {
+  it("should group buckets by IST day boundaries, not UTC", async () => {
+    await initUptimeTable();
+    // 18:20 UTC = 23:50 IST Sep 24; 18:40 UTC = 00:10 IST Sep 25
+    await turso.execute(
+      "INSERT INTO uptime_log (component, status, latency_ms, created_at) VALUES ('api', 'up', 5, '2026-09-24 18:20:00')",
+    );
+    await turso.execute(
+      "INSERT INTO uptime_log (component, status, latency_ms, created_at) VALUES ('api', 'up', 6, '2026-09-24 18:40:00')",
+    );
+
+    const buckets = await getUptimeDailyBuckets("api", 30);
+    const byDay = Object.fromEntries(buckets.map((b) => [b.day, b.pings]));
+
+    expect(byDay["2026-09-24"]).toBe(1);
+    expect(byDay["2026-09-25"]).toBe(1);
   });
 });
