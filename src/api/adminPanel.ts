@@ -455,6 +455,16 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
       });
     return istDateFmt.format(utcMs);
   };
+  // concrete AM/PM IST clock time for recent entries, relative for older:
+  // today -> "9:15 AM", yesterday -> "Yesterday 9:15 PM", else "3d ago"
+  var clockOrAgo = function (utcStr) {
+    var t = parseUtc(utcStr);
+    if (isNaN(t)) return utcStr;
+    var day = istDate(t);
+    if (day === istDate(Date.now())) return istTime(t);
+    if (day === istDate(Date.now() - 86400000)) return "Yesterday " + istTime(t);
+    return ago(utcStr);
+  };
 
   var api = function (path) {
     return fetch(BASE + "/api/" + path).then(function (r) {
@@ -744,7 +754,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
         html += '<tr data-uid="' + u.userId + '">' +
           '<td class="who"><div class="name">' + esc(name) + (handle ? ' <span class="handle">' + esc(handle) + "</span>" : "") + "</div></td>" +
           '<td class="mono rolls">' + (u.rollNo ? esc(u.rollNo) : "&ndash;") + "</td>" +
-          '<td class="dim">' + ago(u.lastSeen) + "</td>" +
+          '<td class="dim">' + clockOrAgo(u.lastSeen) + "</td>" +
           '<td class="num mono">' + fmt(u.totalActions) + "</td>" +
           '<td class="num mono">' + fmt(u.privateActions) + "</td>" +
           '<td class="num mono">' + fmt(u.channelActions) + "</td>" +
@@ -853,7 +863,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
         '<div class="stat"><div class="n">' + fmt(p.channelActions) + '</div><div class="l">channel</div></div>' +
         "</div>" +
         '<h4>Last 30 days</h4><div class="dmini" id="dmini"></div>' +
-        '<div class="dim" style="font-size:12.5px">first seen ' + istDate(parseUtc(p.firstSeen)) + " · last seen " + ago(p.lastSeen) + "</div>" +
+        '<div class="dim" style="font-size:12.5px">first seen ' + istDate(parseUtc(p.firstSeen)) + " " + istTime(parseUtc(p.firstSeen)) + " · last seen " + ago(p.lastSeen) + "</div>" +
         '<h4>Recent activity</h4><div class="dfeed">';
       for (var i = 0; i < d.recent.length; i++) {
         var e2 = d.recent[i];
