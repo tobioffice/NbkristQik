@@ -209,11 +209,11 @@ export const registerAdminRoutes = (app: Express): void => {
               args: [],
             },
             {
-              sql: `SELECT date(created_at) d, COUNT(*) actions, COUNT(DISTINCT user_id) users,
+              sql: `SELECT date(created_at, '+330 minutes') d, COUNT(*) actions, COUNT(DISTINCT user_id) users,
                            SUM(CASE WHEN action = 'daily_checkin' THEN 1 ELSE 0 END) checkins
-                    FROM activity_log
-                    WHERE created_at >= datetime('now', '-30 days')
-                    GROUP BY d ORDER BY d`,
+                     FROM activity_log
+                     WHERE created_at >= datetime('now', '-30 days')
+                     GROUP BY d ORDER BY d`,
               args: [],
             },
             {
@@ -231,11 +231,13 @@ export const registerAdminRoutes = (app: Express): void => {
               args: [],
             },
             {
-              sql: `SELECT strftime('%H', created_at) h, COUNT(*) actions,
-                           COUNT(DISTINCT user_id) users,
+              // day+hour keys in IST (+330 min shift) — storage stays UTC,
+              // grouping follows IST wall-clock boundaries
+              sql: `SELECT strftime('%Y-%m-%d %H', created_at, '+330 minutes') h,
+                           COUNT(*) actions, COUNT(DISTINCT user_id) users,
                            SUM(CASE WHEN action = 'daily_checkin' THEN 1 ELSE 0 END) checkins
                     FROM activity_log
-                    WHERE created_at >= datetime('now', 'start of day')
+                    WHERE created_at >= datetime('now', '-30 hours')
                     GROUP BY h ORDER BY h`,
               args: [],
             },
@@ -387,9 +389,9 @@ export const registerAdminRoutes = (app: Express): void => {
               args: [userId],
             },
             {
-              sql: `SELECT date(created_at) d, COUNT(*) n FROM activity_log
-                    WHERE user_id = ? AND created_at >= datetime('now', '-30 days')
-                    GROUP BY d ORDER BY d`,
+              sql: `SELECT date(created_at, '+330 minutes') d, COUNT(*) n FROM activity_log
+                     WHERE user_id = ? AND created_at >= datetime('now', '-30 days')
+                     GROUP BY d ORDER BY d`,
               args: [userId],
             },
           ],

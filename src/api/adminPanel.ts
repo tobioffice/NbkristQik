@@ -430,6 +430,32 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
     return Math.floor(s / 86400) + "d ago";
   };
 
+  // the DB stores UTC; every wall-clock time shown here is converted to
+  // IST (Asia/Kolkata) in the browser, in 12-hour AM/PM format
+  var istTimeFmt = null, istDateFmt = null;
+  var parseUtc = function (utcStr) {
+    return Date.parse(String(utcStr).replace(" ", "T") + "Z");
+  };
+  var istTime = function (utcStrOrMs) {
+    var t =
+      typeof utcStrOrMs === "number"
+        ? utcStrOrMs
+        : parseUtc(utcStrOrMs);
+    if (isNaN(t)) return String(utcStrOrMs).slice(11, 16);
+    if (!istTimeFmt)
+      istTimeFmt = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Kolkata", hour: "numeric", minute: "2-digit", hour12: true,
+      });
+    return istTimeFmt.format(t);
+  };
+  var istDate = function (utcMs) {
+    if (!istDateFmt)
+      istDateFmt = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit",
+      });
+    return istDateFmt.format(utcMs);
+  };
+
   var api = function (path) {
     return fetch(BASE + "/api/" + path).then(function (r) {
       if (r.status === 401) { showLogin(); throw new Error("unauthorized"); }
@@ -501,7 +527,10 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
   var pulseRange = "30d";
 
   // zero-fills the selected window from the cached overview payload, so
-  // switching between monthly and daily costs no extra request
+  // switching between monthly and daily costs no extra request.
+  // "Today" = the last 30 UTC hours relabeled into IST hour ranges — each
+  // UTC hour maps exactly to one IST hour shifted by 5:30 (e.g. the UTC
+  // 13:00 bucket is 18:30–19:30 IST)
   var buildPulsePoints = function () {
     if (!overviewData) return [];
     var out = [];
@@ -509,11 +538,15 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
       var byHour = {};
       var hourly = overviewData.hourly || [];
       for (var i = 0; i < hourly.length; i++) byHour[hourly[i].h] = hourly[i];
-      for (var h = 0; h < 24; h++) {
-        var hh = (h < 10 ? "0" : "") + h;
-        var rec = byHour[hh];
+      var nowMs = Date.now();
+      for (var h = 29; h >= 0; h--) {
+        // IST-aligned hour boundaries; key matches the backend's
+        // strftime('%Y-%m-%d %H', created_at, '+330 minutes')
+        var startMs = Math.floor((nowMs + 19800000 - h * 3600000) / 3600000) * 3600000 - 19800000;
+        var key = new Date(startMs + 19800000).toISOString().slice(0, 13).replace("T", " ");
+        var rec = byHour[key];
         out.push({
-          label: hh + ":00",
+          label: istTime(startMs) + "–" + istTime(startMs + 3600000),
           actions: rec ? rec.actions : 0,
           users: rec ? rec.users : 0,
           checkins: rec ? rec.checkins || 0 : 0,
@@ -526,7 +559,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
       var now = new Date();
       for (var d = 29; d >= 0; d--) {
         var dt = new Date(now.getTime() - d * 86400000);
-        var key = dt.toISOString().slice(0, 10);
+        var key = istDate(dt.getTime());
         var rec2 = byDay[key];
         out.push({
           label: key,
@@ -587,7 +620,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
         tip.style.cssText = "position:fixed;pointer-events:none;font-size:12px;background:#1b1d24;border:1px solid rgba(148,163,184,.2);padding:5px 9px;border-radius:7px;z-index:30;font-family:" + "var(--mono)" + ";white-space:nowrap";
         document.body.appendChild(tip);
       }
-      tip.textContent = lab + " · " + pt.actions + " actions · " + pt.users + " students · " + pt.checkins + " check-ins";
+      tip.textContent = lab + (pulseRange === "24h" ? " IST" : "") + " · " + pt.actions + " actions · " + pt.users + " students · " + pt.checkins + " check-ins";
       tip.style.left = (ev.clientX + 12) + "px";
       tip.style.top = (ev.clientY - 30) + "px";
       tip.style.display = "block";
@@ -678,8 +711,17 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
       countUp($("ov-active7"), d.totals.active7d);
       countUp($("ov-active30"), d.totals.active30d);
       countUp($("ov-actions"), d.totals.totalActions);
-      var dailyList = d.daily || [];
-      countUp($("ov-checkins"), dailyList.length ? dailyList[dailyList.length - 1].checkins : 0);
+      // check-ins today, counted over the IST day from the hourly buckets.
+      //backend keys are IST "YYYY-MM-DD HH", so compare the date part
+      //directly — parsing an hour-precision key as a date yields NaN.
+      var todayIst = istDate(Date.now());
+      var todayCheckins = 0;
+      var hourlyRows = d.hourly || [];
+      for (var hi = 0; hi < hourlyRows.length; hi++) {
+        if (String(hourlyRows[hi].h || "").slice(0, 10) === todayIst)
+          todayCheckins += hourlyRows[hi].checkins || 0;
+      }
+      countUp($("ov-checkins"), todayCheckins);
       drawPulse(buildPulsePoints());
       drawSurfaces(d.surfaces || {});
       drawWeights(d.topActions || []);
@@ -734,7 +776,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
     var ts = Date.parse(e.at + "Z");
     var isFresh = !isNaN(ts) && Date.now() - ts < 120000;
     return '<div class="feedrow' + (isFresh ? " fresh" : "") + '">' +
-      '<span class="when">' + e.at.slice(11, 16) + "</span>" +
+      '<span class="when">' + istTime(e.at) + "</span>" +
       '<span class="what"><span class="badge">' + esc(actionLabel(e.action)) + "</span>" +
       esc(e.name || e.username || "ID " + e.userId) +
       (e.detail ? '<span class="detail">' + esc(e.detail) + "</span>" : "") + "</span>" +
@@ -766,7 +808,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
         var nowD = new Date();
         for (var day = 89; day >= 0; day--) {
           var dt = new Date(nowD.getTime() - day * 86400000);
-          var key = dt.toISOString().slice(0, 10);
+          var key = istDate(dt.getTime());
           var bucket = byDay[key];
           var cls = "miss", h = 30;
           if (bucket) {
@@ -809,11 +851,11 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
         '<div class="stat"><div class="n">' + fmt(p.channelActions) + '</div><div class="l">channel</div></div>' +
         "</div>" +
         '<h4>Last 30 days</h4><div class="dmini" id="dmini"></div>' +
-        '<div class="dim" style="font-size:12.5px">first seen ' + p.firstSeen.slice(0, 10) + " · last seen " + ago(p.lastSeen) + "</div>" +
+        '<div class="dim" style="font-size:12.5px">first seen ' + istDate(parseUtc(p.firstSeen)) + " · last seen " + ago(p.lastSeen) + "</div>" +
         '<h4>Recent activity</h4><div class="dfeed">';
       for (var i = 0; i < d.recent.length; i++) {
         var e2 = d.recent[i];
-        html += '<div class="feedrow"><span class="when">' + e2.at.slice(5, 16).replace("T", " ") + "</span>" +
+        html += '<div class="feedrow"><span class="when">' + istDate(parseUtc(e2.at)).slice(5) + " " + istTime(e2.at) + "</span>" +
           '<span class="what"><span class="badge">' + esc(actionLabel(e2.action)) + "</span>" +
           '<span class="sdot" style="background:' + surfaceColor(e2.chatType) + '"></span> ' +
           (e2.detail ? '<span class="detail">' + esc(e2.detail) + "</span>" : "") + "</span></div>";
@@ -829,7 +871,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
       var now2 = new Date(), miniHtml = "";
       for (var dd = 29; dd >= 0; dd--) {
         var dt2 = new Date(now2.getTime() - dd * 86400000);
-        var key2 = dt2.toISOString().slice(0, 10);
+        var key2 = istDate(dt2.getTime());
         var n2 = byDay2[key2] || 0;
         miniHtml += '<i style="height:' + Math.max(2, (n2 / maxN) * 34) + 'px" title="' + key2 + ": " + n2 + '"></i>';
       }
