@@ -528,9 +528,8 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
 
   // zero-fills the selected window from the cached overview payload, so
   // switching between monthly and daily costs no extra request.
-  // "Today" = the last 30 UTC hours relabeled into IST hour ranges — each
-  // UTC hour maps exactly to one IST hour shifted by 5:30 (e.g. the UTC
-  // 13:00 bucket is 18:30–19:30 IST)
+  // "Today" = since midnight IST (12 AM), growing hour by hour — the
+  // backend buckets are IST wall-clock hours, so the keys match directly
   var buildPulsePoints = function () {
     if (!overviewData) return [];
     var out = [];
@@ -538,15 +537,18 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
       var byHour = {};
       var hourly = overviewData.hourly || [];
       for (var i = 0; i < hourly.length; i++) byHour[hourly[i].h] = hourly[i];
-      var nowMs = Date.now();
-      for (var h = 29; h >= 0; h--) {
-        // IST-aligned hour boundaries; key matches the backend's
-        // strftime('%Y-%m-%d %H', created_at, '+330 minutes')
-        var startMs = Math.floor((nowMs + 19800000 - h * 3600000) / 3600000) * 3600000 - 19800000;
-        var key = new Date(startMs + 19800000).toISOString().slice(0, 13).replace("T", " ");
-        var rec = byHour[key];
+      var istNow = new Date(Date.now() + 19800000); // shifted = IST wall clock
+      var currentIstHour = istNow.getUTCHours();
+      var todayIst = istDate(Date.now());
+      // today's IST 00:00 expressed as a UTC instant
+      var istMidnightUtc =
+        Math.floor((Date.now() + 19800000) / 86400000) * 86400000 - 19800000;
+      for (var h = 0; h <= currentIstHour; h++) {
+        var hh = (h < 10 ? "0" : "") + h;
+        // matches the backend key: strftime('%Y-%m-%d %H', ...,'+330 minutes')
+        var rec = byHour[todayIst + " " + hh];
         out.push({
-          label: istTime(startMs) + "–" + istTime(startMs + 3600000),
+          label: istTime(istMidnightUtc + h * 3600000) + "–" + istTime(istMidnightUtc + (h + 1) * 3600000),
           actions: rec ? rec.actions : 0,
           users: rec ? rec.users : 0,
           checkins: rec ? rec.checkins || 0 : 0,

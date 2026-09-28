@@ -193,7 +193,10 @@ export const registerAdminRoutes = (app: Express): void => {
           [
             { sql: `SELECT COUNT(*) n FROM botusers`, args: [] },
             {
-              sql: `SELECT COUNT(*) n FROM botusers WHERE last_seen >= datetime('now', '-1 day')`,
+              // "today" = since midnight IST (IST is UTC+5:30, so its
+              // midnight is 18:30 UTC the day before)
+              sql: `SELECT COUNT(*) n FROM botusers
+                    WHERE last_seen >= datetime('now', 'start of day', '-330 minutes')`,
               args: [],
             },
             {
