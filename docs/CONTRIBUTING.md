@@ -649,8 +649,9 @@ Aim for:
 ### Documentation Files
 
 - `README.md` - Project overview, quick start
-- `docs/ARCHITECTURE.md` - System architecture
-- `docs/API.md` - REST API documentation
+- `openwiki/` - Generated, source-grounded wiki (authoritative for behavior)
+- `docs/ARCHITECTURE.md` - System architecture overview
+- `docs/API.md` - REST API reference
 - `docs/DATABASE.md` - Database schema
 - `docs/DEPLOYMENT.md` - Deployment guide
 - `docs/CONTRIBUTING.md` - This file

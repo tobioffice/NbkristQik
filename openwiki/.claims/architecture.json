@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:f0cb7931beb2eece2a1be3945ddd8901fa8cc68a3cf899c288a9f2807e2a7f54",
+  "claims": [
+    {
+      "id": "claim_3ffca15c55e748a9a083859ad301453a",
+      "statement": "NbkristQik runs the Telegram bot and Express API in one Node process, and bot polling starts only after database init, handler module imports, and API server startup.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/index.ts#L38-L85",
+          "version": "repo-lines-v1:sha256:c4bc2c8efc16d7d7dd02629e6850a36c7f61e3e6994b6811e943c69e0447fcee:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZmY3ZDEzMTA2NmM2MDE2NjU5Yjc0Y2UxMzc2NGI0OTAzMmIwNTI5OTIzOTNkZDhlMTUyMjFjZjhlNTAxNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3YjQ1MzEyOGRkNTU2MDFmMjg2MDg2NGM0OWM4OGY4ODE2NjM3MzliZDRkNzBiYzIwNmQ4YjZiYmQ4YWUzYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjNWI1MTVjZTBkOTFlZjNiYzg5YzgwNzZhYWNhYmE0YjRiYTEyYTk2NjRlM2E0ZTlhZDE2YTdkMmYzNzQ5MmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_44d2ca88205a40efae053917fa79c813",
+      "statement": "Startup order is initDatabase, setupBot, dynamic imports of handler modules (including register and registered), explicit registerSyncDbCommand/startUptimeMonitor/startServer calls, then bot.startPolling last.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/index.ts#L45-L76",
+          "version": "repo-lines-v1:sha256:02fd1f21f33e1d675c48df4a4630a276ec7a09e3440e0fbc9959ebf086ea293c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4ZDEwN2RhZjkzMzMzYTY5YzI4MTViNDBiZDgwZjg3OTU2NGJjZTFlMDU0MDNiOTY5M2NjY2QxNTAyODQ1NWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY2ZTE4ZWQxMWViNWNjNTgxNjRiMzc4ODViYTMzZmYyOWYwNDJlZmEwODIyZDVkMWJkODYwODAxZWQwNzgzMDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM3ZDMxZjM1YzRhNmIyZDVmMDQwNTIxODU1NTNjNmMwZDk0NWY0NjBkMjg1Yzc0NmViZjliM2JhOTQ3ZjYyNWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_74ad15bf6fcd4828824c9604622fb5f0",
+      "statement": "Handler registration is an import side effect: the bot is constructed with polling disabled and each module calls bot.onText or bot.on at module scope.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/bot.ts#L16-L17",
+          "version": "repo-lines-v1:sha256:495f58f06ace5d54e248aac9d8d3659919a527b2a1c767361f00e3a3ccaef89b:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGY5NDdjZmRmNjE3YjNkNDdjZDgyN2UxNWIzZmU4MDZhYjJiNWQ5ZjRkZTY4ZjY5MWU4OGE1M2ZkNjg0NjNjOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGI5NzFkZTU4OWI3MThkYWIyMDI3MGRhZThlNTk4ZWI5YjEwMmExMWI0NjExNWU2OTc4MjRkMmI5YjcwZjgxZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI1ODBlOTY0ZjgzYTQ3M2Y0M2Q0NDM4NDYyOTQ5ZDY4YjU2MDBmZGE3ODdmMTYzNzQ1ZDAwZGU4OWNiZjM2YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWFkNDU5NzU4ZTVjYTBhMjQ4ZmY5YzhiNmI5OTZlNmM3YTIyOTU0MWU5YjA5MWM1ZWJlNzA4ODcwZGIwMThlOSJ9"
+        },
+        {
+          "resource": "repo://src/bot/index.ts#L53-L65",
+          "version": "repo-lines-v1:sha256:30721e9a1cf002f267d43453c792ed55853fe0a57fb722602d94ab230e6e5734:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4MGRiMzU1MzI0MjE3ZDNmODlkZThlZGY1Yjc2MjQ2ODk5YTFjOTRjNmZhMGZjOWQ4NDBjNWRlZTE3YjNmZDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwOTNlMTI5MDZhNjFmZDVjMDg5ZmVlOGZjYWZkOTUyZTU3YTU5MDlhMjQ5ZGQxMjUwOTQ5OGQyNzFhNzFjOTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA0N2FlYTQyMDU0MmEzMjVjYjBhMTk3ZGYxOGZmZTNkM2UzNjAxOTA2N2ExNTc3Nzk4MDRiMWE0Yzc3ZDFjYzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVmZTUwZThmMjU3YzBkZTIzZWI3MmEyZThhYjA4NjgyMTBlNDAxNmYyZjllMDEzNTUyODk0MTVmNDU2ZjQ3MDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4d19fe66593140a690dcc06d36232b77",
+      "statement": "The bot exits the process when no Telegram token is configured, except under NODE_ENV=test where a dummy token is used so tests can import modules.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/bot.ts#L7-L14",
+          "version": "repo-lines-v1:sha256:7c40451e6aec5c909763b3796b6fffa5d39ab22b6ae42ea931d5f6e654672fb8:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjRkMWYyMTg5NDZkODZiNmJiYThhY2IxMmUwNmQ0ZTAxMjBlYmUxYWY1NDlhY2ZkN2MyOGQ4ZjdjMjEzYmFhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjZjNmRkYWM0NDA1NzJjNWQ0ZjU4MmIxZTdiNDdiNzExYWE3MjAwMmRmYjgxM2EyNmEyOGQ5OWJlYzQ5OTU5YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2Q2NDA4ZGI5ODNjZmIwOTQ3ZTIzOTNkZjE1ZDJkYTIxNmRmMjU1NDkwZmY5MmIyNDY2NzlkMjM0YjAwODhmYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_6e90c568c09944f199b7072617b85031",
+      "statement": "Bot token and channel selection switch between production and development environment variables based on ENV.",
+      "evidence": [
+        {
+          "resource": "repo://src/config/environmentals.ts#L5-L22",
+          "version": "repo-lines-v1:sha256:f662bb68fc40b3708ac610335e2a7eae98f9fc8b1513f4ef948efd5b399a54b4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4ODk2NDZhNDE2Yjk3MDE1ODQwZWFjMWZiMmFjM2I2ODVmOWY5YjFmY2QzNWVmOTEyNDcwOGZjZTgxMGU5YTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzNWJjN2Y1ZWJiMzQ4YWE2YzYwMjlhNzM4YjcyOTI2ZGY3NGU5MGRkNTc1NTg2M2UxMzhjNjc3YWJjODE5OTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdjNmU2YjA3Y2ZiMTVkM2E0MDljNjc2ZjBlZGI3NGE0NmU2Mjk0YWQ3OTAzYjU3YzhlY2YyMDAxYmVmZTY4ZDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEwZTA3ODBkMWFmYjE0YzA2OTM2MjdlYTIwZGY1YTVkNTk4NDM1NWNkMzgzZDhhYjI0YmI4YTU2MTczYzVlMDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_cdf17150352b4498aa515175641c2742",
+      "statement": "On SIGINT or SIGTERM the process stops polling, disconnects Redis tolerating an absent connection, and exits with code 0, guarded against repeated signals.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/index.ts#L13-L36",
+          "version": "repo-lines-v1:sha256:74013f69e047b520103d945be85b23d8816c6dffd1dcc8a0ade512ea1bb11ec5:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkZTU4YTUwNzRkMzFjNmY1ZjA1NTU5NjFiYmIxMDE5ZDQwOGVhZDNjMjkxMmY4ZjRhOGNlYjJkYzA0MjNhMzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1MWE2MTMxYWRjM2NhMzBjOTYxMzE4MzQ5YmYzYzFmZTRhYzEzNzhiYjU5NzQyYjJhZGVhMmNjM2IyZGM1YTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRiOTk4ODZiMmVmMjczNmYzMmY2MDNlMGI0YzhlYzM2MjJhODNiZDQzZmVmNWU1Nzg3NWJiNjE2ZWY1NWE4OWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY3MWMzNTQ2NzBjOTcwMTE4ZTE2YWE3YjkwY2E3OTdiMmExZTcxMGNiOGFmMjU5NjU1ZGExN2IwNGY4OGQwMmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_465870ea58f543e1976dcbace0bc72c3",
+      "statement": "Unhandled promise rejections are logged rather than crashing the process.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/index.ts#L7-L9",
+          "version": "repo-lines-v1:sha256:5a8cd89cc765a568726deed93252e7ffca20b48218944a242368a601b242c485:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWEyNmZlMzg0ZTJiZTU4OTc1NzY0YjE5MmM4M2M4OGU0OTQwYTk1MWMyNTYyNTY5YmQ4YmUyYmFmNWZmMDExYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjZmNWI0MGIxNTg0NTdkMTc4NjRmMjE3OTA3ODZkZDVhMmVjZGI2NGI2NmE2NTFmNzg4ZDRlMjVjZDMzMDNkMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGVkYjJjNWZhM2FkZTIwYjEwZTM4OGI5MGZmYzVmMmZiMDQ2MWViZGM2Zjk4ZDJkZjc4Yzc4NWQ4ZGM4ODVlMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGI5OTg4NmIyZWYyNzM2ZjMyZjYwM2UwYjRjOGVjMzYyMmE4M2JkNDNmZWY1ZTU3ODc1YmI2MTZlZjU1YTg5YSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e64850b29e5845f0af4f1a642c0b32f2",
+      "statement": "initDatabase is the single schema entry point that creates all tables (including registrations) and indexes before any handler or the API starts.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/init.ts#L12-L86",
+          "version": "repo-lines-v1:sha256:c2d63ab8d6bc298773b9be8de9faf7ed421b59da4d9f1225a6b7fa455c79ebc2:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlMWE2NGE0YmEzYmFlZmM1ZTc2MmVjY2Y0ZGQwZDU5NDk4MmZlNWY2OWJiZTExYTAyNzIxZTUwZjVmMTUxMTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhYzlmNWNjN2RjN2YyOGRjMDgyMjIwYWMzMDM3NzQyZmZlNDkzNzNiZWI4MDM5ZDlkYzUzNGViZTU1ZGY4ODIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRkNjJlZjZhMDY2NmQ3YzA4Zjc5NzFhYWZhN2MyNWJkNzFjMmFjMDk4M2MzNjUxNzE3ZjI4ODIwNmFlNmRjNmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d0db692399874f8c9f04456fbbaa35ef",
+      "statement": "The uptime monitor is idempotent, probes api/turso/redis/portal every 5 minutes after a 15-second initial delay, records per-component heartbeats, and runs a daily prune of uptime, activity log, and expired admin session rows.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/uptime.ts#L149-L168",
+          "version": "repo-lines-v1:sha256:ca69647345f67da5a802d1a5f029f72ed183d9d2d5a109fc9abbdfd032765e7e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzZTU2ODY3ZDMzZWUzOGY5ZTVlNmMwMzhiM2E3MGQ0OTQ4NmQ4NDcwYTc0NjQxNjI5NzUyN2Y0Y2IwZmQ5MWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_07fd4db544e54afda2daab8c85d428bb",
+      "statement": "A failed Redis connect clears the cached connect promise and starts a 30-second cooldown during which callers get an immediate rejection instead of retrying.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/redis/getRedisClient.ts#L43-L56",
+          "version": "repo-lines-v1:sha256:a38e31d4fd20c67e192d843409c3142ef276f005c1f840cdcd0d33bb01f10ab6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjYjI2MjVmNjI4NDU1NjNhOGMyM2QxOGFkMjY3ZDk4NTQ3NDg5ZjU5Nzc3NDJiMWY1ZGRiM2MyY2ZiYjhlMjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJkYjI0MGZlYjc1NzRjOTNiMTYxZDgyMjA2Y2FkMTlmNTU3NWI5ZWRjZDAzMTZiMDVlMDQwZDRlZjkxNWZmNDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/services/redis/getRedisClient.ts#L8-L14",
+          "version": "repo-lines-v1:sha256:9ff9d6ca9b67d11e2b4444bc06444f3b762768deba14ff98cc99aff590ee329b:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjQzZjFiMDY2MWQ3ZDJmMmFhMDFkYTk2NzQxNmM3ZDNlY2NiMjVhZTYyYjZmNmRiOGIyZTRiYzc4NWY3MzU0ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTM4ODMyYzM4OTJlMzJhNTVkYmMzNDNlMmEzYTkxOTdiNmVmYjIyMDU1NjBhOTBhYzFlM2I1YzcyMWRlODUyYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGEzZGQyZDI5OWY4OTA5ZjQyN2I4N2RiZGE2Njc1NTJmZjdlODdlYTY5NzI4MzgzOWUwYTUzMGYzMGRhZWQxNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d9af215e4b8c46b78191b8940dd871de",
+      "statement": "Uptime probes run concurrently with Promise.allSettled, and up/down transitions per component send a Telegram alert to ADMIN_ID.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/uptime.ts#L91-L111",
+          "version": "repo-lines-v1:sha256:a8b79a525e3e244172dc9ade519c8b1591d3cbfb8642b61ae03395d1e086512a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5NWJkNWY5NDgwZTgyMmMwMTlmMzQ5N2MyOTY0YmQ5YzI1ODI2MjlmMDA3NDlmNDE0OTQ2NmU5ZDQ1ZmZjZDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmODgxNjE4MGZiZTUxMGY4MzM0OWUwMTM1Y2ViMmU2ZmZkYTkzNWQ5YjQ1NTQyNGJkNDE0OThjMmE4ZDYwNzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFkMGVhMDc3OTQ4YWRlNjhlMDI5ZTc5MzRhYzMzNjA3Y2JiZTk1MmY1YjQwYWYyM2UyNGFkMzc0MTNjOWI3ZTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM1YTJlNmRmYjA1ZGJjNWMzZTAwMmVjZTQzYzgxYmE1NWM4MjFjMzAyODcxMjQxZWEzY2YxYWQyNGUyZGYwODEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a43bd3345ccf42af8080ac18af69781e",
+      "statement": "On SIGINT or SIGTERM the process stops polling, disconnects Redis tolerating an absent connection, and exits with code 0, guarded against repeated signals.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/index.ts#L14-L36",
+          "version": "repo-lines-v1:sha256:393735466028d8d4a2ada008c2a61635763cb25c802d28630bd955868b0c161e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlZjc2OTllZGU4ZGQxZmU1OTdmNDk3NTg5MTEwMTUyZWM4MGNhNWJjZGJiODNlMzM2ZmY0YzJkOGZiNzZkNTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1MWE2MTMxYWRjM2NhMzBjOTYxMzE4MzQ5YmYzYzFmZTRhYzEzNzhiYjU5NzQyYjJhZGVhMmNjM2IyZGM1YTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZlZGJkNGEyYWQ0ZWY3MzBjYmEzM2E4Yjg4YmVjNmMwZjI0Yjk3NWJmZWY2NmUxMjAwN2U5YmRiNWQyMGM0NjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY3MWMzNTQ2NzBjOTcwMTE4ZTE2YWE3YjkwY2E3OTdiMmExZTcxMGNiOGFmMjU5NjU1ZGExN2IwNGY4OGQwMmUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-09T23:13:13.880Z"
+  }
+}

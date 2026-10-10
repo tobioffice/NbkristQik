@@ -74,7 +74,7 @@ describe("Academic Integration Tests", () => {
       const message = await academicTG.getAttendanceMessage();
 
       expect(message).toContain("Error");
-      expect(message).toContain("Unable to fetch attendance");
+      expect(message).toContain("Couldn't fetch attendance");
     });
 
     it("should return error message when getMidmarksJSON fails", async () => {
@@ -86,7 +86,7 @@ describe("Academic Integration Tests", () => {
       const message = await academicTG.getMidmarksMessage();
 
       expect(message).toContain("Error");
-      expect(message).toContain("Unable to fetch midmarks");
+      expect(message).toContain("Couldn't fetch midmarks");
     });
   });
 

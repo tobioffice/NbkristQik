@@ -40,7 +40,7 @@ export const ErrorState = ({ onRetry }: { onRetry: () => void }) => (
         <line x1="12" x2="12.01" y1="2" y2="2" />
       </svg>
     </p>
-    <p className="text-slate-400 font-medium">Couldn't load the leaderboard</p>
+    <p className="text-slate-400 font-medium">The leaderboard didn't load</p>
     <button
       onClick={onRetry}
       className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60"
@@ -59,7 +59,7 @@ export const LoadingSpinner = () => (
 export const EndNote = () => (
   <div className="text-center py-8">
     <p className="text-slate-600 text-sm font-medium">
-      ✨ You've reached the end ✨
+      That's everyone
     </p>
   </div>
 );
@@ -77,7 +77,7 @@ export const EmptyState = ({
         <p className="text-2xl mb-2">🔍</p>
         <p>No results for "{search}"</p>
         <p className="text-xs mt-2 text-slate-600">
-          Try roll number or partial name
+          Try a roll number or part of a name
         </p>
       </>
     ) : sortBy === "midmarks" ? (
@@ -85,14 +85,14 @@ export const EmptyState = ({
         <p className="text-2xl mb-2">📝</p>
         <p>No mid-marks recorded yet.</p>
         <p className="text-xs mt-2 text-slate-600">
-          Marks appear here once faculty publishes them. Check attendance
-          instead.
+          They show up once the faculty publishes them. Attendance is ready
+          in the meantime.
         </p>
       </>
     ) : (
       <>
-        <p>No records found yet.</p>
-        <p className="text-xs mt-2">Check back later!</p>
+        <p>No records yet.</p>
+        <p className="text-xs mt-2">Check back after the next sync.</p>
       </>
     )}
   </div>

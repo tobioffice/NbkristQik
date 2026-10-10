@@ -14,7 +14,7 @@ export default function SearchBar({ value, onChange }: SearchBarProps) {
         aria-label="Search students by name or roll number"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Search your name or roll number..."
+        placeholder="Search by name or roll number"
         className="w-full bg-slate-900/50 text-slate-200 text-sm rounded-xl p-3.5 pl-10 border border-white/5 focus:outline-none focus:border-indigo-500/50 focus-visible:ring-2 focus-visible:ring-indigo-400/40 placeholder:text-slate-600"
       />
       <span

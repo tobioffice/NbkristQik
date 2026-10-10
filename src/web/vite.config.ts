@@ -5,6 +5,15 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   base: "./",
+  build: {
+    rollupOptions: {
+      input: {
+        main: "index.html",
+        register: "register.html",
+        report: "report.html",
+      },
+    },
+  },
   server: {
     // local dev: proxy API calls to the backend started from the repo root
     // (pnpm dev) so no CORS/env juggling is needed; VITE_API_URL still wins

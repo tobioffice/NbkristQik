@@ -23,6 +23,7 @@ import { ADMIN_ID, N_USERNAME, N_PASSWORD } from "../config/environmentals.js";
 import { BASE_URL, BRANCHES } from "../constants/index.js";
 import { makeSessionToken } from "../services/student.utils/portalSession.js";
 import { getClient } from "../services/redis/getRedisClient.js";
+import { redisKeys, cacheFlushPatterns } from "../services/redis/keys.js";
 import { turso } from "../db/db.js";
 import { buildStudentRow, StudentRow } from "../db/student.model.js";
 import { logger } from "../config/logger.js";
@@ -316,7 +317,7 @@ async function upsertStudents(ctx: SyncContext): Promise<void> {
 // ---------- phase 6: flush stale caches ----------
 async function flushCaches(p: SyncProgress): Promise<void> {
   const redis = await getClient();
-  const patterns = ["student:*", "attendance:*", "midmarks:*", "lb:*"];
+  const patterns = cacheFlushPatterns;
   for (const pattern of patterns) {
     let cursor = "0";
     do {
@@ -338,7 +339,7 @@ export const registerSyncDbCommand = () => {
     const chatId = msg.chat.id;
     const redis = await getClient();
 
-    const current = await redis.get("sync:semType");
+    const current = await redis.get(redisKeys.syncSemType);
     const arg = match?.[1];
 
     if (!arg) {
@@ -352,7 +353,7 @@ export const registerSyncDbCommand = () => {
       return;
     }
 
-    await redis.set("sync:semType", arg);
+    await redis.set(redisKeys.syncSemType, arg);
     const label =
       arg === "1" ? "1st semester (11/21/31/41)" : "2nd semester (12/22/32/42)";
     await bot.sendMessage(
@@ -372,12 +373,12 @@ export const registerSyncDbCommand = () => {
     const yearArg = argStr.match(/(\d{4}-\d{2})/)?.[1];
 
     const redis = await getClient();
-    const storedSem = await redis.get("sync:semType");
+    const storedSem = await redis.get(redisKeys.syncSemType);
     const semType = semArg || storedSem || null; // "1" | "2" | null(all)
 
     // persist if provided explicitly
     if (semArg && semArg !== storedSem) {
-      await redis.set("sync:semType", semArg);
+      await redis.set(redisKeys.syncSemType, semArg);
     }
 
     const semLabel =

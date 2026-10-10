@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:280258b680bb5d3ac0cff950fcd07bd5c9001fdf9415a550a68298a83a1fb154",
+  "claims": [
+    {
+      "id": "claim_a90dfd61d635483683ab404253b3f629",
+      "statement": "handleRollNumberMessage processes a roll number in order: persist the userId-to-roll mapping, rate-limit check, format validation, authorization, activity tracking, then send inline options.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/academics/academicHandler.ts#L123-L164",
+          "version": "repo-lines-v1:sha256:baa681269d4cd0ae797215601f1724fd0fe58f1d41856e7270754b05e89f0139:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhZjBhMzMxYzUwYTEzOGI0YTFlZDI2YTFiZDI3MTEzNTI1NzE5ODEwNTVlMDQzNWRkZDE1MTk0MTZkMTE2MDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjllYWVjOTEwMmVhMDc0OTczZWMwYmUxMWI1OGYxZjkzYjBiNWI4NWM3ZjkwYzgwNDYwODMxNmEzOWJkYWYzZmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE5ODcyOThhYzM0YjI5Mzk5ZjJjOTliN2IyMmNiM2VmNGQ4NWJlNjQyZWJjNzlhNjBhMjAwYWQ4MzEzZDY5MDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f90f0f11374741ba9e563ad5332c67fe",
+      "statement": "The bot rate limiter allows 10 requests per user per minute, and roll validation uses the shared ROLL_REGEX in src/constants/index.ts.",
+      "evidence": [
+        {
+          "resource": "repo://src/constants/index.ts#L37-L37",
+          "version": "repo-lines-v1:sha256:10bb3560345c52e688a19306c76b624962f15072803c38e6149ba83d11f8a482:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTBiYjM1NjAzNDVjNTJlNjg4YTE5MzA2Yzc2YjYyNDk2MmYxNTA3MjgwM2MzOGU2MTQ5YmE4M2QxMWY4YTQ4MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTBiYjM1NjAzNDVjNTJlNjg4YTE5MzA2Yzc2YjYyNDk2MmYxNTA3MjgwM2MzOGU2MTQ5YmE4M2QxMWY4YTQ4MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2I1OWJkZGMwZDA1YzMwMTc4Nzg1MzRkZTQ1ZGMyZTYxNmU1YjQwMDcwZGI0NjJjNjk4Y2ExOTY3YjU3N2M1MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzM0MTY0YWM0ODJkNzcyMTA2ZWEwZjIxOWZkODZkMDI0OWFmM2U4MDNhZTUyYWZiMDU0ZWQ4ZjZiYzg1NWFmOCJ9"
+        },
+        {
+          "resource": "repo://src/middleware/security.ts#L190-L235",
+          "version": "repo-lines-v1:sha256:31dc4b829142ad563214084c4660f46571be2d2efce85d3d0f867161b1f3d262:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4MDNkOTgyZDUzNmZjNTY3ZGQwYmFhNjgxNjY1NzBhYTAyNjRjYmMwMTJmNjY5NzlkMmQyOTg5MDA3YzE4MjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwMzIxODg3OTMyZTI1NTI1YjBkNTY3M2JmZGEyMTg4YzBmZjFhMTc4YTc3ODMwZTMxNTJlMGJjMmQ4ZTRjZjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ1MDhkNDRhNzMyNTYzZjA2YmZiYzNhYmRlYmE5ODM1MDA3YmQ0MThiZjdkZmFhYjUyOTAzODM0OWNjZDRmZmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_39184c33f944442f9038205d5c272bb8",
+      "statement": "In the chit-chat group the bot deletes roll-number messages and sends a self-deleting notice, and callback taps there get an alert instead of an action.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/academics/academicHandler.ts#L167-L181",
+          "version": "repo-lines-v1:sha256:3a6535618c94c89d5b8891bc726ca2ef965939968db89a80f9f468806aa7897a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3NWI0OWY0YzM3ZDgzOTcyNzkxN2E4NWM5OWQ3Zjk2ZDFmZWJjMWNmYWVlNWM2OGI4Nzc5YjAzYWE0MWY4MWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQxOGU2NDZhYjQzYWM3NWRjOTliYmI3MjBhMWNiMWI2ZDhmYzZkZDFkM2ZhOWFiZjA4OGY1ZDFiMDdlZTYyYzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQyOGJkYzU2NTI4MTEyYmMxNWNlYjg4Yzk0OTFhYjE0OWZjMmUzMzVkMDZjOWE3OGU0N2ZmNDRhOGNmOWU5YWMifQ"
+        },
+        {
+          "resource": "repo://src/bot/academics/academicHandler.ts#L199-L208",
+          "version": "repo-lines-v1:sha256:a35346117d87f85eb36535261f48d5d723120f25c86d72ecfc4dd38b4d50211f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NTYwYjJmOWM0MDQ1NGE3NDNkYzViNzM2OTkyMDU1YmIxNzkyYWRjOGU4ZWQ5OWE2NTFjZDg3ZjdkYTU4NDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI3NzlkMTE4ZDZlM2NiZjQ1MDUzOTc0OGRlZTdhNDMwN2FjYmU2NDQ2Y2JhMjk3ZjI3NjBmYTVkMGJiYTFiYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyMzRjNDBmMDE4ZDZjNDBjNmFlZTM0ODVlYzUzY2E4N2IyNDdlN2U4MjkwMjg0MTJiODE5YjIxOGY5OWRiN2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ef5e3597635b4eedb740c9ce87984fac",
+      "statement": "The callback handler is wrapped in a try/catch that answers with an error alert on unexpected throws; inside, it skips dailycheck, rate-limits and authorizes the actor, tracks the action, then concurrently deletes the menu message, runs the action, and answers the callback via Promise.allSettled with rejected steps logged.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/academics/academicHandler.ts#L210-L291",
+          "version": "repo-lines-v1:sha256:c4d633753a0da940d95b70d7c827582c452678420ff6c13418405aa898858b83:eyJzZWxlY3RlZExpbmVDb3VudCI6ODIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2ZDIxMjQ2NTljM2M2NmMzYTNmMmIyMTkwZDBkMTY0ZTg3MzIxNWRiMDVhOTlhMDZkOGQ0OTdhNjZmYzNkZTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhNTE2Mzk5MmE0NmVhNTU2ZmVmM2RhODgyNGE2NGVmNTg5MjA0MTJlMTVmMWQ0YjM1NDFkZTQ3YjM3MDZiMDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZlMmI4M2RiODUxOTY0YjRkMmNlMzE2M2Q5MTIwMDIxMTFiMzkzM2NlZTBlNGFiMWZkOTZlNGU0OGY1NWVmNzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0fb7a84eeef047978146de38b867e30a",
+      "statement": "Callback data uses att_, mid_, and bunk_ prefixes followed by the roll number, and the roll is re-validated before each action.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/academics/academicHandler.ts#L293-L325",
+          "version": "repo-lines-v1:sha256:3f36940ecbe8079544300d0bade156f7d052bca4da2cb6feeb4ef9f2cd05a906:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhhODEwYTdlM2QxZWExYjdkMjc4NDU4YzQ3NWM0OTg2Mjk3MDU0YzM3ODNlN2RjYjc4MDdmM2Y1ZjcwOWQyMzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9abed687d1364f83b0ccaeb096b2dc9c",
+      "statement": "The shared fetchAndEdit flow sends a placeholder message, fetches content, then edits the placeholder in place; edit failures are only warned and fetch errors are sent as a new message.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/academics/studentActions.ts#L17-L52",
+          "version": "repo-lines-v1:sha256:86f0d6950e0f8a5915fbde5b5a36a24db8bd98ab812f555ec13f77cafa925c4c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhMjJjMDNiNjRhY2U0NTI5OGNlNDVhYzBmMzkxODMzNzRjMDQyMDVkYzQyOTExMjQwZWRjNGEwMTdmZjMwM2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyZDk4OWZkZWVjNTZmN2NlMzM2ODk0N2QyYzEyMGNlYTE5N2ExNDgyNDZjOGU4OWUzMzM2YjYyMmQ4MDc4MDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU3MGYyMmRlOTcyMGI3NWY5Yjc4M2FjNzZhYjIxNzZjNjhkZDg0MzQyMDBiYjZmOWVjZTRlMTY5ZjJlY2FjZWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0770e17279394282b79e594aa03b1903",
+      "statement": "student.service builds an AcademicTG per roll for attendance, mid-marks, and bunk plan; AcademicTG catches errors and maps typed errors to user-facing HTML messages with Asia/Kolkata timestamps.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/student.service.ts#L3-L16",
+          "version": "repo-lines-v1:sha256:921eb9c922af58a63d22483c445ee5a0a741bf2271baa875699068b8cb28916b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiNDZmNWJjYTAyMGUwZDc3ZWM3MzNkZjNiZWQ2Y2YzZTBlN2EyNmFhODEyMDFhMzE3MTM3MjAyNWE4MDYwOTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyZWZjZjJhZTZlYzhjMTIyYTY2ZDc0YjVmNjk2MTRiNGIxMThlYmJlZTQyMGU3MjIyMGFmNTgyZDgyNmRlYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk1NThlNWU4NDNmNmUzODg0NGFkYzgwNjk3NTVhMTcyYmU3YWFlYWY2Y2E0NzE3ODA2YWQ4MDE3MjE5MWQxMTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/services/student.utils/AcademicTG.ts#L27-L100",
+          "version": "repo-lines-v1:sha256:f2ae4da537fcef74b985ece1da5d90f9e968dccec87e798713bba13bbcfb6316:eyJzZWxlY3RlZExpbmVDb3VudCI6NzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlNzU3MDU2NmE1MTJmYjQ1ZDZiNTA2MjM2YzdhMGUxN2UzZjk0M2QxMzY0MGZlMWQxZDQ2NDRjMWFhOWY2ZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYzMWY3YTNlYjBkY2M0ZDlhZjQ2YTY1NTA4MTM0NTU5Y2FkM2Q3MWVlZjg1N2YyMDczNGIwODMyMzg0YzRlOTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_73151df3556b4e509e325efde2bc926a",
+      "statement": "The bunk plan computes skippable classes as floor(att/0.75 - cond) and recovery classes as ceil((0.75*cond - att)/0.25) against a 75% target, per subject and overall.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/student.utils/formatters.ts#L98-L152",
+          "version": "repo-lines-v1:sha256:d2d5df70636fb11453ffeeeb3e593c5358073325ef8c43a8f9458ee611201272:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyOWVmMjk1MDMzZDczMWVlMGE2NDJlYTIzNzVkODk1OGI3NDA2ZDk5ZGMyMWM4ZDZkZGFiYmE4NzcxNzYwZGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc5NjNmNTc5ZWQzN2Q0ZWExOGUyNjhhMWFkYjA1NWEzODQ5ODMwYzk2NWM4OGU1OTlkMDk5YzQ5MzEwNjg4YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRjMmQ0Y2M5YTRhMWRlMDg5Yjc5NDMwZDI4M2NkZDg5NDI0ZjViMmE2MzczY2Y5N2ZjOGVjM2E4MjMzYTQ4YTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f373bbf538c74a278cc3f7f0dfa7848f",
+      "statement": "Attendance and mid-marks formatters produce Telegram HTML pre tables with a progress bar, status emojis, and truncated subject names; they no longer accept an isCached flag.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/student.utils/formatters.ts#L11-L96",
+          "version": "repo-lines-v1:sha256:33fe7e938c984dd7eea3f0703d21b0fa0f726def8d47b9042398c0b6f35ada57:eyJzZWxlY3RlZExpbmVDb3VudCI6ODYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5NWRiNDk0NTMzNDYyZjBmMDRiNzUzMWQwMThmM2EwZGYwY2E2NmQzY2ZmZGFlODVkMjRmM2ZhMTFkZGRlYjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlMWRhZWRhZjBmYzY0Zjg4ZjllMjYwMTZhZjA5NjA1MGE4NmJhOWQ1OWNiNWRkNjE0MGMyNmVkYWFmNGY1ZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1MmZiYWJlZGRmZDU1MzgwZGY1ZTJlZjY5NmYyMmZkMzBkYTE2OGM0YmEwNDQwNjA0NWEwNTQ2N2EzMzhiNWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlkZjIyZGZjOTU4NzVmYWYwMzk5Yzc3YjM1OTMzY2M5MjFjZjE3YmNiNjZlYWY0ZGVjYjhiNTI4YWQyN2Y2OGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_747dbd8e63ec47f8bacb6fc32f40eabc",
+      "statement": "isAuthorizedUser degrades when Redis is down: cached-membership read failures return false and a throwing live membership check is treated as allow, with the daily check-in gate still applying.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/academics/academicHandler.ts#L31-L66",
+          "version": "repo-lines-v1:sha256:1c13d107aa91bd16e46f93de7258a5d43f3366eb6275530e3170800ca932e097:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2NTk1ZjRlZTVmZjYzZDUwOTUwNDE5ZGMzNDQxNDUxMzg1MWRjOTczNmZkMTdhNGY3YmZhOTMwYjI2MWI2ZjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxN2QzMzEzZjE0ZTNlYzliZDY3MTNiZmVkYTAwZTc2NDBjZTIyM2ViNmQ1ODNmMzUyNDE1MGQxMWIwYWFlMTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY4NDM2NDVjYWE1ZjQ3Y2M5NGU5ODE5YjFiN2UzZjU0NTZjMzg4YTEyOGEyODFkNjRmZWE1MDUzZDllNjdhYWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE2MWQ4MWU5ZmNmN2IzZTgzMjdlYWQ4NTgwYTgwNDU5NTBkNWQ2NWU2ZmZiZDJmNGYyZWI1ZTAxMThkZDg4OTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0184132538e24edc8dc636a84b653612",
+      "statement": "The roll handler's top-level catch replies to the user with an error message before logging, so unexpected failures are not silent.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/academics/academicHandler.ts#L188-L196",
+          "version": "repo-lines-v1:sha256:02994967f0951cfd529046925872f3a41b4a0f9fbd8a5b06c33922dd9261587e:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFhMThkOGY2M2EyMjU0OGI5MWFmMDJlYWYyZDViMDIwNDk2YmIzNjQzYjgyYWE2MGVkNmRhODQxMTVlODgxNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2EzZTQ2Zjk0Mjc2YjZmNmY0ZWQxZjAyYWY3OGJlZjZhMmVlMWM0MzlkZDU1ODRiOTczOTQ4MzEzMjE0ZDJiNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWEzNjMyZjI3ZGEwYjA3ZTBiYTkxYzcyMDcwZWExM2FlMTU4NGUwYTg0ZTM5NmUwMjZlMzgwNjY4NWZhZjdkOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzZmYWM4Yjc5YTU3ODY1ZWIxZDA4NGU3YjFjOTdlOWUyZDljOGRhYjcyNzkzNzQ0MzE2MmMxMjI1NDhkMWRjMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a4b2d6213bf64d09948b3ec343ab7962",
+      "statement": "fetchAndEdit sends a placeholder, edits it in place with the fetched content, and sends a fallback error message if fetching throws.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/academics/studentActions.ts#L17-L52",
+          "version": "repo-lines-v1:sha256:86f0d6950e0f8a5915fbde5b5a36a24db8bd98ab812f555ec13f77cafa925c4c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhMjJjMDNiNjRhY2U0NTI5OGNlNDVhYzBmMzkxODMzNzRjMDQyMDVkYzQyOTExMjQwZWRjNGEwMTdmZjMwM2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyZDk4OWZkZWVjNTZmN2NlMzM2ODk0N2QyYzEyMGNlYTE5N2ExNDgyNDZjOGU4OWUzMzM2YjYyMmQ4MDc4MDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU3MGYyMmRlOTcyMGI3NWY5Yjc4M2FjNzZhYjIxNzZjNjhkZDg0MzQyMDBiYjZmOWVjZTRlMTY5ZjJlY2FjZWIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-09T23:13:13.880Z"
+  }
+}

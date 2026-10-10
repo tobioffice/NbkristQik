@@ -66,11 +66,37 @@ export const initDatabase = async () => {
         expires_at TEXT NOT NULL
     );
   `);
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS registrations (
+        userId TEXT PRIMARY KEY,
+        roll_no TEXT NOT NULL,
+        display_name TEXT,
+        registered_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        message TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'open',
+        admin_reply TEXT,
+        replied_at TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
   await turso.execute(
     `CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_log (created_at);`,
   );
   await turso.execute(
     `CREATE INDEX IF NOT EXISTS idx_activity_user ON activity_log (user_id, created_at);`,
+  );
+  await turso.execute(
+    `CREATE INDEX IF NOT EXISTS idx_reports_created ON reports (created_at);`,
+  );
+  await turso.execute(
+    `CREATE INDEX IF NOT EXISTS idx_reports_user ON reports (user_id, created_at);`,
   );
   await initStatsTable();
   await initUptimeTable();

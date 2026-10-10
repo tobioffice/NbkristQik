@@ -34,7 +34,7 @@ describe("AcademicTG - Error Handling", () => {
 
       expect(result).toContain("⚠️");
       expect(result).toContain("Error");
-      expect(result).toContain("Unable to fetch attendance");
+      expect(result).toContain("Couldn't fetch attendance");
     });
 
     it("should log errors to console", async () => {
@@ -78,7 +78,7 @@ describe("AcademicTG - Error Handling", () => {
 
       expect(result).toContain("⚠️");
       expect(result).toContain("Error");
-      expect(result).toContain("Unable to fetch midmarks");
+      expect(result).toContain("Couldn't fetch midmarks");
     });
   });
 
@@ -141,7 +141,7 @@ describe("AcademicTG - Error Handling", () => {
 
       const result = await academicTG.getAttendanceMessage();
 
-      expect(result).toContain("Unable to fetch attendance");
+      expect(result).toContain("Couldn't fetch attendance");
       expect(result).toBeDefined();
     });
 
@@ -150,7 +150,7 @@ describe("AcademicTG - Error Handling", () => {
 
       const result = await academicTG.getAttendanceMessage();
 
-      expect(result).toContain("Unable to fetch attendance");
+      expect(result).toContain("Couldn't fetch attendance");
       expect(result).toBeDefined();
     });
   });

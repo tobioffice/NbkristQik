@@ -3,16 +3,13 @@ import { trackMessage } from "../../services/tracker.js";
 
 bot.onText(/\/help/, (msg) => {
   trackMessage(msg, "command:help");
-  const helpMessage = `<b>How to use NbkristQik:</b>
+  const helpMessage = `<b>How NbkristQik works</b>
 
-1️⃣ <b>Send your Roll Number</b>
-   (Example: <code>23KB1A0599</code>)
+Send your roll number, like <code>23KB1A0599</code>, and I'll show your attendance and mid-term marks. That's the whole flow.
 
-2️⃣ <b>Get Instant Results</b>
-   • Attendance 📊
-   • Mid-Marks 📝
+<b>In a hurry?</b> /register saves your roll once, then /attendance, /midmarks and /bunk work in one tap.
 
-<i>That's it! No complex commands needed.</i>`;
+Spotted a problem? /report files it with a trackable issue id.`;
 
   bot.sendMessage(msg.chat.id, helpMessage, { parse_mode: "HTML" });
 });

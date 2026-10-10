@@ -35,7 +35,7 @@ vi.mock("../../src/db/fallback/response.model.js", () => ({
 vi.mock("axios", () => {
   class AxiosError extends Error {
     code?: string;
-    response?: any;
+    response?: unknown;
     constructor(message: string, code?: string) {
       super(message);
       this.code = code;

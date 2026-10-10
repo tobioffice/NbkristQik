@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:e886ae4ff1e25298979971a88e09f729b7c57b6dac5ef628865c0e1453c65a76",
+  "claims": [
+    {
+      "id": "claim_b7e63221515c447592d6f01aebcc5bda",
+      "statement": "The daily check-in gate is dormant and returns unlocked when no checkin:post:msgId key exists in Redis, and any Redis failure also returns unlocked so users are never hard-locked.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/dailyCheckIn.ts#L38-L49",
+          "version": "repo-lines-v1:sha256:a93d8c05505524f10116d9e457bc5692c0f392b05d78da5e068fad9fcd8f63e1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZmOTFkMTUzNWExZWEzYTFjNWIxMDhlNTNlZDNlNTc4NzJkMjVhNThkNWM1MmEwZmRlYzhlNWQxNjUyZWIzMWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRlNTgzNDRjNWE2NWEzNjNmNmM5Y2Y2YmNhMjM1ZTlhYjI4MWE3NTI4ZmJlNWUxY2JjZTk2YzdlYzU4ZTY0YzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjNTYyNjM0MDM4MWRhYzFlZDBmMGM2ZWM1ZWE2OGJmZjUxZTAzOWRiOTM4OWQ5NmMyOTI3YmVjZjE5NTAzOWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9054b13714e6453fab4e77169df84e4c",
+      "statement": "getCheckInLink deep-links to the stored check-in post message id, falling back to the channel root or bot link when Redis or CHANNEL_ID is unavailable.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/dailyCheckIn.ts#L51-L65",
+          "version": "repo-lines-v1:sha256:5941fdb6240669a29b5547bee2b2af536438bfe2470ddf600909d15776f92bcd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwNGRkNDk1YjZmMGI5NWFmMWMwYTVlN2U0MmZjZmFmNWRmODU4ZTE4ZmFmMTliOTFhNGQ1MGNjNjU1MTk0YmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhM2Y1MTQ5MDQ5Yjk3NzA2N2NlMmI4ZDQwNGQ2NDUzM2I3ZmQ0MTI0MmZjYzJmN2M3ZDNlY2IwMDkyN2YzNmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a39362f7941244ca8cdba68f4d074540",
+      "statement": "/postcheckin is admin-only; it deletes the previous pinned post if known, posts a new message with a dailycheck callback button, pins it silently, and stores the new message id.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/dailyCheckIn.ts#L103-L124",
+          "version": "repo-lines-v1:sha256:271120a72c021a36a206702dec79bf7b10f21f072402ba6bd293145152b096ab:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2NzU0NWZiZjQ3MTAzNWJkZTcwMDI0NmRiZTdmNDg0MzgxZWMwOWU4MzhjOGVlMWI4NjFiNmU3YWM5ODJmMDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRkMmE0ZmZlMDM5ZjFlNzJmYzJhYWUwOGEwNzliYzFjMGVlNGVhYzZhZjg4YTE0OWE0NjhjMGE1MWRjNmI0NWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhjOWM5MDMzNTZlMTA3M2Q1YmY3ZmU2OWJmOTgwZTcyYWUxMTA3YWMxOTY4ZDIzYWVjYmI4ZWZiNDZmODc4NDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_40f8f16251354364b12d4c57fcaecf59",
+      "statement": "The dailycheck callback sets dailyUnlocked:{userId} with a TTL until the next IST midnight (UTC+5:30, minimum 60 seconds), adds the user to qik:users, records a daily_checkin event, and answers with a link to /start=unlocked; the TTL helper takes an injectable now parameter.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/dailyCheckIn.ts#L126-L158",
+          "version": "repo-lines-v1:sha256:fdcd4a976e4dd14f01f5007573a3deebffb5e4f99c07c4dfb55d7b84ca783dc2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzNGNhMjc4ZGZlMjQzMmNlMTA4ZTQ0ZTliZTcyMTdmZDA2ODE1ZmNkNjk0NWRhN2UxYTA2OTgwMjVmYTQ0OGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImViMWVhMTVhMGY3YjFkNzc0MWMwOTJkZTgwMmQzOWZkYTQ0MzRlY2YwNWY5NDM1OGM2ZjM2OWNhOTExNmUyMmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIifQ"
+        },
+        {
+          "resource": "repo://src/bot/dailyCheckIn.ts#L20-L36",
+          "version": "repo-lines-v1:sha256:5b9b35a5126001eaa6d2eae5d7c68af74eb5b72f55cbbc42339d2fe45cdb16c1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBkOWE0NzIwMDBmZmQ4NDIwOTY5OGEyZDY0YzA2ZGYyN2MxYjVhMDA0Y2RiYTYwZmRmZTcxNzY1ZWEyZmJhZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkxYTBhMTBmYWJiZTQ2ZGEyZGFmYjA0YmJhMDZmN2RhOWQ4NTRkNjMxOWZmMTFkMmQ4YzgxZDMxYWU0NzM1MDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllOWNkNjNhYTRjMWUyYjA3ZWZmM2ZlNmIyZGYyMjYxZGM2YzI1ZjI3Yzk5NDkxYzFiNzZiNDVjNmQ2NWYwMzQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8e9b76ca7a304c48b0df7b2f038b31b4",
+      "statement": "The academic handler ignores the dailycheck callback so it is not rate-limited or treated as a menu message.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/academics/academicHandler.ts#L236-L238",
+          "version": "repo-lines-v1:sha256:df945e9fe98e9c71adcbfc9146ce630fca5d262e572b2e1ab9550d7380cb20f7:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGRiY2IyMjQxNjE0MzdjYjM0OGQ0NjM4ODcxYWFhNzgxNDFiOTY0ZThhZmYyNjgzYThiNmExMjg1ZGMyYzYwZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTUxYmI5NTViMWQ1NTY1Yzc1NTJiMzY4YzZjN2ZiZWRkM2U3ZWI5NzY5MjFjMjAzYzQzYjlkMWE3MWJhNmI0NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzZlNTFlMGQwMDhmMTZjN2EyYjcwMDJlOGJjNDY1NDg3YWUyZjVhMzNiMDhmNzNmNTM1ZDAwYmYyOGI4N2ZlMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2YxNjFjNThjODEzMGJhZDU5YTM2Yjg0Y2Y2MDc2MThhMDY4ODgzZGI1MjQzMTNjYWEwNTdiY2YzZmRlZDg2YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8491a5fb815a4b25822aecbbee355e3f",
+      "statement": "/setsem persists the semester type in Redis under sync:semType and /syncdb accepts inline semester and/or academic-year arguments with the stored value as default.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/syncdb.ts#L336-L362",
+          "version": "repo-lines-v1:sha256:c228312f4a762a1e15aad8e867f15cac47b7bd4f5a6aea886dba5bc7421225e3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5OGE4MzNhODZmMTQ1MmQzZjIwZDg0Y2RjYzExMTNkODcxODQxOTU4ZDVjN2ZhNWYzNjg0OGE1MTQ2ZGI2ZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0ZTQyMDhjZDZmZmI4YzRhMzU0N2IyZjU0YWRhMTk5NzhjM2YzNjVlNzhmOTUwMmVmNTE0NWNkZDJhYTg1NDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5MzE0YzNmNDhiNThkMDg2ZDkwN2JkNzNkYjhkMWZhYzQ0MTk5NmNiNDQ1MzZjYTBhMzIxMzE4ZmQ0YmYyMGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNlNDA4ZjlmMmZkNDdhZTVhY2FmMjBiMjRlOWY0ZWUyZDMyZWFhMGJlZjMyMTdlMDdkNjRhNjlmNTVjZDRlZjgifQ"
+        },
+        {
+          "resource": "repo://src/bot/syncdb.ts#L366-L466",
+          "version": "repo-lines-v1:sha256:9e4959fa21fe97cd8d285ba91a35a4346cb2fdf06ededa97e86c74960eb5175d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJkNTJjZDRmZjM5ZGU2NjNkZjczZDExYTYxNDcyOGNhY2Q0ZjM0ZGE3OWI1YTM4MGY1NTczZDRhYTk0YThlNzI4IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIzYTNlNDZmOTQyNzZiNmY2ZjRlZDFmMDJhZjc4YmVmNmEyZWUxYzQzOWRkNTU4NGI5NzM5NDgzMTMyMTRkMmI3IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJjZTQwOGY5ZjJmZDQ3YWU1YWNhZjIwYjI0ZTlmNGVlMmQzMmVhYTBiZWYzMjE3ZTA3ZDY0YTY5ZjU1Y2Q0ZWY4IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MSwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJhYTFkMWE2MzM5MDIyOWM3OTgzNDdlODNhMDQwNTQ0MWM5NDAwMDM1Mjg0YWQxNjhjMWJmNmNkZjFkNzBhMzcwIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_6b2472632bab4955b7631a7c4a6d1c94",
+      "statement": "Sync phases one and two log into the portal with a generated PHPSESSID and detect the current academic year and valid yearSem values from the portal dropdowns.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/syncdb.ts#L77-L128",
+          "version": "repo-lines-v1:sha256:b9ceab0c6edd64c594db54a9e1c07888dab5f18134ff4c52dc03be8d63f6f6db:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI0NDUzYjEzYTVhNTVjMjgyM2NmOGQxZjI1YWRkYzUzOTU4NWYxN2JhYjFiODc3YWI1MjE1NzAzYjhlNTRkODgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIwZjY3NjI2ZjM4MDAwNjg3NjYyMzZkYjZiMmY4NzQ0ODA0MWZhNTM1ZGZiNTMwNTFjNzNiMzk5N2JiZGM1NjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYyOWQ3YmJkMjU3NDRiOWYxYzU3MmM3Y2QzYzY2MTU2OTM2YTI1NzE1MzYzYWIxODk2Yjc0ODYwM2E1ZDZjMjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1ab88e1beeb3448eae897566ae1edf54",
+      "statement": "Combo scraping uses a pool of 3 workers with 120 ms sleeps, treats a response lacking <td>1.</td> as no class, and extracts rolls from td.tdRollNo elements.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/syncdb.ts#L135-L246",
+          "version": "repo-lines-v1:sha256:054dd263d1fe6daf1b817f7cb1d436cd5c50b4c2c96f82140f682dbf34d27e3d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0MThmYzNiMGNiNTY3MmU4MTA4ZjY5NzA1ZDYwMzIzOTljNzAzNWNjZTQzMjFjODA4YmZkZDBhMzljZDY3NjVhIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIyMTQ0MzFjNmQxMjQ4MjYwODViYTQ5MjBkMTgxYTdhYmQ2MmQ2NmRhOTI5Yzk1ZTlkNWM4YzYwNTQwMTZhYTMxIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJjYjNhMGUzYzljOTM1NTUwMzJhMDg3YzY3ZTVkNGIwY2U2NmE2YmQ0OTQ3YTQ2MDA3NTg4MTBlMTQ0ZDdhMTViIn0"
+        },
+        {
+          "resource": "repo://src/bot/syncdb.ts#L40-L43",
+          "version": "repo-lines-v1:sha256:d31e0b13f74cb06f0583bfa54419282be2efc4414ee95ab5126864d397883966:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmQ1Nzc0ODAxMDQwOTJmOTY2NDE4MjRkZTEzMDY4MDg1YTEzZTg4ZTA4YTAxYzc1MWVjMTUzNmQyNDNiMTEzMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmU2NzcwNGIyN2RiYzkyOWVjOTU4NmUyZGY3MzlkZmI2YmMxZTFkZjhhMDNhZjhkYzcxMWU1ZWFkYzc0ZDBhMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTZlOWMzYjFmNWU1ZDA1MzE0ZTQ3MDhlZmYzNzg3NjRhZjE2ZWU4ZmQ4YjU1ZjY4NWQ0MWYwYmE3ZmEwNWUwNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjAwY2MyZjU0MjZiNDc1YjFiMzE3MGFiMGNlYTllZjE1MWFhYWRkNTFkZjUyNGM4ZWQ4Nzc1MzliZWNlNjRlOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5115c13b97814aa8abaaabcfd6b6cefe",
+      "statement": "Student names are fetched from getStudentName.php with the same concurrency pool, leaving names null on failure.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/syncdb.ts#L248-L277",
+          "version": "repo-lines-v1:sha256:37fb5b10d668ea2c6891534425e15d5b969c3d182e2cd10023dbe54afd1ef323:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlOTBmYTIyN2M0MGMyMGRhOGZiNjU4ZDY4ZDhjMjRkYTk1MDU5YjYxOWVjNGFiYWMyYzBlMzAyODgzZmMxZTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlMWQ1ZmExZmIwZDUyZTFlNjFmZTFhZTRhZTM0ZWMwNTRiZDlmOTgyMmIyYjM1NTFmYWVhNGRlZWYzYmJlOWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNlZmYzN2I3NmVmNDNhZTIwMDQ0MTM1Yzg2ZjU4OWNmZmVhNmEwMmM4ZGJkMzFlODcwOTYxNDYwY2VmMjcyMWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8ac31d06cc90456ab67f668a3d269110",
+      "statement": "Upserts run in batches of 50 into studentsnew, updating section, branch, and year on conflict while preserving an existing name if the new one is null.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/syncdb.ts#L279-L315",
+          "version": "repo-lines-v1:sha256:835ba79e2f9e223618b187e9da316834cebc860af47506ced11e39097ce28a61:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzOGM4Y2I1ZmQ1N2IzNjRmY2YxODM1Yjc1ODZmMjllYjE1YzkzZGYwNjAwMzk3NGNmYzQ5NTgwMmY1N2Q3NGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlMWQ1ZmExZmIwZDUyZTFlNjFmZTFhZTRhZTM0ZWMwNTRiZDlmOTgyMmIyYjM1NTFmYWVhNGRlZWYzYmJlOWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIzYTk4MjdjNzQ0NDAxNDc1YzNhYWVlNjZjM2I0YTFiYmJlZTMwOWQ4YjQzNTI2YzYwNjBjOGYxNDIxNjMzOTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9c033407a6d341449ff856cb0186490f",
+      "statement": "After a sync the cache patterns defined in cacheFlushPatterns (student:*, attendance:*, midmarks:*, lb:*) are scanned and deleted.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/syncdb.ts#L317-L332",
+          "version": "repo-lines-v1:sha256:41e0fee31e80772fca5f614e11875021409feed3f9d869d94ea79518dc7c695f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzN2I0N2MzNDYzMzBiNzliYjQ2N2Q0MzI4YTA5YjQxZDdmODMxNzA4YmM1NjU0ZDZhYmMwZDMxMDFlZGMxNzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4YTMzZjA5MTIzNmM4NGNlZTUxYzRjM2RmNTg0NWI0ZWRmNmVjNjdiZmEyNzdkMWY1Mzc2ODlkNDkyNjQ5YzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlMWQ1ZmExZmIwZDUyZTFlNjFmZTFhZTRhZTM0ZWMwNTRiZDlmOTgyMmIyYjM1NTFmYWVhNGRlZWYzYmJlOWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE5MzE0YzNmNDhiNThkMDg2ZDkwN2JkNzNkYjhkMWZhYzQ0MTk5NmNiNDQ1MzZjYTBhMzIxMzE4ZmQ0YmYyMGYifQ"
+        },
+        {
+          "resource": "repo://src/services/redis/keys.ts#L29-L34",
+          "version": "repo-lines-v1:sha256:06e876f4f0f48d3af0f61bad3ad830dbfbdde1d9d72e6813195580c1aef2dd2f:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmNjZjkxYjQ0NmExYzFmNDA5N2ViZDEwYWEwZmY1NjJjYTkwNTU2ZWFkYmI2YzJjNGJlYTU2ZDRkY2Q0MDI3ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmNkYzc2ZDEyZTUzMDRkMzA3OWVkYjVmODkwMDA3ZWEwNWYyMjZlNGQ5M2I2OTU2ODQ2MGNhZmFmODAwNzQ0YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2NlMjViMmMxNGY2YTk2OTE2ZTdmOGRhOTg3YTZjZjdlM2I1MDkyNDA4NTBjNjgxMzE3Y2YwMDdlNDczOGE2MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d800057abd07451393abb94e0d13e5fa",
+      "statement": "If the portal login page appears mid-sync, workers detect it via the name='username' marker, set authLost, abort, and the sync fails with an instruction to rerun rather than treating combos as empty.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/syncdb.ts#L130-L133",
+          "version": "repo-lines-v1:sha256:59d5fd9d3265049c9c6d5a9945611b87318e5b324ff40b5fda7e79009282ef6b:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODBlMTA2MWIwNTI5YzQ5YjIxMjExY2IxMjA4NDE1NzY4YTMyOTM5MWFlMTE1MzUxYTliZTRiYmQxMWZmZTU4MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzdmMThhOTRjNjM4NzBiNmQ4MWNlOTU4ZmE3YTI1YWMxMmM2MDM4ZmFjMDU1ZmYyYzgxN2NlY2VlN2UxZTE1NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWY1OTcwN2RmMzQ4OGFiMzAzNGZiMWFkMWMzZDE3ZWRlMDkyNThiMTBlZmViYjJjZDU1ZjI3NTExODhiMmZhNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGJjZDAzOTY0ZTE5MDQwYTBlMTQ2YTYxYzIyNjU2MzVkZjlkNGYzZTEzNGM4OTY0N2YxNWRmZDAxOTM2YjJiMiJ9"
+        },
+        {
+          "resource": "repo://src/bot/syncdb.ts#L186-L239",
+          "version": "repo-lines-v1:sha256:ddf0d9995c49f5e8450ec411f1b64aaae9c55b67d85d483eeb33289ce541ad96:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyM2U4ZmE2MDYyZjNlMDFiZWNjNjIwOTcxOGM1ZDJjNGE1OTM3YWU1MWZlMDFlMDZhNDc0MjhiOWMzMjFkMzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0ZTQyMDhjZDZmZmI4YzRhMzU0N2IyZjU0YWRhMTk5NzhjM2YzNjVlNzhmOTUwMmVmNTE0NWNkZDJhYTg1NDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyYWI5NmJhNTEwZmNjYWIwMjc3MmFmZDQ5YWJlMjMxNDA0NDM2OGUyNWRmODhiZmY2YjM3NDUwYjIzYWI2MTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ0YmIyZWYzZGMyNDA4YzFmZjkyNmVjYjkxZDc4OGY1MGZjNzk4YTRkNjlkYzlkYWFmZTVjZWRlZGI0YjBjNzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ffcfe87bb59a41dea43dd213014f0fd8",
+      "statement": "The BRANCHES map mirrors the portal's full academic branch dropdown (CSE, AI_DS, MECH, ECE, EEE, CIVIL, IT, CSE_DS, CSE_AIML, AIML, MTech and diploma variants), and /syncdb scans every branch in that map; non-academic entries are excluded.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/syncdb.ts#L137-L137",
+          "version": "repo-lines-v1:sha256:0cb1453641786b6e62d667094d19d0f520775336bc49a0a1c4ef29321266b02f:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGNiMTQ1MzY0MTc4NmI2ZTYyZDY2NzA5NGQxOWQwZjUyMDc3NTMzNmJjNDlhMGExYzRlZjI5MzIxMjY2YjAyZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMGNiMTQ1MzY0MTc4NmI2ZTYyZDY2NzA5NGQxOWQwZjUyMDc3NTMzNmJjNDlhMGExYzRlZjI5MzIxMjY2YjAyZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGJjZDAzOTY0ZTE5MDQwYTBlMTQ2YTYxYzIyNjU2MzVkZjlkNGYzZTEzNGM4OTY0N2YxNWRmZDAxOTM2YjJiMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODhmM2NhZDk1YjkwNzdlNTRmYzk0MDc3NmZmZGQ0MjllZGI4MGZjNjg0MTg5MzYzNWJiZDkyNTY0ZDgxZjRiNSJ9"
+        },
+        {
+          "resource": "repo://src/constants/index.ts#L43-L66",
+          "version": "repo-lines-v1:sha256:9b90028380a0b005b9eb6ccbaf092b9d6b75c813c7ca5d98f13ed21afd17e9df:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0YzllODEzM2JkYjcxYjM3NWY1ZTY1ZWNkYzkyZmQ5MGE1OTU3MWM5YmVhMTYxYjJlYWY4NTBhN2ViMTUyMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFlMDY4M2E5ZjExOTBiODFiMTAyYWY0OGI1NzA4ZTUzZTkyYzRjZWFlYTQwZDc3M2QzNjc4ZDczZjRkYzJmNjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_81a095b7c5d34ebf95e55cdafcb52111",
+      "statement": "Daily check-in Redis keys go through the shared redisKeys module (checkinPostMsgId, dailyUnlocked, broadcastUsers).",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/dailyCheckIn.ts#L17-L17",
+          "version": "repo-lines-v1:sha256:729e386da9f8d5f0e81b7640f5beb30ac8c8a27e11f48a15fbf482fcf47840e7:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzI5ZTM4NmRhOWY4ZDVmMGU4MWI3NjQwZjViZWIzMGFjOGM4YTI3ZTExZjQ4YTE1ZmJmNDgyZmNmNDc4NDBlNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzI5ZTM4NmRhOWY4ZDVmMGU4MWI3NjQwZjViZWIzMGFjOGM4YTI3ZTExZjQ4YTE1ZmJmNDgyZmNmNDc4NDBlNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzI0YzE3ODJlNzYwZDFkOGI3NmQxNmM3N2VhNDE5NWIwMzE0ZDcyNjI4MTZhNmY3MzcxMWE2NTJhMzNiZTI5MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTUxYTk2YzJiYzQ5YjM4ZWVlNGRjMmNkOGUxYjE2MDRmOWU1MGFjMzBjOGI4NTkyMWI4NmEyZDdhYTRjNDQzYSJ9"
+        },
+        {
+          "resource": "repo://src/bot/dailyCheckIn.ts#L44-L44",
+          "version": "repo-lines-v1:sha256:f5862fa5e54afd7812675c6ec3c1bc669ef1d0b22118f70860010ecb02a69dd7:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjU4NjJmYTVlNTRhZmQ3ODEyNjc1YzZlYzNjMWJjNjY5ZWYxZDBiMjIxMThmNzA4NjAwMTBlY2IwMmE2OWRkNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjU4NjJmYTVlNTRhZmQ3ODEyNjc1YzZlYzNjMWJjNjY5ZWYxZDBiMjIxMThmNzA4NjAwMTBlY2IwMmE2OWRkNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDU4NWRhM2I4NmMzZDE1NjIxZmIzMWIzMDNmMTQ5ZTA3NjFiOTlhOTlkNjhlNGNjZjNlYjBjZDFlZjdiMjU0YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDNhODBjN2M5OWE0ZDAzMjkyYzNjMjU1MGUwY2UzZWU5MmUwMTRjZDg2ZjI2YzY5NjE5YTIzMDA0ZDA3YWRhNSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-09T23:13:13.880Z"
+  }
+}

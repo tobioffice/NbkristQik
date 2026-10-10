@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:4ed7da746ec7143e030a7020dc4ec1b16716041366a6691fff6d1a958862fe52",
+  "claims": [
+    {
+      "id": "claim_3acc7611e73949be93027ee5211924a4",
+      "statement": "getClient caches the connect promise rather than the client, and a failed connect clears the promise and starts a 30-second cooldown during which callers fail fast instead of retrying; the reconnect strategy bounds attempts at about four.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/redis/getRedisClient.ts#L36-L56",
+          "version": "repo-lines-v1:sha256:502fcd7a8a655571443aebb40551d74555cd5f418b0888b76c329ba603960600:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg5NzQ4N2JmNzlkNThkMzI1ZjM5ZWNhNzBiYjlmOTU1ZWYyMTJmMzEyNjU2NDM5ZGM3MTBjYTEwMzRjMWE0YTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIwNWQ1ZTQ1ODRlY2NhMmVhOTk3ZmFkYmIzZDg0NmE4M2FkNjQ0OTZkY2ViN2M5ZDYwODQ1ZTMyNTcxZDcxYTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/services/redis/getRedisClient.ts#L8-L14",
+          "version": "repo-lines-v1:sha256:9ff9d6ca9b67d11e2b4444bc06444f3b762768deba14ff98cc99aff590ee329b:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjQzZjFiMDY2MWQ3ZDJmMmFhMDFkYTk2NzQxNmM3ZDNlY2NiMjVhZTYyYjZmNmRiOGIyZTRiYzc4NWY3MzU0ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTM4ODMyYzM4OTJlMzJhNTVkYmMzNDNlMmEzYTkxOTdiNmVmYjIyMDU1NjBhOTBhYzFlM2I1YzcyMWRlODUyYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGEzZGQyZDI5OWY4OTA5ZjQyN2I4N2RiZGE2Njc1NTJmZjdlODdlYTY5NzI4MzgzOWUwYTUzMGYzMGRhZWQxNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_41fa83b4d1dc412aa864fbab3a60b854",
+      "statement": "Redis cache TTLs include student:{roll} 7 days, attendance:{roll} 1 hour, and midmarks:{roll} 2 hours.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/redis/storeAttOrMidToRedis.ts#L13-L14",
+          "version": "repo-lines-v1:sha256:040896489ca2cce32b871272389cd45e80cf13a0c58b5535868069c9fd2e8583:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzRjZTNmMThiZmNhYTMwYTEzZDEwMjlkNDhkYTEyODJiNjE2MmI0ZjY5MjZlZGNkZWNjYjU1MzcwMzhmODU2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmEyZWJiYmQ5YTlmODg2OWRiMDY0ZTVhZTZjM2IzM2YxM2Y4NDVhZWFhYWI2YzBlMzVkNjkyYTY4YmYwNzcyMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjFmODI5MDA0NDZiYTg1MGY1Y2EzMjYzYzRmZGNhZTYzZDNhMGI5MTY4ZTMyYjE4NWY0N2U2MzZmZTU5NDJhMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTNjYTRkZWQ5NDYyOTRlNDhhZWIyMWZhMGJlNTQ3YzE4OGNhNGYzMjQ4MTUwOWM4MzIxZjBmNGMyYTdiYWUyYSJ9"
+        },
+        {
+          "resource": "repo://src/services/redis/storeAttOrMidToRedis.ts#L71-L80",
+          "version": "repo-lines-v1:sha256:8306d3fb6676bf79d6dd1771db61f80d8665b487562d1f2a262de9584b91b8e5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3OWY4NTJjM2IyNWQzOTA0NDAyZjQ3OTQ2ZTNkMTM5NjU4MjA5ODQ0ZjY2ODczN2E0NzljZjM2MTczYmU1NGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxZWEwMTE0NjNkN2I5MDEyYjc1OTZkNWFkMWM4ZDk2MzQ0ODNmZWM1MzlkMTM0NmIyZTgzZTc4NTI5MzA5ZDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI5Y2ZmNGE2NTk1YmNmZmY4NjU1N2YzN2U2NDU5MTE3MGUzNTk5ODYzOGE0YmI1NjE4Mzg3NWNlMjk3MGU4YWMifQ"
+        },
+        {
+          "resource": "repo://src/services/redis/utils.ts#L17-L38",
+          "version": "repo-lines-v1:sha256:b7f67e49b6b621023052399a2344eb9e5bf2bd415cefe0a0ba288902767ab454:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2ZTM5NjEzZTUxMmUzNjQ1Nzk5NmRmZDEwNmVlMjM3N2FmZWYzYzQzM2Y2OWMzMmY3N2QzZmE4NGUyZmI3YzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzZTZjNTVmMDQxNDQ5ZmMwOTFiZWI1YjgyYTA1MjY0ZGQwNjk5Mjg2ZTdjMzRiOTBlNjc3YjAyMGMzZWMwNzQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e7cf8525a8074435aab33cab92de6fef",
+      "statement": "The leaderboard API response is cached in Redis for 60 seconds per query key.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/server.ts#L87-L110",
+          "version": "repo-lines-v1:sha256:3261ebe3a96fe91988c9963a3fbbfd9e14101882523ac6053cff4672dd4b6a3b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMyZDA2ZGViOWJkZDVlZGNkNzhkNjM0NjZhYzIxOGZlNDAzNmQ0Y2QzY2E2NmZiMzQ5NzEyN2M1NDkyNjUzZjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5MWM1MjJkYjhmMGM2N2UwZDI1Zjg5ZWViMDEyMTVlZDFhZjIzOTVhZjcwNmIzYmI1OWJiNDNmNjkyNTZiNzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJkYmU3MzIxZDJiYzg2Y2ViMTVjYzdlNWFhMTUzZmRlODdhMjNkMGJkMDQ5MDQ2OWNlNGY0YTc5ODFjZjczNzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9e9c5f924ba74f3ebb098d632f269e21",
+      "statement": "Membership positives are cached for 1 day and the tracker's per-user profile upsert is gated by a 60-second Redis NX key.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/student.utils/checkMembership.ts#L12-L23",
+          "version": "repo-lines-v1:sha256:916678028d80ed34b6c52bce9e2a37b50284a532ad2456c1253f88da83a1c4f8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjODZkZmNlMDVkNzBjNTRjYjk5MGE1OWRhNWQ0NWYyN2Q4MjYxMDNiM2U0MzJjOGMxNDY1ZDc2YTA3YWE4ZmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3Y2FiYTIzZmU0OWE0NjQwZjdhZDMxOWU2Y2NlN2MzOGMyYWQ3N2NiNzZjZmJkNTQyYzRjMzg0MDRmMmM5OTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZkMzBjYjk0NGZjZjRlYTFjNDEzMWU4ZTc4ZDA4OTgxMTJkOTNkOWIxNTlhZDViM2I4ODcyNzdiYzY1NDhmMTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAifQ"
+        },
+        {
+          "resource": "repo://src/services/tracker.ts#L47-L57",
+          "version": "repo-lines-v1:sha256:20489ddb916b3b8b6b074ae3fbd52f399308d945a31cf32ce7b4639d90eacaf2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyODU3YWQyMzY2MmUyYzAyZjBhM2EzZTA3MmY1NjEyNzhhZTUzNDc0YjU3ODEzMzhiZTMwMGMzNTNlNWRkMjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJkNjA0ZjM4M2M4YmU5MmM3YTAxOTdhOGU1M2RlY2Y0ZGMyMWM3Y2VlMzkyYTM0NDVhZTQzMDA5MDdkNjJmZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI4NjczYTA0OGJiMmI3MGNlODFkZmQ1MTkwZTVlNWY5YjVkM2M4MjRkZmI1NzEyN2EyZDUyOTAyZDk4NmJlZjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_952d75d29e5f480a83366f0c1aca10c8",
+      "statement": "A missing roll raises StudentNotFoundError with nearby-roll suggestions rather than being masked as an outage.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/redis/utils.ts#L32-L36",
+          "version": "repo-lines-v1:sha256:c89f1c312028bfd3bfd0f132674f36355e72df0050954411a1b31e341cc803ac:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTZiNDA5YzFhMTZhZjdkNTQ1ZDMzN2ZjMmQyZDdmYWZlOGVlZjQxYjMzMjA1ZWU1NWQ4ZWU4Njk0YjhmNjk4NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWEzMzhmOGRjZmUwOGZiMjZlYWM1NWNkMGFkMjZmZjkxOTJkMzhhYzcxZTUzMjgzZDBiZmViYjhjNDZiMjAzOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGY5NDNlYWY5YzZiOGQzM2EwODQzMjljNGRiOWFhMTE5ZjdmMDViMzU1NTI2MGMyNDA0ZTk4MTM4ZTcwZDZlZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_bf799a1ac3af4f4cb342f735ca9986ed",
+      "statement": "The requester's row is parsed and replied first, then full-section attendance cached in the background by extracting every tr[id] roll and parsing all rows in parallel.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/redis/storeAttOrMidToRedis.ts#L54-L79",
+          "version": "repo-lines-v1:sha256:c084528b951694a58ea0508d08998f7fa6e4410c29296b2aecd59015ff9f2865:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkOGEzNjMxY2M1MzlhNTIxMjkzODhkNTE2ZmIyN2EyMDI4MmYwMDBmM2I4YTVjYzkxM2UwZGEzNGJhNDI0MTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0MzQ1NTQ3MzYxOTU0ZTM0N2QzYTQyN2U5MmVlYTEzMjFjYzAwNThlN2EyMjk4OGQ0NDJkYTRlZDVjN2FjNzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBkMzYzNmRkOTRkZjhjOTViMWQzYTU3YzFjZjI2NDNjYjQyMjcxMTM2MTYyZTBhYWVhMTkyZDJmOGMyNjA2YTAifQ"
+        },
+        {
+          "resource": "repo://src/services/student.utils/Academic.ts#L281-L326",
+          "version": "repo-lines-v1:sha256:cf58f7a59203eabd20a8cc713d859f5e2b6c8086c2345b41a965b8c6f2d3cf0d:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlNzExMjdmN2Y1ZjE3MTdiOTZlN2U5NzY5MGE3ZDE4MWE1MDcyMzdmY2FkMTg4NDBiYmIwOTM0MDIyYTkyMGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU5ODIzNzBkZmY0MDU5YThmNWUzNzBiNDAxM2E3MGRmOGRkZGNjMmE2ODI0NTllYmY2OTlkOGY2Mzk0MGMzYzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEzMDgyZmNlM2ZlZTNiNmRkYTgzMzJhMzIzZDk0YjhlYWI1YmVhZjgxM2MxODlkOTA1MmNkNjRmMmEwNjVlMDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a1d6bf4bd9b74319ae529866253fa9b6",
+      "statement": "Mid-marks average uses (M1+M2)/2 when M2>0 else M1, excludes subjects with both marks zero, and scales year 41 averages by 30/40.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/redis/storeAttOrMidToRedis.ts#L104-L126",
+          "version": "repo-lines-v1:sha256:0f3cb55b66c534d6f379cdbddb5da3320199c1f066320644ca3f504b4424e7e7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyNGNkMjg1YmNlY2JjZTAwOWYxZTc2NzU4ZDc4YzRiMGY3ZDlkMmEyOTJmZTQ5OTc3ODBjMGMyNjE4MWFiYjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc3MTc1MjNiODljNTc1ZmUzNzczZmNjZWE2NDk2MGM3ZDFiZDNiYWMzZTRlMGE0NzEzODFkMGZlYTVkYmJjNGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkxZjZjYzQ4M2Q0MWNkYjA5NTZmNTg0YjMzYzkwYjJkYWY3MjJmZGE0MDIzZDc4ZTc2MjBlMTc5OWU5NTU1ZTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b1913fe962aa42ea9680f6307bfc4724",
+      "statement": "Leaderboard ranking uses RANK() over the rounded score only, with the deterministic tiebreak applied in the outer ORDER BY, because adding a tiebreaker inside the window ORDER BY makes Turso collapse ties.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/student_stats.model.ts#L140-L171",
+          "version": "repo-lines-v1:sha256:e3bfa19673c81ed6f4c1d6152fa11670612a2deba83a318490672926342755ec:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3MzI3NzVlZWU3NzAwMThkYjdkNzlkMDM1YTAxNjMwMTVhMDE2ZGUxN2ViYmY4ODg0OTAyZWM2ZDFkOWZjZjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3MmE0MjkzODJiMmUxNDcxOGUwZTM3YjA1NzBhOGExNzAyOTkxZmNkODQ5OGNkODQwNjBhOGJmNGYwNTAxN2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzZGFkYjc2ZmNhZTVjN2MxODA5YmFhN2I2MTEyNDY4NGFiYzI1MDA5MjVkM2E4NmI4NWQwZmJkZjQ5NjJhNGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBlZTQ0YjFkOWI0YTJkZjZjYWVhMWRiZmE0MjYxZTQ0ZjU4ZjNmZGEyMjk2MTllMjJiZTU5ZGFlNmM2NjU4NmIifQ"
+        },
+        {
+          "resource": "repo://src/db/student_stats.model.ts#L172-L206",
+          "version": "repo-lines-v1:sha256:125c1a1a4466a9c3972d7a010a8ee179fc7676aae6f60a75273ad3a0da5ab136:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiY2YyNjRjNjA0OTQwNmRjMjQxYTkzNjAxZTc0MmNiY2FiODY5YTRmYmI1MjY3YjdlNWRmMThhY2ZlNzZmMmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyYTJjYjI1YTEyMmI0NDIyMWE2MjM0ZWM2NjBhN2I1ZmI3ZjliZGU3YjNiOWUyYjNjNTU5YTBkOTZmYWM3MzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRhZTM4ZWE4MzQ5MDI3MDJkZGI2ODVkNTU1ZmEzMWMwYTVhNmI5NjhjZDA3OTIyNzVkZWU3MjgyY2QzYTUyMGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc5NzI3ZDIwYzhlMDZkNzc5ODUzZGEwOWRhOWFkZDA2NzA1N2QyMGU0YjUzMjY1ZjE0N2QwMDgwMWYzYmI4NjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_367195b2fe9349039227d98c6cdb62b8",
+      "statement": "COUNT(*) OVER() supplies the filtered total with the page, and a fallback COUNT query keeps the total accurate when a page is empty.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/student_stats.model.ts#L124-L143",
+          "version": "repo-lines-v1:sha256:3881b17b7024e62d98ca3c24085b5d35213dee38ab91e6a08257ea78992b55a8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwMjk0YTI5YzhhODA2NzdlODM4MDQ2NjJhYzQ3ZTA3YmYzZmJmMzJkNjA3Y2U5NDA0NWEwYzJlYzdiMjA5ZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhYzNmZDgwMDRiMGQyZjNhZTU3Mzk4ZWEwY2ZlMzU0YWJlNzUyOGNiYjMwNjg4YjIwMDQwNWM4OWQ2YmU3Y2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQyOTIzMDZhZGY5YzI0ZjVhNzE3ZWQ1MTYwOTFjMzBiZGRhYWI3NzVmNjAwZWI3MTMzYWViMWM3YzQzZjUzODEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI3YTYxYjIzMDlmM2ViN2Q0MjRhZDY3YzYzMTFmYjJhYjUxNTQ2ZjRlM2JlNjVhODhhMDc3MjZhYzA2Mjc5NzkifQ"
+        },
+        {
+          "resource": "repo://src/db/student_stats.model.ts#L199-L206",
+          "version": "repo-lines-v1:sha256:3f9705196c964b6538c00e6f4a123cc7eeaffd437369e88e18cb11724b531670:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2RjMzc3YmU4MWM2YzNhNzQyNjUzYmIyYmU4NjQ3YTlmZTU5MmFkNzNjNWE2OTQwMTdmNjJlYzM1MDhjZDhjMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDJhMmNiMjVhMTIyYjQ0MjIxYTYyMzRlYzY2MGE3YjVmYjdmOWJkZTdiM2I5ZTJiM2M1NTlhMGQ5NmZhYzczOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWFjMjljNTE4MjRhMDM4NjhjMzE5ZDE2NTRmYjBlNGExM2VlMTUzNjE2YWQ5M2Q3N2M2ZTU0N2IzMzBiY2E3NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzk3MjdkMjBjOGUwNmQ3Nzk4NTNkYTA5ZGE5YWRkMDY3MDU3ZDIwZTRiNTMyNjVmMTQ3ZDAwODAxZjNiYjg2MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f746df71301e4c5b987ff968a8d324e7",
+      "statement": "getStudentRank uses the same RANK() and rounding scheme as getLeaderboard so list rank and /api/me agree.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/student_stats.model.ts#L222-L258",
+          "version": "repo-lines-v1:sha256:9ec6b85e7fb33eee024e54e3910a8d5ec103946fe0c135be42b593d13cb2d2d7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3MTM2MjExOTI4Zjk4MzRmZmQ4YzBkYmQ0MWMzYjA3YzVkMTFmOWI0NWU5YmVhMjEwZmE3MTE0YWNhYTg0ZmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNmMDU4MTkwM2FmOTQ3NGE2ZjY4OTg3NzNhNGYyYTY2NzA3OGYyZTM4MDM0MTZiNWUyNGZlZGVmZmYwYTE2NGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdmYTFjNzg5YjIyNGIxY2Q4YWE2ZTkyNTNlMGZmY2JiMzVlMjQ3ZjFhZGMyZWViMTM1NjhjN2VjNTY5YmUzNWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e4a13bc5086243dfb4557bdd88319aeb",
+      "statement": "All Redis key names are built by the shared redisKeys module, and cacheFlushPatterns defines the SCAN globs deleted after /syncdb.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/redis/keys.ts#L1-L34",
+          "version": "repo-lines-v1:sha256:2cf3f45b10466fccc3367a2b585e67a23169dfa917cc6cb8af09514b1583149e:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjZGM3NmQxMmU1MzA0ZDMwNzllZGI1Zjg5MDAwN2VhMDVmMjI2ZTRkOTNiNjk1Njg0NjBjYWZhZjgwMDc0NGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1f013de9e7a746038bc28fafaf4c70cd",
+      "statement": "storeMidMarksToRedis resolves student records with a parallel Promise.all of getStudentCached calls instead of serial lookups.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/redis/storeAttOrMidToRedis.ts#L90-L99",
+          "version": "repo-lines-v1:sha256:80b70a9a08442be1065cc30ed706c3a0d05f3dcbd0b2d33682eb88159ecf427e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg5Yjk4ZjcwZjUyZTg4YzhiYWM5ZGNhZjY0NzNlNzNlZjk5NmI0NzUxZGU2NjI2MGEwMGZlMzNlYTNhZDJmZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzMTE3MjE1NjRkODJmMDkxYTlmZTdjNzk1Y2QzMWNjMTZmY2NhNWEyN2NiMmNiYTRmZDRhODQwMjFlMGI3ZGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5ZGY4OTJhOTcyNTg0ODRkMmY1ZTlkYWY4NTQyMjExNjEzMTg2NWIxZTVmY2ZiOGI0NDAxNGZiMWM1ZDNiNTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_140a09fcfd3f47aa86560b22cffa18ee",
+      "statement": "student_stats writes stamp last_updated with SQLite datetime('now') and upsert only their own column, never clearing the other.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/student_stats.model.ts#L17-L45",
+          "version": "repo-lines-v1:sha256:70b2af3a7e4f102363bed2b36e42a6e423cae5570212b42e4cfeeb73a01841dd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYzlkNmM1NmU4MjJiODVhZDU0YWIxMzFiMzg4MjI2NWJkNjdkZTY4ZWJhMTc2NDllNWMwYjIyYmNkYWIwMmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhM2U0NmY5NDI3NmI2ZjZmNGVkMWYwMmFmNzhiZWY2YTJlZTFjNDM5ZGQ1NTg0Yjk3Mzk0ODMxMzIxNGQyYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI2M2FiODQ3NmJiNTAyNzg4ZTFmZjJmMGJlMzE3ZGVjNTdkNmE0OTQxY2U4ZjE2NTU5MTRhYTQwZmFiMzBkOGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIwYTYyYmRmZGU2ZGQxZjBmNGNmNjMyNzI0OWM2ZWRkNGE3YmQzMWYzYWFmMjE2YjdlZjE2MzkwODJmYzJmYWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e86afc11b7f14a14b9764e9ae85765e5",
+      "statement": "The leaderboard and per-student rank queries use an INNER JOIN to studentsnew so ghost stats rows without a master-table match never appear or affect ranks.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/student_stats.model.ts#L104-L120",
+          "version": "repo-lines-v1:sha256:f41842f906468dafcec2a6465463844b5c468cdce1ababcf01740710061ff8cb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3MzI3NzVlZWU3NzAwMThkYjdkNzlkMDM1YTAxNjMwMTVhMDE2ZGUxN2ViYmY4ODg0OTAyZWM2ZDFkOWZjZjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI0ZTdmZTk1NWQ5MDZmM2NmZWRlOGI4MDg5NDFjYzM4YTI0ZTJiNTA2YWZlZTRiZjEzNWQ2YzI1ZTRmYzg5ZWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1ZDUwZWMzMzU5Y2QwOTk4MTc5Mjk4NjY1NmVkZDQxNjc1ODJmNDgxYTU3ZTIwNTFmM2RmYzcxZTViYzFkNzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQyOTIzMDZhZGY5YzI0ZjVhNzE3ZWQ1MTYwOTFjMzBiZGRhYWI3NzVmNjAwZWI3MTMzYWViMWM3YzQzZjUzODEifQ"
+        },
+        {
+          "resource": "repo://src/db/student_stats.model.ts#L233-L247",
+          "version": "repo-lines-v1:sha256:9a635fa6b217aa1d5090232b1ea013188e3c999569ed01b6759203f7195db63b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiYTFhNTdjMzhhMGJhM2JkZmVlMTNjMjhkMjc2ZGU3MjQwYzdhNDk2ZmJmOGEwY2ViMjQ2YjY2NTBkODI4OTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1MzQ3NmFjODk3NjI0ZmNlZmQyYmI0NWRlNjEwNGI2YjY5MjAzMDE0NGQ3ZWFhODRjNTI1ODE0NjQ2OGQ2YWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE3MTcxYmUzZjY5N2QxMzQ3ZGYxYTg0NDVlYWFkNDgzMmZkYjlmYmZmNzZkMTNkMGIwMzEzMTdkMjY0ZjQ3NjkifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-09T23:13:13.880Z"
+  }
+}

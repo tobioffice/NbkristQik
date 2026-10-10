@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:beb620e5896de8021fa3cb736ec049fd802ce44985396f02c55812b8169177c3",
+  "claims": [
+    {
+      "id": "claim_f107abc924534d0d8229091a0c7b6457",
+      "statement": "Registration pins a userId to an uppercased roll_no plus optional display_name in the registrations table, with registered_at preserved and updated_at refreshed on upsert; the table is deliberately separate from tgusers so lookup-driven writes cannot overwrite a registration.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/init.ts#L69-L76",
+          "version": "repo-lines-v1:sha256:4c8624ea526b8526c5224d289e8bf909da2eadbe32cf10b78cf2457448d563e1:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODAxZmE2MTk1OGUyN2RiYWM4MGI0OTYwZmZjYzJlODU2Mjc2NjZmNDFlNDQ1N2NhNjExNjgyNTg0NjRiYjExOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODRlNDIwOGNkNmZmYjhjNGEzNTQ3YjJmNTRhZGExOTk3OGMzZjM2NWU3OGY5NTAyZWY1MTQ1Y2RkMmFhODU0MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmY1MDNiY2M3M2QzZjY2M2ZjZTdlZTc4NDIwNzk5NGI2NTNlYWU4NzQ0ZDc4MGRiNGQ5YmE3Zjk0ZjU0MzczZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGZjN2NhOWM5MTFjZWVmMWRhZjQ3ZGI4NjUzMTM0Y2NkY2VkNjY0ZjRkYzFhYzhlN2ViOTNkN2QxMDhkYjQzYiJ9"
+        },
+        {
+          "resource": "repo://src/db/registration.model.ts#L31-L56",
+          "version": "repo-lines-v1:sha256:79635af1c542d7fc268d9833f91497b27ce86dddeecde2f364d8daa5394f581d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlMDVmZjdlZTcyYTM5NzA3NDgzYzUyMTVkZTU1ZmQyZGY1NjgyODQ5MjQ4YzU3MGM1NjQ2YjI4Mzg1YTRmNjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMwNWJhNWFhN2MxMTJiMzViYTEzMDMyZGRiZjRiNTQ4MDhlNTJjOWFmYWQ3NDJhN2ZkN2Y1OTM5MDMxY2RhOTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a112c42f66c64326a64cf03768788863",
+      "statement": "Profile endpoints share resolveUserId: initData from query then body, verified with the 24h HMAC scheme, 4096-char cap, and a numeric userId shortcut only outside production.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/resolveUser.ts#L17-L42",
+          "version": "repo-lines-v1:sha256:6f0e93d2a62c059436685fcea8c4a5ce6aa54b313086c91cbfd61becf6b656d7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmMGJhOTFkMTUzMjNhMDQ5OTBjZDU1ZDVmN2M2ZjNiMzE3NTlmNWNhMzlhMDUzYTc4NTUxNjBlMDQ2MTdkZjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkwODlmYzNhYmVjYzFkZGRmNmU4NDBjM2FiYjgwYWZiY2E0OWQxN2FkMWFkN2RhODRhNjg2ZDg2Yzg1OGE4MTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_227c8c0d6cc249189b5d833b7a6b332b",
+      "statement": "GET /api/profile returns the registration with live student info, a stale:true shape when the registered roll is missing from studentsnew, or found:false with a past-lookup roll suggestion for unregistered users.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/profile.ts#L25-L62",
+          "version": "repo-lines-v1:sha256:0600318f4d0c9c61b40f27e9541db294c6e835410e9f09878a8ff7cb3c1fba8c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiZTFlYTkzMmE5ZjFkYzQ5Nzk5ZTFjZGE4YjZlMzU1ZjAxZTkyZTJjOTAxM2M4ZTNlNzU1ZmM5Nzk1ODMzNmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE1YWFmMzQzNjY5NmEyNWFjYjQxMzg1MDBlNmRhNTU0MjM5NjFmY2JjOWQ0YTY1MjQ0NWFmNTc0OGY1OTllZDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ0ZjY3M2Q4YzQ3ODFlZWZlMjBlMmI2NzBiMjg4ZTE4YWJkMzkwNTkyODJjMjYzNmRhOGU3OWI4ZTdjZDlhM2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_686cc903255b4157af908a86c6932304",
+      "statement": "POST /api/register validates the roll against ROLL_REGEX (400), requires the roll to exist in studentsnew (404 with nearby suggestions), caps displayName at 40 chars, upserts, and records a register activity event.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/profile.ts#L65-L116",
+          "version": "repo-lines-v1:sha256:4e45505166c0002dad2269060175bfe59573b076325834c8669fb72e3767991c:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwZjQzNGU5OTFmNjZiYjcwMzdmYTQyYzI3NDkwMDAyYzgwMTVmNDg1YzNkNzJjODUzMWYxMzY2YjI3ZDU1MWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE1OWY4ZGQ5MzQ4MTJiMGI5MmExOWQwNjY3Yjc0YTA2NTI0MjZiODAxOGY1YjgwMjA5MDY4YzQ3MThhZTc1YzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d056c5d9c8184fe19580a43be644239f",
+      "statement": "The register write route is additionally limited to 20 requests per 15 minutes per IP via profileWriteLimit.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/server.ts#L47-L55",
+          "version": "repo-lines-v1:sha256:3470e9b241807c68c2c0a2a975136d7604b068e0c5ae162945f8e2a208e1411d:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzhkNTI1MzcyMzg0NTMxMzZlNGRjNjdjZDYxYzU4ZjJkNGY0ODIzNDcwNThiMjIzNDllZGI0MzE4MjRjZGJlMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDFiOWM1MTI1OTFmNDRkZWRlMzUyY2QxZmI0NDc5NGNmNTc2ZDYyOTAzMjQ3ODU2ODIxM2NmMDllYWMzNzBjMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTllOGU2ZWNhZjc4NzgyYjYyNDk0MTI2OWNmMzJiMzgzYzQ5ZWM4NTk1ZmVhYWU2NTg2NWVkODk3ZDQxODRlNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjA4NGVhYzkyMDVlNjc5YjAzZGFlNjQxNDc4YTA2MjMzMTc4NDczN2QxZGI4NWUzZmY1MTlhNmM4YzUzYzVmNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8368c7f7860048fb97423bb59dc66b58",
+      "statement": "resolveRegisteredRoll prompts unregistered callers with a register web_app button, refreshes the tgusers mapping for a valid registration, and prompts a profile update when the registered roll left studentsnew.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/commands/registered.ts#L120-L145",
+          "version": "repo-lines-v1:sha256:08eda214e537106f3e63d296fb5616fb880fce4a6be3695a27883f050459edfa:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyODEzMmJhZTY5NDg0MGY5MTQ4MGFhNzg5YzgwMDVkM2JiYWQ1NTVlMmVkOTdmODZlOThjNjFiMDEwNjQ5OTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkZDg3OWRhOTU2MGNmMzU4ZGRjMGE0OThmZmE0YTljZWE4YjJkYmNmYTU5NTIxOTMzMzlkYTg4NDE3OTYzYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllNTI0OGI1YTFkYWQ5ZDIxNzcyMmExMDdhNWY1NDNjNzVjNDFkM2Y5MjRjZmQwYTAwYmI4N2Q2M2E2OGI4MzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_815f9be6aca94da8b1e8445f1622da2a",
+      "statement": "/attendance, /midmarks, and /bunk are registered-only shortcuts reusing the same rate limit, membership, and daily check-in gates as the roll flow; /register opens the profile page via a web_app button.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/commands/register.ts",
+          "version": "repo-file-v1:sha256:1af61440ba1ebe45054b8ae7b9931f39e8e4600416f3731bfc5238e5f04f4010"
+        },
+        {
+          "resource": "repo://src/bot/commands/registered.ts#L147-L204",
+          "version": "repo-lines-v1:sha256:c0fe3b9b9b2288c29d446b8c77a7abdbcec88a6061befcc586a3fd79e07adfac:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyODUxMDA2NzllNDEyMGZkZDdhODYzYjE5MjMxODk3OTZiMzMwYmJlNzY4YjBkZDUyYjJlYjljOGI2N2E3ZTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwNmMzMDQ5NDcyYTI4OWFiZTFkZjBlYTUwNzNkNmE1ZTRhOTBhNDk2NTZkMGNlZTljZjE2YWNmNmY1NGE0ZjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_da24d8a143af493ea7759cb32486dba7",
+      "statement": "The profile form is a standalone Vite entry (register.html → register-main.tsx → ProfileApp) with its own useProfile data layer and form view, separate from the leaderboard page.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/register.html",
+          "version": "repo-file-v1:sha256:66b890ad7f0ce31def2f1ef1ef12d4994092b30d13f6ad0bbea8627ad47a2d00"
+        },
+        {
+          "resource": "repo://src/web/src/ProfileApp.tsx",
+          "version": "repo-file-v1:sha256:11f1e6470ffaa347240b83e0040c82b3f21fa92a0bd924835f5e8632030dd219"
+        },
+        {
+          "resource": "repo://src/web/src/useProfile.ts",
+          "version": "repo-file-v1:sha256:763e9bbe8ce47daa5a4028e811df4721eab7fb9528ed19d492933e3084cb50aa"
+        },
+        {
+          "resource": "repo://src/web/src/views/Profile.tsx",
+          "version": "repo-file-v1:sha256:9c1382b50049d15ff88fba82e752a99a32fd95ae966df98fb37a6baf65789334"
+        },
+        {
+          "resource": "repo://src/web/vite.config.ts#L6-L15",
+          "version": "repo-lines-v1:sha256:92c85822a29b3a9276ac15b827c9d812dcfacd0f4a9b59effe2f6bccffb8f2f6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0ODQwMTM0OTc5NWE1MGJjN2M5MTFlYWNhOWFlNzIwMmY3OGY3MmU5ZGY2NTRhNDk1OThjOGU2N2FiZmY3NzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNWNkMmZiNGYzZGY4ODQ1MTUyNTViMzk1MjNmMmY4YjU0NzJiZWVhOWY1NjZmZmNhMjA0ZGI4MDI1NjEwNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVmZDBlNGRhYWE1MTQ0Y2JiY2E5MmVhYzZkYzBlMjFjMTQxNDlhNjZmMWZkNGVhM2MyNzdmMDQ1NzE0YzZiODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMxY2ViZjNmNjAzZGExNzQyNGMwOGVkNDVlYzU3YjEyY2VjMTZmZmQ0NzBkZjJhMTUzNDQ4NmZmOTdmYmI1OGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b5084344d7534936b44a1d5eb945ad76",
+      "statement": "Both mini app URLs are centralized (bot side src/constants/webapp.ts, web side src/web/src/constants.ts) and used as web_app buttons for full-screen opens.",
+      "evidence": [
+        {
+          "resource": "repo://src/constants/webapp.ts#L1-L6",
+          "version": "repo-lines-v1:sha256:c7f7aae3f78138505e62bf61d53413f034410a06856843f878990942fca15c30:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWZlN2MxY2E0MDFlZmNjMjAzZjQ3ODU0YzBkZmQ2NTc0MmVjNzFjNWQxMDczNWQzMTNjMTY3MGJjYmE5OTIyZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjZiMzIzMTc5MzE3ZDk3YjQ5MjlmMTVkZGQ5NDllNWVmYWE2ODgxYmUxMzRlNWNkNmZhMjMwOTYwMGUxZTQzNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        },
+        {
+          "resource": "repo://src/web/src/constants.ts#L30-L35",
+          "version": "repo-lines-v1:sha256:6e51a0d99693d4161a46ba0eb40036c704c91547d2271a8e12de65d05766240a:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjU1YmIxNWM3MDg2YzYzYjM2ZjI5ZWJmOTBkODM0MjhiY2EyZmZiM2VjMzFmMTE3MGVkY2ZiMTNjYmVkZjJmNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTgzYTUzZWVkMWRlODBkMTgyOTQ5NWVjMzllMWY4Y2EzYzY5NmMzYzkwOWU2NTIxYTBhOGU4OGRiMWI3NDdjYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjI0Y2VkNDZiNzA2YmJhNTA1MGQ3ZGM2NDllYmVhYmM4NGFlZDYzZTA4ZTg1ZTc3M2MzZDhlMGFjM2I5MWZlMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ada48f5e79de4ced9c556a7add498c54",
+      "statement": "There is no delete endpoint or model function: registrations can only be created or edited, and re-registering overwrites the roll and display name.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/profile.ts#L15-L16",
+          "version": "repo-lines-v1:sha256:aa95fcdf2b4582669967db9f9bb90849070f330ed46bab8a4d9488234a7b1fd6:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWE5MzgyYzEzZDZmOTk5YjRiMmRlOTI5OWY3M2UzYmVkMzkzYjQxZDk1MDc1YmNkNjc2N2FmZmFkYzllNGI1MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDRjNmNjY2M5ZjQ2NzJlMWI3ZDk2ODM3ODUzNDVlMWI0MzlhZWEwM2YxMzdhMWVlODVmZjAyMzVhNWIwZDY3OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjJmYWQyYTcyNGY0YWE0MmM5NzAxNzFmYWI2MDhmNWYzM2FjZTc2YTQwMWEzNWE2ODJjMTFiM2M3ZWI5Mzg0YyJ9"
+        },
+        {
+          "resource": "repo://src/db/registration.model.ts#L1-L30",
+          "version": "repo-lines-v1:sha256:2603b6849e2b9ae77bb124ea1a022499681e40eb826dabbd73af96d34f8cd622:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5ZjliZTMzYjI2NDk5NzAzNTRhNGFhZWEwOGQ0ZDQwNjdlMTdkYWM3NDJlMTE2MzkyNjBkYmViYTkxY2Y0ZjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2ZjVhMTQ1MzRiY2U1ZWRmNTEzZjkwMmUzNDhkODY2YjZmNDI5YTlmMWM4NGQzMWEyOGIyYjEzOWFhM2RlN2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2NmJlYzE3NDlhMWFlYWIwYjQwNjg2NzBiYzQ3ZjA3NjdjYzIwM2QxNjIzYjEwYmQyMjExMzk3ZDFiMzg4ZDQifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-09T23:13:13.880Z"
+  }
+}

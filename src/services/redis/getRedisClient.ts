@@ -7,6 +7,11 @@ import { logger } from "../../config/logger.js";
 // the next caller retries.
 let clientPromise: ReturnType<typeof createRedisClient> | null = null;
 
+// After a failed connect, callers fall back to Turso/portal for a short
+// cooldown instead of re-paying the full reconnect timeout on every request.
+const RETRY_COOLDOWN_MS = 30_000;
+let lastFailureAt = 0;
+
 async function createRedisClient() {
   const client = createClient({
     url: REDIS_URL,
@@ -31,4 +36,21 @@ async function createRedisClient() {
   return client;
 }
 
-export const getClient = () => (clientPromise ??= createRedisClient());
+export const getClient = () => {
+  // fast-fail during the cooldown so a down Redis doesn't add its full
+  // reconnect timeout to every request
+  if (!clientPromise && Date.now() - lastFailureAt < RETRY_COOLDOWN_MS) {
+    return Promise.reject(new Error("Redis connect in cooldown after failure"));
+  }
+  clientPromise ??= createRedisClient();
+  const promise = clientPromise;
+  // If the initial connect fails, clear the rejected promise so the next
+  // caller retries instead of reusing the same failure forever.
+  void promise.catch(() => {
+    if (clientPromise === promise) {
+      clientPromise = null;
+      lastFailureAt = Date.now();
+    }
+  });
+  return promise;
+};

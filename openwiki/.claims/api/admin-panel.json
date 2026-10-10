@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:eae5f98567eb7b26c9eb8bfdb5485840584a0555608a8e445b3b56972ba89c01",
+  "claims": [
+    {
+      "id": "claim_e4c0ed10281d4b0abc909cd7b42d6b45",
+      "statement": "The admin panel is disabled entirely unless both ADMIN_PANEL_PATH and ADMIN_PANEL_PASSWORD environment variables are set.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/index.ts#L22-L31",
+          "version": "repo-lines-v1:sha256:174d8919b2832cdf848f0a095798601f6145f0c7dbb865dc1d7f40b03c87005f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkN2YyMzk2ZGMxMGE3OTE3ZDliNzhjNDYxOTA1ZDZjNTU4MjYzZDQ1M2RhMjljN2ZhMGE0ODU4Zjg0ZGFjNzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNiMjJiNzRmNWY2OWIxZDgyZTg0YThlZTFlNWMzMGNkMjc2NDliZTRiYTJlYzczNjFkNWYwYmIyYTI0YzQ3ZDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE2ZDcwNDg4NTgzMzhiN2RiZWIyOTQzMTU0NjgwZTBlZTQyZWQ2NzBkYjdkMzMyZjNkZTIxZGQxNWI2MTFkZWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9aad740b0ade41cdb97f3c8a12416889",
+      "statement": "Admin routes are registered before the global sanitizer middleware so passwords containing angle brackets are not mangled.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/index.ts#L22-L31",
+          "version": "repo-lines-v1:sha256:174d8919b2832cdf848f0a095798601f6145f0c7dbb865dc1d7f40b03c87005f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkN2YyMzk2ZGMxMGE3OTE3ZDliNzhjNDYxOTA1ZDZjNTU4MjYzZDQ1M2RhMjljN2ZhMGE0ODU4Zjg0ZGFjNzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNiMjJiNzRmNWY2OWIxZDgyZTg0YThlZTFlNWMzMGNkMjc2NDliZTRiYTJlYzczNjFkNWYwYmIyYTI0YzQ3ZDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE2ZDcwNDg4NTgzMzhiN2RiZWIyOTQzMTU0NjgwZTBlZTQyZWQ2NzBkYjdkMzMyZjNkZTIxZGQxNWI2MTFkZWQifQ"
+        },
+        {
+          "resource": "repo://src/api/server.ts#L42-L45",
+          "version": "repo-lines-v1:sha256:ce06d106642541f7e21e15f5dd407e1ec30fdd9aa4e73643a89ef90a46b4c1d0:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWZjNzY4MDQ0YTAyN2JmNWQ1YWZmY2QwNTg0MjA0NDQ2NjExZjA2YmVhNGY0YTMxN2Y3ZDAzN2M1ZTZhZDc4ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODI4Y2FhZWU4ZDMzZmIxZDVjYzFhZWNiYzcyZTllNTI5NTBhYmY3YjFmNjdiMTE5ZDMzZjY0OWQzNzA2Y2ZjNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjk5N2U4NjY1MWUyNWQ5MDc1ZjY5YmIzMzAzNDY3ZTcxZDYyNjUzYWYxOTU1MTgwNTFlNDFkYmRmYjA4ZGYwNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmYyYmFmZmI1NGE3YWYzYWExNGI4MmVhZjM0YzgyNjU3Y2Q2NGRlZDMzOTg1NjIwZWViYTlmYmYxYmQ0YWFmZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_931149809058411d85e5d8de5e6f356d",
+      "statement": "Admin sessions store only HMAC-SHA256(token, ADMIN_PANEL_PASSWORD) in admin_sessions; the raw token never exists in the database, and changing the password invalidates all sessions.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/auth.ts#L46-L47",
+          "version": "repo-lines-v1:sha256:8acfb6e7b9db18b4ceaef76e9abb44425a182c1b99238bfe36f2765c0649168a:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjU4Y2I5N2JmMjgxNTViNjFmNjFmNDMwZTZjYzQ3NWRiZmE3MTU0YTJmZTY4YjIzZjc1OTM2ZDExNjE0NTIwOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDYwNjM2YzM1OWJlYzZmN2RjYzg4M2Y2NzA2ZmMzNjdkYWE2OTRhMDgyYTRjOTBlZmY3MWUwYjM0MjVlZWE4NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTE3YWNmZTkwZjdmZjQ1OWIzNmY3OWNkMWY2YWJmNmY4NmE2MmNkNTdhZmRlMWVmYjRjNjgxMTVmMWM2ZGVhZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTkzZDMyMDZhZDJiYmQ5NDUxYjMzZWIyMjc1ZGE1NWVmZDZlZTA1NGQzMmU5ZGQ2YTY1NTI5NDVkNTJjYzU3ZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_049cdd39f81143439a61b4b18eeb798e",
+      "statement": "The admin session cookie qik_admin is HttpOnly, SameSite=Strict, Secure in production, scoped to the panel base path, and lasts 24 hours (SESSION_TTL_SECONDS).",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/auth.ts#L6-L7",
+          "version": "repo-lines-v1:sha256:39c01d88aac8f619fc99624b76e9a25f92c50216c9151e3114d97447960f7e59:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWVhZDAxOWI1YTRmNWIwODlmZTM1NWMzZGU3YmVkNzVlYjhkZWIyMjZhOTlkNGI2NTlkM2UzYTRiNDA2NmQ1MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjJmZTk4N2YxYWZmZmZjNzkzZTAxNzVkNjJlMDVkNzU0NjFiNzkzYjY4Yjk2NTU0NjdjM2JmNDQ0ZTU3N2E1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzc2MzA0NzM1MmQ0MGVlMmEzMWJiNTkzZDMyMGE0ODE1MWQyYTkzNmYzZTJkMzA0YWQzZjE1Yjc1MjFkNzFhOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTcxMTc3MWM5MGE5ODNjODk0YWNhZDEwYjU0NWFmNGNmNDFkZjdiYzUzYjVhNjY1NzBlZjViMTg0ZDAwZWNjZSJ9"
+        },
+        {
+          "resource": "repo://src/api/admin/login.ts#L45-L54",
+          "version": "repo-lines-v1:sha256:5102479fd92f3309558e26583e278f9b2e3ef0e7c6db7fed7f685784551d912f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5ZmVlZGI3NGQ0N2JiMGFiOGRjZGQ4ZDZkNmExYzBmNTAyMTg3YTNmZmUyNzY1MDFiMTI0NmMwNmIzMzBkMDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwMzllZjdjOWU0ZjFmMGUzNzFiNTYwNTQ2ZmU3NWYzNDJhYTY5YWVmY2EwZTFhN2JmMzhhN2JkYmNhNmVjOGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY2NjA1ZWZjMjNmMTNkZTQyNGVkYzQ0ZGQ2ZGI5YTk3MGJiZWQyNDhkMDZmMjIyZjViYWNkNGFjYTI0ZTZkZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjYTZjMDkyYTgyNDkyM2QyMmVlMDk5N2I1Y2VjOWY2MTFhNGUyOTJkYzU4ODUzN2M2ODM3ZDlmMTkzMzdlODMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6e63b41982144f1890d8f9a3ada8c76d",
+      "statement": "Admin login is rate-limited to 5 attempts per 10-minute window per IP and uses crypto.timingSafeEqual for password comparison.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/auth.ts#L21-L25",
+          "version": "repo-lines-v1:sha256:b4f3353eef501d1ebb4e7096b8fb0c75a1facfc6158804388322af91adc16048:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDhkYTcwYTUzNzYwMDA3MDZkYzc4OTcxOTZkNTQ2ODM5NGIzZDU0NmJjM2ZiOGZhOGE1OWI4ODVkZDAyMGU4ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWQ3ZjZhOWMyOTU5MDJiZTg3NmZjMGM0NmE3OTMzNWMwMDc2YzUyODU2MTYzMDdjMzIyODAyMTJmNGM2ZWU4OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzIxMjljMjczNTJiNDk1NTQ4YjA3MWFlMzRhYjkwODExNzI4NzM0MjhmNmY4N2Y1NGI1ODBlNTE1M2M5YWEwMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2M4NzcxYTAzNmYyMTdmMWExOWQ5YThkZWU4M2ZiMTNmOWY2OTk1MDFmM2IwOTg5MTUzNDRkZTU5MDA5NDRkZiJ9"
+        },
+        {
+          "resource": "repo://src/api/admin/auth.ts#L49-L62",
+          "version": "repo-lines-v1:sha256:67eab971456d5df0f2f0643baf341a29ac43131fb418e453e74aa4b3d3ca8e28:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxMzFiMzI3MWI2MzZlOTkyMTU2NTQyZmRhNzYyYzM4OTVlYWIxNzBjNWU4ZDJkMDNiODhiZGExNThhMjk2YjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwYjg4YmU1YWNhMzlkNDRjZWNhMDlmYmVhNWFjMzAwOTY1MmJjMjEwZDYxMDFmOGQxYzkwZGM3Y2UzNzdkNDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE0MThlNDIzNGIyNDVmYmMzZGNjZDA1NmNhM2U3MTFkMmQ1N2JkMGFkOWVlOGQwNWY2YjlmZDY5ZDcxMDNkYWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBkNmQ5YmIxYTg2NThhN2U4OWY3MjA3NTIzNWQ4Yzk2YmNkMWZkMTdjZmVjM2NmZjNlMGU5MDMyODcxY2FiMzQifQ"
+        },
+        {
+          "resource": "repo://src/api/admin/auth.ts#L8-L9",
+          "version": "repo-lines-v1:sha256:4bc10519ffef1d9275fcc03d34e3388cd4e458f166aa97a1db50072a2345408d:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWUyN2U3NDI0ODZiNGM4YTdiMjdhNGIyNDhkZjU5NWU1ODY3Y2NiMWUxMzhmMjRjOTdhN2YzY2U1YTljNGUyMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWMyOWYzMjY3ZWIxMTJjNzUyYmI4NTc5NDcwMjFiODFlNzliNDA0NDFhODk4ZjA4ZGVmMjEzODAxMjM1ZTJkMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjI1MTFkYmMzZTRkNjI2OTE2ZTA0YjE2YzVhZTliMjY2YWI2ZmRmYTg4MjI0MTk5YzhmZGY0ZTI1YTY1OTE0MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGU4NjNlNDgzZTI0NDBkZDM3ZGFhYzdjMmFhZTBiMmE0N2ZlOGRmNGVlMjRmNzNkOWI0MDMwNjhjZGJlYTNiZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_6a28ffe4273a4bc79d28bafa0a2f2d6f",
+      "statement": "Every admin data endpoint requires an unexpired session row in admin_sessions.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/auth.ts#L71-L96",
+          "version": "repo-lines-v1:sha256:2b3373f1fe7c473dc193a7b604671fc78c6744297a4ce6e38b91afb659ef8548:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3MWE1YzE0MjEwNjVhNzAxMDBiNTExOWQ3NTY0ZWExYWVlODk4YzNmYTQ0NzJhOTkzYzYzODkwMmI1NzkyNDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyYTJjYjI1YTEyMmI0NDIyMWE2MjM0ZWM2NjBhN2I1ZmI3ZjliZGU3YjNiOWUyYjNjNTU5YTBkOTZmYWM3MzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUxZjUxODViZTg2OWJhOTg4MDkxMjRiMGQ4MWM3NDExNzVhYzIzZGQ4M2IyMGM5MmZjYzczZTZiNmJiMzE4OGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_53df63a833fb4aa6ba67ece949e09168",
+      "statement": "A small in-memory response cache (cached helper, 200-entry cap) fronts the read-heavy admin endpoints with per-endpoint TTLs.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/cache.ts#L1-L20",
+          "version": "repo-lines-v1:sha256:b1b52430b37af0dcae3e201f7b7968257b4a3944f2d9daeba9e49657efa2ffbd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzNDM4YTIxOTg0NzE0ODEyYWNmNTIxNzAxNmYyYmNlNDUyMDUxZTEzYjFjOGNkY2U4NWY2ZGUyNTg0N2EwMzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNmY2UyNmY2MjdmMTc0MzBiMTVjZDM4Mzk1NTUzM2QwZjlkMjIxMDg4YzU0ZDgzOTA5NWE0ZTM0OGIxOTg0ZGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a19015d31af04bc6946afc0e10326ba5",
+      "statement": "Admin endpoint cache TTLs are: overview 60s, users 20s, recent feed 5s, health 300s.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/feed.ts#L27-L27",
+          "version": "repo-lines-v1:sha256:b8e609d1c857d47286e7c449a4c48ad3965ef362a30700aefffd9a87bdd32a23:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjhlNjA5ZDFjODU3ZDQ3Mjg2ZTdjNDQ5YTRjNDhhZDM5NjVlZjM2MmEzMDcwMGFlZmZmZDlhODdiZGQzMmEyMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjhlNjA5ZDFjODU3ZDQ3Mjg2ZTdjNDQ5YTRjNDhhZDM5NjVlZjM2MmEzMDcwMGFlZmZmZDlhODdiZGQzMmEyMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmY1YmZmNjBiYjMzYzQ5MDJjZjQ3OGE0NmU4MjY1NDZhNDk1NDljYWEzNTUxZjI4ZjBhNGRlNDdlMjY3Y2UxNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmQ0OGVjOTY0ZTIzZmI2ZDQ5M2JjYmVlMWIxNTY0ZTllZmY1MmI0MTVlMDQ3Mzg3YzAwOWE4MGU1YWFmZDkwYiJ9"
+        },
+        {
+          "resource": "repo://src/api/admin/feed.ts#L73-L73",
+          "version": "repo-lines-v1:sha256:c0a32d15118b08b8813e2c9ae3fa0987f73cdb55620405451b894a79cab92cf4:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzBhMzJkMTUxMThiMDhiODgxM2UyYzlhZTNmYTA5ODdmNzNjZGI1NTYyMDQwNTQ1MWI4OTRhNzljYWI5MmNmNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzBhMzJkMTUxMThiMDhiODgxM2UyYzlhZTNmYTA5ODdmNzNjZGI1NTYyMDQwNTQ1MWI4OTRhNzljYWI5MmNmNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjE4ZjJmNzBkMWZmMDE2YjdiNmQyNDY0ODkwNjBjZjM3ZDMyMGM1MjJiNWI5MjI3MjNiNDFmZWFiOTEwNTgzYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjAwM2FlYjg2ODU1NzFlMDQyODg1ZGIxNzEzNDQwNjEwZjRkMjEyMmZkNDcxNTI2ZDM0YzNkMjJhNjk3ZWZiNCJ9"
+        },
+        {
+          "resource": "repo://src/api/admin/overview.ts#L147-L147",
+          "version": "repo-lines-v1:sha256:36caefb2e790d0409f72561322eb4dd51d4b6c53f2231c8c45027c4c6c1ee2e4:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzZjYWVmYjJlNzkwZDA0MDlmNzI1NjEzMjJlYjRkZDUxZDRiNmM1M2YyMjMxYzhjNDUwMjdjNGM2YzFlZTJlNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzZjYWVmYjJlNzkwZDA0MDlmNzI1NjEzMjJlYjRkZDUxZDRiNmM1M2YyMjMxYzhjNDUwMjdjNGM2YzFlZTJlNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWU0Yzk3MTgzNmQ1MjAyNzJlZDM4M2NmMmVmYTc2OTU3Y2ZjMzc3Mzg1YTE0YzM3NjY3OGM5NTY5MjE3MzEwYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzdiN2Q3Y2IwZDljMzMxOWFiMDFjNTVhYjQzZDk5NjRmOWU5NDVmMzI3ZWExMTNhZGZjMDliY2VjNDFhZjk3ZSJ9"
+        },
+        {
+          "resource": "repo://src/api/admin/users.ts#L125-L125",
+          "version": "repo-lines-v1:sha256:4f2b39578286fb661d2f93bc17e9ee3323a4d461e667991f77609fd3c3dbfac6:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGYyYjM5NTc4Mjg2ZmI2NjFkMmY5M2JjMTdlOWVlMzMyM2E0ZDQ2MWU2Njc5OTFmNzc2MDlmZDNjM2RiZmFjNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGYyYjM5NTc4Mjg2ZmI2NjFkMmY5M2JjMTdlOWVlMzMyM2E0ZDQ2MWU2Njc5OTFmNzc2MDlmZDNjM2RiZmFjNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmU3ZDAzMTIxNDlhMjU0MmFkNmRmMTY3ODhkNjMwMzEwNzg4NTc2OGY5OWZlYmE1NTM4OTI0MzhiYTViZDlhOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDE3MDkyMjNhNjA4ZTU5YmY1MmVlNDg3NjNjNDlkYTYxMzNkZDA3ODIxYzdkMTE2Nzg1MGQ5OTdjYTExNzlmMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e73f18efb65649cf92b94e17927c0e76",
+      "statement": "Activity timestamps are stored in UTC, and day/hour grouping shifts by +330 minutes so charts follow IST wall-clock boundaries.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/overview.ts#L31-L146",
+          "version": "repo-lines-v1:sha256:d1eff18b647e4c00d419782f8fa2e64fbc0d2e0ab412389f949f2f5c9bd3c4e0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxY2ExMjg0NDc3MTE5ZTA1OWFhOWJlOTExOTM2YmZkNzM2YmRjNmFjYjgyN2ZjY2Y1OGI2NDdhZDlhYzk3N2Y4IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJmOWE3ZTY1MDQ3NGFlZjRlOWY4NTAyNDBmOTM4MzM5MDczYjFkYzk0MTU4NjkyNDZjOWFjOTZkNzg3ZGQ2NGQxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJjNjZkMjdmNDBjMmNjOGMxNWRmNjIxNWIzMjRiMjgzMjc4ZmQ1MjRlZGE1ZmEwMDQ0NjA3ODlhNWM2Y2YxZDM5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJiOTliOTgwN2E5NTJmOGMyMDFhMjY0MWFhOWNiOTljYWM5NjdlYjYwMjA1OGMwZTNmNDQ1MDBiNGM0ZmVhYzFiIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_a514361a90824c0fb92f2a6a4fb10f70",
+      "statement": "The overview endpoint computes totals, a 30-day daily series with check-ins, a 30-hour hourly series, a 30-day surface split, and top actions over 7 days excluding roll_lookup.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/overview.ts#L31-L146",
+          "version": "repo-lines-v1:sha256:d1eff18b647e4c00d419782f8fa2e64fbc0d2e0ab412389f949f2f5c9bd3c4e0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxY2ExMjg0NDc3MTE5ZTA1OWFhOWJlOTExOTM2YmZkNzM2YmRjNmFjYjgyN2ZjY2Y1OGI2NDdhZDlhYzk3N2Y4IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJmOWE3ZTY1MDQ3NGFlZjRlOWY4NTAyNDBmOTM4MzM5MDczYjFkYzk0MTU4NjkyNDZjOWFjOTZkNzg3ZGQ2NGQxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJjNjZkMjdmNDBjMmNjOGMxNWRmNjIxNWIzMjRiMjgzMjc4ZmQ1MjRlZGE1ZmEwMDQ0NjA3ODlhNWM2Y2YxZDM5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJiOTliOTgwN2E5NTJmOGMyMDFhMjY0MWFhOWNiOTljYWM5NjdlYjYwMjA1OGMwZTNmNDQ1MDBiNGM0ZmVhYzFiIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_5a82a1f2cb094796bf220b346c6bf1de",
+      "statement": "The panel frontend is one self-contained HTML document, composed at build-time from CSS in src/api/admin/panel.css.ts and client JS in src/api/admin/panel.js.ts, with no external assets except the Outfit webfont; the extracted assets keep the served HTML byte-identical to the previous single-template version.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/adminPanel.ts",
+          "version": "repo-file-v1:sha256:9df3e1da4638e4088be8c44d8c19833d2918764e924dee11e8e4197aac5046c0"
+        }
+      ]
+    },
+    {
+      "id": "claim_f6f195167e9c4cbb89041e34739d1da1",
+      "statement": "The live view polls /api/recent every 10 seconds while active and visible; client-side staleness TTLs mirror the server-side cache TTLs.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/panel.js.ts#L126-L130",
+          "version": "repo-lines-v1:sha256:b98007bb3a8222febc55d028d79c6d13fcc9f2b2ac2c5ace66ea39c2fc03fa47:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2Y5YzQ4NDMwODEwYzJhODM3ZTAyNzgxMjVjYTZkOWQ0NGM3NTYwNzRiMGMyMTRkMDdlYTYzOTBjMTg3M2M2NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzU1MTQ5YTVmM2M2MGEzNTE4YmI3N2E3NDhhN2Y1Y2VlNmM5ZjQ4MjhjZDFhNDhlYzY4ZmRmMzUyNTAzZmY1YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2M3YzQ4MDcyNjA1MGYwOTQxMDc4N2EyOTBiZjY4ZGNmYmZkY2RhNDk2NzZkZDAwMDkyOTI1NGU4NjllYTRiOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmM4MDBkMTZhMzBjOGNiYTE3MWY0YzUyMjdmODNhMmVjZWJmOWRmNTM4NzIyZWY2NDI2NzM1ZDIyYjY3MjY1OCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_553d5630f1094b7dae31c04563c49007",
+      "statement": "The users endpoint joins botusers to tgusers on CAST(user_id AS TEXT) = userId to include the student's roll number.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/users.ts#L44-L52",
+          "version": "repo-lines-v1:sha256:f74124d0d9c63f685a9ff42f808f5377b4f582fcffe754047836a3af1cbcbe4f:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmM0M2UxNzZmNWMyZmE1ZDZkZWMyMjAxOTliZjAwOTJmYTY2YmViNzMxZjc1MDc4NDE2NWVlOGFhYjcyMzZiOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2EzZTQ2Zjk0Mjc2YjZmNmY0ZWQxZjAyYWY3OGJlZjZhMmVlMWM0MzlkZDU1ODRiOTczOTQ4MzEzMjE0ZDJiNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzQ5ZTlhMWVhNDkwMDM5YmFkN2E5MjRmNjA5MGRmZTRlYjc0ZDUzNzAwYzFiNWNlNzZmOWZlMTZhOWU4OTg4YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmQyZmVkYzQxMDgzNzNmNDM4MTU0ODFlNzkzMjc4YTlhOWQ0MmJkZjAyNzUzM2Q3ZTQzYTA3MDQ1YjA5NTI4MCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8b92a5ebf2074f9db0101198aa7ddb6b",
+      "statement": "The health endpoint reuses getUptimeSummary and getUptimeDailyBuckets from the stats model, the same data as the public status page.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/feed.ts#L62-L90",
+          "version": "repo-lines-v1:sha256:9651eb7565c3a0c0f532ce95d27f4352479e815f44b074a25027dc8ed601d43b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjYTk3OWRhNjg3OGY0ZTg0M2RlNjIwNWRhYjc4ZWFjOGYwNGNiZGE0ZTQzNjgyYzk5MTY0OTJjNzJjM2YyMjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5ZWU5MTQ3NGY4OGJiYzdmYjcyMjEzZDQxMmIyNTQ5YTVmOWFmMzQ5MWE0MDgyZDliODA4ZTdkOTg0MjU2OWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1ZWYzYTUwOGY0N2M2YmNlMDFkNmRjOWY4ZWY4YmU2Y2FlOTEwYzYzOWNhNGJkNmFjM2QxMjQ5ZWNhNzUxZjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM4OWE5MDE2OWY2NDljMzEwMTUyY2YwMjViODQ2ZjFlODllNTk4Mzc3YThmZGYyNTlhYjI1MGMzNDIyNjYwNDAifQ"
+        },
+        {
+          "resource": "repo://src/db/student_stats.model.ts#L283-L337",
+          "version": "repo-lines-v1:sha256:134f18bea7afbd4d1b6d83d1226f587f9539504dcb598c5318d6c11e0703e0e1:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlZjY5MDA3YTdlNzVjY2RiMmMxOWVmYTlkOTVjNDNiZjc4N2YzM2EyYjljODI2NWM0YTVjZTY0MmZlNmRiZWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYwYTViMWIzMmVkY2Q0ZmU4OTc2ZmJmMWYzNDM2ZTdkZWU2ZjdmZGFmYmZjMjkzZmJjNWUyZGZmNWQyMTVlNjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkYWJkNzc2NTczMGVjNDNkMGZlZDFkN2Q0NmVkOTc1Y2Y3ZGQ3NGE2ZDA5OGQ2MjY5MWFjZjE4MTZkN2MwMWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRlMzg2NWU0OThlZjgwOGM5NDE2MmE4MjBlZTBkNmY2ZDU1MTllNzAzYWY5MzI4MmJmN2UyZTdjOTQwYTY1ZTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7cf21e1929cc40c594650f96834ada2d",
+      "statement": "The admin routes are split into focused modules: index.ts wires route registration, auth.ts holds session/cookie/rate-limit primitives, login.ts mounts login/logout, cache.ts holds the response cache, overview.ts, users.ts, and feed.ts mount the data endpoints.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/index.ts#L1-L46",
+          "version": "repo-lines-v1:sha256:6fe5b4b824a5126032d3143450f971aa11cffb4ee719a124e7c0818dd8d5f29d:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0ZjNiMzhiMGM3NTY0YzQ5NmZmNTNhMTcyYWMzNjA1OWQ0MzUxMDEyMjkzMTU5NTZjMjkxZDdhZjIxYTA0MGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY0ZTNiNjdlOTE4MzUxZWJiMmQ4ODllNzViMzkzZGIyNjAwM2ZlMGMxNjk2NDY4MTBiMzAxM2YzYTllZGEwOWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e27ec9815a554c09bed4911bf9550c50",
+      "statement": "The admin login-attempts map is pruned of expired entries once it exceeds 1000 entries, keeping the attacker-facing map bounded.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/auth.ts#L14-L19",
+          "version": "repo-lines-v1:sha256:97bab37063a101e76c8cda4e74897353be34917d633ef49744dfb81d97078e69:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzQyMTI3MmQ0NzE4MDhiMzIzYzBkYmQ5YWEwMTZhMjA1ZWVhODg2YTU2M2QwMmJlNGY5Nzg2YWFhMWZhOWExYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWExZDFhNjMzOTAyMjljNzk4MzQ3ZTgzYTA0MDU0NDFjOTQwMDAzNTI4NGFkMTY4YzFiZjZjZGYxZDcwYTM3MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmY5MzExYzNkM2EzNzA4MzViODAyZjVmOWEzOTViNjI4OGZjOTE3ZDVhMmJjNDJlYzRhMzNiNTZlOGU2YjY0NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjZlZDFiMzQyZjE2NDBkY2VmN2U1ZjFkZDYyODk0NjYyZGQyYjI4ZDY2MmZhZTRlNmE3Y2M0NmY5ZjMyNGY5OSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-09T23:13:13.880Z"
+  }
+}

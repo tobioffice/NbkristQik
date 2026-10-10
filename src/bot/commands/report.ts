@@ -1,53 +1,76 @@
 import { bot } from "../bot.js";
-import { ADMIN_ID } from "../../config/environmentals.js";
-import { logger } from "../../config/logger.js";
+import {
+  createAndAnnounce,
+  tooSoonToReport,
+} from "../../services/reportService.js";
 import { trackMessage } from "../../services/tracker.js";
+import { REPORT_WEBAPP_URL } from "../../constants/webapp.js";
+import { CHIT_CHAT_ID } from "../../constants/index.js";
+import { logger } from "../../config/logger.js";
 
-// Telegram HTML parse_mode: these three must be escaped in user content
-const escapeHtml = (text: string) =>
-  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+// /report now lives on the web: easy typing, an issue id, and replies that
+// reach the reporter here in Telegram. A bare /report opens the form;
+// "/report <message>" still works and files a tracked report with an id.
 
 bot.onText(/\/report$/, (msg) => {
+  trackMessage(msg, "command:report");
   bot.sendMessage(
     msg.chat.id,
-    "⚠️ <b>Oops! You missed the message.</b>\n\nPlease use the command like this:\n<code>/report [your message]</code>\n\nExample:\n<code>/report I found a bug!</code>",
-    { parse_mode: "HTML" },
+    `🐞 <b>Report an issue</b>\n\n` +
+      `Open the form and describe what went wrong. You'll get an issue id like <code>QIK-0012</code>, and I'll reply here in chat.`,
+    {
+      parse_mode: "HTML",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🐞 Report an issue", web_app: { url: REPORT_WEBAPP_URL } }],
+        ],
+      },
+    },
   );
 });
 
-bot.onText(/\/report (.+)/, (msg, match) => {
-  const reportMessage = match ? match[1] : "No message provided";
-  trackMessage(msg, "report", reportMessage.slice(0, 100));
-  const reporterName = msg.from?.id
-    ? `<a href="tg://user?id=${msg.from.id}">${escapeHtml(
-        msg.from.first_name || `U-K`,
-      )} </a>`
-    : escapeHtml(msg.from?.username || msg.from?.first_name || "Unknown user");
-  const formattedMessage =
-    `📢 <b>New Report Received</b>\n\n` +
-    `👤 <b>Sender:</b> ${reporterName}\n` +
-    `🆔 <b>User ID:</b> <code>${msg.from?.id}</code>\n\n` +
-    `📝 <b>Report:</b>\n<i>${escapeHtml(reportMessage)}</i>`;
+bot.onText(/\/report ([\s\S]+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const from = msg.from;
+  const text = match?.[1]?.trim();
+  if (!from || !text) return;
 
-  if (!ADMIN_ID) {
-    logger.warn(
-      "[report] ADMIN_ID not set — dropping report:",
-      reportMessage.slice(0, 100),
+  if (chatId === CHIT_CHAT_ID) {
+    bot.deleteMessage(chatId, msg.message_id).catch(() => {});
+    return;
+  }
+
+  trackMessage(msg, "command:report", text.slice(0, 100));
+
+  if (text.length < 10 || text.length > 1000) {
+    bot.sendMessage(
+      chatId,
+      "Give me a bit more detail so I can help: between 10 and 1000 characters.",
     );
     return;
   }
 
-  // Forward to personal chat
-  bot
-    .sendMessage(ADMIN_ID, formattedMessage, {
-      parse_mode: "HTML",
-    })
-    .catch((err) => logger.error("Error forwarding report:", err));
+  if (await tooSoonToReport(from.id)) {
+    bot.sendMessage(chatId, "One report at a time. Try again in a minute.");
+    return;
+  }
 
-  // Confirm to the user
-  bot.sendMessage(
-    msg.chat.id,
-    "✅ <b>Thanks for reporting!</b>\n\nI've sent your message to the admin. We'll check it out soon!",
-    { parse_mode: "HTML" },
-  );
+  try {
+    const { issueId } = await createAndAnnounce({
+      userId: from.id,
+      username: from.username ?? null,
+      firstName: from.first_name ?? null,
+      chatType: msg.chat.type as "private" | "group" | "supergroup" | "channel",
+      message: text,
+    });
+    // the service already confirmed in DM; in groups confirm inline too
+    if (chatId !== from.id) {
+      bot.sendMessage(chatId, `✅ Report ${issueId} received.`);
+    }
+  } catch (e) {
+    logger.error("[report] chat submission failed:", e);
+    bot
+      .sendMessage(chatId, "I couldn't file that report. Please try again.")
+      .catch(() => {});
+  }
 });

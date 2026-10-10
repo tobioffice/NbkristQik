@@ -21,6 +21,15 @@ const REDIS_URL = process.env.REDIS_URL || "";
 
 const PORT = process.env.PORT || 3000;
 
+// Comma-separated allowlist for the web leaderboard origin(s). Defaults to
+// the GitHub Pages host so existing deployments keep working unchanged.
+const CORS_ORIGINS = (
+  process.env.CORS_ORIGINS || "https://tobioffice.github.io"
+)
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 export {
   ENV,
   TELEGRAM_BOT_TOKEN,
@@ -32,4 +41,5 @@ export {
   CHANNEL_ID,
   REDIS_URL,
   PORT,
+  CORS_ORIGINS,
 };

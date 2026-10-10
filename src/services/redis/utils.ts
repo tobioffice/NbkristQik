@@ -1,6 +1,7 @@
 import { getStudent, findSimilarRolls } from "../../db/student.model.js";
 import { Student } from "../../types/index.js";
 import { getClient } from "./getRedisClient.js";
+import { redisKeys } from "./keys.js";
 import { logger } from "../../config/logger.js";
 
 export class StudentNotFoundError extends Error {
@@ -17,15 +18,16 @@ export const getStudentCached = async (
   rollnumber: string,
 ): Promise<Student> => {
   const redisClient = await getClient();
+  const key = redisKeys.student(rollnumber);
 
-  const cachedStudent = await redisClient.get(`student:${rollnumber}`);
+  const cachedStudent = await redisClient.get(key);
   let student = cachedStudent ? (JSON.parse(cachedStudent) as Student) : null;
 
   if (!student) {
     student = await getStudent(rollnumber);
     if (student) {
-      await redisClient.set(`student:${rollnumber}`, JSON.stringify(student));
-      await redisClient.expire(`student:${rollnumber}`, 60 * 60 * 24 * 7);
+      await redisClient.set(key, JSON.stringify(student));
+      await redisClient.expire(key, 60 * 60 * 24 * 7);
       logger.debug("cached student: ", rollnumber);
     } else {
       // not in college records — suggest similar rolls

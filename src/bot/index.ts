@@ -54,7 +54,10 @@ async function startBot() {
       import("./commands/help.js"),
       import("./commands/start.js"),
       import("./commands/report.js"),
+      import("./commands/answers.js"),
       import("./commands/leaderboard.js"),
+      import("./commands/register.js"),
+      import("./commands/registered.js"),
       import("./academics/academicHandler.js"),
       import("./dailyCheckIn.js"),
       import("./syncdb.js"),
@@ -68,6 +71,10 @@ async function startBot() {
     void startUptimeMonitor();
     const { startServer } = await import("../api/server.js");
     startServer();
+
+    // Only expose the bot to Telegram after DB init, all command/handler
+    // imports, and the API server are ready.
+    await bot.startPolling();
 
     logger.info("Bot is ready!");
   } catch (error) {

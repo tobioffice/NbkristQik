@@ -1,6 +1,7 @@
 import type { Message } from "node-telegram-bot-api";
 import { turso } from "../db/db.js";
 import { getClient } from "./redis/getRedisClient.js";
+import { redisKeys } from "./redis/keys.js";
 import { logger } from "../config/logger.js";
 
 export type ChatSurface = "private" | "group" | "supergroup" | "channel";
@@ -46,7 +47,7 @@ const record = async (event: ActivityEvent): Promise<void> => {
   let skipProfile = false;
   try {
     const redis = await getClient();
-    const claimed = await redis.set(`track:p:${event.userId}`, "1", {
+    const claimed = await redis.set(redisKeys.trackProfile(event.userId), "1", {
       EX: 60,
       NX: true,
     });

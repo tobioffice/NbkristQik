@@ -88,7 +88,7 @@ export default function Leaderboard() {
         {myRoll && myRankNow != null && !initialLoading && !error && !isFiltered && (
           <div className="flex items-center justify-center mb-4">
             <span className="text-xs font-semibold text-indigo-300 bg-indigo-500/10 border border-indigo-500/30 rounded-full px-4 py-2">
-              🎯 You're #{myRankNow} of {total.toLocaleString()} · {myRoll}
+              🎯 You're #{myRankNow} of {total.toLocaleString()} ({myRoll})
             </span>
           </div>
         )}
@@ -116,7 +116,9 @@ export default function Leaderboard() {
                 key={stat.roll_no}
                 stat={stat}
                 sortBy={sortBy}
-                isMe={stat.roll_no === myRoll}
+                // guard: myRoll is null for unidentified viewers, and a ghost
+                // row's roll_no is also null — null === null must not mean "me"
+                isMe={myRoll != null && stat.roll_no === myRoll}
                 isLast={index === listStats.length - 1}
                 lastElementRef={lastElementRef}
               />

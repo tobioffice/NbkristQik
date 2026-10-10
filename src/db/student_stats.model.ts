@@ -16,32 +16,32 @@ export const updateAttendanceStat = async (
   rollno: string,
   percentage: number,
 ) => {
-  const now = new Date().toISOString();
-  // Upsert logic: Insert or Update only attendance
+  // last_updated uses SQLite's datetime('now') format (UTC, no ms) to match
+  // every other table in the schema — comparisons like datetime('now', ...)
+  // stay consistent.
   await turso.execute({
     sql: `
          INSERT INTO student_stats (roll_no, attendance_percentage, last_updated)
-         VALUES (?, ?, ?)
+         VALUES (?, ?, datetime('now'))
          ON CONFLICT(roll_no) DO UPDATE SET
          attendance_percentage = excluded.attendance_percentage,
          last_updated = excluded.last_updated
       `,
-    args: [rollno.toUpperCase(), percentage, now],
+    args: [rollno.toUpperCase(), percentage],
   });
 };
 
 export const updateMidMarkStat = async (rollno: string, average: number) => {
-  const now = new Date().toISOString();
-  // Upsert logic: Insert or Update only mid marks
+  // see updateAttendanceStat for the last_updated format rationale
   await turso.execute({
     sql: `
          INSERT INTO student_stats (roll_no, mid_marks_avg, last_updated)
-         VALUES (?, ?, ?)
+         VALUES (?, ?, datetime('now'))
          ON CONFLICT(roll_no) DO UPDATE SET
          mid_marks_avg = excluded.mid_marks_avg,
          last_updated = excluded.last_updated
       `,
-    args: [rollno.toUpperCase(), average, now],
+    args: [rollno.toUpperCase(), average],
   });
 };
 
@@ -101,12 +101,21 @@ const buildLeaderboardWhere = (
 // ranking notes in the git history / docs). Tiebreak in the outer
 // ORDER BY instead. COUNT(*) OVER() returns the filtered total alongside
 // each row so the count and page come from a single round trip.
+/*
+ * GHOST ROWS — read this before touching the SQL.
+ *
+ * student_stats can contain scores for roll numbers that no longer exist in
+ * studentsnew (student re-sectioned, typo'd roll, or roll wiped by a sync).
+ * LEFT JOIN would list them with roll_no = NULL and no name — blank ghost
+ * rows in the web leaderboard. Use an INNER JOIN so only students who exist
+ * in the master table rank.
+ */
 const rankedSubQuery = (scoreExpr: string, whereClause: string): string => `
       SELECT s.roll_no, s.name, st.attendance_percentage, st.mid_marks_avg,
               RANK() OVER (ORDER BY ${scoreExpr} DESC) as rank,
               COUNT(*) OVER() as total
       FROM student_stats st
-      LEFT JOIN studentsnew s ON st.roll_no = s.roll_no
+      JOIN studentsnew s ON st.roll_no = s.roll_no
       ${whereClause}
   `;
 
@@ -120,7 +129,7 @@ const countFilteredTotal = async (
     sql: `
         SELECT COUNT(*) as total
         FROM student_stats st
-        LEFT JOIN studentsnew s ON st.roll_no = s.roll_no
+        JOIN studentsnew s ON st.roll_no = s.roll_no
         ${whereClause}
       `,
     args,
@@ -223,13 +232,16 @@ export const getStudentRank = async (
       : "ROUND(mid_marks_avg, 1)";
 
   // Single round trip: rank + COUNT(*) OVER() over the same filtered set.
+  // INNER JOIN studentsnew so ghost stats rows (student gone from the master
+  // table) can't hand the caller a bogus rank.
   const result = await turso.execute({
     sql: `
       WITH ranked AS (
-        SELECT roll_no,
+        SELECT st.roll_no,
                RANK() OVER (ORDER BY ${scoreExpr} DESC) as rank,
                COUNT(*) OVER() as total
-        FROM student_stats
+        FROM student_stats st
+        JOIN studentsnew s ON st.roll_no = s.roll_no
         WHERE ${column} IS NOT NULL
       )
       SELECT rank, total FROM ranked WHERE roll_no = ?

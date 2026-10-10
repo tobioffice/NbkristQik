@@ -58,29 +58,33 @@ export const sendAttendanceOrMidMarks = async (
 ) => {
   await fetchAndEdit(
     msg,
-    `Fetching ${signal == "att" ? "Attendance" : "Mid marks"}...`,
+    `Getting ${signal == "att" ? "attendance" : "mid marks"}...`,
     () => (signal == "att" ? getAttendance(rollno) : getMidMarks(rollno)),
   );
 };
 
 export const sendBunkPlan = async (msg: Message, rollno: string) => {
-  await fetchAndEdit(msg, "Calculating bunk plan...", () =>
+  await fetchAndEdit(msg, "Working out your bunk plan...", () =>
     getBunkPlan(rollno),
   );
 };
 
 export const sendJoinChannelMsg = async (chatId: number): Promise<void> => {
   const channelName = CHANNEL_ID.slice(1);
-  await bot.sendMessage(chatId, "Join the channel to use in private ‼️", {
-    reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: `Join @${channelName}`,
-            url: `https://t.me/${channelName}`,
-          },
+  await bot.sendMessage(
+    chatId,
+    "👥 Join our channel first, then I can help you here.",
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: `Join @${channelName}`,
+              url: `https://t.me/${channelName}`,
+            },
+          ],
         ],
-      ],
+      },
     },
-  });
+  );
 };

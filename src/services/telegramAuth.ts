@@ -23,7 +23,7 @@ export const verifyInitData = (initData: string): TgInitUser | null => {
     params.delete("hash");
 
     const dataCheckString = [...params.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
+      .sort()
       .map(([k, v]) => `${k}=${v}`)
       .join("\n");
 

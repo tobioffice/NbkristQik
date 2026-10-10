@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:ba640605e99170103a868711be0ca2f7787a85c2ddad08f46bc7c46fb839e620",
+  "claims": [
+    {
+      "id": "claim_bd912aa28bb94114a6e1f34d596d187f",
+      "statement": "The root package defines dev, build, start, lint, format, typecheck, test, test:ui, and test:coverage scripts, is ESM-typed, and starts from dist/bot/index.js.",
+      "evidence": [
+        {
+          "resource": "repo://package.json#L6-L18",
+          "version": "repo-lines-v1:sha256:744f46f905af7e48baa1a6f84186eed824998dccb1a1151e1b0275cd7ccbff2f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwOGYxYjMxODg3Y2U0ZWE2NmU0ODI3MjdiMTY5MWUxMDRmMjVmZTEzYWZiYjVjZDczYjI0NjExMjRkMzkzZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyYTgwYTIyYjYyZWMyYTU1MTU1OTRiNzJkYjE2ZGFjMmIwZTkyNWMzMWIyZTg4YjFmYTg2YzA0ZGNkMzBiZGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlZTJkYzc4M2IyZDU4YjUzZjRjM2VlNjZmMWU2YjFjMDVmYjU0YzBkZjMxM2E0N2QzN2Q3YjMxYTdjMGNiMWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fe749cefa39b4d31a3083553ce6f0f0f",
+      "statement": "Required environment variables cover ENV, Telegram tokens, Turso credentials, Redis URL, portal credentials, ADMIN_ID, channels, admin panel path/password, and CORS_ORIGINS; PORTAL_BASE_URL and PORT are optional with defaults.",
+      "evidence": [
+        {
+          "resource": "repo://.env.example#L1-L40",
+          "version": "repo-lines-v1:sha256:8dd120ace706d722c4bd14bafe8232ad3b73558c6130dc431fe49d5d3af98dad:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1ZjU1Y2RmZGIyNjA5NjFmYzI1NTc1MWUzOWJjZGFiNDQyOTU3NDhiOThiMmY0NDc2ZmM1MzM5ZWNlMGNiOWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmYWRmNjM1Y2U1N2JiN2I3N2ViMzM4YzIzYjhlZTIxZmMxZTAzYmMyM2ZiMmNjMDY1ZTZjNjZmOGRhYTU2YWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/config/environmentals.ts#L5-L30",
+          "version": "repo-lines-v1:sha256:ebe469cc89c03e6069dbb2c4951a165ac2b3c507f1d21bbcb4467b06bd785212:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4ODk2NDZhNDE2Yjk3MDE1ODQwZWFjMWZiMmFjM2I2ODVmOWY5YjFmY2QzNWVmOTEyNDcwOGZjZTgxMGU5YTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4MGNmNTQxZDUzYTc4N2EzMjA5YWZmNmQzNDI2N2U1OTY5ZWMyZDdlNzc0NjVjMTBlNDJmMWNjNDAxODQ0YmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdjNmU2YjA3Y2ZiMTVkM2E0MDljNjc2ZjBlZGI3NGE0NmU2Mjk0YWQ3OTAzYjU3YzhlY2YyMDAxYmVmZTY4ZDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA3OTA2MGExOWJlODcyNGI1MzcyMGQ3ZjdjNDVjODM0MDc2YWUxMzg3NWM0MzZkODhkYzk2NDE1OGQ3ZWY1YjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_afa8e9ff42284f97964bfa6a98b9068b",
+      "statement": "Deployment builds locally, rsyncs dist and manifests to the server, installs production dependencies with a frozen lockfile, and restarts and verifies the nbkristqik systemd service.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/deploy.sh#L11-L33",
+          "version": "repo-lines-v1:sha256:7e118c1da1b03cf185a55a5e3e1dbce91c4ce41881a543b96d15c3a8224ad3c6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4ZmM2MzM2NjdkMDMwMDczMWJkZDg0NDcyZGM0MjRlMWY5YzY0MTc1ZWEyYmFkYjY2NjQ3MmQ5MWFlYjRlZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxNDBlMTZlODFhYjkwNjYwNDg4OWY2MmMyZmVlY2JmYmIxNzUyZTUwN2IzZmY4ZTBkYzc3MzkxZDBlNGE5YmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxNWQ3ZDkwMjk5ZjBlZDc0MzQxZmY3ZmZkOGU4YmNlODUzNjg2NTM4YmVjODc4NzBkNjY5M2U0ZGJjNjFjNTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4102b942a85746f9a4d8ebfe5e46371e",
+      "statement": "The deploy script targets the oracle3 SSH alias and /home/ubuntu/nbkristqik by default, overridable via DEPLOY_HOST, DEPLOY_DIR, and DEPLOY_SERVICE.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/deploy.sh#L1-L10",
+          "version": "repo-lines-v1:sha256:394bd2630954799d1e464c6175c0b826f009521bd2f57ecc3778e232bf3b01de:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkOTVmYzA0YTgwYzk1MmY0OWNlNDE4ODYyN2M1M2IwZmJlOGM0NDA0MWI5NTJkNTkyYWNkMWRlOTk4NjE0NjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjMzdlMjcxZTVjZTg0NjdiYTIyZjRjY2QxYzQwNzlkYzdmYjBlNzY5MTk5MmYyMTU1NDQ2ZDA4NThmNDA4NDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5MTNmZGE2NzgyNWRhYmNiYjc5NTc0ODc1ZGQ1NjcwMDc2ZjI1MjM2MjVmODcxNjUyMWQ5ZmM2MjU1MzA0ZWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2ca0114ea7aa409b8faa44a15e20a774",
+      "statement": "CI runs lint, typecheck, and test:coverage on Node 20 with pnpm 10 for pushes and PRs to main and develop, uploading coverage to Codecov without failing on upload errors.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/test.yml#L1-L50",
+          "version": "repo-lines-v1:sha256:0fb7c793baa7227d612f655cb50f952c29e5773a8015a14e4236b010598d74ba:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiZmNhNTkzNzZhODE4MTVkNzg5NDRkZGVjNzhkYzEyNGQ4ODNiOTZjNWQ5YmU0ODJlNDZiYjU3ZTRkZmJjMjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2ZWM3N2I1ODFjYmQ2ZjNkMWQ1MmNmZThjMTUxNjdiMDBhNWQyMTVkYzg1ODYyNzI1MmE4YTBiNDNiMDNjNzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_370de719aca747d989dc0775bb49a931",
+      "statement": "A scheduled workflow refreshes the OpenWiki daily and opens a pull request, preserving completed pages even when generation fails.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/openwiki-update.yml#L1-L88",
+          "version": "repo-lines-v1:sha256:bb97ae74933353bc8cb7293ccf61e9685819bd0a25cb3f5e281ae3aa0bcc9bdc:eyJzZWxlY3RlZExpbmVDb3VudCI6ODgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2MDI3ODdhZjZkY2MwODM0ZGUxMjFjYmIxY2I5NWY5NDU5YjcyMWVhYjAzNDlmMTA1MDFiOTk2YzFjNzdmZmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2NzE4ZjA2N2I1ZTVjMWYwOTkxYTZlNzQ3MjZmZTJhMjNkMjY0MzQ1ZTA4ZTRlYWQwNGZhZjczYzI3ZWQ0NDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ae0181fba6b64bb29c82417607530ad6",
+      "statement": "Vitest forces TURSO_DATABASE_URL to file::memory: so stray production credentials cannot point tests at production, and enforces coverage thresholds.",
+      "evidence": [
+        {
+          "resource": "repo://vitest.config.ts#L4-L32",
+          "version": "repo-lines-v1:sha256:59285f8c7044a82caa7b4a8975eea398980cd7d4872f4c1eea2327b95f99af01:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyY2VjYjE0NGE0NmY1ZGNmMTJhNjE2OWZjZWVkNzY5NWU4Mjk0YjA5MGRlNzZmMzY2MWNkZDAyNDkzMDAxNDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2ZTYyNjU4MzQ1YjM3MjcwNjdlNzE1ODI5MTMxZTNhYzM4OGZlY2M2N2VkMmIwZDhjZjhlOGI2NzYwNzljYTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcxMzIyZmNlNjM4MmFlOWMwODU4ODcyZDMwNTgzNGFhOGI4NjM5YWI0NmQ4ZjA1ZDYzNjAzOWY4ZjE3NzAxM2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY0NTFiZjJiOWYyYTc5YjU2MjEyMjRlNmNlNDU0ODRlNDljM2M5ZGQ3NWM1MWQ4YjNmYmQ1ODVkYzNhMWUzODcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c162c3c11beb41ff877019c261d06f7c",
+      "statement": "Test setup seeds fake Telegram, portal, Redis, Turso, channel, and port values, disables the admin panel with empty (not deleted) vars, and clears mocks before each test.",
+      "evidence": [
+        {
+          "resource": "repo://tests/setup.ts#L1-L28",
+          "version": "repo-lines-v1:sha256:4173e7d14a902182db5bb4f7656a090a04a42fe613508c9e17a6a116255c2282:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4OWJmNTBmYTk1ZjI2ZjM4NDMwYmJmMDZjMmIxYWVhOWFiN2JiNGQwMDFlYmQ1Zjg4YjJmNDhjMDc4OGVlOWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_54468fb7466f4682ae8239d0741185d4",
+      "statement": "The suite has unit, integration, mocks, and setup layers, with tests grouped by Academic, AcademicTG, integration flows, security, and stats concerns.",
+      "evidence": [
+        {
+          "resource": "repo://tests/README.md#L34-L50",
+          "version": "repo-lines-v1:sha256:e9d6ca4fe1ef6e57b1733989646aa19bdc0ae2c0e8bb18ab0d211a1926d32f39:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkMDIyZmQzYjA0ZjkxMmNjNjEyMDNlMGEwMTllNjMzYzQ2YjExZTg2MjY3ZjcxNzZhYjM5MmY5ZGM2MTMzYmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3YzA2YzU2MWQ1YzMyNzM0MzY4NTI2OGE0NmIzMzkxZjM5OThlZWU4OTBkMmJlNTFmMGQyMWNjNGE1M2FlNmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImViN2QyNzA3YjhiYTU5OWUyNjMzNWJjZmM1ZThjNmMxYTc4MmU2M2VmYTdkNjRiMWNhMjZkMzhmYTFiYmQ0MTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE0ZjVjMTQ3MWIxZjNiNTQ5ZDM2YzQxMTJmNTQ5MTk2ZDU3YmIxMTJmMzYxNWZkODA2Yzc2ZDA5NTUwMzBlNWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_217a86d570164129b1b21f6d6e0ad212",
+      "statement": "The web app builds with vite and deploys as static pages to GitHub Pages via the gh-pages script; the build has two entries (index.html leaderboard, register.html profile).",
+      "evidence": [
+        {
+          "resource": "repo://src/web/package.json#L6-L14",
+          "version": "repo-lines-v1:sha256:7d5cb4e05f325730eec52c59182e1e2c16f2049067f5e96ee9a7f9760b56da16:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzQ4MzNkNTk0OWMwM2E0MGNhOTUyNDkxNjEwYTY2NTk2NDRiM2FhNDY2MzYyZjc5OTAyMGRiZjE5ODE1NDdkYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2E2M2JmMDk0ZjUzYTg5MTIzMjc5MjRlMjllMTE5MzIzYjJjOTU5YWNjMDEzMmZhZmEyNzE1MmI1YmQ5Zjg2NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzYyYmRiNTZkNmIxZDZhOGJjN2ZhOWEyNGU2YTdmZjcxODM2NWE2OTU1ZjhiZTRiNGJhMTVkYzYwMTQ3OTg3MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4e0ce481b609408193b3f292e27aa892",
+      "statement": "CI runs a test job (lint, typecheck, coverage with thresholds) and a web job (lint, tests, build in src/web) on Node 20 with pnpm 10.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/test.yml#L1-L83",
+          "version": "repo-lines-v1:sha256:02d8253339d173d245590fd2a04346de81464cc74a1653d0a365b3e7f77c6c89:eyJzZWxlY3RlZExpbmVDb3VudCI6ODMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiZmNhNTkzNzZhODE4MTVkNzg5NDRkZGVjNzhkYzEyNGQ4ODNiOTZjNWQ5YmU0ODJlNDZiYjU3ZTRkZmJjMjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4MjM1NTg1OWM5YWU4ZDhhYjA3Y2Y4OTc1Y2I5M2RhY2U2NTM5YTY3NDY5ODA1OGVlZWZjMGNiNDdiZTllZjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_242e9ec7b46946d499309d5c18b9e5a2",
+      "statement": "package.json pins engines.node >= 20 and .nvmrc records 20.",
+      "evidence": [
+        {
+          "resource": "repo://.nvmrc",
+          "version": "repo-file-v1:sha256:5378796307535df3ec8d8b15a2e2dc5641419c3d3060cfe32238c0fa973f7aa3"
+        },
+        {
+          "resource": "repo://package.json#L22-L25",
+          "version": "repo-lines-v1:sha256:57a6672ce16ff76fbd1493bbadc34dcca1d860da591f3ca922cf6b8c07de5e9f:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjZiNzBmZGJmMTY3MjkyYWZlOWE1OTExOGUxNGNkOWVjMWYxYTlhNGM1Mjk0NzBmYTdhMDFlMDAxNjc1OTBkNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWYwY2RiOTcyYTdiZmI3ZWQyNDZmOWZmNjcyMzg1ZTU1ZjQ5NjhmYzExMDQzZGM1YjY4NGQ1MWRmYTMxZGJjYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGVlMmRjNzgzYjJkNThiNTNmNGMzZWU2NmYxZTZiMWMwNWZiNTRjMGRmMzEzYTQ3ZDM3ZDdiMzFhN2MwY2IxZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2FlNzYwMmRjZDYxMzViZmY5NDM3MzIwNDYwNjgyOTRiNTY5MThiYjE3MDY2MzMyODQwZGQwZDFiZDQwYzJmYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_38dcd07954d74dffb7504140526e1b1c",
+      "statement": "Bot buttons use direct GitHub Pages URLs for the leaderboard (index.html) and profile (register.html) mini apps.",
+      "evidence": [
+        {
+          "resource": "repo://src/constants/webapp.ts#L1-L6",
+          "version": "repo-lines-v1:sha256:c7f7aae3f78138505e62bf61d53413f034410a06856843f878990942fca15c30:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWZlN2MxY2E0MDFlZmNjMjAzZjQ3ODU0YzBkZmQ2NTc0MmVjNzFjNWQxMDczNWQzMTNjMTY3MGJjYmE5OTIyZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjZiMzIzMTc5MzE3ZDk3YjQ5MjlmMTVkZGQ5NDllNWVmYWE2ODgxYmUxMzRlNWNkNmZhMjMwOTYwMGUxZTQzNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_eb8039ebc7044e30a8f698d34df6edf9",
+      "statement": "Backend and web test suites are separate: root vitest includes tests/**/*.test.ts, and the web package has its own vitest config for src/web/tests.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/vitest.config.ts",
+          "version": "repo-file-v1:sha256:007863fbde24d1382ce905144b229031f2c7c82302e61051bc396b6528f481de"
+        },
+        {
+          "resource": "repo://tests/integration/profileRoutes.test.ts",
+          "version": "repo-file-v1:sha256:d7836523e092a7bd27b96e623ccfbe3719a235e9a7735e59d7dd1d7eeecc835c"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-09T23:13:13.880Z"
+  }
+}

@@ -45,7 +45,7 @@ describe("getLeaderboard", () => {
     const { rows, total } = await getLeaderboard("attendance", 10, 0, {});
 
     expect(total).toBe(3);
-    expect(rows.map((r: any) => r.rank)).toEqual([1, 1, 3]);
+    expect(rows.map((r: { rank: number }) => r.rank)).toEqual([1, 1, 3]);
   });
 
   it("should apply section filters to rows and total", async () => {
@@ -55,7 +55,7 @@ describe("getLeaderboard", () => {
 
     expect(total).toBe(1);
     expect(rows).toHaveLength(1);
-    expect((rows[0] as any).roll_no).toBe("AAA00003");
+    expect((rows[0] as { roll_no: string }).roll_no).toBe("AAA00003");
   });
 });
 

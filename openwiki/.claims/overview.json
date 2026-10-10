@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:addda0025439bd25da4f1d8276bea1e0fca28c6dc35c2473e6c43b487e183b39",
+  "claims": [
+    {
+      "id": "claim_995d939b0856440392aae1ce3347c7a3",
+      "statement": "NbkristQik starts the Telegram bot and Express API in a single Node process from src/bot/index.ts, beginning bot polling only after database init, handler imports, and server startup.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/index.ts#L38-L85",
+          "version": "repo-lines-v1:sha256:c4bc2c8efc16d7d7dd02629e6850a36c7f61e3e6994b6811e943c69e0447fcee:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZmY3ZDEzMTA2NmM2MDE2NjU5Yjc0Y2UxMzc2NGI0OTAzMmIwNTI5OTIzOTNkZDhlMTUyMjFjZjhlNTAxNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3YjQ1MzEyOGRkNTU2MDFmMjg2MDg2NGM0OWM4OGY4ODE2NjM3MzliZDRkNzBiYzIwNmQ4YjZiYmQ4YWUzYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjNWI1MTVjZTBkOTFlZjNiYzg5YzgwNzZhYWNhYmE0YjRiYTEyYTk2NjRlM2E0ZTlhZDE2YTdkMmYzNzQ5MmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_850744c0f2324243a0d34dabfb500100",
+      "statement": "The stack uses TypeScript with node-telegram-bot-api, Express 5 with rate limiting and validation middleware, @libsql/client for Turso, redis v5, axios, and cheerio, tested with Vitest, with engines.node >= 20.",
+      "evidence": [
+        {
+          "resource": "repo://package.json#L23-L59",
+          "version": "repo-lines-v1:sha256:3840f3cd09b46edc54cad57c370eb699d8f472ba7cbb0a9a9f32fde381fd1917:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRiYjJlMTEyOWUwOTkzNTBmYzdlNGY0YWY0NWMzMTMyNWFmNTYzZTJiZDFlNmE1MTFiZDQ1ODVjNjZiYjE2MDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxMGIzNmFhNzRhNTliY2Y0YTg4MTg1ODM3ZjY1OGFmYWYzNjQ2ZWZmMmJiMTZjMzkyOGQwZTkzMzVlOTQ1ZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJiZTcxYjU0OWUzZGZjMDA2YWRiNDAxMjkyZjcwNTVhODFmNjRjMzQ2ZjViNzE1ZTRlMjEyZTA4OWQwZjMwMTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_164bc0dad9bd4c05b8770eac29ea2898",
+      "statement": "The web frontend is React 19 built with Vite and styled with Tailwind CSS.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/package.json#L15-L37",
+          "version": "repo-lines-v1:sha256:22d0d0a1d8e1dc857f042405701ca88b3a5f6c7cd7fc8b1ab56e8d0338a1bdf4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhM2I0NjlkOWUwOTc1NzIyNDY2NjczNGM5ZWY3YjI1NGQ4ODUzNGY1ZDViYjcwOTg5NjA4MDVjNTUzZGMzMDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImExZjJjZjhhYmU4YWYxNDgzY2Y0OGM5ZmI5NmFjYjJhOTMxNjA2OTY2MjEzZWI4ZWFlZmQwNjg2YzU4NmU1ZGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_79f7e4bfabc74182ba3c049560ee3c78",
+      "statement": "The bot replies to a roll number with attendance, mid-marks, or a bunk plan, and the bunk plan computes skippable and recovery classes against a 75% attendance target.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/student.utils/formatters.ts#L98-L152",
+          "version": "repo-lines-v1:sha256:d2d5df70636fb11453ffeeeb3e593c5358073325ef8c43a8f9458ee611201272:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyOWVmMjk1MDMzZDczMWVlMGE2NDJlYTIzNzVkODk1OGI3NDA2ZDk5ZGMyMWM4ZDZkZGFiYmE4NzcxNzYwZGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc5NjNmNTc5ZWQzN2Q0ZWExOGUyNjhhMWFkYjA1NWEzODQ5ODMwYzk2NWM4OGU1OTlkMDk5YzQ5MzEwNjg4YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRjMmQ0Y2M5YTRhMWRlMDg5Yjc5NDMwZDI4M2NkZDg5NDI0ZjViMmE2MzczY2Y5N2ZjOGVjM2E4MjMzYTQ4YTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_47596468a1ff4507a70a95fa70c54eb0",
+      "statement": "Node runs as an ESM project (type: module) with dev, build, start, lint, and test scripts defined in package.json.",
+      "evidence": [
+        {
+          "resource": "repo://package.json#L6-L18",
+          "version": "repo-lines-v1:sha256:744f46f905af7e48baa1a6f84186eed824998dccb1a1151e1b0275cd7ccbff2f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwOGYxYjMxODg3Y2U0ZWE2NmU0ODI3MjdiMTY5MWUxMDRmMjVmZTEzYWZiYjVjZDczYjI0NjExMjRkMzkzZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyYTgwYTIyYjYyZWMyYTU1MTU1OTRiNzJkYjE2ZGFjMmIwZTkyNWMzMWIyZTg4YjFmYTg2YzA0ZGNkMzBiZGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlZTJkYzc4M2IyZDU4YjUzZjRjM2VlNjZmMWU2YjFjMDVmYjU0YzBkZjMxM2E0N2QzN2Q3YjMxYTdjMGNiMWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a776282c52bc46b3b9cd4f283f8f06c5",
+      "statement": "Optional registration pins a default roll and unlocks the registered-only /attendance, /midmarks, and /bunk shortcut commands.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/commands/registered.ts",
+          "version": "repo-file-v1:sha256:134eb68084e1d2728a4e6ce4a34d020aa8bb3f29c89b9ad483d0420c17a58a1c"
+        },
+        {
+          "resource": "repo://src/db/registration.model.ts",
+          "version": "repo-file-v1:sha256:7d389374033513a840796bd9dff367e83fbf79b0dfa66b6659729c2f423fcadc"
+        }
+      ]
+    },
+    {
+      "id": "claim_bfd7f7c5fcda49978456595a94cf00c0",
+      "statement": "The admin panel health view and status page are backed by multi-component uptime probes (api, turso, redis, portal) with admin alerts on status transitions.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/uptime.ts#L90-L111",
+          "version": "repo-lines-v1:sha256:3f476c6e6e78ba9617f067f5690afc6aa7441e4da6e74f6ad62000f23afa1c7c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzYzVjNTE2ZjE1M2U0ZDVmNWQ2NmI3ZDc3NTZmMDg3YTQ0NzgwMzA4ZWE4Yjg4ZmM1NWQyNWEyOGExMDY4NDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmODgxNjE4MGZiZTUxMGY4MzM0OWUwMTM1Y2ViMmU2ZmZkYTkzNWQ5YjQ1NTQyNGJkNDE0OThjMmE4ZDYwNzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk2Y2ZhODYzNTI4ZGI4NTA0YzY4NWE1MmMzOTJlZTg1YTZmOTkxNmEyNTJjYWZmNjg0YmIwMzMwYzFiYzFiY2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM1YTJlNmRmYjA1ZGJjNWMzZTAwMmVjZTQzYzgxYmE1NWM4MjFjMzAyODcxMjQxZWEzY2YxYWQyNGUyZGYwODEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_85a873c722964895a9014f337b1da9ae",
+      "statement": "Semester sync covers the portal's full academic branch list via the expanded BRANCHES map.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/syncdb.ts#L137-L137",
+          "version": "repo-lines-v1:sha256:0cb1453641786b6e62d667094d19d0f520775336bc49a0a1c4ef29321266b02f:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGNiMTQ1MzY0MTc4NmI2ZTYyZDY2NzA5NGQxOWQwZjUyMDc3NTMzNmJjNDlhMGExYzRlZjI5MzIxMjY2YjAyZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMGNiMTQ1MzY0MTc4NmI2ZTYyZDY2NzA5NGQxOWQwZjUyMDc3NTMzNmJjNDlhMGExYzRlZjI5MzIxMjY2YjAyZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGJjZDAzOTY0ZTE5MDQwYTBlMTQ2YTYxYzIyNjU2MzVkZjlkNGYzZTEzNGM4OTY0N2YxNWRmZDAxOTM2YjJiMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODhmM2NhZDk1YjkwNzdlNTRmYzk0MDc3NmZmZGQ0MjllZGI4MGZjNjg0MTg5MzYzNWJiZDkyNTY0ZDgxZjRiNSJ9"
+        },
+        {
+          "resource": "repo://src/constants/index.ts#L43-L66",
+          "version": "repo-lines-v1:sha256:9b90028380a0b005b9eb6ccbaf092b9d6b75c813c7ca5d98f13ed21afd17e9df:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0YzllODEzM2JkYjcxYjM3NWY1ZTY1ZWNkYzkyZmQ5MGE1OTU3MWM5YmVhMTYxYjJlYWY4NTBhN2ViMTUyMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFlMDY4M2E5ZjExOTBiODFiMTAyYWY0OGI1NzA4ZTUzZTkyYzRjZWFlYTQwZDc3M2QzNjc4ZDczZjRkYzJmNjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-09T23:13:13.880Z"
+  }
+}

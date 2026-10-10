@@ -9,6 +9,7 @@ import { IAcademic, Attendance, Midmarks, Student } from "../../types/index.js";
 
 import axios, { AxiosError } from "axios";
 import { getStudentCached, StudentNotFoundError } from "../redis/utils.js";
+import { redisKeys } from "../redis/keys.js";
 import {
   storeAttendanceToRedis,
   storeMidMarksToRedis,
@@ -268,7 +269,7 @@ export class Academic implements IAcademic {
   async getAttendanceJSON(): Promise<Attendance> {
     // Try Redis cache first
     const cached = await this.getCachedJson<Attendance>(
-      `attendance:${this.rollnumber}`,
+      redisKeys.attendance(this.rollnumber),
     );
     if (cached) {
       logger.debug("[Academic] Returning cached attendance");
@@ -297,7 +298,7 @@ export class Academic implements IAcademic {
   async getMidmarksJSON(): Promise<Midmarks> {
     // Try Redis cache first
     const cached = await this.getCachedJson<Midmarks>(
-      `midmarks:${this.rollnumber}`,
+      redisKeys.midmarks(this.rollnumber),
     );
     if (cached) {
       logger.debug("[Academic] Returning cached midmarks");

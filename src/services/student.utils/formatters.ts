@@ -8,28 +8,20 @@ import {
 /**
  * Formats attendance data into Telegram-friendly message with freshness indicator
  */
-export const formatAttendanceMessage = (
-  data: Attendance,
-  isCached = false,
-): string => {
+export const formatAttendanceMessage = (data: Attendance): string => {
   const { rollno, year_branch_section, percentage, totalClasses, subjects } =
     data;
 
-  // Header section with freshness indicator
+  // Header section
   let msg =
     `🧑‍🎓 <b>ROLL:</b> <code>${rollno}</code>\n` +
     `🏫 <b>Branch:</b> <code>${year_branch_section}</code>\n` +
     `📚 <b>Attended:</b> <code>${totalClasses.attended}/${totalClasses.conducted}</code>\n\n` +
     `📈 <b>Percentage:</b> <b>${percentage.toFixed(2)}%</b>\n`;
 
-  // Add cache indicator if data is from cache
-  if (isCached) {
-    msg += `📦 <i>Cached data</i>\n`;
-  }
-
   msg += buildProgressBar(percentage);
   msg += buildAttendanceTable(subjects);
-  msg += `\n<i>💡 Tip: Maintain 75%+ for good attendance</i>`;
+  msg += `\n<i>💡 Tip: Stay above 75% for safe attendance</i>`;
 
   return msg;
 };
@@ -59,10 +51,7 @@ const buildAttendanceTable = (subjects: AttendanceBySubject[]): string => {
 /**
  * Formats midmarks data into Telegram-friendly message
  */
-export const formatMidmarksMessage = (
-  data: Midmarks,
-  isCached = false,
-): string => {
+export const formatMidmarksMessage = (data: Midmarks): string => {
   const { rollno, year_branch_section, subjects } = data;
 
   // Header section
@@ -71,14 +60,9 @@ export const formatMidmarksMessage = (
     `🧑‍🎓 <b>ID:</b> <code>${rollno}</code>\n` +
     `🏫 <b>Branch:</b> <code>${year_branch_section}</code>\n`;
 
-  // Add cache indicator
-  if (isCached) {
-    msg += `📦 <i>Cached data</i>\n`;
-  }
-
   msg += `\n`;
   msg += buildMidmarksTable(subjects);
-  msg += `\n<i>💡 Tip: Focus on subjects with low averages</i>`;
+  msg += `\n<i>💡 Tip: Give extra attention to the subjects with low averages</i>`;
 
   return msg;
 };
@@ -149,7 +133,7 @@ export const formatBunkPlanMessage = (data: Attendance): string => {
       `\n\n`;
   }
 
-  msg += `<i>💡 BUNK = classes you can skip, NEED = classes to attend consecutively to reach 75%</i>`;
+  msg += `<i>💡 BUNK = classes you can skip · NEED = classes to attend in a row to get back to 75%</i>`;
 
   return msg;
 };

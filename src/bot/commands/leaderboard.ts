@@ -1,9 +1,10 @@
 import { bot } from "../bot.js";
 import { trackMessage } from "../../services/tracker.js";
+import { WEBAPP_URL } from "../../constants/webapp.js";
 
 bot.onText(/\/leaderboard/, (msg) => {
   trackMessage(msg, "command:leaderboard");
-  const helpMessage = "Click on the button below to view the leaderboard";
+  const helpMessage = "Tap the button below to see who's on top! 🏆";
 
   bot.sendMessage(msg.chat.id, helpMessage, {
     reply_markup: {
@@ -11,7 +12,7 @@ bot.onText(/\/leaderboard/, (msg) => {
         [
           {
             text: "View Leaderboard 🏆",
-            url: "https://t.me/NbkristQik_bot/nbkristqik_leaderboard",
+            url: WEBAPP_URL,
           },
         ],
       ],

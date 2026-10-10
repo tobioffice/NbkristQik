@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:d33413093265b6b7fa86535b4638885d0d3efc071cc210788e02d8dff27aa5f6",
+  "claims": [
+    {
+      "id": "claim_5e511cd255fd46348e8a4080651eb721",
+      "statement": "initDatabase is the single schema entry point, creating fallbackResponses, tgusers, studentsnew, botusers, activity_log, admin_sessions, registrations, student_stats, and uptime_log idempotently before handlers or API start.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/init.ts#L12-L86",
+          "version": "repo-lines-v1:sha256:c2d63ab8d6bc298773b9be8de9faf7ed421b59da4d9f1225a6b7fa455c79ebc2:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlMWE2NGE0YmEzYmFlZmM1ZTc2MmVjY2Y0ZGQwZDU5NDk4MmZlNWY2OWJiZTExYTAyNzIxZTUwZjVmMTUxMTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhYzlmNWNjN2RjN2YyOGRjMDgyMjIwYWMzMDM3NzQyZmZlNDkzNzNiZWI4MDM5ZDlkYzUzNGViZTU1ZGY4ODIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRkNjJlZjZhMDY2NmQ3YzA4Zjc5NzFhYWZhN2MyNWJkNzFjMmFjMDk4M2MzNjUxNzE3ZjI4ODIwNmFlNmRjNmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_16e3c8cbb38c4b7ba0364fc940c1b2b5",
+      "statement": "fallbackResponses stores raw portal HTML under a <year>-<branch>-<section>-<type> composite id capped at 50 characters, using INSERT OR REPLACE writes and throwing when a lookup misses.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/fallback/response.model.ts#L5-L31",
+          "version": "repo-lines-v1:sha256:b855a57d726a73fc8dc868ab261bce5efacb4bea804c347e651f2207f9900fac:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyNDI4NWIyNTgyMTI4ODJmOTU0MTE5MmMzNWFlNjdmNDRiNWQwZjY0YzRiYjM4YjMzNTc3OGJkZGI0ZGYyODkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRlZWY1MmU1YjNjOWEyN2VlYWU3ODM0ZjE0NjZhZWJjMjBkZDhjZWE1OGJmMTY3YmQxOTcyM2UwNmQwNzAwZjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a9dcd73edb9049209c93befa1228e623",
+      "statement": "tgusers maps Telegram userId to rollNo for the web lookup, and findSimilarRolls suggests up to three nearby rolls by 8-character prefix, ranked by numeric distance of the trailing sequence.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/student.model.ts#L67-L96",
+          "version": "repo-lines-v1:sha256:65708defd4c1ac3364f76891d4f3a5407855b270dc1ea5d603419bd346cf8844:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmYWVhZDBjMzdiMWIzMjA5NGJiODI4ODAyYjM0YzA5N2Q1NjVkM2ZhZWVkYzhlZmE1NTVmYWFhZmU5YjE5M2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcwNzU5YTc2YjAzMmE4NTdkOWZlY2VjOGU5Y2ZjN2MzYTgyMjMxODIxNWM0MDg4ZDk3NTkzNjkwYTdlZGZmNWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI0ZjQzMTI0MGMwOWFiZmYxZWU1ZTliMjJhMmQwNDBlMDc1NzZmNWY0MjEwMjMxOGFiNTMwZTEzMTJhYTc1ODcifQ"
+        },
+        {
+          "resource": "repo://src/db/student.model.ts#L8-L36",
+          "version": "repo-lines-v1:sha256:5e5135337db48ae3ad713b15c846e0617b6798167475ed83ba40af44ec4790dd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5MjRjYjkxMDQxOTlkMDQ5Nzg5ZjA5OGY2ZjljYTY0OGU1ZDRlNGZmZThkODYwM2QzYjAxYTk1NDFkMzNiZTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIxNDY5NDg3YWNjZGYxODUxZTQwYWExMDgxYzdjMzk1YmE3Yjg3NjFiNTdlMTU3MjgyODc5ZWRkYWI0Mjk1ZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFiODBjY2NjY2I5YTZkNWUzNmYyNzgxZmEzYzM3ZDVlOWQyMTM1ZmVlNjE2NGRkZWQ1OGM1ZTg1YWIxNGZhOGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a4b0ecec613b43e2a88c4d789018eafe",
+      "statement": "studentsnew is the master student table with roll_no primary key and nullable name, created even on a fresh database so leaderboard indexes cannot fail before a first sync.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/init.ts#L28-L38",
+          "version": "repo-lines-v1:sha256:175c4586ac056cf010806a2807fe633bf46ac12b9519c6b64a3a50fba495c141:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjZTI4ZmVmYTdjYTgwYjc3ZTE4NGRhZGE3NDVlYTE3YWMzOGQzMmY5NDgzMTVkMWIyNzUwMjI0N2M5ZTE5YzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkZjIxMWZiMzU1YWNhM2VhYmU0MGFlYjEyNTRjMjc0ZWUzYjFlMjlmMTMzZDBlNzY2MjFjMWUyZmZiZDhmNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIzMGQwMjFiNmM1NGI4N2U4OWM3ZjRhOGJkMDkyN2RmOTlmMGRhM2YzOWM4ZjJhY2Y0Zjk0NDI2ODMxNzA5MTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIxNzE5MzFlMWQ4MTcwZTMyNjdjYjM4MThkZTZkMDc3ZjhiYjU5NjVkZWQxNGY3NjBiNzc5ZjBiYmEyMjExYjUifQ"
+        },
+        {
+          "resource": "repo://src/db/student.model.ts#L38-L61",
+          "version": "repo-lines-v1:sha256:3379d80047c9277836627524a1582100a8229c7e64639d9e619bd65d37418582:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViYjVhMzU1YWM1NTNjMGY1OTYwYjExZDQ5YTgzMTEwY2IwZTUwNzEyYzk4MWJlMjcxZWY2M2Y2ZTllZTNjNDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjZjhkOTJhMWY4MTMxOTY5ZmQwNjM1NGQyOTI2OTk0ZTI2ZDhiZWMyNzMwMjNjNDMyY2U0M2M3YTQ2ZjRhOTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIxMDMyYjEwMDJlODU4YzU3ODQzODE1YmIxNDE5OTE0OTFmODQ5MTk1MTQ5NjIxM2U4NjE2ZWYyNTlhZmQwYTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9c93013c6f7f49c6a97c253da3eba5ed",
+      "statement": "botusers holds per-user activity counters keyed by user_id, and activity_log is an append-only event stream with user_id, chat_type, action, detail, and a UTC created_at default.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/init.ts#L39-L61",
+          "version": "repo-lines-v1:sha256:3ee618bc27f5f8bc372f8567bd698d1b1c3fbef969fef1296b0a109f1e096a6e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgwMWZhNjE5NThlMjdkYmFjODBiNDk2MGZmY2MyZTg1NjI3NjY2ZjQxZTQ0NTdjYTYxMTY4MjU4NDY0YmIxMTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkZjIxMWZiMzU1YWNhM2VhYmU0MGFlYjEyNTRjMjc0ZWUzYjFlMjlmMTMzZDBlNzY2MjFjMWUyZmZiZDhmNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRlNTc0MDU0NDcxY2QyNjkzMWE4Y2UzY2ZkOTUyNjdkOWNkZjc3ZDAwZTgyMTg3ODc4NjJmMGRjNzVhOWEyODIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcyZGI1ZjlmZDVkMjgyYmI2ZTUzZmZkMjgwYTc3NGI3ZjM3NjVkZjQ4NzlhYzZmNDNmYzg3ZjBhOWYxMWMzMTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f8a23bf171974bef83f805738ea6bccf",
+      "statement": "admin_sessions stores a token_hash primary key with created_at and expires_at, and expired rows are deleted on logout and by the uptime prune.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/init.ts#L62-L68",
+          "version": "repo-lines-v1:sha256:686a6217bbfb3e87a08fe0acafd37cd923005dc52e7a4d29246b00ccb6e042c2:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODAxZmE2MTk1OGUyN2RiYWM4MGI0OTYwZmZjYzJlODU2Mjc2NjZmNDFlNDQ1N2NhNjExNjgyNTg0NjRiYjExOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmRmMjExZmIzNTVhY2EzZWFiZTQwYWViMTI1NGMyNzRlZTNiMWUyOWYxMzNkMGU3NjYyMWMxZTJmZmJkOGY0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWNkZjdiNzU0NjQyOTdmMmIwYzFmZjU1NjU1M2E1NGZlMjBhODQ0MzdiMWQzNmQ2MWE1NWFiOTJkNTllM2FjYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTRiY2I1OGMxZGZkOGQwOGYyOTcwMzg0NTAzMGU5MjU0YzMzZWM3M2JhOWY2MTNlMzQwM2NmNDI1OTgwMTMzNiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_927a4df2a35d44d0853f590e7fcb1a07",
+      "statement": "student_stats holds attendance_percentage and mid_marks_avg per roll, updated independently via upserts so writing one never clears the other; last_updated uses datetime('now').",
+      "evidence": [
+        {
+          "resource": "repo://src/db/student_stats.model.ts#L4-L46",
+          "version": "repo-lines-v1:sha256:c43d3322831072ae6642e6d2469212624691784d61e618f4d50588861d13edd9:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2ODMxZTUxNDlkNWE4NzQzYTk3MWFmOGRkMjA5YThkZWJjMTRjMGNjYThkZmJhZTI0ZDZmNmMwMWE0YjJiNjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlN2ZjY2I4MDk4MjVkMWYwNzgzNGM2Y2E3NDBkMjYyNjllYjg5YzA5MmRlZDg3ODM1ZDYxYjdjMTA5MWJkZjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJmZDQ2NzBhNTA2YjQ1MWNjNjhiM2JlMTcwMDNmNGIwNGQxNThhYjQ1ZTE3ODA2ZDlkMGJhNjI2MTRiZWNlMDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_905c32447cba41f895af12712e164d7a",
+      "statement": "uptime_log records component, status, latency_ms, and created_at, and four indexes exist: idx_activity_created, idx_activity_user, idx_studentsnew_filters, and idx_uptime_component_time.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/init.ts#L78-L86",
+          "version": "repo-lines-v1:sha256:d028b604415b3a66ac2c4435d4066d61e0b1ea3536ba6f0cf4736158394ad8ab:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTVkOTlkN2RhNTgyNmY0OGNhZWFlODBhODZjNTZmZjc0MmYyYzFmMTA2ZjM1Yjg1ODc0MjBlOWIwZGIyYmVhMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmFjOWY1Y2M3ZGM3ZjI4ZGMwODIyMjBhYzMwMzc3NDJmZmU0OTM3M2JlYjgwMzlkOWRjNTM0ZWJlNTVkZjg4MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmY1MDNiY2M3M2QzZjY2M2ZjZTdlZTc4NDIwNzk5NGI2NTNlYWU4NzQ0ZDc4MGRiNGQ5YmE3Zjk0ZjU0MzczZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWExZDFhNjMzOTAyMjljNzk4MzQ3ZTgzYTA0MDU0NDFjOTQwMDAzNTI4NGFkMTY4YzFiZjZjZGYxZDcwYTM3MCJ9"
+        },
+        {
+          "resource": "repo://src/db/student_stats.model.ts#L275-L289",
+          "version": "repo-lines-v1:sha256:f0fd35d91b496020b7698639546bbd4cf7b67881176c8b779daecf36cfef0f5d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRjMjdiNGE5NjFiNzFhY2VjNWY4ZWQxODA3ODI0YjZlYWNiNWJmYmEyNjkwZGI0OTJkOTY1N2RjYmUwZjBiOTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4YjJiMzNkMTkxZjcyYmQ5ZmFhOGU5YTkzMTI2OWNhYzBmOTU1OGMzNDYyMzZjMWViNmNkMWQ5ZGQzMmUxNjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM3M2IwZGJlMjE4Yzc4NWI4YWY4MDNhOGJlZDBlZWVmNTc3NmUxNTNkM2FjOTFlMzFiYzlhOTJmNTJlYTIxMDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVlZWNhOWFmY2U1ZjIwMzVkOTdjYjgwNGEwNjI4MmE0YTEyMjM5ZWM1YTI0YWJiNmFlZmVlNzAzZTQ4YjhjODIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5e08ff9cd6eb4d2789697dcc81f4d091",
+      "statement": "The only string interpolations in SQL are a day count clamped to 1-365 and the module constant retention of 95 days; all user-input queries use parameter placeholders.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/student_stats.model.ts#L325-L327",
+          "version": "repo-lines-v1:sha256:8c93790517891a610ed66efe19d153fc4054957e5863c53e7047943a6d3b23bf:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGU3ZjdjM2I3ZDc2ZTBjMjYwNDdjZWNmOGQ3MWNhZDQyYjFmMmE0YjNlZjg4ZmY3ZjBmMTIxYTIxMzYyOTk1NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzQzM2RhNzM1ZWFmMTNiYWUyZjMxYjhkZDBhMTE2YmY2MWJlZDRhNzQ5NDkyOTNkZGFkYTg4ZmQxMTc3OTAyNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTc5ODk2ZDY0MzNlNWVmMjZmNWUxMjk0N2ExYmZjY2YyMDI5YWFmZWM2N2EzYjJhM2VhNTExNTc2NDc4MDUyOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjMxM2JhMzJhNDM3OThlZDYwNTA1YWRlNDNjOWJhMTI4ZWNlMmI1MDRmYTRlZTEzMzJjMjgzNzYwYjAzN2ViYyJ9"
+        },
+        {
+          "resource": "repo://src/services/uptime.ts#L128-L143",
+          "version": "repo-lines-v1:sha256:1988d23aa579ddda4c01b790b4a46139f140d704d8150600d94155a037c2a494:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgwYzNlYjhhZTZjN2ZhYzQ3NDgxNGM4NDIxZDYzOThiODFlY2Q3NGEwMGQzNTNkYzM4NjY0MjM4YmEwMjE1MzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0ZTQyMDhjZDZmZmI4YzRhMzU0N2IyZjU0YWRhMTk5NzhjM2YzNjVlNzhmOTUwMmVmNTE0NWNkZDJhYTg1NDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2NGZiNzdlYjRjYTdmZDVkMDMwM2JlNzJkOTRiNzE3MTFhZGJkNGU0ODQ4ZWQyN2MxYWFkMWExYThhNzA1OGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI3ZTBkMTE0YzFjMTZlOTFhMGM2ZDU4MTk0Y2QwNGI3ZTA0OTIyZGI1N2RjZTE0ZmJjNDFmYWYxNzc5OTFkZWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4b990af7472f4161b2dbb4cece6cd255",
+      "statement": "Leaderboard where clauses are built from fixed column names and placeholders, never raw filter strings.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/student_stats.model.ts#L60-L96",
+          "version": "repo-lines-v1:sha256:1c06ca96113f0700be7032b9ba2cb0da5e93700974db599f438a4e037a56a823:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmYWNjNzY3NmU1NWIyZDllMDhjYThhN2UzNmU2YjFhOTgyMGNiNWJjM2VhNDdjMWUyM2YxZTg4NDg2OWI4ZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM4ZTlkMGIzMjMwOTRjOWZlN2M1N2UzYjI2Y2RmOTAzNWY1YTllMjdmNWYxZjBiMjA4ODU2N2I1ZmM5NmE5ZjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNhMGM0YTA1OWY3YmI0NjYxNzU5YjllMjZjZTU1NWVkZGI3YzAwMzBkMTRjZWExYjI2MTA4NzMxNWVkODllMGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fec7ef1bc9284b869de57d09c387c2be",
+      "statement": "The registrations table maps a Telegram userId to a registered roll_no plus optional display_name, with registered_at preserved and updated_at refreshed on upsert; it is separate from tgusers so lookup-driven mapping writes cannot overwrite a registration.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/init.ts#L69-L76",
+          "version": "repo-lines-v1:sha256:4c8624ea526b8526c5224d289e8bf909da2eadbe32cf10b78cf2457448d563e1:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODAxZmE2MTk1OGUyN2RiYWM4MGI0OTYwZmZjYzJlODU2Mjc2NjZmNDFlNDQ1N2NhNjExNjgyNTg0NjRiYjExOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODRlNDIwOGNkNmZmYjhjNGEzNTQ3YjJmNTRhZGExOTk3OGMzZjM2NWU3OGY5NTAyZWY1MTQ1Y2RkMmFhODU0MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmY1MDNiY2M3M2QzZjY2M2ZjZTdlZTc4NDIwNzk5NGI2NTNlYWU4NzQ0ZDc4MGRiNGQ5YmE3Zjk0ZjU0MzczZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGZjN2NhOWM5MTFjZWVmMWRhZjQ3ZGI4NjUzMTM0Y2NkY2VkNjY0ZjRkYzFhYzhlN2ViOTNkN2QxMDhkYjQzYiJ9"
+        },
+        {
+          "resource": "repo://src/db/registration.model.ts#L1-L56",
+          "version": "repo-lines-v1:sha256:7d389374033513a840796bd9dff367e83fbf79b0dfa66b6659729c2f423fcadc:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5ZjliZTMzYjI2NDk5NzAzNTRhNGFhZWEwOGQ0ZDQwNjdlMTdkYWM3NDJlMTE2MzkyNjBkYmViYTkxY2Y0ZjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bf995ac651284472974cbcda4e35359b",
+      "statement": "uptime_log records one heartbeat per probe component (api, turso, redis, portal) with status and latency, retained 95 days.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/init.ts#L62-L68",
+          "version": "repo-lines-v1:sha256:686a6217bbfb3e87a08fe0acafd37cd923005dc52e7a4d29246b00ccb6e042c2:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODAxZmE2MTk1OGUyN2RiYWM4MGI0OTYwZmZjYzJlODU2Mjc2NjZmNDFlNDQ1N2NhNjExNjgyNTg0NjRiYjExOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmRmMjExZmIzNTVhY2EzZWFiZTQwYWViMTI1NGMyNzRlZTNiMWUyOWYxMzNkMGU3NjYyMWMxZTJmZmJkOGY0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWNkZjdiNzU0NjQyOTdmMmIwYzFmZjU1NjU1M2E1NGZlMjBhODQ0MzdiMWQzNmQ2MWE1NWFiOTJkNTllM2FjYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTgzNDYzNTkyZjYwZjNhZjJkNTFjMmE4ZjMyY2VmYzJmMWUyMzFjMTkwMWVjZTcxOTM4OTJjOGNjMGM3NDNkZiJ9"
+        },
+        {
+          "resource": "repo://src/services/uptime.ts#L51-L72",
+          "version": "repo-lines-v1:sha256:fa627dfac6c8e9ce0367ebb2a5eb71a0720a12061655c38d1f104484cb8f0b1c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NjY1MzE4Nzg2YjcyNGI0N2Y5OTlhOWUzNTkzZmNkYTk0NGRlMWY2YjM5MzE5NGM0YjM3NjQ2YjI4ZmQwNDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYjJkMjk1YjQ2ZTg0Y2ZlY2I5YTFjMTVmMDBlYjdlZmE4YjAyZDViN2QwOTQ3N2RjODVhOGU0MTcyYzUzM2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgwMTkyOWY2YjQzNjNmYTE5YjRlODNmOWQ4MWVlZmFlZGRkOGE1NjkyMWFjYjc0YmY1OGY5NTliYTY1MzMwYTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU5MTEwMWViNTQ0ZTZjMjFhNTE2NjI2NzI0MTMzMTc2MjRiNjdlOGEyMmJlNTRkNzVlNDUyNjIwZDkwZDk5M2UifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-09T23:13:13.880Z"
+  }
+}

@@ -10,15 +10,14 @@
 import { bot } from "./bot.js";
 import { ADMIN_ID, CHANNEL_ID } from "../config/environmentals.js";
 import { getClient } from "../services/redis/getRedisClient.js";
+import { redisKeys } from "../services/redis/keys.js";
 import { logger } from "../config/logger.js";
 import { trackActivity, ChatSurface } from "../services/tracker.js";
 
-const MSG_ID_KEY = "checkin:post:msgId";
-const UNLOCK_PREFIX = "dailyUnlocked:";
+const MSG_ID_KEY = redisKeys.checkinPostMsgId;
 
 /** Seconds until next midnight IST (UTC+5:30), calendar-day reset. */
-const secondsUntilMidnightIST = (): number => {
-  const now = new Date();
+export const secondsUntilMidnightIST = (now: Date = new Date()): number => {
   const istNow = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
   const istMidnight = new Date(
     Date.UTC(
@@ -42,7 +41,7 @@ export const isDailyUnlocked = async (userId: number): Promise<boolean> => {
     const redis = await getClient();
     // no check-in post created yet -> gate dormant
     if (!(await redis.get(MSG_ID_KEY))) return true;
-    return (await redis.get(`${UNLOCK_PREFIX}${userId}`)) === "1";
+    return (await redis.get(redisKeys.dailyUnlocked(userId))) === "1";
   } catch (e) {
     logger.error("[dailyCheckIn] isDailyUnlocked error:", e);
     return true; // never hard-lock users on redis failure
@@ -80,7 +79,7 @@ const createCheckInPost = async (
 ): Promise<number> => {
   const sent = await bot.sendMessage(
     CHANNEL_ID,
-    `🤖 <b>Prove you're human!</b>\n\n👇 Tap the button below to unlock the bot for today`,
+    `🔓 <b>Unlock the bot for today</b>\n\n👇 Tap <b>I'm not a robot</b> to use NbkristQik today.`,
     {
       parse_mode: "HTML",
       disable_notification: true,
@@ -131,11 +130,11 @@ bot.on("callback_query", async (query) => {
   try {
     const redis = await getClient();
     const userId = query.from.id;
-    const key = `${UNLOCK_PREFIX}${userId}`;
+    const key = redisKeys.dailyUnlocked(userId);
 
     const ttl = secondsUntilMidnightIST();
     await redis.set(key, "1", { EX: ttl });
-    await redis.sAdd("qik:users", String(userId));
+    await redis.sAdd(redisKeys.broadcastUsers, String(userId));
 
     trackActivity({
       userId,
@@ -146,14 +145,14 @@ bot.on("callback_query", async (query) => {
     });
 
     await bot.answerCallbackQuery(query.id, {
-      text: "✅ Unlocked for today!",
+      text: "✅ You're in for today!",
       url: "https://t.me/NbkristQik_bot?start=unlocked",
     });
   } catch (e) {
     logger.error("[dailyCheckIn] callback error:", e);
     await bot
       .answerCallbackQuery(query.id, {
-        text: "❌ Something went wrong, try again",
+        text: "❌ Something went wrong. Try again.",
       })
       .catch(() => {});
   }

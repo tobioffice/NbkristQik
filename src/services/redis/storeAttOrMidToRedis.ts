@@ -1,6 +1,7 @@
 import * as cheerio from "cheerio";
 import { Academic } from "../student.utils/Academic.js";
 import { getClient } from "./getRedisClient.js";
+import { redisKeys } from "./keys.js";
 import {
   updateAttendanceStat,
   updateMidMarkStat,
@@ -8,6 +9,9 @@ import {
 import { getStudentCached } from "./utils.js";
 import { Attendance, Midmarks } from "../../types/index.js";
 import { logger } from "../../config/logger.js";
+
+const CACHE_TTL_ATTENDANCE_S = 60 * 60;
+const CACHE_TTL_MIDMARKS_S = 60 * 60 * 2;
 
 const extractRollNumbers = (doc: string): string[] => {
   const $ = cheerio.load(doc);
@@ -25,7 +29,7 @@ interface SectionWrite<T> {
 /** Writes each student's payload to Redis + their stat to Turso in parallel. */
 const persistSectionWrites = async <T>(
   writes: SectionWrite<T>[],
-  cachePrefix: string,
+  cacheKey: (roll: string) => string,
   ttlSeconds: number,
   writeStat: (roll: string, value: number) => Promise<void>,
 ) => {
@@ -33,7 +37,7 @@ const persistSectionWrites = async <T>(
   await Promise.all(
     writes.map(({ roll, payload, value }) =>
       Promise.all([
-        redisClient.set(`${cachePrefix}:${roll}`, JSON.stringify(payload), {
+        redisClient.set(cacheKey(roll), JSON.stringify(payload), {
           EX: ttlSeconds,
         }),
         writeStat(roll, value).catch(() => {}),
@@ -66,8 +70,8 @@ export const storeAttendanceToRedis = async (doc: string) => {
 
   await persistSectionWrites(
     writes,
-    "attendance",
-    60 * 60,
+    redisKeys.attendance,
+    CACHE_TTL_ATTENDANCE_S,
     updateAttendanceStat,
   );
 
@@ -83,19 +87,22 @@ export const storeMidMarksToRedis = async (doc: string) => {
     ),
   );
 
+  // student lookups in parallel — same fan-out pattern as the parsing above
+  const students = await Promise.all(
+    rollNumbers.map((roll) =>
+      getStudentCached(roll.toUpperCase()).catch((e) => {
+        logger.warn(`[cache] skipping ${roll}: student lookup failed`, e);
+        return null;
+      }),
+    ),
+  );
+
   const writes: SectionWrite<Midmarks>[] = [];
   for (let i = 0; i < parsed.length; i++) {
     const studentMidmarks = parsed[i];
-    if (!studentMidmarks) continue;
+    const student = students[i];
+    if (!studentMidmarks || !student) continue;
     const roll = rollNumbers[i].toUpperCase();
-    let student;
-    try {
-      student = await getStudentCached(roll);
-    } catch (e) {
-      logger.warn(`[cache] skipping ${roll}: student lookup failed`, e);
-      continue;
-    }
-    if (!student) continue;
 
     const zeroMarkSubjects = studentMidmarks.subjects.filter(
       (sub) => (sub.M1 || 0) === 0 && (sub.M2 || 0) === 0,
@@ -119,8 +126,8 @@ export const storeMidMarksToRedis = async (doc: string) => {
 
   await persistSectionWrites(
     writes,
-    "midmarks",
-    60 * 60 * 2,
+    redisKeys.midmarks,
+    CACHE_TTL_MIDMARKS_S,
     updateMidMarkStat,
   );
 

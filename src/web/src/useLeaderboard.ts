@@ -94,7 +94,7 @@ export const useLeaderboard = (
 
   // reset + refetch when the query changes (intentional setState-in-effect)
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset-then-refetch orchestration
+     
     setPage(1);
     setStats([]);
     setHasMore(true);
@@ -104,7 +104,7 @@ export const useLeaderboard = (
 
   useEffect(() => {
     if (page > 1) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- pagination fetch sets loading state
+       
       fetchLeaderboard(page, sortBy);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

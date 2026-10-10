@@ -8,6 +8,8 @@ A Telegram bot for students to check attendance and mid-term marks.
 - Check attendance details
 - View mid-term examination marks  
 - **🏆 Live Leaderboard (Telegram Web App)**
+- **👤 Optional registration** — set your roll once in the web app, unlock
+  `/attendance`, `/midmarks`, `/bunk` instant commands; edit anytime
 - Admin controls
 
 ### 🚀 Upcoming Features
@@ -76,9 +78,16 @@ pnpm start
 
 - `/start` - Initialize the bot
 - `/help` - Get usage instructions
-- `/report [message]` - Report an issue to the admin
+- `/report` - Report an issue (opens the web form; gets an issue id like QIK-0007;
+  you can also type `/report <message>` directly)
 - `/leaderboard` - Open the live leaderboard
-- Check attendance and marks by sending your roll number
+- `/register` - Set your roll number once (via the web app) for instant lookups
+- `/attendance`, `/midmarks`, `/bunk` - Instant lookups for registered users
+- Check attendance and marks by sending your roll number (works for everyone)
+
+Admin commands: `/reply QIK-0007 <answer>` replies to a report (DMs the
+reporter), `/close QIK-0007` marks it resolved. Reports are also listed and
+replyable in the admin panel.
 
 ## Environment Variables
 
@@ -110,7 +119,13 @@ where — private chat, group or channel — and how often) plus service health.
   Changing the password invalidates all sessions instantly; login is rate-limited.
 - **Views**: Overview (30-day activity pulse, surface split, top actions),
   Students (searchable activity table + per-student drill-down), Live (10s feed),
-  Health (90-day uptime).
+  Health (90-day uptime for API, Turso, Redis, and the college portal; the admin
+  is alerted in Telegram when a component goes down or recovers).
+
+## Documentation
+
+- Generated, source-grounded wiki: [`openwiki/quickstart.md`](openwiki/quickstart.md)
+- Hand-written guides: [`docs/`](docs/) (API, architecture, database, deployment)
 
 ## Deployment
 

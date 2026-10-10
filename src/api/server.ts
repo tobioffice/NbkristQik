@@ -8,16 +8,20 @@ import {
 } from "../db/student_stats.model.js";
 import { getTgUserRoll } from "../db/student.model.js";
 import { getClient } from "../services/redis/getRedisClient.js";
-import { verifyInitData } from "../services/telegramAuth.js";
+import { redisKeys } from "../services/redis/keys.js";
+import { resolveUserId } from "./resolveUser.js";
 import { trackActivity } from "../services/tracker.js";
 import {
   leaderboardSecurityMiddlewares,
   apiSecurityMiddlewares,
   securityLogger,
+  createRateLimit,
 } from "../middleware/security.js";
-import { PORT, ENV } from "../config/environmentals.js";
+import { PORT, CORS_ORIGINS } from "../config/environmentals.js";
 import { logger } from "../config/logger.js";
-import { registerAdminRoutes } from "./admin.js";
+import { registerAdminRoutes } from "./admin/index.js";
+import { profileRouter } from "./profile.js";
+import { reportRouter } from "./report.js";
 
 export const app = express();
 
@@ -27,7 +31,7 @@ app.set("trust proxy", 1);
 
 app.use(
   cors({
-    origin: ["https://tobioffice.github.io"],
+    origin: CORS_ORIGINS,
   }),
 );
 
@@ -40,6 +44,26 @@ registerAdminRoutes(app);
 
 // Apply security middleware to all routes
 app.use(apiSecurityMiddlewares);
+
+// Profile/registration endpoints: identity-authenticated, writes rate-limited
+// harder than the global limit (bot-side flows are the intended entry).
+const profileWriteLimit = createRateLimit(
+  15 * 60 * 1000,
+  20,
+  "Too many profile updates, please try again later.",
+);
+app.use("/api/register", profileWriteLimit);
+app.use("/api", profileRouter);
+
+// Report endpoints: identity-authenticated; submits rate-limited per IP and
+// further throttled per user in the service (60 s gate, fail-open).
+const reportWriteLimit = createRateLimit(
+  15 * 60 * 1000,
+  5,
+  "Too many reports, please try again later.",
+);
+app.use("/api/report", reportWriteLimit);
+app.use("/api", reportRouter);
 
 interface LeaderboardQuery {
   page: number;
@@ -72,7 +96,9 @@ const parseLeaderboardQuery = (req: Request): LeaderboardQuery => {
 };
 
 const leaderboardCacheKey = (q: LeaderboardQuery): string =>
-  `lb:${q.sortBy}:${q.page}:${q.limit}:${q.filters.year || "all"}:${q.filters.branch || "all"}:${q.filters.section || "all"}:${q.filters.search || ""}`;
+  redisKeys.leaderboard(
+    `${q.sortBy}:${q.page}:${q.limit}:${q.filters.year || "all"}:${q.filters.branch || "all"}:${q.filters.section || "all"}:${q.filters.search || ""}`,
+  );
 
 // 60s Redis cache per unique query — protects Turso read quota (best-effort)
 const getCachedLeaderboard = async (
@@ -134,27 +160,6 @@ app.get(
     }
   },
 );
-
-// "You are #N" — rank lookup for the web leaderboard via tgusers mapping.
-// The caller must prove it's the Telegram client it claims to be: userId is
-// only trusted when it comes signed inside Telegram WebApp initData.
-const resolveUserId = (
-  req: Request,
-): { userId: string; error?: string } | null => {
-  const initData = req.query.initData as string | undefined;
-  if (initData) {
-    const user = verifyInitData(initData);
-    if (!user) return { userId: "", error: "Invalid Telegram signature" };
-    return { userId: String(user.id) };
-  }
-
-  // Dev convenience: a browser outside Telegram may pass userId directly.
-  if (ENV !== "production") {
-    const raw = req.query.userId as string | undefined;
-    if (raw && /^\d{1,20}$/.test(raw)) return { userId: raw };
-  }
-  return null;
-};
 
 app.get(
   "/api/me",

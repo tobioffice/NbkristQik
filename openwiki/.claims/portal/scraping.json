@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:dcd05cc5e1e10ecde2ecb3b3e846dee505c660a9a858eaaec115160bc8f0d258",
+  "claims": [
+    {
+      "id": "claim_54716cb5ae834c05994488b22bfe15d6",
+      "statement": "The portal base URL defaults to plain HTTP http://103.203.175.91 and is overridable with PORTAL_BASE_URL; the login, attendance, and midmarks endpoints hang off it.",
+      "evidence": [
+        {
+          "resource": "repo://src/constants/index.ts#L6-L16",
+          "version": "repo-lines-v1:sha256:733b4fe7d49b87b3d1819b23f5add73bb1db03c7cd190083da9d4ea88cac1c7c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxYzE4MDkwZTJhYjE4ODRmZDZiMWE2NTgyZjUwNjhmZjIyYjdlOGI5NTRkMDAzNWU2MDM0NDUwYTY2YzY0MjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBjYjY5NTlmNGY4YWRhM2FjZDhjZjUwODNjODc4MjlhZGZiZTA5YWQzMTk3YTEzYjA1ZDA2MzczN2I1YjkzOTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkMzBhMGIyZTk3MzlkMTk0ZGNmMmM3YzI2NGUwNzAzNDYwMzgyYzY4OTcxZjUwYWEwZjU1M2Y3YWYzNDUxYmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c1df972a75a447849fd12c3be2639925",
+      "statement": "makeSessionToken generates a client-chosen PHPSESSID (fixed prefix plus 3 random bytes), and renewSession re-logs-in with it, storing the cookie module-level and throwing InvalidCredentialsError on failure.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/student.utils/portalSession.ts#L18-L21",
+          "version": "repo-lines-v1:sha256:ff23c1bf6250adf2b72413af39b1ef86b4b3945f26bfa7ee93a7d74874030c55:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGQ4OTI4ZDMzY2RiY2FjZTc3NDNiZmZlYjM1NmRiNTkzOGQ3Y2E1NTlkMThiYjZkODUyNDViY2YzZWQ0OTEyNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWExZDFhNjMzOTAyMjljNzk4MzQ3ZTgzYTA0MDU0NDFjOTQwMDAzNTI4NGFkMTY4YzFiZjZjZGYxZDcwYTM3MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzdjZDNiNmYzMThhMjk2OWJhZmFkOGRjNDE4YjM5ZTg5N2ZhYjBhMWM4NDQ3ZmZmNDk2NWUxOTY4NGI4YmY0MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjgwZjEyZjM2Y2NkNjdiNGEyNzA5NjZjMWQ3MWVlMzU4NWNiM2M3NzBmYzA2YmE5ODY4MTkwODA0NDM3ZDE1OCJ9"
+        },
+        {
+          "resource": "repo://src/services/student.utils/portalSession.ts#L51-L73",
+          "version": "repo-lines-v1:sha256:1e00041755465338631a252992daf0c77ff94f18315422778c897c11c808fcc8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5MzVmNjdhOTgxOWVmNmMwZWFhNTI4YTMwZjI1Nzk3NzA4NTc5MjE3NjgwNWJjNmE5ZTU4NGJjY2FjZTNmMGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk2YWE2ODZiYTc1OWY5Y2UyOGIxZTYxYjZiOGE1N2U5YzI5YWM1YWI1ZmUyZDczNTIzZDEyZGVmNjg2MThhNWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5NTZhZmNmNDNiZmQxNWIxZTRiNWZkZWRlMjVkOGM2YTQxYjhlYTUxMjJlYTg3NzVjZDkxMmJmNWNiZTZiMjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d695ba1a8f424073b6d6124855949ba7",
+      "statement": "isSessionValid checks the attendance page for the portal marker 'function selectHour(obj)'.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/student.utils/portalSession.ts#L28-L46",
+          "version": "repo-lines-v1:sha256:3091eb22341269a4656bad7b70e03e33dfee5470a99cde07fbac64a63b3572b8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1ZDQzM2Q2YzZiNjhhYjc2ZjFiZjRiZmI4ZDk2OGFjNGU0ODQ5NWYwYzdiOWNmNDM5OWYwMjlhZGEyYzhlNjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU5MTI0YjMzNWFlMDM1ZGFkNjRmZTIxNGZhZDg5MzUwNzI2YTY2ZmU5ODkyMDAwMzI2YzM2ODIwZmE4MTcwMjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZmMjE5Mjc4MzFhMzc1NTI0NzkwOTFiNWQ4NDhmMTJjODU0ODljOWJhY2EyMTViZThlOGJkNjE1MzNmOTQ5OWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c44c5f115fcb471b93b8be9b349f82a4",
+      "statement": "getAcadYearForDate computes the academic year the portal expects (flipping in July) using Asia/Kolkata time.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/student.utils/portalSession.ts#L76-L86",
+          "version": "repo-lines-v1:sha256:4efef53e40a5bf6dd1980a338bc6d2a525b7e1b3f08dffd19da4ede097d69247:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5YjBhOWI2NWViMTM3MWM4YTgwNGFjODAyNmNkZDk0NzY4MDNhMTRlNzc3ZTM3YWUxZjE1NGQ0ZjBhOTkyZjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdjMTE2ODczY2ZiNmY3ZGY1OWFmYzE3YTcyZDYxY2ZhYmUyOTk2NWZlYTVhN2Y2Y2RiMGE2NDg2N2U3NDE0NjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e5c1f6ba4ba940eebe95a1afdd751850",
+      "statement": "getResponse retries transient network errors once after a 1.5-second backoff; fetchFresh detects the login page, renews the session and recurses up to 2 attempts, then throws InvalidCredentialsError.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/student.utils/Academic.ts#L60-L122",
+          "version": "repo-lines-v1:sha256:0f5305a216ace088b85d1e5827d504b15a8fcc6caeb3cedf2522fae70386c7dd:eyJzZWxlY3RlZExpbmVDb3VudCI6NjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYzOTg3NjBhYWI2NjkyNjc4NmYxNjQ1ZWM5MTYyOWNjN2UzNTFkNzYwNzNlZjNjZDc3ZTliZmEwYjg2MmYxZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZmODkzMDlmNWJlZDExYjEzNTNmODY5MjRiYjYyYmU3MDM0NTM5Mzc0NWUwNzk3YzE2OTBhMTBmYjAyMWEzMDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI1NTdjODZlY2I0ZGFhYjFiNWRmMzkxMWRkMGQ0YmQwZjkwYTlkMTU1ZGY3MTgzOGUwYjM2ODkwMjhhZDE2MDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5b55a8cae19647c89d860b590d13759e",
+      "statement": "Blocked reports are detected by the exact substring 'Blocked by Admin', and successful raw responses are cached in fallbackResponses keyed by year-branch-section-type.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/student.utils/Academic.ts#L180-L205",
+          "version": "repo-lines-v1:sha256:73882510f69d1c6e57e987f14914048f60b50141b050b6cc132f41534102a258:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmMmEyZjk5NmYwOGU2ODBiZDI5MjEzNWE2ZmE0OTc4YmRhMjZlNjAyZDg0ZjMzY2IxZDU5NDc3NWQ0MzA0YjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFkYjNlN2NkMGMzYTYyMzA0NzY2ODE2MWQxMDRlOTlkODYyMDljYTNlNzc1NGEyNWIxMTlhNDkwNzg3ODA0MjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ5ZDk5YjI0MWViMmQwODg2NjQyOTViOTdiZGZmZjJlNmFmNGU5ODRlMzNjZDBhNTE1OWJlNjU1MjQ4NThiMmIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b304610b200d4cb9a3541b4d5dde1236",
+      "statement": "Request error handling re-throws AcademicError subclasses and StudentNotFoundError, otherwise falls back to the section's cached HTML or throws ServerDownError.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/student.utils/Academic.ts#L210-L264",
+          "version": "repo-lines-v1:sha256:118ce003abede1e32289cb161b34501f0e72cf78a453b3a7a479e26527f65a33:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjczNDMxYjU2MzBhMzljZGQyM2RmZmZmOTA5Mzc0NzNlMmY4ZWE1NjAxNTA5ZGQ0MjVkM2YzMDZlMTY4ZTg4NDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzZjcyZmUyNzkyNzkwYzhlYjFmNGIzNmEyZjgzN2RiZDkzMzM1NjU1YjMxOTJjODJlN2UzNmI2MGE0YTYwOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEwMTEwMTVhMDc2N2Q4MjNmODA5MzcyMzJmZWRhZjBjYWU2ZWJjZWJiNTBlZjcyMWRiN2Q2ZWU1YWEyMmE1NzYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_336448d211dd4bb6b35d3314737559b0",
+      "statement": "The attendance parser looks up tr[id=ROLL], reads percentage and totals from td.tdPercent, and skips the %AGE column and subjects with zero conducted classes.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/student.utils/parsers.ts#L17-L107",
+          "version": "repo-lines-v1:sha256:20d15faad4d10de0fd529de5a4d396d718bb995bb2f950017ce280ec3391dcb5:eyJzZWxlY3RlZExpbmVDb3VudCI6OTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMxNDQzYWExYjAzZTY2Mzk1ZThkMDljNGIxN2VjOTYxYzhhYTUwNGM2MWE0YTY3MjUzNzI0MjVjM2U5NGM4ODkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFmMWZhYjY0NThmNjZlNThiYzhhZWYzNTZjMzZjYTQyZmU5OTc0Mjc1OTMwMzJkMjMzN2RmNTE3YWIwYWZlYjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwYmQ1ZDZkMzI1NWMyYTA1ODUwZTEzYTk1ZjBmZmNlZGU0ZjU5ZmI4ZDc2MTUzOWM4NzIxMTRmYTY4NjIzNTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_383dc8a13ec34fac800866f7602b1f9e",
+      "statement": "The midmarks parser splits header cells into subjects (cells containing a link) and labs (plain cells), and subject marks parse as M1 with optional M2 and average.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/student.utils/parsers.ts#L109-L195",
+          "version": "repo-lines-v1:sha256:ee898dadccb947ab7afb9864b58a0edf16cd6fb3f3173c9dbda0a7b51a5afdd0:eyJzZWxlY3RlZExpbmVDb3VudCI6ODcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhM2U0NmY5NDI3NmI2ZjZmNGVkMWYwMmFmNzhiZWY2YTJlZTFjNDM5ZGQ1NTg0Yjk3Mzk0ODMxMzIxNGQyYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdkMzhhNDI3ODJmOTcwMjg5NjRhNDA2MTYxOTJlMDU0ZTdmY2IzZjUzZjcwZmExNjhlMzY2NDUwNmI2NDRkNzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e639d4026936412bbdba7ac7ade7ec02",
+      "statement": "Typed errors are AcademicError (base with code), ServerDownError, BlockedReportError, NoDataFoundError, and InvalidCredentialsError; StudentNotFoundError carries nearby-roll suggestions.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/student.utils/academicErrors.ts#L1-L37",
+          "version": "repo-lines-v1:sha256:f68ebaa3aa058cce1e684e3dd6529616414388801bf99513fd4872527f47dcba:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0OGY1NmFiYzAyNTI5OTBjYTk2NjAwY2E0MzNiZWQ3M2FiYjc5ODFjMTc0YTNmN2FiYTZjN2UzNDNiNjE3OTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1d580851f2c54acb809cfb1c6725fa53",
+      "statement": "/syncdb additionally uses attendanceTillADate.php and getStudentName.php?q= and performs its own login with the same generated PHPSESSID trick.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/syncdb.ts#L33-L36",
+          "version": "repo-lines-v1:sha256:4dda3408b0cc1640e00c6bb040ebda15217a87d86207e865e0e54173c948ad4c:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmEzNDJjMGM2YWU0ZTQyM2Y1YWJiZTVkZThhNmE4OTQ4YTljMTBiYzJlNWQxYTdhNGYxNDFhNWU2YzY2ZTFmMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDNmY2YyODgyMDBiZDg1MGJlZTNhOTEwZDZkNDMzZTAyNTU4OGVmNDA0OTM4MzAxY2ExYmQwZTI0Mzk1MGI2OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmI1ZjNhZDUxYTE5MGI0NmRmOTljN2Q2ZGNjZDkxNDI1NzcyYTE2MDM3MTQ5ZDk1ZjE4NTBhMDkyMmEzY2Y2MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTZlOWMzYjFmNWU1ZDA1MzE0ZTQ3MDhlZmYzNzg3NjRhZjE2ZWU4ZmQ4YjU1ZjY4NWQ0MWYwYmE3ZmEwNWUwNyJ9"
+        },
+        {
+          "resource": "repo://src/bot/syncdb.ts#L77-L96",
+          "version": "repo-lines-v1:sha256:dec253169cba6d9bdd3df9cc7cecf43d549b0bd2597784a550cb17c0683aaad3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI0NDUzYjEzYTVhNTVjMjgyM2NmOGQxZjI1YWRkYzUzOTU4NWYxN2JhYjFiODc3YWI1MjE1NzAzYjhlNTRkODgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIwZjY3NjI2ZjM4MDAwNjg3NjYyMzZkYjZiMmY4NzQ0ODA0MWZhNTM1ZGZiNTMwNTFjNzNiMzk5N2JiZGM1NjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc3ZTVkZjhjYjQ5ZGY4YmMxMDdjOTNhZTcyZWM3ODNlMWYxMTk4YmU5ZGE1MTYxMjFjMzU2MDQyODNkYTZiMzMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e4b7c6bcfba24a8791afd43289053d8b",
+      "statement": "AcademicTG maps typed portal errors to static humanized HTML messages in errorMessages.ts (server down, no data, student not found, blocked report, generic, unknown); copy is template-only, no runtime model calls.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/student.utils/AcademicTG.ts#L27-L100",
+          "version": "repo-lines-v1:sha256:f2ae4da537fcef74b985ece1da5d90f9e968dccec87e798713bba13bbcfb6316:eyJzZWxlY3RlZExpbmVDb3VudCI6NzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlNzU3MDU2NmE1MTJmYjQ1ZDZiNTA2MjM2YzdhMGUxN2UzZjk0M2QxMzY0MGZlMWQxZDQ2NDRjMWFhOWY2ZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYzMWY3YTNlYjBkY2M0ZDlhZjQ2YTY1NTA4MTM0NTU5Y2FkM2Q3MWVlZjg1N2YyMDczNGIwODMyMzg0YzRlOTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        },
+        {
+          "resource": "repo://src/services/student.utils/errorMessages.ts",
+          "version": "repo-file-v1:sha256:e03bf2fe3959d1fd6af3d25f9221cdbf4d9f619225a31394f2fab2de0d94b4ca"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-09T23:13:13.880Z"
+  }
+}

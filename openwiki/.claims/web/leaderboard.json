@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:5a1014a74fd5d41bed1f7bd825255eff22c29cbfdd02e24e62ee94ec34486c8b",
+  "claims": [
+    {
+      "id": "claim_9545f3aea22545fe9096b0899b2256cc",
+      "statement": "API_BASE resolves in order: VITE_API_URL, then same-origin in dev (vite proxies /api to localhost:3000), then https://checker.tobioffice.dev in production.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/api.ts#L1-L50",
+          "version": "repo-lines-v1:sha256:2bf20d38a0157a6a5666086b110609b0f14f5d6a09c2674e5a3c7738d095f064:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwNzVkZGRjMzdhMGVhNzczZTAxMDNmMzcyYjc3Yjg3MDZhY2U3MTlmMDFlM2YyMzQ1ODdmMDQzODc3OTQ2NTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk4ZDJlMzkxY2Y0OTdjNTYzOTlmZWMxMmE1MjY3ZmZjYzM3YzI5M2ViMWVjZWJjNDQyYzJmMjBkMTFhYTM0ZWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f9ec990a70e5472ab8d50d3c6178eae8",
+      "statement": "The dev server proxies /api to http://localhost:3000 so local development needs no CORS or environment overrides, and the Vite build declares two entries (index.html and register.html).",
+      "evidence": [
+        {
+          "resource": "repo://src/web/vite.config.ts#L6-L23",
+          "version": "repo-lines-v1:sha256:7fd1b819411f69519400791fe7a4a740ccceeb7e8becfafdfa00f325b4592759:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0ODQwMTM0OTc5NWE1MGJjN2M5MTFlYWNhOWFlNzIwMmY3OGY3MmU5ZGY2NTRhNDk1OThjOGU2N2FiZmY3NzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVmZDBlNGRhYWE1MTQ0Y2JiY2E5MmVhYzZkYzBlMjFjMTQxNDlhNjZmMWZkNGVhM2MyNzdmMDQ1NzE0YzZiODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1e7a47aa437c4a2e822c39d9e10388af",
+      "statement": "useLeaderboard aborts superseded requests via AbortController with a reqId stale-response guard, applies a 15-second timeout, and resets to page 1 when sort, filters, or search change.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/useLeaderboard.ts#L42-L111",
+          "version": "repo-lines-v1:sha256:f7b2ef8f6c600bfaf7b8d881680f1c9a55160cae4131866bb328895dca780dc0:eyJzZWxlY3RlZExpbmVDb3VudCI6NzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1NmUzM2FkMmIwNjQ3NGYxNmI1NmE3ZTJmZGZmNDdiNGY3ZTk5Y2E4ZjM2MGRkNzhjODI2MzU5OTRhNzQ4MjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA1ODNhM2U2MzI5MTg0OWViZmMwMGM3NGVhMTlhM2IwNmVhZDlmZTgyNDBmNTk4OTQzMTVkY2RlZTlkZTdkNTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIyY2NjZjdjOGE4YjY1Mjg1NzJiNGU2ZGZmZWUxYzlhMTc5ODdiYTI3NjZlMzk3ODVkNzMzNzYwNzMyOWE4MTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg0MjFkZDg4Njc5NDA4YzFjZDZmMzBkOTdkZjliZDk3NjQ1ZjE3Y2Y1YjY4NjlhMDQ2ZDUxZWQ3M2M2NmU2NWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f97b049a652646f8b4654d1c350bc616",
+      "statement": "An IntersectionObserver on the last-row sentinel increments the page for infinite scroll, and retry resets to page 1.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/useLeaderboard.ts#L113-L130",
+          "version": "repo-lines-v1:sha256:dff7223149a5db36d5d9b23544a35267db82880716cbbe83352a7c34069eaf86:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwZGVjMTg2Yzc2ZDJhOTI4YzY1ZDQ1NDI4YjA4NDllNTY1MmYwMGY1M2ViMGYwODQzNWY5ZDY0YmQ2N2EzMjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyYTJjYjI1YTEyMmI0NDIyMWE2MjM0ZWM2NjBhN2I1ZmI3ZjliZGU3YjNiOWUyYjNjNTU5YTBkOTZmYWM3MzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJlNDljOTE3M2YxZWQxMmUyOTBmZTEyYTI1ODAyMTcxYTM0OWIwNTBjYzdhMjIxMWM3ODU1NGZhMThiZTk0NmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyNzhhOThkMjg2NGE1YzM0MzMzY2FmOTZiNjEyNzRhMzc5YTI4MGZlMzQ4YzJjMzUzMjQzODk1ZGNjNjY3NGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8ecab0eba465492aa8af5067966d22ed",
+      "statement": "useTelegramUser builds on the shared useTelegramIdentity hook, no-ops without a Telegram user, and on success fetches /api/me with userId and initData to set the roll and nullable attendance/midmarks ranks.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/useTelegramUser.ts#L16-L38",
+          "version": "repo-lines-v1:sha256:a649b9dde3f22f34a41b2edea97ae52a0c63ca1c28122abed28b08c1f697422e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhOWFkNmMwZGRiY2Y3MzI1NDg1Zjg2MzhmNzhlMjM0YjUxYmMzNzdlYWJhZjYzMWUyZjdlMTZhZmU0M2MyNDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYwYjQ2ZjhmODk2ZmMzZTdkZDkyZWFjZWNiZTA0OTdlYjMzNzE1ZTM2NGI4NzBlZGZmOTk2YjM4OGU0ZDc4NTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_25aaec0fccab44eaadd7f24c5865d6b5",
+      "statement": "Leaderboard.tsx owns sort, filters, and a 400 ms debounced search; the podium hides while searching, the list skips the top three when the podium is visible, and a floating My profile link opens the separate profile page.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/Leaderboard.tsx#L18-L138",
+          "version": "repo-lines-v1:sha256:2af4815f9a4863f5e0974d8637fed0d5e64ccd4d1b9ad79863a29079ccaa13c3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiOTZmZTU4OGQxNDUwYTY0NDZlYWFlZmEyZTcxMjc2YWI3ZTAwYTYxY2ZlMmQ1MzM5YzJiYzAwMjQ0YjY1YTFhIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI5NWVmMDFiYzA4ZGJjM2I2M2U0ZTc1ZWEzZDI2YTViOTQxODkxODc3ZTI3YWQ4OTEzMjljODQxMWQ3ZDhkYzRkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI5MGFmZWU2YmNiNzIzN2NlODVlYTA1N2QyMmFkMTljNWIzZjQxN2Q5ZThkM2RlNWQ4NzhjM2VkM2ZkYjA5NDdmIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MSwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJkMTBiMzZhYTc0YTU5YmNmNGE4ODE4NTgzN2Y2NThhZmFmMzY0NmVmZjJiYjE2YzM5MjhkMGU5MzM1ZTk0NWQyIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_81f8cd4d04ea4b2da10f7ecd5df7c5d6",
+      "statement": "Rank badges color by rank so identical ranks share a badge, and formatScore shows two decimals for attendance and one for mid-marks with a dash for missing values.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/format.ts#L1-L19",
+          "version": "repo-lines-v1:sha256:411def0b256ed30f92bd4ad78f27abfe7380a0504d40edc750c6ddc2655fee32:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjMzg1MTJlMzJlZGFmZWFiOTQ2MWRkYzRkNjY0NzAzYWU0MDQ4ZDU1MTgwZWU2NTBhZTIxOTViZjlmMzg2YzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzNzkwODdmOGM5MjA3YjAxMmEwMjMwZGYzZjU4OTFjYjc0ZTcwYTM3YTRlMDE4MzY0ODZjYTA1MGNkMGY3NmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4b92ba5dd3344383b1219de64751e1cd",
+      "statement": "The web app keeps a local copy of the branch map so the frontend build does not depend on backend source layout, and derives both mini app page URLs from a PAGES_ROOT constant.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/constants.ts#L1-L35",
+          "version": "repo-lines-v1:sha256:87d357ebd342a1f33b36612ddb5bcf34e84089894449a9589e16c6ce589366d5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkZTAwNjBhYjhmYzI0YzZiNWE3ODc3YjQwNzA2ZTYxODFhMGEyMDYzNjc2MWVhN2NkN2QyZDg1ZTFkMTAzYjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4M2E1M2VlZDFkZTgwZDE4Mjk0OTVlYzM5ZTFmOGNhM2M2OTZjM2M5MDllNjUyMWEwYThlODhkYjFiNzQ3Y2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_34cd057b912446d38862a81ac4fcc1ca",
+      "statement": "The podium renders gold, silver, and bronze variants with color-matched score stats for the active sort.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/components/Podium.tsx#L1-L49",
+          "version": "repo-lines-v1:sha256:f1237e87cc5d09d6ec5f42c562284996d3dc51711236f6f48f16f0934913b614:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYxZjVmMzZmYWJhMzU4ZGVhZTdlOGQwY2VhOTUzZmRiOGEyMGRjNWJmNWMyZDc2MTNjNWE1ODk2MGZjODBmNjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5OTY3ZWMxZWQzODM2ZjhlYjE3YWZmMTcyYjViZmVmN2RlNjA0ODVhNDM5YzZjYTExYzU5MWUxNzU1NzM5YWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlOWI3ZTViODc5YWQ5MDNmMGRlN2NlMjQ0ZmNkMmIwZDQzZGM3ZThhZTMxNmJjYmU0YjEzNjE2YzRlMGE4YWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_db1d5a0afdb54e4499a2b6ec6853eec0",
+      "statement": "The web app builds with tsc plus vite and deploys the dist directory (both pages) to GitHub Pages via the gh-pages script.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/package.json#L6-L14",
+          "version": "repo-lines-v1:sha256:7d5cb4e05f325730eec52c59182e1e2c16f2049067f5e96ee9a7f9760b56da16:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzQ4MzNkNTk0OWMwM2E0MGNhOTUyNDkxNjEwYTY2NTk2NDRiM2FhNDY2MzYyZjc5OTAyMGRiZjE5ODE1NDdkYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2E2M2JmMDk0ZjUzYTg5MTIzMjc5MjRlMjllMTE5MzIzYjJjOTU5YWNjMDEzMmZhZmEyNzE1MmI1YmQ5Zjg2NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzYyYmRiNTZkNmIxZDZhOGJjN2ZhOWEyNGU2YTdmZjcxODM2NWE2OTU1ZjhiZTRiNGJhMTVkYzYwMTQ3OTg3MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_2a401152cd304f4c815c5d0183f6cd3b",
+      "statement": "useTelegramIdentity reads the WebApp SDK once via a lazy initializer and exposes tgUser and initData, shared by the leaderboard and profile pages.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/useTelegramIdentity.ts#L17-L32",
+          "version": "repo-lines-v1:sha256:e298149d4f8655f1e43757a08761845675bec0db2e9b94a8f479cbdd9f6d4374:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4YjNlNjM0ZjkyYWQ5NzE1YzcyZTUwYjIyOGVlOTM3Yzc4MzczMjk2Y2MwMGFjNzljNGQ2Y2UwNWVhNjQyN2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyZmQ1NjdlMjk3MzRkOTU3YWFmM2U0OGRiN2FkNmYyMzE2MTMzMjJhMGQ5NWRjMTAyNDIyYWMxMWY0YTZmMTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNmN2Y1MDc0OTM4M2Q3NGFiNzk4NTVjOGIyMTQzY2VmZDIwY2I3YzgwMTQ1YzYyMzc2MjdmOGVkY2E5Y2Y4ZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRmMzk4MmZkNjEwMTczNTk5MjQxZmNhOTNjN2M4NjY2ODNmNThmNTQxZWNlZDFjMjA5ODEwMjE0NTQ3NzE2NGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_485054d1c6294511bcaa62ce0251ee13",
+      "statement": "The isMe call site is guarded with myRoll != null so an unidentified viewer does not match ghost rows via null === null.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/Leaderboard.tsx#L119-L121",
+          "version": "repo-lines-v1:sha256:744a126ad6e535aed1f9348a6a340d6000c475796b254a5798c5e271c9ccc1fb:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzBkMjFhYzJmZWZkM2JmYTQ1ZDc2ZDIzMzA1ZDdmMGZmNzc2MDA2Njg5OWIxYzI3ZTU2YTkzYWQzY2ZhNzAxZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjRlNmMxMGViMGFjNDg5ZjliYTA2OGUxMTYwYTkzYTljNDU4MTc1MTZmNDc5MjNhNGViNjYwODU1OWFhY2ZkMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDcwMTVlMzRlZGIyYTM0ODQ2YTA5ODAwN2NkZTMxNWNlNjBmODJiZWMyNmY2OTk1MGU4ZDJkMTgyM2Q4NWE5NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDU1OTkyOTMyY2ViMDRiMjJiNzEwOTU5MDI2ZTJlNjRkZTU5Y2Q4ODlmM2YyZTIyM2YzYmNmZGNiYmNhMGJmMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_888e63ef7e5143c6b4d910ce07ee20dc",
+      "statement": "register.html is a separate Vite entry mounting ProfileApp via register-main.tsx, independent of the leaderboard page.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/register.html",
+          "version": "repo-file-v1:sha256:66b890ad7f0ce31def2f1ef1ef12d4994092b30d13f6ad0bbea8627ad47a2d00"
+        },
+        {
+          "resource": "repo://src/web/src/register-main.tsx",
+          "version": "repo-file-v1:sha256:d362c352635761dcf408078c337fe1c3ca7f0eabf60fda4f19b3a81a9837f65c"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-09T23:13:13.880Z"
+  }
+}

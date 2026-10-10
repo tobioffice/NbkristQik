@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:b9b96108276fa5838f4758211b1ea4640992e26a857d526f2bf1e65be2e11490",
+  "claims": [
+    {
+      "id": "claim_1939087266cd4b8f86382aafea6b2ace",
+      "statement": "NbkristQik runs the Telegram bot and Express API in a single Node process from src/bot/index.ts, starting bot polling only after database init, handler imports, and API server startup.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/index.ts#L38-L85",
+          "version": "repo-lines-v1:sha256:c4bc2c8efc16d7d7dd02629e6850a36c7f61e3e6994b6811e943c69e0447fcee:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZmY3ZDEzMTA2NmM2MDE2NjU5Yjc0Y2UxMzc2NGI0OTAzMmIwNTI5OTIzOTNkZDhlMTUyMjFjZjhlNTAxNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3YjQ1MzEyOGRkNTU2MDFmMjg2MDg2NGM0OWM4OGY4ODE2NjM3MzliZDRkNzBiYzIwNmQ4YjZiYmQ4YWUzYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjNWI1MTVjZTBkOTFlZjNiYzg5YzgwNzZhYWNhYmE0YjRiYTEyYTk2NjRlM2E0ZTlhZDE2YTdkMmYzNzQ5MmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_673b14de17b4473daa3c50719283c605",
+      "statement": "Persistence is Turso (libSQL/SQLite) through @libsql/client, and Redis provides caching.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/db.ts#L1-L8",
+          "version": "repo-lines-v1:sha256:fc21eb92824dd04e604abc9cf4f44b0f2ac01b3114cc63853568605b8a03024e:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTdjNzc1ZmFjNjdhNTIxNjAyZTFjOWFkOTEzODI5ZGYxNzAxMjlhOWRhNDNlNWVmN2E5OTQyMzI3N2M5NjA2OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjZmNWI0MGIxNTg0NTdkMTc4NjRmMjE3OTA3ODZkZDVhMmVjZGI2NGI2NmE2NTFmNzg4ZDRlMjVjZDMzMDNkMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        },
+        {
+          "resource": "repo://src/services/redis/getRedisClient.ts#L7-L14",
+          "version": "repo-lines-v1:sha256:a67ae619a4de289aab518a3998d44875346a49bd4913d7326963c769e38a1478:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjE4M2NjZDBlNWUwZTM4YWIwZTZlODdmMjNmZGQzM2QyNDE4MDhhOTdmMmM5ZTkzODhiNjg5ZWVhN2Y1OGM2MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDBjZTYzMDhhNWZjNjgxNzY1YzU3ODUwMzMxZmZjNzk3MjcyNmFiMGExMTRkM2U0ZTBmNGE5MzhiYTZkYzVjZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGEzZGQyZDI5OWY4OTA5ZjQyN2I4N2RiZGE2Njc1NTJmZjdlODdlYTY5NzI4MzgzOWUwYTUzMGYzMGRhZWQxNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9a25a336e6aa4f67b72ca3928d3e2209",
+      "statement": "The web frontend is React 19 with Vite and Tailwind, built as two static Telegram Web App pages.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/package.json#L15-L37",
+          "version": "repo-lines-v1:sha256:22d0d0a1d8e1dc857f042405701ca88b3a5f6c7cd7fc8b1ab56e8d0338a1bdf4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhM2I0NjlkOWUwOTc1NzIyNDY2NjczNGM5ZWY3YjI1NGQ4ODUzNGY1ZDViYjcwOTg5NjA4MDVjNTUzZGMzMDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImExZjJjZjhhYmU4YWYxNDgzY2Y0OGM5ZmI5NmFjYjJhOTMxNjA2OTY2MjEzZWI4ZWFlZmQwNjg2YzU4NmU1ZGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_05c4ed3e3b694e37b7af3abc7e0e1a8f",
+      "statement": "Local development uses pnpm dev; production builds dist locally and restarts the nbkristqik systemd service on the server.",
+      "evidence": [
+        {
+          "resource": "repo://package.json#L6-L18",
+          "version": "repo-lines-v1:sha256:744f46f905af7e48baa1a6f84186eed824998dccb1a1151e1b0275cd7ccbff2f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwOGYxYjMxODg3Y2U0ZWE2NmU0ODI3MjdiMTY5MWUxMDRmMjVmZTEzYWZiYjVjZDczYjI0NjExMjRkMzkzZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyYTgwYTIyYjYyZWMyYTU1MTU1OTRiNzJkYjE2ZGFjMmIwZTkyNWMzMWIyZTg4YjFmYTg2YzA0ZGNkMzBiZGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlZTJkYzc4M2IyZDU4YjUzZjRjM2VlNjZmMWU2YjFjMDVmYjU0YzBkZjMxM2E0N2QzN2Q3YjMxYTdjMGNiMWUifQ"
+        },
+        {
+          "resource": "repo://scripts/deploy.sh#L11-L33",
+          "version": "repo-lines-v1:sha256:7e118c1da1b03cf185a55a5e3e1dbce91c4ce41881a543b96d15c3a8224ad3c6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4ZmM2MzM2NjdkMDMwMDczMWJkZDg0NDcyZGM0MjRlMWY5YzY0MTc1ZWEyYmFkYjY2NjQ3MmQ5MWFlYjRlZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxNDBlMTZlODFhYjkwNjYwNDg4OWY2MmMyZmVlY2JmYmIxNzUyZTUwN2IzZmY4ZTBkYzc3MzkxZDBlNGE5YmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxNWQ3ZDkwMjk5ZjBlZDc0MzQxZmY3ZmZkOGU4YmNlODUzNjg2NTM4YmVjODc4NzBkNjY5M2U0ZGJjNjFjNTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b61a0feeaaa641b3bf38a17e4e90284e",
+      "statement": "Vitest runs the unit and integration suites (with coverage thresholds), and CI runs lint, typecheck, and coverage on Node 20 plus a separate web job.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/test.yml#L17-L50",
+          "version": "repo-lines-v1:sha256:6b39c4629b1877250ceb9d7b8e33976658d81376efff9320dd806cf1fcfef53a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4OTk5MTEwM2Y2YmE4ODhlM2RlNzY1MWM1YTMwNWM3N2U1NTQ3Njc3M2FiYTgzOTU5MWVjYzViZDBmMmFiMWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2ZWM3N2I1ODFjYmQ2ZjNkMWQ1MmNmZThjMTUxNjdiMDBhNWQyMTVkYzg1ODYyNzI1MmE4YTBiNDNiMDNjNzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQzMzZiOTMzM2FiNDU3OWNjYWI3NWJmNzViMjgyMTc3YjE0MDMxMTMyNmQ5NWY3ODhlZWMzODY4MTY1MmY2YzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY4MDM0ZDNiZGE0N2FlNjNlOWY2MTMxZmRiN2Q5NzgwOTIzMjU4MGMyOWE2MTczNWNjYWQ3NGVjYThhMGU3NzgifQ"
+        },
+        {
+          "resource": "repo://vitest.config.ts#L4-L32",
+          "version": "repo-lines-v1:sha256:59285f8c7044a82caa7b4a8975eea398980cd7d4872f4c1eea2327b95f99af01:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyY2VjYjE0NGE0NmY1ZGNmMTJhNjE2OWZjZWVkNzY5NWU4Mjk0YjA5MGRlNzZmMzY2MWNkZDAyNDkzMDAxNDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2ZTYyNjU4MzQ1YjM3MjcwNjdlNzE1ODI5MTMxZTNhYzM4OGZlY2M2N2VkMmIwZDhjZjhlOGI2NzYwNzljYTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcxMzIyZmNlNjM4MmFlOWMwODU4ODcyZDMwNTgzNGFhOGI4NjM5YWI0NmQ4ZjA1ZDYzNjAzOWY4ZjE3NzAxM2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY0NTFiZjJiOWYyYTc5YjU2MjEyMjRlNmNlNDU0ODRlNDljM2M5ZGQ3NWM1MWQ4YjNmYmQ1ODVkYzNhMWUzODcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_aab86b9ef0314827adfdd05b17be66f2",
+      "statement": "Registered users get /attendance, /midmarks, and /bunk instant commands backed by the registrations table; unregistered users keep the roll-number menu flow.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/commands/registered.ts",
+          "version": "repo-file-v1:sha256:134eb68084e1d2728a4e6ce4a34d020aa8bb3f29c89b9ad483d0420c17a58a1c"
+        },
+        {
+          "resource": "repo://src/db/init.ts#L69-L76",
+          "version": "repo-lines-v1:sha256:4c8624ea526b8526c5224d289e8bf909da2eadbe32cf10b78cf2457448d563e1:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODAxZmE2MTk1OGUyN2RiYWM4MGI0OTYwZmZjYzJlODU2Mjc2NjZmNDFlNDQ1N2NhNjExNjgyNTg0NjRiYjExOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODRlNDIwOGNkNmZmYjhjNGEzNTQ3YjJmNTRhZGExOTk3OGMzZjM2NWU3OGY5NTAyZWY1MTQ1Y2RkMmFhODU0MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmY1MDNiY2M3M2QzZjY2M2ZjZTdlZTc4NDIwNzk5NGI2NTNlYWU4NzQ0ZDc4MGRiNGQ5YmE3Zjk0ZjU0MzczZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGZjN2NhOWM5MTFjZWVmMWRhZjQ3ZGI4NjUzMTM0Y2NkY2VkNjY0ZjRkYzFhYzhlN2ViOTNkN2QxMDhkYjQzYiJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-09T23:13:13.880Z"
+  }
+}
