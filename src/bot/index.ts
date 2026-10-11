@@ -5,7 +5,10 @@ import { ADMIN_ID } from "../config/environmentals.js";
 import { logger } from "../config/logger.js";
 
 process.on("unhandledRejection", (reason) => {
-  logger.error("[bot] unhandled rejection:", reason);
+  // message only: a full error dump can carry request URLs with the bot
+  // token and other credentials into the journal
+  const message = reason instanceof Error ? reason.message : String(reason);
+  logger.error("[bot] unhandled rejection:", message);
 });
 
 logger.info("Starting bot initialization...");

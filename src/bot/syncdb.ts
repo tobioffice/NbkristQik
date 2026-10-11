@@ -458,7 +458,7 @@ export const registerSyncDbCommand = () => {
       );
     } catch (e: unknown) {
       const err = e as Error;
-      logger.error("[syncdb] error:", e);
+      logger.error("[syncdb] error:", e instanceof Error ? e.message : e);
       bot
         .sendMessage(chatId, `❌ Sync failed: ${err?.message || e}`)
         .catch(() => {});

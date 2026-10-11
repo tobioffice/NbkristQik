@@ -67,7 +67,10 @@ export const renewSession = async (): Promise<void> => {
     sessionCookie = sessionToken;
     logger.debug("[Academic] Session renewed successfully");
   } catch (error) {
-    logger.error("[Academic] Failed to renew session:", error);
+    logger.error(
+      "[Academic] Failed to renew session:",
+      error instanceof Error ? error.message : error,
+    );
     throw new InvalidCredentialsError();
   }
 };

@@ -7,7 +7,7 @@ bot.onText(/\/start(?:\s+(.+))?/, (msg, match) => {
   if (match?.[1] === "unlocked") {
     bot.sendMessage(
       msg.chat.id,
-      `✅ <b>You're unlocked for today.</b>\n\nSend your roll number and I'll pull up your stats.`,
+      `✅ <b>You're all set.</b>\n\nSend your roll number and I'll pull up your stats.`,
       { parse_mode: "HTML" },
     );
     return;

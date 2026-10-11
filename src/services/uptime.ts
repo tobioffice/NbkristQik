@@ -14,7 +14,12 @@ import { logger } from "../config/logger.js";
 
 const INTERVAL_MS = 5 * 60 * 1000;
 const RETENTION_DAYS = 95;
-const PROBE_TIMEOUT_MS = 8000;
+// The production VM occasionally pauses for several seconds (host-level CPU
+// steal / storage hiccups): observed stalls of 3–8.2s hit ALL components in
+// the same second. The timeout sits just above that band, and anything that
+// still fails is re-probed once before being recorded or alerted.
+const PROBE_TIMEOUT_MS = 10000;
+const CONFIRM_DELAY_MS = 45 * 1000;
 
 const API_PROBE_URL = `http://127.0.0.1:${PORT}/health`;
 
@@ -75,6 +80,16 @@ const probePortal = (): Promise<ProbeResult> =>
     });
   });
 
+const componentProbes: Record<string, () => Promise<ProbeResult>> = {
+  api: probeApi,
+  turso: probeTurso,
+  redis: probeRedis,
+  portal: probePortal,
+};
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** Record one result and fire any transition alert. */
 const notifyAdmin = async (result: ProbeResult): Promise<void> => {
   if (!ADMIN_ID) return;
   const previous = previousStatus.get(result.component);
@@ -95,34 +110,59 @@ const notifyAdmin = async (result: ProbeResult): Promise<void> => {
     .catch((e) => logger.warn("[uptime] admin alert failed:", e));
 };
 
-const probe = async () => {
-  const results = await Promise.allSettled([
-    probeApi(),
-    probeTurso(),
-    probeRedis(),
-    probePortal(),
-  ]);
+const recordAndNotify = async (result: ProbeResult): Promise<void> => {
+  try {
+    await recordHeartbeat(result.component, result.status, result.latencyMs);
+  } catch (e) {
+    logger.warn(`[uptime] heartbeat write failed for ${result.component}:`, e);
+  }
+  await notifyAdmin(result);
+  previousStatus.set(result.component, result.status);
+  logger.debug(
+    `[uptime] ${result.component}: ${result.status} (${result.latencyMs ?? "timeout"}ms)`,
+  );
+};
 
-  for (const settled of results) {
-    if (settled.status === "rejected") {
-      logger.warn("[uptime] probe crashed:", settled.reason);
-      continue;
-    }
-    const result = settled.value;
-    try {
-      await recordHeartbeat(result.component, result.status, result.latencyMs);
-    } catch (e) {
-      logger.warn(
-        `[uptime] heartbeat write failed for ${result.component}:`,
-        e,
-      );
-    }
-    await notifyAdmin(result);
-    previousStatus.set(result.component, result.status);
-    logger.debug(
-      `[uptime] ${result.component}: ${result.status} (${result.latencyMs ?? "timeout"}ms)`,
+/**
+ * Re-probe a failed component once after a short delay. The production VM
+ * pauses for a few seconds several times a day, which fails every component
+ * at once; a single retry separates those blips from real outages. If the
+ * retry succeeds the component is recorded healthy (the blip is logged, not
+ * alarmed); only a second failure is recorded and alerted.
+ */
+const confirmFailure = async (failed: ProbeResult): Promise<void> => {
+  await sleep(CONFIRM_DELAY_MS);
+  const retry = await componentProbes[failed.component]();
+
+  if (retry.status === "up") {
+    logger.warn(
+      `[uptime] ${failed.component} failed once and recovered within ${CONFIRM_DELAY_MS / 1000}s — treating as a transient blip`,
     );
   }
+  await recordAndNotify(retry);
+};
+
+const probe = async () => {
+  const settled = await Promise.allSettled(
+    Object.values(componentProbes).map((fn) => fn()),
+  );
+
+  const results: ProbeResult[] = [];
+  for (const s of settled) {
+    if (s.status === "rejected") {
+      logger.warn("[uptime] probe crashed:", s.reason);
+      continue;
+    }
+    results.push(s.value);
+  }
+
+  // record healthy components immediately; confirm failures in parallel
+  for (const result of results.filter((r) => r.status === "up")) {
+    await recordAndNotify(result);
+  }
+  await Promise.all(
+    results.filter((r) => r.status === "down").map(confirmFailure),
+  );
 };
 
 const prune = async () => {

@@ -41,6 +41,7 @@ const getCachedMembership = async (userId: number): Promise<boolean> => {
 const isAuthorizedUser = async (
   userId: number,
   chatId: number,
+  replyToMessageId?: number,
 ): Promise<boolean> => {
   // admin always allowed
   if (userId === ADMIN_ID) return true;
@@ -69,9 +70,11 @@ const isAuthorizedUser = async (
     const target = chatId < 0 ? chatId : userId;
     await bot.sendMessage(
       target,
-      "🔓 <b>One tap to unlock today</b>\n\nTap <b>\"I'm not a robot\"</b> in the channel and you're set.",
+      "🔓 <b>Quick human check</b>\n\nTap <b>\"I'm not a robot\"</b> below and you're in.",
       {
         parse_mode: "HTML",
+        // show as a reply to the user's message so it's clearly for them
+        ...(replyToMessageId ? { reply_to_message_id: replyToMessageId } : {}),
         reply_markup: {
           inline_keyboard: [[{ text: "👇 I'm not a robot", url: checkInLink }]],
         },
@@ -148,7 +151,7 @@ const handleRollNumberMessage = async (msg: Message): Promise<void> => {
     return;
   }
 
-  const authorized = await isAuthorizedUser(userId, chatId);
+  const authorized = await isAuthorizedUser(userId, chatId, msg.message_id);
   if (!authorized) return;
 
   trackActivity({
@@ -249,7 +252,11 @@ const handleCallbackQuery = async (
     return;
   }
 
-  const authorized = await isAuthorizedUser(userId, msg.chat.id);
+  const authorized = await isAuthorizedUser(
+    userId,
+    msg.chat.id,
+    msg.message_id,
+  );
   if (!authorized) {
     await bot.answerCallbackQuery(callbackQuery.id, {
       text: "❌ You need to be authorized first",

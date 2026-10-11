@@ -79,7 +79,7 @@ const createCheckInPost = async (
 ): Promise<number> => {
   const sent = await bot.sendMessage(
     CHANNEL_ID,
-    `🔓 <b>Unlock the bot for today</b>\n\n👇 Tap <b>I'm not a robot</b> to use NbkristQik today.`,
+    `🔓 <b>Quick human check</b>\n\n👇 Tap <b>I'm not a robot</b> and you're in.`,
     {
       parse_mode: "HTML",
       disable_notification: true,
@@ -145,7 +145,7 @@ bot.on("callback_query", async (query) => {
     });
 
     await bot.answerCallbackQuery(query.id, {
-      text: "✅ You're in for today!",
+      text: "✅ You're all set!",
       url: "https://t.me/NbkristQik_bot?start=unlocked",
     });
   } catch (e) {
