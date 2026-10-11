@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390, initial-scale=1">
+<title>NbkristQik — The Attendance Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Cutive+Mono&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:390px; height:844px; overflow:hidden; background:#E7DCC3; color:#1E2A38;
+         font-family:"Cutive Mono", monospace; font-size:15px; font-variant-numeric:tabular-nums; }
+  .cloth { background:#3F6457; padding:16px 16px 13px;
+           background-image:repeating-linear-gradient(90deg, rgba(255,255,255,.045) 0 2px, transparent 2px 5px),
+                            linear-gradient(#3F6457, #35564A); color:#EFE8D6; }
+  .cloth h1 { font-family:"Special Elite", serif; font-size:25px; font-weight:400; letter-spacing:.04em; }
+  .cloth .sub { font-size:10.5px; letter-spacing:.26em; margin-top:6px; opacity:.75; }
+  .cloth .yr { float:right; font-family:"Special Elite"; font-size:17px; margin-top:2px; }
+  .meta { display:flex; justify-content:space-between; padding:9px 16px; font-size:11px; letter-spacing:.12em; color:#5A5140; border-bottom:1px solid rgba(30,42,56,.25); }
+  .entry { margin:12px 16px 4px; background:#EFE5CD; border:1.5px solid #1E2A38; border-left:6px solid #C33B2E;
+           padding:10px 12px; display:flex; align-items:center; gap:12px; }
+  .entry .lbl { font-family:"Special Elite"; font-size:12px; color:#C33B2E; letter-spacing:.1em; }
+  .entry .roll { font-size:13.5px; }
+  .entry .big { margin-left:auto; text-align:right; }
+  .entry .big b { font-size:27px; display:block; font-family:"Special Elite"; font-weight:400; }
+  .entry .big span { font-size:10px; letter-spacing:.2em; color:#5A5140; }
+  .tabs { display:flex; gap:18px; padding:12px 16px 0; }
+  .tab { font-family:"Special Elite"; font-size:14px; letter-spacing:.08em; padding-bottom:4px; color:#5A5140; }
+  .tab.on { color:#1E2A38; border-bottom:3px solid #C33B2E; }
+  .controls { display:flex; gap:8px; padding:10px 16px 6px; }
+  .search { flex:1; background:#EFE5CD; border:1.5px solid #1E2A38; padding:8px 10px; font-family:"Cutive Mono"; font-size:13px; color:#6B6250; }
+  .chip { border:1.5px solid #1E2A38; background:#EFE5CD; padding:7px 9px; font-size:11px; letter-spacing:.1em; }
+  .thead { display:grid; grid-template-columns:32px 86px 1fr 50px 30px; gap:4px; padding:7px 16px 5px;
+           font-family:"Special Elite"; font-size:11px; letter-spacing:.12em; color:#5A5140; }
+  .row { display:grid; grid-template-columns:32px 86px 1fr 50px 30px; gap:4px; align-items:center; padding:8px 16px;
+         height:41px; border-top:1px solid rgba(30,42,56,.22); }
+  .row .n { overflow:hidden; white-space:nowrap; }
+  .row .a { text-align:right; font-weight:700; }
+  .row .bnk { text-align:right; color:#C33B2E; letter-spacing:.1em; }
+  .row.you { background:#E2D6B8; border-left:6px solid #C33B2E; padding-left:10px; position:relative; }
+  .row.you .a { font-size:20px; }
+  .youflag { position:absolute; right:16px; top:-9px; z-index:2; background:#C33B2E; color:#EFE8D6; font-family:"Special Elite";
+             font-size:9px; letter-spacing:.14em; padding:2px 6px; }
+  .rule75 { display:flex; justify-content:space-between; align-items:center; border-top:3px solid #C33B2E; margin-top:2px;
+            padding:5px 16px 4px; color:#C33B2E; font-family:"Special Elite"; font-size:11.5px; letter-spacing:.12em; }
+  .below { background:#EBD3C2; }
+  .below .a, .below .r { color:#A62F22; }
+  .fade { position:fixed; left:0; right:0; bottom:0; height:64px; background:linear-gradient(transparent, #E7DCC3 80%); }
+</style>
+</head>
+<body>
+  <div class="cloth">
+    <span class="yr">2026</span>
+    <h1>Attendance Register</h1>
+    <div class="sub">NBKRISTQIK · CSE · SECTION A</div>
+  </div>
+
+  <div class="meta"><span>ROLL CALL — PERIODS 1–6</span><span>UPDATED 11 OCT, 2:02 PM</span></div>
+
+  <div class="entry">
+    <span class="lbl">MY ENTRY</span>
+    <span class="roll">23BQ1A05Y3</span>
+    <div class="big"><b>76.4%</b><span>ATTENDANCE · RANK 47</span></div>
+  </div>
+
+  <div class="tabs"><div class="tab on">ATTENDANCE</div><div class="tab">MID MARKS</div></div>
+
+  <div class="controls">
+    <div class="search">search roll / name…</div>
+    <div class="chip">ALL YRS</div>
+    <div class="chip">CSE</div>
+    <div class="chip">A</div>
+  </div>
+
+  <div class="thead"><span>RNK</span><span>ROLL NO</span><span>NAME</span><span>ATT %</span><span>BNK</span></div>
+
+  <div class="row"><span>1</span><span>23BQ1A0512</span><span class="n">K. Sahithi</span><span class="a">97.8</span><span class="bnk"></span></div>
+  <div class="row"><span>2</span><span>23BQ1A0547</span><span class="n">M. Teja</span><span class="a">96.1</span><span class="bnk"></span></div>
+  <div class="row"><span>3</span><span>22BQ1A0308</span><span class="n">P. Harsha</span><span class="a">95.4</span><span class="bnk">/</span></div>
+  <div class="row"><span>4</span><span>23BQ1A0521</span><span class="n">S. Nikhita</span><span class="a">94.9</span><span class="bnk"></span></div>
+  <div class="row"><span>5</span><span>23BQ1A0563</span><span class="n">V. Chaitanya</span><span class="a">93.7</span><span class="bnk"></span></div>
+  <div class="row"><span>46</span><span>23BQ1A0540</span><span class="n">G. Lokesh</span><span class="a">76.6</span><span class="bnk"></span></div>
+  <div class="row you"><span>47</span><span>23BQ1A05Y3</span><span class="n">You</span><span class="a">76.4</span><span class="bnk"></span><span class="youflag">YOU</span></div>
+  <div class="row"><span>48</span><span>23BQ1A0509</span><span class="n">T. Sneha</span><span class="a">76.2</span><span class="bnk"></span></div>
+
+  <div class="rule75"><span>75% — MINIMUM REQUIREMENT</span><span>BUNK DANGER LINE</span></div>
+
+  <div class="row below"><span>63</span><span>23BQ1A0588</span><span class="n">R. Divya</span><span class="a">71.2</span><span class="bnk">///</span></div>
+  <div class="row below"><span>64</span><span>23BQ1A0503</span><span class="n">B. Manoj</span><span class="a">70.9</span><span class="bnk">///</span></div>
+  <div class="row below"><span>65</span><span>22BQ1A0391</span><span class="n">K. Anusha</span><span class="a">70.1</span><span class="bnk">////</span></div>
+  <div class="fade"></div>
+</body>
+</html>

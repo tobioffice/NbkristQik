@@ -8,6 +8,44 @@ interface ProfileViewProps {
   initData?: string;
 }
 
+const LockIcon = () => (
+  <svg
+    aria-hidden="true"
+    xmlns="http://www.w3.org/2000/svg"
+    width="30"
+    height="30"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="5" y="10.5" width="14" height="9.5" rx="1" />
+    <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" />
+    <path d="M12 14.5v2" />
+  </svg>
+);
+
+const WarnIcon = () => (
+  <svg
+    aria-hidden="true"
+    xmlns="http://www.w3.org/2000/svg"
+    width="30"
+    height="30"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M12 4 21 19.5H3z" />
+    <path d="M12 10.5v4" />
+    <path d="M12 17.2v.01" />
+  </svg>
+);
+
 export default function ProfileView({ tgUser, initData }: ProfileViewProps) {
   const { status, save } = useProfile(tgUser, initData);
   const [roll, setRoll] = useState("");
@@ -31,32 +69,36 @@ export default function ProfileView({ tgUser, initData }: ProfileViewProps) {
 
   if (!tgUser) {
     return (
-      <div className="text-center py-16 space-y-3">
-        <p className="text-3xl">🔒</p>
-        <h2 className="text-white font-semibold">Open this inside Telegram</h2>
-        <p className="text-sm text-slate-500 max-w-xs mx-auto">
-          Your profile is tied to your Telegram account. Open the bot and
-          send /register to set it up.
-        </p>
+      <div className="form-block">
+        <div className="state-block">
+          <LockIcon />
+          <p className="title">Open this inside Telegram</p>
+          <p className="sub">
+            Your profile is tied to your Telegram account. Open the bot and
+            send /register to set it up.
+          </p>
+        </div>
       </div>
     );
   }
 
   if (status.state === "loading") {
     return (
-      <div className="space-y-4 py-8">
-        <div className="h-10 rounded-xl bg-slate-800 animate-pulse" />
-        <div className="h-10 rounded-xl bg-slate-800/70 animate-pulse" />
-        <div className="h-12 rounded-xl bg-slate-800/50 animate-pulse" />
+      <div className="form-block" aria-hidden="true">
+        <div className="sk" style={{ height: 44, marginTop: 22 }} />
+        <div className="sk" style={{ height: 44, marginTop: 12 }} />
+        <div className="sk" style={{ height: 48, marginTop: 16 }} />
       </div>
     );
   }
 
   if (status.state === "error") {
     return (
-      <div className="text-center py-16 space-y-3">
-        <p className="text-3xl">⚠️</p>
-        <p className="text-sm text-slate-400">Could not load your profile.</p>
+      <div className="form-block">
+        <div className="state-block">
+          <WarnIcon />
+          <p>Could not load your profile.</p>
+        </div>
       </div>
     );
   }
@@ -90,27 +132,25 @@ export default function ProfileView({ tgUser, initData }: ProfileViewProps) {
   };
 
   return (
-    <div className="space-y-5">
-      {stale && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
-          Your saved roll is no longer in the college records. If the
-          semester changed, update it below.
-        </div>
-      )}
+    <>
+      <div className="form-block">
+        {stale && (
+          <div className="note note--warn mb-5">
+            Your saved roll is no longer in the college records. If the
+            semester changed, update it below.
+          </div>
+        )}
 
-      <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 space-y-4">
-        <div>
-          <h2 className="text-white font-semibold">
-            {registered ? "Edit your roll" : "Save your roll number"}
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Optional. Set it once and /attendance, /midmarks and /bunk answer
-            instantly, no roll to type.
-          </p>
-        </div>
+        <h2 className="form-title">
+          {registered ? "Edit your roll" : "Save your roll number"}
+        </h2>
+        <p className="form-note">
+          Optional. Set it once and /attendance, /midmarks and /bunk answer
+          instantly, no roll to type.
+        </p>
 
-        <label className="block space-y-1.5">
-          <span className="text-xs font-medium text-slate-400">Roll number</span>
+        <label className="field">
+          <span>Roll number</span>
           <input
             value={roll}
             onChange={(e) => {
@@ -120,14 +160,11 @@ export default function ProfileView({ tgUser, initData }: ProfileViewProps) {
             placeholder="26KB5A0218"
             autoComplete="off"
             spellCheck={false}
-            className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-indigo-500/50"
           />
         </label>
 
-        <label className="block space-y-1.5">
-          <span className="text-xs font-medium text-slate-400">
-            Display name (optional)
-          </span>
+        <label className="field">
+          <span>Display name (optional)</span>
           <input
             value={displayName}
             onChange={(e) => {
@@ -136,28 +173,25 @@ export default function ProfileView({ tgUser, initData }: ProfileViewProps) {
             }}
             placeholder="How should we show you?"
             maxLength={40}
-            className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50"
           />
         </label>
 
         {status.state === "ready" && status.profile.studentName && (
-          <p className="text-xs text-slate-500">
-            College record: <span className="text-slate-300">{status.profile.studentName}</span>
+          <p className="hint-line">
+            College record: <b>{status.profile.studentName}</b>
           </p>
         )}
 
-        {saved && (
-          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-300">
-            {saved}
-          </div>
-        )}
+        {saved && <div className="note note--ok mt-4">{saved}</div>}
 
         {error && (
-          <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+          <div className="note note--err mt-4">
             {error}
             {suggestions.length > 0 && (
-              <div className="mt-2 space-y-1">
-                <p className="text-xs text-slate-400">Did you mean:</p>
+              <div className="mt-2">
+                <p className="hint-line" style={{ marginTop: 0 }}>
+                  Did you mean:
+                </p>
                 {suggestions.map((s) => (
                   <button
                     key={s}
@@ -166,7 +200,7 @@ export default function ProfileView({ tgUser, initData }: ProfileViewProps) {
                       setError(null);
                       setSuggestions([]);
                     }}
-                    className="block text-xs font-mono text-indigo-300 underline underline-offset-2"
+                    className="suggestion"
                   >
                     {s}
                   </button>
@@ -179,18 +213,15 @@ export default function ProfileView({ tgUser, initData }: ProfileViewProps) {
         <button
           onClick={submit}
           disabled={saving || !roll.trim()}
-          className="w-full py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-indigo-600 to-blue-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+          className="btn-ink w-full mt-5"
         >
           {saving ? "Saving..." : registered ? "Save changes" : "Register"}
         </button>
       </div>
 
-      <a
-        href={REPORT_URL}
-        className="block text-center text-xs text-slate-500 hover:text-indigo-300 transition-colors"
-      >
+      <a href={REPORT_URL} className="foot-link">
         Found a problem with the bot? Report an issue
       </a>
-    </div>
+    </>
   );
 }

@@ -3,28 +3,21 @@ interface SearchBarProps {
   onChange: (value: string) => void;
 }
 
-const iconBtn =
-  "cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 rounded";
-
 export default function SearchBar({ value, onChange }: SearchBarProps) {
   return (
-    <div className="relative mb-4">
+    <div className="search-field">
       <input
         type="text"
         aria-label="Search students by name or roll number"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search by name or roll number"
-        className="w-full bg-slate-900/50 text-slate-200 text-sm rounded-xl p-3.5 pl-10 border border-white/5 focus:outline-none focus:border-indigo-500/50 focus-visible:ring-2 focus-visible:ring-indigo-400/40 placeholder:text-slate-600"
       />
-      <span
-        aria-hidden="true"
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none"
-      >
+      <span aria-hidden="true" className="search-icon">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
+          width="17"
+          height="17"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -40,12 +33,12 @@ export default function SearchBar({ value, onChange }: SearchBarProps) {
         <button
           onClick={() => onChange("")}
           aria-label="Clear search"
-          className={`${iconBtn} absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-300 p-1.5`}
+          className="search-clear"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
+            width="15"
+            height="15"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"

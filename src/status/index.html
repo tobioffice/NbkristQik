@@ -3,82 +3,134 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#33544a" />
   <title>NbkristQik Status</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Zilla+Slab:wght@600&display=swap" rel="stylesheet" />
   <style>
+    :root {
+      --paper: #e7dcc3;
+      --paper-2: #efe5cd;
+      --paper-3: #f6efdd;
+      --ink: #1e2a38;
+      --ink-2: #5a5140;
+      --ink-3: #675d4b;
+      --cloth: #3f6457;
+      --cloth-deep: #33544a;
+      --red-ink: #a62f22;
+      --amber-ink: #8a6a12;
+      --amber-text: #6e5410;
+      --green-ink: #2f5c46;
+      --rule: rgba(30, 42, 56, 0.2);
+      --rule-strong: rgba(30, 42, 56, 0.45);
+      --font-display: "Zilla Slab", "Roboto Slab", Georgia, serif;
+      --font-ui: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { color-scheme: light; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0d1117; color: #e6edf3;
-      min-height: 100vh; padding: 24px 16px;
+      background: var(--cloth-deep); color: var(--ink);
+      font-family: var(--font-ui); font-size: 15px; line-height: 1.45;
+      -webkit-font-smoothing: antialiased; min-height: 100dvh;
     }
-    .wrap { max-width: 720px; margin: 0 auto; }
+    ::selection { background: rgba(195, 59, 46, 0.24); }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 30px 0 60px; }
+    .sheet { background: var(--paper); box-shadow: 0 20px 44px -16px rgba(16, 24, 30, 0.55); }
+    @media (max-width: 760px) {
+      .wrap { padding: 0; }
+      .sheet { box-shadow: none; min-height: 100dvh; }
+    }
+
+    /* cloth band */
+    .reg-band {
+      background: var(--cloth); color: var(--paper-3);
+      padding: 17px 20px 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+    }
+    .reg-band__title { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-height: 1.05; letter-spacing: 0.01em; }
+    .reg-band__sub { margin-top: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(246, 239, 221, 0.85); }
+    .reg-band__stamp { flex-shrink: 0; border: 1.5px solid rgba(246, 239, 221, 0.5); border-radius: 2px; padding: 5px 9px; text-align: right; line-height: 1.25; }
+    .reg-band__stamp b { display: block; font-family: var(--font-display); font-weight: 600; font-size: 16px; font-variant-numeric: tabular-nums; }
+    .reg-band__stamp span { font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(246, 239, 221, 0.85); }
+
+    /* state banner */
     .banner {
-      border: 1px solid #1f6f43; background: rgba(46,160,67,.12);
-      border-radius: 10px; padding: 16px 18px; margin-bottom: 24px;
-      display: flex; gap: 10px; align-items: flex-start;
+      display: flex; gap: 12px; align-items: flex-start;
+      margin: 16px 20px 0; padding: 13px 14px;
+      border: 1.5px solid var(--green-ink); background: rgba(47, 92, 70, 0.08); color: var(--green-ink);
     }
-    .banner.bad { border-color: #9e2f2f; background: rgba(218,54,51,.12); }
-    .banner .dot { width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px; }
-    .banner h2 { font-size: 16px; font-weight: 600; color: #3fb950; margin-bottom: 4px; }
-    .banner.bad h2 { color: #f85149; }
-    .banner p { font-size: 13px; color: #8b949e; }
-    .card {
-      background: #161b22; border: 1px solid #30363d;
-      border-radius: 10px; padding: 4px 0; margin-bottom: 24px; overflow: hidden;
-    }
-    .comp { padding: 16px 20px; border-bottom: 1px solid #21262d; }
-    .comp:last-child { border-bottom: none; }
-    .comp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .comp-name { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
-    .comp-name .dot { width: 14px; height: 14px; flex-shrink: 0; }
-    .comp-uptime { font-size: 12px; color: #8b949e; }
-    .comp-uptime b { color: #c9d1d9; font-weight: 600; }
-    .bars { display: flex; gap: 2px; height: 28px; }
-    .bar { flex: 1; border-radius: 1px; min-width: 1px; background: #21262d; position: relative; }
-    .bar.up { background: #2ea043; }
-    .bar.degraded { background: #d29922; }
-    .bar.down { background: #da3633; }
-    .bar.none { background: #21262d; }
+    .banner.bad { border-color: var(--red-ink); background: rgba(166, 47, 34, 0.07); color: var(--red-ink); }
+    .banner.unknown { border-color: var(--amber-ink); background: rgba(138, 106, 18, 0.08); color: var(--amber-text); }
+    .banner svg { flex-shrink: 0; margin-top: 1px; }
+    .banner h2 { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
+    .banner p { margin-top: 3px; font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+
+    /* components */
+    .components { margin: 18px 20px 0; border-top: 1.5px solid var(--ink); }
+    .comp { padding: 14px 0 16px; border-bottom: 1px solid var(--rule); }
+    .comp-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 9px; flex-wrap: wrap; }
+    .comp-name { display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 600; }
+    .comp-name svg { flex-shrink: 0; }
+    .comp-state { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+    .comp-uptime { font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+    .comp-uptime b { color: var(--ink); font-weight: 700; }
+    .bars { display: flex; gap: 2px; height: 26px; }
+    .bar { flex: 1; min-width: 1px; background: rgba(30, 42, 56, 0.12); position: relative; }
+    .bar.up { background: var(--cloth); }
+    .bar.degraded { background: var(--amber-ink); }
+    .bar.down { background: var(--red-ink); }
     .bar:hover::after {
-      content: attr(data-tip); position: absolute; bottom: 34px; left: 50%;
-      transform: translateX(-50%); background: #1c2128; color: #e6edf3;
-      border: 1px solid #30363d; padding: 5px 9px; border-radius: 6px;
+      content: attr(data-tip); position: absolute; bottom: 32px; left: 50%;
+      transform: translateX(-50%); background: var(--paper-3); color: var(--ink);
+      border: 1.5px solid var(--rule-strong); padding: 5px 9px;
       font-size: 11px; white-space: nowrap; z-index: 10; pointer-events: none;
     }
-    .footer { text-align: center; font-size: 12px; color: #6e7681; padding: 12px 0 24px; }
-    .loading { text-align: center; color: #8b949e; padding: 60px 0; font-size: 14px; }
+
+    .footer { text-align: center; font-size: 12px; letter-spacing: 0.02em; color: var(--ink-3); padding: 20px 20px 26px; }
+    .loading { text-align: center; color: var(--ink-2); padding: 64px 20px; font-size: 14px; }
     .spinner {
-      width: 28px; height: 28px; border: 3px solid #30363d; border-top-color: #2ea043;
+      width: 22px; height: 22px; border: 2px solid var(--rule); border-top-color: var(--ink);
       border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div id="banner" class="banner" style="display:none">
-      <svg class="dot" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2ea043"/><path d="M4.5 8.5l2.5 2.5 4.5-5" stroke="#0d1117" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <div class="wrap"><div class="sheet">
+    <header class="reg-band">
+      <div>
+        <h1 class="reg-band__title">NbkristQik</h1>
+        <p class="reg-band__sub">System status</p>
+      </div>
+      <div class="reg-band__stamp"><b id="stamp-val">&mdash;</b><span>systems up</span></div>
+    </header>
+
+    <div class="banner" id="banner" style="display:none">
+      <span id="banner-icon" aria-hidden="true"></span>
       <div>
         <h2 id="banner-title">Checking status...</h2>
         <p id="banner-sub">We're not aware of any issues affecting our systems.</p>
       </div>
     </div>
 
-    <div class="card">
-      <div id="components" class="loading">
-        <div class="spinner"></div>
-        Loading status...
-      </div>
+    <div class="components" id="components-wrap" style="display:none">
+      <div id="components"></div>
+    </div>
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      Loading status...
     </div>
 
-    <p class="footer">Updated live · Last 90 days · checker.tobioffice.dev</p>
-  </div>
+    <p class="footer">Updated live &middot; Last 90 days &middot; checker.tobioffice.dev</p>
+  </div></div>
 
   <script>
     const IST = "Asia/Kolkata";
     const fmtDay = (d) => new Date(d + "T00:00:00+05:30").toLocaleDateString("en-GB", { timeZone: IST, day: "numeric", month: "short" });
-    const fmtTime = (iso) => new Date(String(iso).replace(" ", "T") + "Z").toLocaleTimeString("en-GB", { timeZone: IST, hour: "2-digit", minute: "2-digit" });
+    const fmtTime = (iso) => new Date(String(iso).replace(" ", "T") + "Z").toLocaleTimeString("en-US", { timeZone: IST, hour: "numeric", minute: "2-digit", hour12: true });
     const istDayFmt = new Intl.DateTimeFormat("en-CA", { timeZone: IST, year: "numeric", month: "2-digit", day: "2-digit" });
     // bar color: up if >=99% of pings that day were up, degraded if some failed, down if all failed
     const dayClass = (b) => {
@@ -89,21 +141,30 @@
       return "down";
     };
 
+    const ICONS = {
+      ok: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.4 2.4 2.4 4.6-5"/></svg>',
+      bad: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9.2 9.2 5.6 5.6"/><path d="m14.8 9.2-5.6 5.6"/></svg>',
+      unknown: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5"/><path d="M12 16v.01"/></svg>'
+    };
+
     fetch("/api/status")
       .then((r) => r.json())
       .then((data) => {
         const comps = data.components || [];
         const allUp = comps.every((c) => c.current === "up");
         const anyDown = comps.some((c) => c.current === "down");
+        const upCount = comps.filter((c) => c.current === "up").length;
+        document.getElementById("stamp-val").textContent = upCount + "/" + comps.length;
 
         const banner = document.getElementById("banner");
         banner.style.display = "flex";
+        const icon = document.getElementById("banner-icon");
         const title = document.getElementById("banner-title");
         const sub = document.getElementById("banner-sub");
+        banner.className = "banner" + (anyDown ? " bad" : allUp ? "" : " unknown");
+        icon.innerHTML = anyDown ? ICONS.bad : allUp ? ICONS.ok : ICONS.unknown;
         if (anyDown) {
-          banner.classList.add("bad");
           title.textContent = "Experiencing issues";
-          title.style.color = "#f85149";
           sub.textContent = "Some systems are not responding. We're on it.";
         } else if (allUp) {
           title.textContent = "We're fully operational";
@@ -113,8 +174,9 @@
           sub.textContent = "No recent data.";
         }
 
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("components-wrap").style.display = "block";
         const wrap = document.getElementById("components");
-        wrap.className = "";
         wrap.innerHTML = "";
 
         // build 90-day calendar in IST to match the IST bucket days from the API
@@ -132,7 +194,7 @@
           const div = document.createElement("div");
           div.className = "comp";
 
-          const dotColor = isUp ? "#2ea043" : c.lastPingAgeSec < 3600 ? "#d29922" : "#da3633";
+          const stateColor = isUp ? "#3f6457" : c.lastPingAgeSec < 3600 ? "#8a6a12" : "#a62f22";
           const statusWord = isUp ? "Operational" : c.lastPingAgeSec < 3600 ? "Degraded" : "Down";
 
           let barsHtml = "";
@@ -148,10 +210,11 @@
           div.innerHTML = `
             <div class="comp-head">
               <span class="comp-name">
-                <svg class="dot" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="${dotColor}"/></svg>
+                <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="${stateColor}"/></svg>
                 ${c.component.charAt(0).toUpperCase() + c.component.slice(1)}
+                <span class="comp-state" style="color:${stateColor}">${statusWord}</span>
               </span>
-              <span class="comp-uptime"><b>${upPct}%</b> uptime · last check ${fmtTime(c.lastPing)} IST</span>
+              <span class="comp-uptime"><b>${upPct}%</b> uptime &middot; last check ${fmtTime(c.lastPing)} IST</span>
             </div>
             <div class="bars">${barsHtml}</div>
           `;
@@ -159,8 +222,7 @@
         }
       })
       .catch(() => {
-        document.getElementById("components").innerHTML =
-          '<div class="loading">⚠️ Status unavailable right now.</div>';
+        document.getElementById("loading").textContent = "Status unavailable right now.";
         document.getElementById("banner-title").textContent = "Status unavailable";
         document.getElementById("banner-sub").textContent = "Couldn't reach the status API.";
       });

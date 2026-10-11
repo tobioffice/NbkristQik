@@ -10,3 +10,4 @@ testing
 package-lock.json
 src/web/package-lock.json
 src/web/dist
+.playwright-mcp/

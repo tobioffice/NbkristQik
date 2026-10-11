@@ -14,3 +14,13 @@ This repository has a generated `openwiki/` evidence index. It is optional just-
 The scheduled OpenWiki GitHub Actions workflow refreshes the repository wiki. Do not hand-edit generated OpenWiki pages unless explicitly asked; prefer updating source code/docs and letting OpenWiki regenerate.
 
 <!-- OPENWIKI:END -->
+
+## Design system
+
+Every web-facing surface (leaderboard, register/profile, issue reports, status page, admin panel) follows the design system in `DESIGN.md` — "The Class Register, Open on the Desk."
+
+- Before changing any UI: read `DESIGN.md`. Follow its palette, typography, layout, and its Do's and Don'ts.
+- The named rules are binding: Red Pen Rule (red is correction ink only), Cloth Band Rule (one green head band per surface), Tabular Register Rule (every comparable figure uses tabular numerals), Printed Form Rule (square corners, drawn brackets not stripes), Hairline First (structure is drawn, not elevated).
+- Do not reintroduce rounded cards, glass blur, gradient text, or dark backgrounds — that is the explicit anti-reference.
+- Machine-readable tokens: `.impeccable/design.json`. Direction contract and per-surface notes: `.impeccable/surfaces/`. Review renders (synthetic data): `.impeccable/review/`.
+- Product brief: `PRODUCT.md`.

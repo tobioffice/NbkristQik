@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390, initial-scale=1">
+<title>NbkristQik — The Timetable Rack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:390px; height:844px; overflow:hidden; font-family:"Archivo Narrow", sans-serif;
+         background:linear-gradient(180deg, #E4B33A, #D9A21B 46%, #C08E12); color:#F4F1E4;
+         font-size:15px; font-variant-numeric:tabular-nums; }
+  .bed { padding:22px 16px 0; position:relative; }
+  .rail { position:absolute; right:12px; top:22px; bottom:0; width:1px; background:rgba(244,241,228,.4); }
+  .rail i { position:absolute; right:-4px; width:9px; height:1px; background:rgba(244,241,228,.55); display:block; }
+  .slide { transform:rotate(-2.4deg); background:rgba(91,102,115,.85); padding:13px 16px 12px; margin-bottom:12px;
+           box-shadow:0 10px 22px rgba(80,60,6,.25); }
+  .slide h1 { font-size:26px; font-weight:700; letter-spacing:.04em; }
+  .slide h1 span { color:#F4F1E4; opacity:.62; font-weight:400; }
+  .slide p { margin-top:6px; font-size:11px; letter-spacing:.28em; opacity:.75; font-weight:600; }
+  .plate { transform:rotate(1.6deg); background:#F4F1E4; color:#2C2E2A; padding:12px 16px; margin:4px 0 14px;
+           box-shadow:0 12px 26px rgba(80,60,6,.3); display:flex; align-items:baseline; gap:12px; }
+  .plate b { font-size:27px; letter-spacing:-.01em; }
+  .plate span { font-size:12px; font-weight:600; letter-spacing:.14em; }
+  .cols { display:grid; grid-template-columns:34px 96px 1fr 54px 42px; gap:6px; padding:2px 4px 6px;
+          font-size:10.5px; letter-spacing:.26em; font-weight:700; border-bottom:2px solid rgba(244,241,228,.55); }
+  .rows { padding-top:2px; }
+  .row { display:grid; grid-template-columns:34px 96px 1fr 54px 42px; gap:6px; padding:10px 4px; align-items:center;
+         background:rgba(91,102,115,.42); border-bottom:1px solid rgba(244,241,228,.28); height:42px; }
+  .row:nth-child(even) { background:rgba(91,102,115,.28); }
+  .row .a { font-weight:700; font-size:18px; }
+  .row .st { font-size:10.5px; font-weight:700; letter-spacing:.12em; color:#DDEAE0; }
+  .row .st.wl { color:#F0B9AE; }
+  .row.cut { color:rgba(244,241,228,.72); }
+  .row.you { background:rgba(30,40,50,.55); box-shadow:inset 3px 0 0 #F4F1E4; }
+  .cutrule { display:flex; justify-content:space-between; margin:10px 4px 2px; padding:6px 8px; border-top:2px solid #B33A2B;
+             border-bottom:2px solid #B33A2B; color:#F6E3DF; font-size:11px; font-weight:700; letter-spacing:.2em; }
+  .foot { margin:16px 4px 0; font-size:10px; letter-spacing:.3em; color:rgba(44,46,42,.85); font-weight:700; display:flex; justify-content:space-between; }
+</style>
+</head>
+<body>
+  <div class="bed">
+    <div class="rail"><i style="top:140px"></i><i style="top:182px"></i><i style="top:224px"></i><i style="top:266px"></i><i style="top:308px"></i><i style="top:350px"></i><i style="top:392px"></i><i style="top:434px"></i><i style="top:476px"></i><i style="top:518px"></i></div>
+
+    <div class="slide">
+      <h1>NBKRISTQIK <span>/ Leaderboard</span></h1>
+      <p>ATTENDANCE · CSE · SECTION A</p>
+    </div>
+
+    <div class="plate"><b>76.4%</b><span>YOUR POSITION — RANK 47 / 1,248</span></div>
+
+    <div class="cols"><span>RNK</span><span>ROLL</span><span>NAME</span><span>ATT</span><span>ST</span></div>
+    <div class="rows">
+      <div class="row"><span>1</span><span>23BQ1A0512</span><span>K. Sahithi</span><span class="a">97.8</span><span class="st">CNF</span></div>
+      <div class="row"><span>2</span><span>23BQ1A0547</span><span>M. Teja</span><span class="a">96.1</span><span class="st">CNF</span></div>
+      <div class="row"><span>3</span><span>22BQ1A0308</span><span>P. Harsha</span><span class="a">95.4</span><span class="st">CNF</span></div>
+      <div class="row"><span>4</span><span>23BQ1A0521</span><span>S. Nikhita</span><span class="a">94.9</span><span class="st">CNF</span></div>
+      <div class="row"><span>5</span><span>23BQ1A0563</span><span>V. Chaitanya</span><span class="a">93.7</span><span class="st">CNF</span></div>
+      <div class="row"><span>46</span><span>23BQ1A0540</span><span>G. Lokesh</span><span class="a">76.6</span><span class="st">CNF</span></div>
+      <div class="row you"><span>47</span><span>23BQ1A05Y3</span><span>You</span><span class="a">76.4</span><span class="st">CNF</span></div>
+      <div class="row"><span>48</span><span>23BQ1A0509</span><span>T. Sneha</span><span class="a">76.2</span><span class="st">CNF</span></div>
+    </div>
+
+    <div class="cutrule"><span>75% — MINIMUM</span><span>WL BELOW</span></div>
+    <div class="rows">
+      <div class="row cut"><span>63</span><span>23BQ1A0588</span><span>R. Divya</span><span class="a">71.2</span><span class="st wl">WL</span></div>
+      <div class="row cut"><span>64</span><span>23BQ1A0503</span><span>B. Manoj</span><span class="a">70.9</span><span class="st wl">WL</span></div>
+    </div>
+
+    <div class="foot"><span>SYNC 2:02 PM IST</span><span>TOTAL 1,248 ENTRIES</span></div>
+  </div>
+</body>
+</html>

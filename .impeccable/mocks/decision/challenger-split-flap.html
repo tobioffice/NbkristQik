@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390, initial-scale=1">
+<title>NbkristQik — The Concourse Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:390px; height:844px; overflow:hidden; font-family:"Saira Condensed", sans-serif;
+         background:linear-gradient(180deg, #8A8F98, #6D737B 60%, #585E66); font-variant-numeric:tabular-nums; }
+  .frame { margin:18px 14px; background:#141414; border:10px solid #3B4046; box-shadow:0 18px 40px rgba(0,0,0,.45), inset 0 0 0 2px #0B0B0B; height:808px; overflow:hidden; }
+  .head { display:flex; justify-content:space-between; align-items:center; padding:14px 16px 10px; border-bottom:2px solid #2A2A2A; }
+  .brand { color:#F5F2EA; font-weight:700; font-size:27px; letter-spacing:.03em; }
+  .brand small { display:block; font-size:10.5px; letter-spacing:.3em; color:#8A8F98; margin-top:5px; font-weight:500; }
+  .sync { display:flex; align-items:center; gap:6px; color:#E0A106; font-size:10.5px; letter-spacing:.2em; font-weight:600; }
+  .lamp { width:9px; height:9px; border-radius:50%; background:#E0A106; box-shadow:0 0 9px #E0A106; }
+  .tabs { display:flex; gap:6px; padding:12px 16px 4px; }
+  .tab { border:2px solid #2E2E2E; padding:7px 16px 6px; color:#6F747B; font-weight:600; letter-spacing:.18em; font-size:12.5px; }
+  .tab.on { background:#F5F2EA; color:#141414; border-color:#F5F2EA; }
+  .cols { display:grid; grid-template-columns:44px 92px 1fr 58px 44px; gap:5px; padding:10px 14px 6px;
+          color:#8A8F98; font-size:10px; letter-spacing:.22em; font-weight:600; }
+  .rows { padding:0 14px; }
+  .row { display:grid; grid-template-columns:44px 92px 1fr 58px 44px; gap:5px; margin-bottom:5px; }
+  .cell { background:#1B1B1B; border:1px solid #101010; box-shadow:inset 0 -2px 0 #0E0E0E; padding:10px 6px;
+          color:#F5F2EA; font-size:15.5px; text-align:center; overflow:hidden; white-space:nowrap; }
+  .cell.l { text-align:left; padding-left:9px; }
+  .cell .fig { font-size:21px; font-weight:700; letter-spacing:.02em; }
+  .flap { background:linear-gradient(180deg, #F5F2EA 49.5%, #0E0E0E 50.5%); color:transparent; }
+  .flap2 { background:linear-gradient(180deg, #F5F2EA 49.5%, #D9D6CE 50.5%); color:#141414; opacity:.55; }
+  .row.you .cell { background:#20241F; box-shadow:inset 0 0 0 1px #E0A106, inset 0 -2px 0 #0E0E0E; }
+  .youmark { color:#E0A106; }
+  .row.stale .cell { color:#C9C6BE; background:#171717; }
+  .row.stale .sync2 { font-size:9px; color:#E0A106; letter-spacing:.14em; display:block; }
+  .row.cut .cell { border-color:#2A1615; color:#8F726E; }
+  .row.cut .cell.wl { background:#3A1512; color:#C97A72; font-weight:700; letter-spacing:.1em; font-size:12px; }
+  .cutbar { display:flex; justify-content:space-between; margin:8px 14px 6px; padding:6px 10px; background:#8E2B28;
+            color:#F1DEDC; font-size:10.5px; letter-spacing:.18em; font-weight:700; }
+  .foot { margin:14px 14px 0; border-top:2px solid #2A2A2A; padding:10px 2px; color:#6F747B; font-size:10px; letter-spacing:.24em; display:flex; justify-content:space-between; }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div class="head">
+      <div class="brand">NBKRISTQIK<small>LEADERBOARD — ATTENDANCE</small></div>
+      <div class="sync"><span class="lamp"></span>SYNC 6 MIN</div>
+    </div>
+    <div class="tabs"><div class="tab on">ATT %</div><div class="tab">MARKS</div></div>
+    <div class="cols"><span>RNK</span><span>ROLL</span><span>NAME</span><span>ATT</span><span>ST</span></div>
+    <div class="rows">
+      <div class="row">
+        <div class="cell">1</div><div class="cell">23BQ1A0512</div><div class="cell l">K. Sahithi</div><div class="cell"><span class="fig">97.8</span></div><div class="cell">C</div>
+      </div>
+      <div class="row">
+        <div class="cell flap2">2</div><div class="cell">23BQ1A0547</div><div class="cell l">M. Teja</div><div class="cell"><span class="fig">96.1</span></div><div class="cell">C</div>
+      </div>
+      <div class="row">
+        <div class="cell flap">3</div><div class="cell">22BQ1A0308</div><div class="cell l">P. Harsha</div><div class="cell"><span class="fig">95.4</span></div><div class="cell">C</div>
+      </div>
+      <div class="row">
+        <div class="cell">4</div><div class="cell">23BQ1A0521</div><div class="cell l">S. Nikhita</div><div class="cell"><span class="fig">94.9</span></div><div class="cell">C</div>
+      </div>
+      <div class="row">
+        <div class="cell">5</div><div class="cell">23BQ1A0563</div><div class="cell l">V. Chaitanya</div><div class="cell"><span class="fig">93.7</span></div><div class="cell">C</div>
+      </div>
+      <div class="row stale">
+        <div class="cell">46</div><div class="cell">23BQ1A0540</div><div class="cell l">G. Lokesh<span class="sync2">LAST SYNC 2:02 PM</span></div><div class="cell"><span class="fig">76.6</span></div><div class="cell">C</div>
+      </div>
+      <div class="row you">
+        <div class="cell youmark">47</div><div class="cell">23BQ1A05Y3</div><div class="cell l youmark">You ▸</div><div class="cell"><span class="fig">76.4</span></div><div class="cell">C</div>
+      </div>
+      <div class="row">
+        <div class="cell">48</div><div class="cell">23BQ1A0509</div><div class="cell l">T. Sneha</div><div class="cell"><span class="fig">76.2</span></div><div class="cell">C</div>
+      </div>
+    </div>
+    <div class="cutbar"><span>75% — BELOW THIS LINE</span><span>WL</span></div>
+    <div class="rows">
+      <div class="row cut">
+        <div class="cell">63</div><div class="cell">23BQ1A0588</div><div class="cell l">R. Divya</div><div class="cell">71.2</div><div class="cell wl">WL</div>
+      </div>
+      <div class="row cut">
+        <div class="cell">64</div><div class="cell">23BQ1A0503</div><div class="cell l">B. Manoj</div><div class="cell">70.9</div><div class="cell wl">WL</div>
+      </div>
+    </div>
+    <div class="foot"><span>CONFIRMED ≥75</span><span>WAITING LIST &lt;75</span></div>
+  </div>
+</body>
+</html>

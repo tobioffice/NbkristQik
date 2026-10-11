@@ -11,14 +11,14 @@ export const panelJs = `(function () {
     "report": "Report to admin"
   };
   var SURFACES = [
-    { key: "private", label: "Private chat", color: "#22d3ee" },
-    { key: "channel", label: "Channel", color: "#a78bfa" },
-    { key: "group", label: "Group", color: "#64748b" },
-    { key: "unknown", label: "Web app", color: "#34d399" }
+    { key: "private", label: "Private chat", color: "#3f6457" },
+    { key: "channel", label: "Channel", color: "#1e2a38" },
+    { key: "group", label: "Group", color: "#857b67" },
+    { key: "unknown", label: "Web app", color: "#a62f22" }
   ];
   var surfaceColor = function (k) {
     for (var i = 0; i < SURFACES.length; i++) if (SURFACES[i].key === k) return SURFACES[i].color;
-    return "#64748b";
+    return "#857b67";
   };
   var surfaceLabel = function (k) {
     for (var i = 0; i < SURFACES.length; i++) if (SURFACES[i].key === k) return SURFACES[i].label;
@@ -215,17 +215,17 @@ export const panelJs = `(function () {
     var area = line + " L" + (W - pad) + " " + H + " L" + pad + " " + H + " Z";
     var svgHtml =
       '<defs><linearGradient id="pulsefill" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0" stop-color="#22d3ee" stop-opacity="0.28"/>' +
-      '<stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></linearGradient></defs>' +
+      '<stop offset="0" stop-color="#1e2a38" stop-opacity="0.16"/>' +
+      '<stop offset="1" stop-color="#1e2a38" stop-opacity="0"/></linearGradient></defs>' +
       '<path d="' + area + '" fill="url(#pulsefill)"/>' +
-      '<path d="' + line + '" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
-      '<line x1="' + pts[pts.length - 1][0] + '" y1="' + pts[pts.length - 1][1] + '" x2="' + pts[pts.length - 1][0] + '" y2="' + H + '" stroke="#22d3ee" stroke-opacity="0.35" stroke-dasharray="2 3"/>';
+      '<path d="' + line + '" fill="none" stroke="#1e2a38" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<line x1="' + pts[pts.length - 1][0] + '" y1="' + pts[pts.length - 1][1] + '" x2="' + pts[pts.length - 1][0] + '" y2="' + H + '" stroke="#1e2a38" stroke-opacity="0.32" stroke-dasharray="2 3"/>';
     if (hasCheckins) {
       var cline = "";
       for (var c = 0; c < points.length; c++) {
         cline += (c ? " L" : "M") + (pad + c * step).toFixed(1) + " " + y(points[c].checkins).toFixed(1);
       }
-      svgHtml += '<path d="' + cline + '" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+      svgHtml += '<path d="' + cline + '" fill="none" stroke="#8a6a12" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
     }
     for (var r = 0; r < points.length; r += 1) {
       var cx = pad + r * step, cy = y(points[r].actions);
@@ -242,7 +242,7 @@ export const panelJs = `(function () {
       if (!tip) {
         tip = document.createElement("div");
         tip.id = "pctip";
-        tip.style.cssText = "position:fixed;pointer-events:none;font-size:12px;background:#1b1d24;border:1px solid rgba(148,163,184,.2);padding:5px 9px;border-radius:7px;z-index:30;font-family:" + "var(--mono)" + ";white-space:nowrap";
+        tip.style.cssText = "position:fixed;pointer-events:none;font-size:12px;background:#f6efdd;border:1px solid rgba(30,42,56,.45);color:#1e2a38;padding:5px 9px;border-radius:2px;z-index:30;font-family:" + "var(--mono)" + ";white-space:nowrap";
         document.body.appendChild(tip);
       }
       tip.textContent = lab + (pulseRange === "24h" ? " IST" : "") + " · " + pt.actions + " actions · " + pt.users + " students · " + pt.checkins + " check-ins";
@@ -440,7 +440,7 @@ export const panelJs = `(function () {
         ? '<div class="rreplyblock"><b>your reply</b>' + esc(r.adminReply) + "</div>"
         : "";
       var open = repOpenId === r.issueId
-        ? '<div class="rform show" id="rf-' + r.issueId + '"><textarea placeholder="Type your reply. It is recorded on the issue and DM'd to the reporter."></textarea><button class="send" data-send="' + r.issueId + '">Send</button></div>'
+        ? '<div class="rform show" id="rf-' + r.issueId + '"><textarea placeholder="Type your reply. It is recorded on the issue and DM\\'d to the reporter."></textarea><button class="send" data-send="' + r.issueId + '">Send</button></div>'
         : "";
       var btns = r.status === "resolved"
         ? ""

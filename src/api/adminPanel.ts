@@ -1,7 +1,8 @@
 /**
  * Self-contained admin panel: one HTML document (CSS + vanilla JS from the
  * sibling `admin/panel.*.ts` modules, so the page stays readable as regular
- * source). No external assets except the Outfit webfont with system fallback.
+ * source). No external assets except the Public Sans + Zilla Slab webfonts
+ * with system fallback.
  * Served by the API at the secret ADMIN_PANEL_PATH; all data endpoints
  * require the session cookie.
  */
@@ -16,7 +17,8 @@ export const adminPanelHtml = (): string => `<!doctype html>
 <meta name="robots" content="noindex,nofollow">
 <title>Qik Control</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Zilla+Slab:wght@600&display=swap" rel="stylesheet">
 <style>
 ${panelCss}
 </style>

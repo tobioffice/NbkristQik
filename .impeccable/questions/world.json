@@ -1,0 +1,144 @@
+{
+  "title": "Choose the visual world",
+  "question": "The roll assigned the Railway Reservation Chart. Keep it, take an alternate, or re-roll.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "The Reservation Chart",
+      "kicker": "THE ROLL",
+      "lineage": "Indian Railways reservation charts, printed timetables, and PNR slips",
+      "thesis": "The leaderboard as the printed chart students find themselves on: dense dot-matrix rows, position codes, and the 75% line as a reservation status.",
+      "palette": ["#F2F4EF", "#16212B", "#1F3A6E", "#D2402A", "#B7791F"],
+      "materials": ["continuous-stationery print", "dot-matrix ink"],
+      "viewport": "A deep-blue chart-head strip, the viewer's own line printed as a ticket strip (23BQ1A05Y3 | 76.4% | POS 47), then ranked dot-matrix rows with the 75% cutoff dividing confirmed rows from the waiting-list block.",
+      "risk": "Reads as officialdom or retro-terminal when the print rhythm is loose; the play must come from the status drama, never decoration.",
+      "raised": [
+        {
+          "from": "challenger-saville",
+          "raise": "Decode discipline: every chart code (WL 71.2, CNF, ATT) decodes to plain language in place — no code ships without its legend."
+        },
+        {
+          "from": "challenger-zoo-map",
+          "raise": "Ground division: the table divides by colour fields and space, never by ruled borders; hairlines stay rationed to the chart rail."
+        },
+        {
+          "from": "challenger-acetate-manual",
+          "raise": "Step honesty: every state change lands in discrete two-frame steps, printed not faded — no easing curve anywhere."
+        }
+      ],
+      "html": ".impeccable/mocks/decision/assigned.html",
+      "htmlFrame": "390x844"
+    },
+    {
+      "id": "model-pick",
+      "label": "The Attendance Register",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "cloth-bound class attendance registers and red-ink roll calls",
+      "thesis": "The leaderboard as the register itself: roll-ordered rows, ink marks, and the red 75% rule everyone fears, run through a working table.",
+      "palette": ["#E7DCC3", "#1E2A38", "#C33B2E", "#3F6457"],
+      "materials": ["cloth-bound ledger", "manila paper", "red ballpoint"],
+      "viewport": "A green cloth head-band, one dense register-ordered table with rank and roll in the left rail, the red 75% rule drawn live across the list, and the viewer's row bracketed in the margin.",
+      "risk": "The most literal and most familiar option — it tips into costume if ruled lines replace the table, and it is where most runs in this category would land.",
+      "html": ".impeccable/mocks/decision/model-pick.html",
+      "htmlFrame": "390x844"
+    },
+    {
+      "id": "challenger-split-flap",
+      "label": "The Concourse Board",
+      "verdict": "competitive",
+      "lineage": "rail concourse split-flap departure boards",
+      "thesis": "Rows as live entities: ranks cascade character by character, and stale data rests under an amber lamp until it is re-flapped.",
+      "palette": ["#141414", "#F5F2EA", "#8A8F98", "#E0A106", "#8E2B28"],
+      "materials": ["matte black flaps", "painted steel frame"],
+      "viewport": "One fixed board of ranked rows in locked columns — RNK / ROLL / ATT% — with the viewer's row clacking into place under a delay lamp when data is stale.",
+      "case": "Fuses cleanly: ranks are board rows and staleness is a delay lamp; loses narrowly on identification — a board you watch, not a chart you are on.",
+      "risk": "Motion-led: the cascade can obscure scanning when overused, and spectacle can turn the ranking into theatre.",
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-split-flap-concourse-hero.webp",
+      "html": ".impeccable/mocks/decision/challenger-split-flap.html",
+      "htmlFrame": "390x844"
+    },
+    {
+      "id": "challenger-warm-app",
+      "label": "The Warm App",
+      "verdict": "competitive",
+      "lineage": "contemporary consumer-app surfaces",
+      "thesis": "Soft cards on a warm ground with one saturated action colour — the frictionless app idiom everyone already knows.",
+      "palette": ["#F6EFE6", "#FFFFFF", "#FF5A36", "#2E2A26"],
+      "materials": ["rounded cards", "soft spring motion"],
+      "viewport": "A friendly ranked list in white cards on a warm ground, one bright action colour on the profile bar, and thumb-reachable everything.",
+      "case": "Holds product clarity absolutely — every pattern is proven; loses identification: nothing here is NBKRIST's.",
+      "risk": "Indistinguishable from every other polished app; safe to the point of anonymity.",
+      "hero": "https://impeccable.style/worlds/cards/digital-design-canon-warm-consumer-app-surface-hero.webp",
+      "html": ".impeccable/mocks/decision/challenger-warm-app.html",
+      "htmlFrame": "390x844"
+    },
+    {
+      "id": "challenger-timetable",
+      "label": "The Timetable Rack",
+      "verdict": "competitive",
+      "lineage": "printed timetables read as a raked rack of tinted slides on goldenrod",
+      "thesis": "One type size throughout, hierarchy carried by weight, case, and rule — a leaderboard set in strict timetable rhythm.",
+      "palette": ["#D9A21B", "#5B6673", "#F4F1E4", "#B33A2B", "#2F5D46"],
+      "materials": ["tinted acetate slides", "goldenrod stock"],
+      "viewport": "Ranked entries as columns of rules on a goldenrod bed, one reversed ivory plate carrying the viewer's own position, a tick rail marking extent at the edge.",
+      "case": "Holds clarity with real information-design discipline; loses identification — a timetable is read for times, not for who you are.",
+      "risk": "One-size typography is severe; without exacting rules and rhythm it degrades into plain dense text.",
+      "hero": "https://impeccable.style/worlds/cards/rw-timetable-slide-rack-hero.webp",
+      "html": ".impeccable/mocks/decision/challenger-timetable.html",
+      "htmlFrame": "390x844"
+    },
+    {
+      "id": "challenger-saville",
+      "label": "The Catalog Sleeve",
+      "verdict": "declined",
+      "lineage": "factory-records sleeves with colour-code strips and pulse plots",
+      "thesis": "Ranks as a white pulse plot on vast matte black, names encoded as colour blocks decoded on touch.",
+      "palette": ["#111111", "#FAFAFA", "#E23A2E", "#2C7BE5", "#F2C037"],
+      "materials": ["matte black sleeve", "white hairline plot"],
+      "viewport": "Vast unprinted black with a single white pulse line as the rank history and a small fac-number as the only headline.",
+      "case": "Fuses poorly: a British design canon the students do not live in, and coded labels trade clarity for mystique.",
+      "kept": "Kept the decode discipline: its colour-strip ledger forced every code to have a legend — now every chart code decodes in place.",
+      "hero": "https://impeccable.style/worlds/cards/brand-identity-canon-saville-catalog-sleeve-hero.webp"
+    },
+    {
+      "id": "challenger-zoo-map",
+      "label": "The Guide Map",
+      "verdict": "declined",
+      "lineage": "zoo and gardens guide maps of flat colour lobes",
+      "thesis": "Areas as swelling flat-colour lobes divided by coastline, not by borders, with capsule chips riding the coast.",
+      "palette": ["#8ED462", "#F5F1E4", "#2C2E2A", "#F5E211", "#FF705D"],
+      "materials": ["flat unmodulated colour", "capsule labels"],
+      "viewport": "One swelling colour field as the ground, ranked entries pinned along its coast, the ground showing through the middle as water.",
+      "case": "Fuses poorly: a Western park-guide idiom the audience barely knows, and soft lobes do not carry a ranked list.",
+      "kept": "Kept the ground division: colour fields and space separate the table's zones without a single ruled border.",
+      "hero": "https://impeccable.style/worlds/cards/aww2-zoo-gardens-guide-map-hero.webp"
+    },
+    {
+      "id": "challenger-acetate",
+      "label": "The Acetate Manual",
+      "verdict": "declined",
+      "lineage": "boxed-software manuals with divider boards and punched acetate leaves",
+      "thesis": "Every panel a clear leaf hinged over a full-strength section colour; selection is a punched hole, error a vermilion slip.",
+      "palette": ["#E9B824", "#2E7C76", "#24418C", "#C4552B"],
+      "materials": ["milk acetate", "coloured divider board"],
+      "viewport": "A divider-hue head board with content on punched clear leaves, a stepped tab rail down the fore edge, nothing easing or fading.",
+      "case": "Fuses poorly: a print-craft canon with weak audience recognition, and acetate layering is ornament on a working screen.",
+      "kept": "Kept the step honesty: changes land in discrete two-frame steps hinged like a leaf — no easing anywhere.",
+      "hero": "https://impeccable.style/worlds/cards/rw-manual-acetate-tab-board-hero.webp"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code", "toggle": false },
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "What this category ships, executed impeccably.",
+    "palette": ["#FFFFFF", "#111827", "#2563EB"],
+    "materials": ["clean grid", "system type"],
+    "viewport": "The arrangement a visitor expects — clean tabs, clear rows, one blue accent — at full craft.",
+    "risk": "Indistinguishable from the competition by design.",
+    "html": ".impeccable/mocks/decision/canon.html",
+    "htmlFrame": "390x844"
+  },
+  "steer": true
+}

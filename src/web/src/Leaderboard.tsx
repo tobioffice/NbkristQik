@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import type { SortBy } from "./api";
 import { useLeaderboard } from "./useLeaderboard";
 import { useTelegramUser } from "./useTelegramUser";
+import Band from "./components/Band";
 import SearchBar from "./components/SearchBar";
 import SortTabs from "./components/SortTabs";
 import FilterBar from "./components/FilterBar";
 import Podium from "./components/Podium";
 import StudentRow from "./components/StudentRow";
+import TheLine from "./components/TheLine";
 import {
   EmptyState,
   EndNote,
@@ -62,46 +64,79 @@ export default function Leaderboard() {
   const podiumVisible = stats.length > 0 && !search;
   const listStats = search ? stats : stats.slice(3);
 
+  // where the 75% rule falls: after the last confirmed row when the loaded
+  // rows cross the line (attendance only — the minimum is an attendance rule)
+  const lineAfter = useMemo(() => {
+    if (sortBy !== "attendance" || search) return -1;
+    for (let i = 0; i < listStats.length - 1; i++) {
+      if (
+        listStats[i].attendance_percentage >= 75 &&
+        listStats[i + 1].attendance_percentage < 75
+      ) {
+        return i;
+      }
+    }
+    return -1;
+  }, [listStats, sortBy, search]);
+
+  // the crossing can sit on the podium/list boundary (top three above the
+  // line, the list below it) — then the rule opens the list
+  const lineBeforeFirst =
+    lineAfter === -1 &&
+    sortBy === "attendance" &&
+    !search &&
+    listStats.length > 0 &&
+    listStats[0].attendance_percentage < 75 &&
+    stats.some((s) => s.attendance_percentage >= 75);
+
   return (
-    <div className="min-h-screen font-['Outfit'] bg-[#0f1014] text-slate-200 selection:bg-indigo-500/30">
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-[#0f1014] to-[#0f1014] pointer-events-none" />
+    <>
+      <Band
+        sub="Attendance register"
+        stamp={
+          !initialLoading && total > 0 && !error
+            ? {
+                value: total.toLocaleString(),
+                label: total === 1 ? "student" : "students",
+              }
+            : null
+        }
+      />
 
-      <div className="relative max-w-lg mx-auto p-4 md:p-6 pb-20">
-        {/* Header */}
-        <header className="mt-8 mb-6 text-center space-y-2">
-          <h1 className="text-3xl font-bold text-white tracking-tight drop-shadow-sm">
-            Leader
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">
-              board
-            </span>
-          </h1>
-          {!initialLoading && total > 0 && !error && (
-            <p className="text-xs text-slate-500">
-              {total.toLocaleString()} student{total !== 1 ? "s" : ""}
-            </p>
-          )}
-        </header>
-
-        <SearchBar value={searchInput} onChange={setSearchInput} />
-
-        {/* You are #N banner (global rank — only when unfiltered) */}
+      <div className="reg-body">
+        {/* the viewer's own entry, bracketed in the margin */}
         {myRoll && myRankNow != null && !initialLoading && !error && !isFiltered && (
-          <div className="flex items-center justify-center mb-4">
-            <span className="text-xs font-semibold text-indigo-300 bg-indigo-500/10 border border-indigo-500/30 rounded-full px-4 py-2">
-              🎯 You're #{myRankNow} of {total.toLocaleString()} ({myRoll})
-            </span>
+          <div className="entry-strip">
+            <div className="entry-strip__id">
+              <div className="entry-strip__roll">{myRoll}</div>
+              <div className="entry-strip__rank">
+                #{myRankNow}
+                <small>of {total.toLocaleString()}</small>
+              </div>
+            </div>
+            <div className="entry-strip__meta">
+              <span>
+                {sortBy === "attendance"
+                  ? "Attendance rank"
+                  : "Mid-mark rank"}
+              </span>
+            </div>
           </div>
         )}
 
         <SortTabs sortBy={sortBy} onSortChange={setSortBy} />
-        <FilterBar
-          filters={filters}
-          onChange={(patch) => {
-            if (patch.year !== undefined) setFilterYear(patch.year);
-            if (patch.branch !== undefined) setFilterBranch(patch.branch);
-            if (patch.section !== undefined) setFilterSection(patch.section);
-          }}
-        />
+
+        <div className="controls">
+          <SearchBar value={searchInput} onChange={setSearchInput} />
+          <FilterBar
+            filters={filters}
+            onChange={(patch) => {
+              if (patch.year !== undefined) setFilterYear(patch.year);
+              if (patch.branch !== undefined) setFilterBranch(patch.branch);
+              if (patch.section !== undefined) setFilterSection(patch.section);
+            }}
+          />
+        </div>
 
         {podiumVisible && <Podium stats={stats} sortBy={sortBy} />}
 
@@ -109,21 +144,30 @@ export default function Leaderboard() {
 
         {error && !initialLoading && <ErrorState onRetry={retry} />}
 
-        {!error && (
-          <div className="space-y-3">
+        {!error && listStats.length > 0 && (
+          <>
+            <div className="list-head" aria-hidden="true">
+              <span>Rnk</span>
+              <span>Roll</span>
+              <span>Name</span>
+              <span>{sortBy === "attendance" ? "Att %" : "Mid avg"}</span>
+            </div>
+            {lineBeforeFirst && <TheLine />}
             {listStats.map((stat, index) => (
-              <StudentRow
-                key={stat.roll_no}
-                stat={stat}
-                sortBy={sortBy}
-                // guard: myRoll is null for unidentified viewers, and a ghost
-                // row's roll_no is also null — null === null must not mean "me"
-                isMe={myRoll != null && stat.roll_no === myRoll}
-                isLast={index === listStats.length - 1}
-                lastElementRef={lastElementRef}
-              />
+              <Fragment key={stat.roll_no}>
+                <StudentRow
+                  stat={stat}
+                  sortBy={sortBy}
+                  // guard: myRoll is null for unidentified viewers, and a ghost
+                  // row's roll_no is also null — null === null must not mean "me"
+                  isMe={myRoll != null && stat.roll_no === myRoll}
+                  isLast={index === listStats.length - 1}
+                  lastElementRef={lastElementRef}
+                />
+                {index === lineAfter && <TheLine />}
+              </Fragment>
             ))}
-          </div>
+          </>
         )}
 
         {loading && !initialLoading && <LoadingSpinner />}
@@ -134,6 +178,6 @@ export default function Leaderboard() {
           <EmptyState search={search} sortBy={sortBy} />
         )}
       </div>
-    </div>
+    </>
   );
 }

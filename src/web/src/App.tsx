@@ -3,14 +3,28 @@ import { PROFILE_URL } from "./constants";
 
 function App() {
   return (
-    <div className="bg-slate-900 min-h-screen text-slate-200">
-      <Leaderboard />
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-30">
-        <a
-          href={PROFILE_URL}
-          className="flex items-center gap-2 bg-indigo-500/20 border border-indigo-500/30 text-indigo-200 text-xs font-semibold rounded-full px-4 py-2 shadow-lg shadow-indigo-500/10"
-        >
-          👤 My profile
+    <div className="app">
+      <div className="sheet">
+        <Leaderboard />
+      </div>
+      <div className="profile-dock">
+        <a href={PROFILE_URL} className="profile-tab">
+          <svg
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 20c1.6-3.4 4.6-5 8-5s6.4 1.6 8 5" />
+          </svg>
+          My profile
         </a>
       </div>
     </div>
