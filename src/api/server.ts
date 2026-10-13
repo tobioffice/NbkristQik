@@ -158,6 +158,11 @@ app.get(
       const query = parseLeaderboardQuery(req);
       const cacheKey = leaderboardCacheKey(query);
 
+      // same payload for everyone, and the source data is refreshed by
+      // /syncdb anyway — let the webview serve repeat opens from its own
+      // cache instead of the network (both the warm and the cold path)
+      res.set("Cache-Control", "public, max-age=30");
+
       const cached = await getCachedLeaderboard(cacheKey);
       if (cached) {
         res.json(JSON.parse(cached));
@@ -167,10 +172,6 @@ app.get(
       const payload = await buildLeaderboardPayload(query);
       await cacheLeaderboard(cacheKey, payload);
 
-      // same payload for everyone, and the source data is refreshed by
-      // /syncdb anyway — let the webview serve repeat opens from its own
-      // cache instead of the network
-      res.set("Cache-Control", "public, max-age=30");
       res.json(payload);
     } catch (error) {
       logger.error("Error fetching leaderboard:", error);
