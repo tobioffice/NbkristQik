@@ -126,6 +126,12 @@ export const panelJs = `(function () {
   // one request of each kind in flight at most: without this, a timer tick
   // landing mid-reply (or a double-click) fires the same heavy query twice
   var inflight = {};
+  // the drawer paints the instant a row is tapped (shell, cache, or sketch)
+  // and reconciles in the background — which conversation is on screen, and
+  // the warm threads/students behind them
+  var drawerIssue = null;
+  var threadCache = {};
+  var userCache = {};
   var STALE_MS = { overview: 60000, students: 30000, reports: 60000, live: 0, health: 300000 };
   var isStale = function (name) {
     return !lastLoad[name] || Date.now() - lastLoad[name] > STALE_MS[name];
@@ -485,10 +491,20 @@ export const panelJs = `(function () {
     }
     lastReports = kept;
     renderReports(lastReports);
+    // the warm thread (and the drawer, if it is on this issue) follows —
+    // the authoritative copy still arrives via refreshThread
+    var c = threadCache[issueId];
+    if (c) {
+      c.messages.push({ author: "admin", body: text, createdAt: newUtcNow() });
+      c.messageCount = c.messages.length;
+      c.status = "answered";
+      if (drawerIssue === issueId) renderThread(c);
+    }
   };
 
   var updateRowStatus = function (issueId, status) {
     if (!lastReports) return;
+    if (threadCache[issueId]) threadCache[issueId].status = status;
     // a row that no longer matches the active filter drops out of the list
     var kept = [];
     for (var i = 0; i < lastReports.length; i++) {
@@ -504,11 +520,79 @@ export const panelJs = `(function () {
 
   // Every issue is a thread now: the row is a summary, the drawer is the
   // conversation. Replying there is the same action as /reply in Telegram.
+  // The drawer opens the instant a row is tapped — from the warm cache when
+  // the thread was opened before, otherwise a shell with the head we already
+  // hold and skeleton message blocks — and the fetch reconciles quietly.
+  var openThreadShell = function (issueId) {
+    var row = null;
+    if (lastReports) {
+      for (var i = 0; i < lastReports.length; i++) {
+        if (lastReports[i].issueId === issueId) { row = lastReports[i]; break; }
+      }
+    }
+    var sub = row
+      ? reporterLabel(row) + ' <span class="mono">' + esc(String(row.userId)) + "</span> · " + esc(row.status)
+      : "loading the conversation…";
+    var sk = "";
+    for (var k = 0; k < 3; k++) sk += '<div class="tmsg sk sk-pulse" style="height:64px"></div>';
+    $("drawer").innerHTML =
+      '<div class="dhead"><div><h3>' + esc(issueId) + "</h3>" +
+      '<div class="meta">' + sub + "</div></div>" +
+      '<button class="x" id="dclose" aria-label="Close">&times;</button></div>' +
+      '<div class="dthread">' + sk + "</div>";
+    $("dclose").addEventListener("click", closeDrawer);
+    drawerIssue = issueId;
+    var drawer = $("drawer");
+    drawer.classList.add("open");
+    $("scrim").classList.add("open");
+    drawer.setAttribute("aria-hidden", "false");
+  };
+
+  var renderThreadError = function (retry) {
+    if ($("dretry")) return;
+    var el = document.createElement("div");
+    el.className = "empty";
+    el.innerHTML = 'That thread did not load. <button class="linkbtn" id="dretry">Retry</button>';
+    $("drawer").appendChild(el);
+    $("dretry").addEventListener("click", function () {
+      var err = $("drawer").querySelector(".empty");
+      if (err) err.remove();
+      retry();
+    });
+  };
+
   var openThread = function (issueId) {
+    var cached = threadCache[issueId];
+    if (cached) {
+      renderThread(cached);
+      markRowRead(issueId);
+    } else if (drawerIssue !== issueId) {
+      openThreadShell(issueId);
+      markRowRead(issueId);
+    }
+    refreshThread(issueId);
+  };
+
+  var refreshThread = function (issueId) {
     if (inflight.thread) return;
     inflight.thread = true;
     api("reports/" + issueId).then(function (d) {
       var t = d.thread;
+      threadCache[issueId] = t;
+      if (drawerIssue === issueId) renderThread(t);
+      markRowRead(issueId);
+    }).catch(function () {
+      if (drawerIssue === issueId && !threadCache[issueId])
+        renderThreadError(function () { refreshThread(issueId); });
+    }).then(function () { inflight.thread = false; });
+  };
+
+  // full thread paint: head, messages, composer, actions. A draft being
+  // typed survives background reconciles — the send flow clears the box
+  // itself when the message goes out.
+  var renderThread = function (t) {
+      var prevReply = $("dreply");
+      var draft = prevReply ? prevReply.value : null;
       var html = '<div class="dhead"><div><h3>' + esc(t.issueId) + "</h3>" +
         '<div class="meta">' + reporterLabel(t) + ' <span class="mono">' + esc(String(t.userId)) + "</span>" +
         " · " + esc(t.status) + " · opened " + istDate(parseUtc(t.createdAt)) + "</div></div>" +
@@ -543,22 +627,26 @@ export const panelJs = `(function () {
         if (!text || sendBtn.disabled) return;
         sendBtn.disabled = true;
         sendBtn.textContent = "Sending...";
+        ta.value = "";
         fetch(BASE + "/api/reports/" + t.issueId + "/reply", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ reply: text })
         }).then(function (r) { return r.json(); }).then(function () {
           updateRowAfterReply(t.issueId, text);
-          openThread(t.issueId); // re-render in place with the new message
+          refreshThread(t.issueId); // drawer stays put, updates when it lands
         }).catch(function () {
           sendBtn.disabled = false;
           sendBtn.textContent = "Send";
+          var cur = $("dreply");
+          if (cur && !cur.value) cur.value = text;
         });
       };
       sendBtn.addEventListener("click", send);
       ta.addEventListener("keydown", function (e) {
         if ((e.metaKey || e.ctrlKey) && e.key === "Enter") send();
       });
+      if (draft) ta.value = draft;
 
       if (t.status === "resolved") {
         $("dreopen").addEventListener("click", function () {
@@ -574,13 +662,12 @@ export const panelJs = `(function () {
         });
       }
 
+      drawerIssue = t.issueId;
       var drawer = $("drawer");
       drawer.classList.add("open");
       $("scrim").classList.add("open");
       drawer.setAttribute("aria-hidden", "false");
       drawer.scrollTop = drawer.scrollHeight;
-      markRowRead(t.issueId); // the server already cleared it; no list refetch
-    }).catch(function () {}).then(function () { inflight.thread = false; });
   };
 
   var renderReports = function (rows) {
@@ -705,6 +792,7 @@ export const panelJs = `(function () {
 
   /* ---------- drawer ---------- */
   var closeDrawer = function () {
+    drawerIssue = null;
     $("drawer").classList.remove("open");
     $("scrim").classList.remove("open");
     $("drawer").setAttribute("aria-hidden", "true");
@@ -714,8 +802,48 @@ export const panelJs = `(function () {
     if (e.key === "Escape") closeDrawer();
   });
 
+  // same instant-open contract as threads: shell, warm cache, reconcile
+  var openDrawerShell = function (userId) {
+    var sk = "";
+    for (var k = 0; k < 4; k++) sk += '<div class="sk sk-pulse" style="height:14px;margin:10px 0"></div>';
+    $("drawer").innerHTML =
+      '<div class="dhead"><div><h3>ID ' + esc(String(userId)) + "</h3>" +
+      '<div class="meta">loading the student…</div></div>' +
+      '<button class="x" id="dclose" aria-label="Close">&times;</button></div>' +
+      '<div class="dfeed">' + sk + "</div>";
+    $("dclose").addEventListener("click", closeDrawer);
+    drawerIssue = "user:" + userId;
+    var drawer = $("drawer");
+    drawer.classList.add("open");
+    $("scrim").classList.add("open");
+    drawer.setAttribute("aria-hidden", "false");
+  };
+
   var openDrawer = function (userId) {
+    var key = "user:" + userId;
+    var cached = userCache[key];
+    if (cached) {
+      renderUserDrawer(cached);
+    } else if (drawerIssue !== key) {
+      openDrawerShell(userId);
+    }
+    refreshUserDrawer(userId);
+  };
+
+  var refreshUserDrawer = function (userId) {
+    var key = "user:" + userId;
+    if (inflight.user) return;
+    inflight.user = true;
     api("users/" + userId).then(function (d) {
+      userCache[key] = d;
+      if (drawerIssue === key) renderUserDrawer(d);
+    }).catch(function () {
+      if (drawerIssue === key && !userCache[key])
+        renderThreadError(function () { refreshUserDrawer(userId); });
+    }).then(function () { inflight.user = false; });
+  };
+
+  var renderUserDrawer = function (d) {
       var p = d.profile;
       var name = p.firstName || p.username || "ID " + p.userId;
       var html = '<div class="dhead"><div><h3>' + esc(name) + "</h3>" +
@@ -754,10 +882,10 @@ export const panelJs = `(function () {
       }
       mini.innerHTML = miniHtml;
 
+      drawerIssue = "user:" + p.userId;
       $("drawer").classList.add("open");
       $("scrim").classList.add("open");
       $("drawer").setAttribute("aria-hidden", "false");
-    }).catch(function () {});
   };
 
   /* ---------- boot ---------- */

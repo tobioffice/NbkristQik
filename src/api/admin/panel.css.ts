@@ -384,4 +384,15 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
   margin-top: 6px; font-size: 13.5px; line-height: 1.55; color: var(--ink);
   white-space: pre-wrap; overflow-wrap: anywhere;
 }
+/* skeleton placeholders: flat paper tones breathing, no gradients or glow */
+.sk { background: var(--paper-3); border: 1px solid var(--line-soft); border-radius: 2px; }
+.tmsg.sk { min-height: 64px; border-left: none; }
+.sk-pulse { animation: skbreathe 1.2s ease-in-out infinite; }
+@keyframes skbreathe { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+.linkbtn {
+  font-size: 13px; font-weight: 600; color: var(--ink);
+  text-decoration: underline; text-decoration-color: var(--red);
+  text-underline-offset: 2px; padding: 0;
+}
+.linkbtn:hover { color: var(--red-ink); }
 `;
