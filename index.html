@@ -2,17 +2,37 @@
 <html lang="en">
 
 <head>
-  <script src="https://telegram.org/js/telegram-web-app.js?59"></script>
-  <script>
-    window.Telegram.WebApp.requestFullscreen()
-    window.Telegram.WebApp.setHeaderColor?.('#3f6457')
-    window.Telegram.WebApp.setBackgroundColor?.('#e7dcc3')
-  </script>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#3f6457" />
   <title>NbkristQik Leaderboard</title>
+  <meta name="theme-color" content="#3f6457" />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+
+  <!-- Telegram WebApp SDK, vendored (public/telegram-web-app.js, rev 59).
+       Loaded from telegram.org this was the first render-blocking script on
+       the page and took 1.2-1.5+ s on Indian networks — the tab took seconds
+       to appear. Same-origin it is a warm, edge-cached ~20 KB gzip. -->
+  <script src="./telegram-web-app.js"></script>
+  <script>
+    var tg = window.Telegram && window.Telegram.WebApp;
+    if (tg) {
+      tg.setHeaderColor && tg.setHeaderColor("#3f6457");
+      tg.setBackgroundColor && tg.setBackgroundColor("#e7dcc3");
+      // inform Telegram the app is ready to display: closes its loading
+      // state immediately instead of after the whole page load
+      tg.ready && tg.ready();
+    }
+  </script>
+
+  <!-- paint the register's paper before the CSS chunk arrives -->
+  <style>
+    html { background: #e7dcc3; }
+    body { margin: 0; background: #e7dcc3; color: #1e2a38; }
+  </style>
+
+  <!-- the first data fetch happens when React mounts; pay the DNS/TCP/TLS
+       handshake to the API origin now, not then -->
+  <link rel="preconnect" href="https://checker.tobioffice.dev" crossorigin />
   <script type="module" crossorigin src="./assets/main-DL4Bxl1w.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/Band-BaZ0ZO56.js">
   <link rel="modulepreload" crossorigin href="./assets/constants-C0RxM1Db.js">
@@ -21,7 +41,6 @@
 
 <body>
   <div id="root"></div>
-
 </body>
 
 </html>
