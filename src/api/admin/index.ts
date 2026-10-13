@@ -37,7 +37,9 @@ export const registerAdminRoutes = (app: Express): void => {
 
   // ---- panel shell (UI only — every data endpoint below requires auth) ----
   app.get(base, (_req: Request, res: Response) => {
-    res.type("html").send(adminPanelHtml());
+    // the JS is embedded in this document: never serve a stale copy after a
+    // deploy, or the panel talks to endpoints its code doesn't know about
+    res.set("Cache-Control", "no-store").type("html").send(adminPanelHtml());
   });
 
   registerOverviewRoute(app, base, requireAdmin);

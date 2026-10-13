@@ -51,7 +51,7 @@ export const registerReportsRoutes = (
 
         const data = await cached(
           `reports:${statusParam ?? "all"}:${limit}`,
-          10_000,
+          30_000,
           async () => {
             const rows = await listReports(statusParam, limit);
             return {

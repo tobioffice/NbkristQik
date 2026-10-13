@@ -123,6 +123,9 @@ export const initDatabase = async () => {
   await turso.execute(
     `CREATE INDEX IF NOT EXISTS idx_reports_user ON reports (user_id, created_at);`,
   );
+  await turso.execute(
+    `CREATE INDEX IF NOT EXISTS idx_reports_status ON reports (status, id);`,
+  );
   await initStatsTable();
   await initUptimeTable();
   await initLeaderboardIndexes();

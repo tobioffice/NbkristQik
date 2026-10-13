@@ -224,4 +224,20 @@ describe("report threads", () => {
     const [mine] = await listUserReports(42);
     expect(mine.unread).toBe(1);
   });
+
+  it("lists reports in a single batched round trip, not N subqueries", async () => {
+    const executeSpy = vi.spyOn(client, "execute");
+    const batchSpy = vi.spyOn(client, "batch");
+    try {
+      await listReports(null, 10);
+      await listUserReports(42, 5);
+      // one batch (which ships several statements together) per list, and
+      // zero standalone round trips
+      expect(batchSpy).toHaveBeenCalledTimes(2);
+      expect(executeSpy).not.toHaveBeenCalled();
+    } finally {
+      executeSpy.mockRestore();
+      batchSpy.mockRestore();
+    }
+  });
 });

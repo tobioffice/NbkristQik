@@ -117,7 +117,7 @@ export const registerUsersRoutes = (
           .slice(0, 40);
         const sort = req.query.sort === "total" ? "total" : "recent";
         const limit = Math.min(
-          Math.max(parseInt(String(req.query.limit)) || 200, 1),
+          Math.max(parseInt(String(req.query.limit)) || 100, 1),
           500,
         );
 

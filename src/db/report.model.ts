@@ -74,20 +74,65 @@ const toRow = (row: Record<string, unknown>): ReportRow => ({
 });
 
 /**
- * Per-report thread roll-up. The `?` is the reader ("user" or "admin") and
- * MUST be the first bound argument of any query embedding this fragment.
+ * Thread roll-up without correlated subqueries. The previous version embedded
+ * four correlated subselects per listed row; with the DB ~250 ms away and
+ * the panel re-listing on a timer, every poll paid that per row. Instead the
+ * list head, the messages behind exactly those reports, and the reader's
+ * markers travel in one batched read (a single round trip, like the overview
+ * query) and the roll-up is computed here. Message bodies stay out — the
+ * list only needs counts, the last author/time, and the unread stamp.
  */
-const THREAD_SUMMARY = `
-  (SELECT COUNT(*) FROM report_messages m WHERE m.report_id = r.id) AS message_count,
-  (SELECT m.author FROM report_messages m WHERE m.report_id = r.id
-    ORDER BY m.id DESC LIMIT 1) AS last_author,
-  (SELECT m.created_at FROM report_messages m WHERE m.report_id = r.id
-    ORDER BY m.id DESC LIMIT 1) AS last_message_at,
-  (SELECT COUNT(*) FROM report_messages m
-    WHERE m.report_id = r.id
-      AND m.id > COALESCE((SELECT rd.last_seen_id FROM report_reads rd
-                            WHERE rd.report_id = r.id AND rd.reader = ?), 0)) AS unread
-`;
+interface ThreadRollup {
+  count: number;
+  lastAuthor: MessageAuthor;
+  lastAt: string;
+  unread: number;
+}
+
+const rollUpThreads = (
+  messageRows: Array<Record<string, unknown>>,
+  markerRows: Array<Record<string, unknown>>,
+): Map<number, ThreadRollup> => {
+  const ids = new Map<number, number[]>();
+  const last = new Map<
+    number,
+    { id: number; author: MessageAuthor; at: string }
+  >();
+  for (const row of messageRows) {
+    const rid = Number(row.report_id);
+    const id = Number(row.id);
+    const list = ids.get(rid);
+    if (list) list.push(id);
+    else ids.set(rid, [id]);
+    const cur = last.get(rid);
+    if (!cur || id > cur.id) {
+      last.set(rid, {
+        id,
+        author: String(row.author) as MessageAuthor,
+        at: String(row.created_at),
+      });
+    }
+  }
+  const markers = new Map<number, number>();
+  for (const row of markerRows) {
+    markers.set(Number(row.report_id), Number(row.last_seen_id));
+  }
+
+  const out = new Map<number, ThreadRollup>();
+  for (const [rid, list] of ids) {
+    const marker = markers.get(rid) ?? 0;
+    let unread = 0;
+    for (const id of list) if (id > marker) unread++;
+    const l = last.get(rid);
+    out.set(rid, {
+      count: list.length,
+      lastAuthor: l ? l.author : "user",
+      lastAt: l ? l.at : "",
+      unread,
+    });
+  }
+  return out;
+};
 
 /** Appends one message to a report's thread; returns the message id. */
 export const addReportMessage = async (
@@ -169,15 +214,44 @@ export const listUserReports = async (
   userId: number,
   limit = 20,
 ): Promise<ReportRow[]> => {
-  const result = await turso.execute({
-    sql: `SELECT r.id, r.user_id, r.message, r.status, r.admin_reply, r.replied_at, r.created_at,
-                 ${THREAD_SUMMARY}
-          FROM reports r
-          WHERE r.user_id = ?
-          ORDER BY r.id DESC LIMIT ?`,
-    args: ["user", userId, Math.min(Math.max(limit, 1), 50)],
+  const n = Math.min(Math.max(limit, 1), 50);
+  const listedIds = `SELECT id FROM reports WHERE user_id = ?
+                     ORDER BY id DESC LIMIT ?`;
+  const [heads, messages, markers] = await turso.batch(
+    [
+      {
+        sql: `SELECT id, user_id, message, status, admin_reply, replied_at, created_at
+              FROM reports WHERE user_id = ?
+              ORDER BY id DESC LIMIT ?`,
+        args: [userId, n],
+      },
+      {
+        sql: `SELECT report_id, id, author, created_at
+              FROM report_messages WHERE report_id IN (${listedIds})
+              ORDER BY report_id, id`,
+        args: [userId, n],
+      },
+      {
+        sql: `SELECT report_id, last_seen_id
+              FROM report_reads WHERE reader = 'user' AND report_id IN (${listedIds})`,
+        args: [userId, n],
+      },
+    ],
+    "read",
+  );
+  const rollup = rollUpThreads(messages.rows, markers.rows);
+  return heads.rows.map((row) => {
+    const r = toRow(row);
+    const s = rollup.get(r.id);
+    if (!s) return { ...r, message_count: 0, unread: 0 };
+    return {
+      ...r,
+      message_count: s.count,
+      last_author: s.lastAuthor,
+      last_message_at: s.lastAt || r.created_at,
+      unread: s.unread,
+    };
   });
-  return result.rows.map(toRow);
 };
 
 export interface ReportThreadData {
@@ -344,21 +418,50 @@ export const listReports = async (
   status: ReportStatus | null,
   limit = 50,
 ): Promise<AdminReport[]> => {
-  const where = status ? `WHERE r.status = ?` : "";
-  const args = status
-    ? ["admin", status, Math.min(Math.max(limit, 1), 200)]
-    : ["admin", Math.min(Math.max(limit, 1), 200)];
-  const result = await turso.execute({
-    sql: `SELECT r.id, r.user_id, r.message, r.status, r.admin_reply, r.replied_at, r.created_at,
-                 ${THREAD_SUMMARY},
-                 u.first_name AS name, u.username
-          FROM reports r
-          LEFT JOIN botusers u ON u.user_id = r.user_id
-          ${where}
-          ORDER BY r.id DESC LIMIT ?`,
-    args,
+  const n = Math.min(Math.max(limit, 1), 200);
+  const where = (a: string) => (status ? `WHERE ${a}.status = ?` : "");
+  const filter = status ? [status] : [];
+  const listedIds = (a: string) =>
+    `SELECT ${a}.id FROM reports ${a} ${where(a)} ORDER BY ${a}.id DESC LIMIT ?`;
+  const [heads, messages, markers] = await turso.batch(
+    [
+      {
+        sql: `SELECT r.id, r.user_id, r.message, r.status, r.admin_reply, r.replied_at, r.created_at,
+                     u.first_name AS name, u.username
+              FROM reports r
+              LEFT JOIN botusers u ON u.user_id = r.user_id
+              ${where("r")}
+              ORDER BY r.id DESC LIMIT ?`,
+        args: [...filter, n],
+      },
+      {
+        sql: `SELECT m.report_id, m.id, m.author, m.created_at
+              FROM report_messages m WHERE m.report_id IN (${listedIds("r2")})
+              ORDER BY m.report_id, m.id`,
+        args: [...filter, n],
+      },
+      {
+        sql: `SELECT rd.report_id, rd.last_seen_id
+              FROM report_reads rd
+              WHERE rd.reader = 'admin' AND rd.report_id IN (${listedIds("r3")})`,
+        args: [...filter, n],
+      },
+    ],
+    "read",
+  );
+  const rollup = rollUpThreads(messages.rows, markers.rows);
+  return heads.rows.map((row) => {
+    const r = toAdminRow(row);
+    const s = rollup.get(r.id);
+    if (!s) return { ...r, message_count: 0, unread: 0 };
+    return {
+      ...r,
+      message_count: s.count,
+      last_author: s.lastAuthor,
+      last_message_at: s.lastAt || r.created_at,
+      unread: s.unread,
+    };
   });
-  return result.rows.map(toAdminRow);
 };
 
 /** Record the admin's reply; flips status to answered. */

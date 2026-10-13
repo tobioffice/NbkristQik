@@ -123,11 +123,14 @@ export const panelJs = `(function () {
   // don't re-query on every tab switch — each view refetches only when its
   // client-side copy goes stale (mirrors the server-side cache TTLs)
   var lastLoad = {};
-  var STALE_MS = { overview: 60000, students: 30000, reports: 15000, live: 0, health: 300000 };
+  // one request of each kind in flight at most: without this, a timer tick
+  // landing mid-reply (or a double-click) fires the same heavy query twice
+  var inflight = {};
+  var STALE_MS = { overview: 60000, students: 30000, reports: 60000, live: 0, health: 300000 };
   var isStale = function (name) {
     return !lastLoad[name] || Date.now() - lastLoad[name] > STALE_MS[name];
   };
-  var switchView = function (name) {
+  var activateTab = function (name) {
     current = name;
     var tabs = document.querySelectorAll(".nav button");
     for (var i = 0; i < tabs.length; i++)
@@ -135,6 +138,9 @@ export const panelJs = `(function () {
     var views = document.querySelectorAll(".view");
     for (var j = 0; j < views.length; j++)
       views[j].classList.toggle("active", views[j].id === "view-" + name);
+  };
+  var switchView = function (name) {
+    activateTab(name);
     if (name === "overview" && isStale("overview")) loadOverview();
     if (name === "students" && isStale("students")) loadUsers();
     if (name === "live") loadFeed();
@@ -326,9 +332,9 @@ export const panelJs = `(function () {
     requestAnimationFrame(step);
   };
 
-  var loadOverview = function () {
-    lastLoad.overview = Date.now();
-    api("overview").then(function (d) {
+  // pure render: shared by the loader and the boot probe, so opening the
+  // panel costs exactly one overview query instead of two
+  var renderOverview = function (d) {
       overviewData = d;
       countUp($("ov-active-today"), d.totals.activeToday);
       $("ov-sub").textContent = fmt(d.totals.totalActions) + " actions recorded all time";
@@ -350,14 +356,24 @@ export const panelJs = `(function () {
       drawPulse(buildPulsePoints());
       drawSurfaces(d.surfaces || {});
       drawWeights(d.topActions || []);
-    }).catch(function () {});
+  };
+
+  var loadOverview = function () {
+    if (inflight.overview) return;
+    inflight.overview = true;
+    lastLoad.overview = Date.now();
+    api("overview").then(function (d) {
+      renderOverview(d);
+    }).catch(function () {}).then(function () { inflight.overview = false; });
   };
 
   /* ---------- students ---------- */
   var userQuery = "", userSort = "recent";
   var loadUsers = function () {
+    if (inflight.students) return;
+    inflight.students = true;
     lastLoad.students = Date.now();
-    api("users?q=" + encodeURIComponent(userQuery) + "&sort=" + userSort).then(function (d) {
+    api("users?q=" + encodeURIComponent(userQuery) + "&sort=" + userSort + "&limit=100").then(function (d) {
       var rows = $("userrows");
       var html = "";
       for (var i = 0; i < d.users.length; i++) {
@@ -379,13 +395,13 @@ export const panelJs = `(function () {
       var trs = rows.querySelectorAll("tr");
       for (var t = 0; t < trs.length; t++)
         trs[t].addEventListener("click", function () { openDrawer(this.dataset.uid); });
-    }).catch(function () {});
+    }).catch(function () {}).then(function () { inflight.students = false; });
   };
   var searchTimer = null;
   $("usersearch").addEventListener("input", function () {
     clearTimeout(searchTimer);
     var v = this.value;
-    searchTimer = setTimeout(function () { userQuery = v.trim(); loadUsers(); }, 250);
+    searchTimer = setTimeout(function () { var q = v.trim(); if (q === userQuery) return; userQuery = q; loadUsers(); }, 250);
   });
   var sortBtns = document.querySelectorAll(".seg button");
   for (var sb = 0; sb < sortBtns.length; sb++)
@@ -409,12 +425,14 @@ export const panelJs = `(function () {
       "</div>";
   };
   var loadFeed = function () {
+    if (inflight.live) return;
+    inflight.live = true;
     lastLoad.live = Date.now();
     api("recent?limit=60").then(function (d) {
       $("feed").innerHTML = d.events.length
         ? d.events.map(feedRow).join("")
         : '<div class="empty">Nothing recorded yet. Activity appears as students use the bot.</div>';
-    }).catch(function () {});
+    }).catch(function () {}).then(function () { inflight.live = false; });
   };
   setInterval(function () {
     if (current === "live" && document.visibilityState === "visible") loadFeed();
@@ -429,9 +447,66 @@ export const panelJs = `(function () {
     return esc(r.name || r.username || ("ID " + r.userId));
   };
 
+  // the list already in memory is patched directly after every action, so a
+  // reply/close/reopen costs zero list refetches (each is a heavy query)
+  var markRowRead = function (issueId) {
+    if (!lastReports) return;
+    for (var i = 0; i < lastReports.length; i++) {
+      if (lastReports[i].issueId === issueId && lastReports[i].unread) {
+        lastReports[i].unread = 0;
+        renderReports(lastReports);
+        return;
+      }
+    }
+  };
+
+  var newUtcNow = function () {
+    var d = new Date();
+    var p = function (n) { return (n < 10 ? "0" : "") + n; };
+    return d.getUTCFullYear() + "-" + p(d.getUTCMonth() + 1) + "-" + p(d.getUTCDate()) +
+      " " + p(d.getUTCHours()) + ":" + p(d.getUTCMinutes()) + ":" + p(d.getUTCSeconds());
+  };
+
+  var updateRowAfterReply = function (issueId, text) {
+    if (!lastReports) return;
+    var kept = [];
+    for (var i = 0; i < lastReports.length; i++) {
+      var r = lastReports[i];
+      if (r.issueId === issueId) {
+        r.adminReply = text;
+        r.status = "answered";
+        r.messageCount = (r.messageCount || 1) + 1;
+        r.lastAuthor = "admin";
+        r.lastMessageAt = newUtcNow();
+        r.unread = 0;
+        if (reportStatus !== "all" && r.status !== reportStatus) continue;
+      }
+      kept.push(r);
+    }
+    lastReports = kept;
+    renderReports(lastReports);
+  };
+
+  var updateRowStatus = function (issueId, status) {
+    if (!lastReports) return;
+    // a row that no longer matches the active filter drops out of the list
+    var kept = [];
+    for (var i = 0; i < lastReports.length; i++) {
+      if (lastReports[i].issueId === issueId) {
+        if (reportStatus !== "all" && status !== reportStatus) continue;
+        lastReports[i].status = status;
+      }
+      kept.push(lastReports[i]);
+    }
+    lastReports = kept;
+    renderReports(lastReports);
+  };
+
   // Every issue is a thread now: the row is a summary, the drawer is the
   // conversation. Replying there is the same action as /reply in Telegram.
   var openThread = function (issueId) {
+    if (inflight.thread) return;
+    inflight.thread = true;
     api("reports/" + issueId).then(function (d) {
       var t = d.thread;
       var html = '<div class="dhead"><div><h3>' + esc(t.issueId) + "</h3>" +
@@ -473,7 +548,7 @@ export const panelJs = `(function () {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ reply: text })
         }).then(function (r) { return r.json(); }).then(function () {
-          loadReports();
+          updateRowAfterReply(t.issueId, text);
           openThread(t.issueId); // re-render in place with the new message
         }).catch(function () {
           sendBtn.disabled = false;
@@ -488,13 +563,13 @@ export const panelJs = `(function () {
       if (t.status === "resolved") {
         $("dreopen").addEventListener("click", function () {
           fetch(BASE + "/api/reports/" + t.issueId + "/reopen", { method: "POST" })
-            .then(function () { loadReports(); closeDrawer(); })
+            .then(function () { updateRowStatus(t.issueId, "open"); closeDrawer(); })
             .catch(function () {});
         });
       } else {
         $("dresolve").addEventListener("click", function () {
           fetch(BASE + "/api/reports/" + t.issueId + "/close", { method: "POST" })
-            .then(function () { loadReports(); closeDrawer(); })
+            .then(function () { updateRowStatus(t.issueId, "resolved"); closeDrawer(); })
             .catch(function () {});
         });
       }
@@ -504,8 +579,8 @@ export const panelJs = `(function () {
       $("scrim").classList.add("open");
       drawer.setAttribute("aria-hidden", "false");
       drawer.scrollTop = drawer.scrollHeight;
-      loadReports(); // opening a thread clears its "new" stamp on the list
-    }).catch(function () {});
+      markRowRead(t.issueId); // the server already cleared it; no list refetch
+    }).catch(function () {}).then(function () { inflight.thread = false; });
   };
 
   var renderReports = function (rows) {
@@ -552,16 +627,18 @@ export const panelJs = `(function () {
     var closeBtns = el.querySelectorAll("[data-close]");
     for (var cb2 = 0; cb2 < closeBtns.length; cb2++) {
       closeBtns[cb2].addEventListener("click", function () {
-        fetch(BASE + "/api/reports/" + this.dataset.close + "/close", { method: "POST" })
-          .then(function () { loadReports(); })
+        var id = this.dataset.close;
+        fetch(BASE + "/api/reports/" + id + "/close", { method: "POST" })
+          .then(function () { updateRowStatus(id, "resolved"); })
           .catch(function () {});
       });
     }
     var reopenBtns = el.querySelectorAll("[data-reopen]");
     for (var ob = 0; ob < reopenBtns.length; ob++) {
       reopenBtns[ob].addEventListener("click", function () {
-        fetch(BASE + "/api/reports/" + this.dataset.reopen + "/reopen", { method: "POST" })
-          .then(function () { loadReports(); })
+        var id = this.dataset.reopen;
+        fetch(BASE + "/api/reports/" + id + "/reopen", { method: "POST" })
+          .then(function () { updateRowStatus(id, "open"); })
           .catch(function () {});
       });
     }
@@ -571,6 +648,7 @@ export const panelJs = `(function () {
   var reportFilterBtns = document.querySelectorAll("#reportfilter button");
   for (var rf = 0; rf < reportFilterBtns.length; rf++) {
     reportFilterBtns[rf].addEventListener("click", function () {
+      if (this.dataset.status === reportStatus || inflight.reports) return;
       reportStatus = this.dataset.status;
       for (var k = 0; k < reportFilterBtns.length; k++)
         reportFilterBtns[k].setAttribute("aria-selected", String(reportFilterBtns[k] === this));
@@ -579,18 +657,20 @@ export const panelJs = `(function () {
   }
 
   var loadReports = function () {
+    if (inflight.reports) return;
+    inflight.reports = true;
     lastLoad.reports = Date.now();
     api("reports?status=" + encodeURIComponent(reportStatus) + "&limit=100").then(function (d) {
       lastReports = d.reports || [];
       renderReports(lastReports);
-    }).catch(function () {});
+    }).catch(function () {}).then(function () { inflight.reports = false; });
   };
 
   var reportsRefresh = $("reportsrefresh");
   if (reportsRefresh) reportsRefresh.addEventListener("click", loadReports);
   setInterval(function () {
     if (current === "reports" && document.visibilityState === "visible" && isStale("reports")) loadReports();
-  }, 20000);
+  }, 30000);
 
   /* ---------- health ---------- */
   var loadHealth = function () {
@@ -681,8 +761,12 @@ export const panelJs = `(function () {
   };
 
   /* ---------- boot ---------- */
-  api("overview").then(function () {
+  // the probe doubles as the first overview render — going through
+  // switchView here would fire the same query a second time
+  api("overview").then(function (d) {
     showApp();
-    switchView("overview");
+    activateTab("overview");
+    lastLoad.overview = Date.now();
+    renderOverview(d);
   }).catch(function () { /* login screen already shown */ });
 })();`;

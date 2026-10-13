@@ -94,6 +94,7 @@ Retained 95 days.
 | `idx_activity_user` | `activity_log` | `user_id, created_at` |
 | `idx_report_messages` | `report_messages` | `report_id, id` |
 | `idx_reports_created` | `reports` | `created_at` |
+| `idx_reports_status` | `reports` | `status, id` |
 | `idx_reports_user` | `reports` | `user_id, created_at` |
 | `idx_studentsnew_filters` | `studentsnew` | `year, branch, section` |
 | `idx_uptime_component_time` | `uptime_log` | `component, created_at` |
