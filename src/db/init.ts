@@ -154,4 +154,17 @@ const backfillReportThreads = async () => {
         WHERE m.report_id = r.id AND m.author = 'admin'
       );
   `);
+  // a replayed report must not look "unread" to the student who wrote it:
+  // seed their marker at their own last message, the same way createReport does
+  await turso.execute(`
+    INSERT INTO report_reads (report_id, reader, last_seen_id, seen_at)
+    SELECT r.id, 'user', MAX(m.id), datetime('now')
+    FROM reports r
+    JOIN report_messages m ON m.report_id = r.id AND m.author = 'user'
+    WHERE NOT EXISTS (
+      SELECT 1 FROM report_reads rd
+      WHERE rd.report_id = r.id AND rd.reader = 'user'
+    )
+    GROUP BY r.id;
+  `);
 };
