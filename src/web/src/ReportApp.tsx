@@ -26,14 +26,24 @@ const telegramWebApp = (): TgWebApp | null => {
   }
 };
 
-/** ?issue=QIK-0007 — the deep link the bot's "Open the thread" button uses. */
-const issueFromUrl = (): string | null => {
+/**
+ * The page has two deep links, both used by the bot's buttons:
+ *   ?issue=QIK-0007 — one conversation ("Open the thread")
+ *   ?view=reports  — the reporter's own issue list ("My reports")
+ * Anything else opens the form.
+ */
+const routeFromUrl = (): { view: View; issue: string | null } => {
   try {
-    const issue = new URLSearchParams(window.location.search).get("issue");
-    return issue ? issue.toUpperCase() : null;
+    const params = new URLSearchParams(window.location.search);
+    const issue = params.get("issue");
+    if (issue) return { view: "thread", issue: issue.toUpperCase() };
+    if (params.get("view") === "reports") {
+      return { view: "history", issue: null };
+    }
   } catch {
-    return null;
+    /* no window: fall through to the form */
   }
+  return { view: "form", issue: null };
 };
 
 const LockIcon = () => (
@@ -62,12 +72,8 @@ const LockIcon = () => (
  */
 function ReportApp() {
   const { tgUser, initData } = useTelegramIdentity();
-  const [view, setView] = useState<View>(() =>
-    issueFromUrl() ? "thread" : "form",
-  );
-  const [openIssue, setOpenIssue] = useState<string | null>(() =>
-    issueFromUrl(),
-  );
+  const [route, setRoute] = useState(routeFromUrl);
+  const { view, issue: openIssue } = route;
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +82,7 @@ function ReportApp() {
   const [loadingReports, setLoadingReports] = useState(false);
   const [loadingError, setLoadingError] = useState(false);
   // true once this session pushed a history entry, so Back can pop it
-  const pushedThread = useRef(false);
+  const pushed = useRef(false);
 
   const identity = { userId: tgUser ?? undefined, initData };
 
@@ -97,52 +103,53 @@ function ReportApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
-  // the thread is a real page: ?issue=... survives a reload and the back
-  // gesture (Telegram's back button, or the browser's) walks back to the list
-  const openThread = (issueId: string) => {
-    setOpenIssue(issueId);
-    setView("thread");
-    pushedThread.current = true;
-    window.history.pushState(
-      { issue: issueId },
-      "",
-      `?issue=${encodeURIComponent(issueId)}`,
-    );
+  // the list and each thread are real pages: the query string survives a
+  // reload, and Back (Telegram's button or the browser's) walks the trail
+  const navigate = (next: { view: View; issue?: string | null }) => {
+    const query =
+      next.view === "thread" && next.issue
+        ? `?issue=${encodeURIComponent(next.issue)}`
+        : next.view === "history"
+          ? "?view=reports"
+          : "";
+    pushed.current = true;
+    window.history.pushState({}, "", `${window.location.pathname}${query}`);
+    setRoute(routeFromUrl());
   };
 
-  const backToHistory = () => {
-    if (pushedThread.current) {
+  const back = () => {
+    if (pushed.current) {
       window.history.back();
       return;
     }
-    window.history.replaceState({}, "", window.location.pathname);
-    setOpenIssue(null);
-    setView("history");
+    // deep-linked straight into a view: leave the list behind, not the form
+    window.history.replaceState(
+      {},
+      "",
+      `${window.location.pathname}?view=reports`,
+    );
+    setRoute(routeFromUrl());
   };
 
   useEffect(() => {
     const onPop = () => {
-      const issue = issueFromUrl();
-      if (issue) {
-        setOpenIssue(issue);
-        setView("thread");
-      } else {
-        setOpenIssue(null);
-        setView("history");
-        setReports(null);
-      }
+      const next = routeFromUrl();
+      setRoute(next);
+      // coming back from a thread: refetch so the "new" stamps are current
+      if (next.view === "history") setReports(null);
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
   // inside the Telegram webview there is no browser chrome, so the native
-  // back button has to be wired to the same thing while a thread is open
+  // back button has to be wired to the same thing whenever we are not on the
+  // form (a thread, or the list opened from the bot's second button)
   useEffect(() => {
     const tg = telegramWebApp();
     if (!tg?.BackButton) return;
-    const onBack = () => backToHistory();
-    if (view === "thread") {
+    const onBack = () => back();
+    if (view !== "form") {
       tg.BackButton.onClick?.(onBack);
       tg.BackButton.show?.();
       return () => {
@@ -250,7 +257,10 @@ function ReportApp() {
                 </p>
               </div>
               <div className="btn-row">
-                <button onClick={() => openThread(ticket)} className="btn-ink">
+                <button
+                  onClick={() => navigate({ view: "thread", issue: ticket })}
+                  className="btn-ink"
+                >
                   Open thread
                 </button>
                 <button
@@ -266,7 +276,7 @@ function ReportApp() {
                 <button
                   onClick={() => {
                     setTicket(null);
-                    setView("history");
+                    navigate({ view: "history" });
                   }}
                   className="link-btn"
                 >
@@ -282,8 +292,8 @@ function ReportApp() {
                 <h1 className="form-title">My reports</h1>
                 <button
                   onClick={() => {
-                    setView("form");
                     setReports(null);
+                    navigate({ view: "form" });
                   }}
                   className="btn-outline btn-sm"
                 >
@@ -324,7 +334,9 @@ function ReportApp() {
                   {reports.map((r) => (
                     <li key={r.issueId} className="report-entry">
                       <button
-                        onClick={() => openThread(r.issueId)}
+                        onClick={() =>
+                          navigate({ view: "thread", issue: r.issueId })
+                        }
                         className="report-entry__open"
                         aria-label={`Open thread ${r.issueId}`}
                       >
@@ -373,7 +385,7 @@ function ReportApp() {
             <ReportThreadView
               identity={identity}
               issueId={openIssue}
-              onBack={backToHistory}
+              onBack={back}
             />
           )}
         </div>

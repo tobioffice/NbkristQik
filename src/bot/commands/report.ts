@@ -4,29 +4,45 @@ import {
   tooSoonToReport,
 } from "../../services/reportService.js";
 import { trackMessage } from "../../services/tracker.js";
-import { REPORT_WEBAPP_URL } from "../../constants/webapp.js";
+import {
+  REPORT_LIST_WEBAPP_URL,
+  REPORT_WEBAPP_URL,
+} from "../../constants/webapp.js";
 import { CHIT_CHAT_ID } from "../../constants/index.js";
 import { logger } from "../../config/logger.js";
 
 // /report now lives on the web: easy typing, an issue id, and replies that
-// reach the reporter here in Telegram. A bare /report opens the form;
-// "/report <message>" still works and files a tracked report with an id.
+// reach the reporter here in Telegram. A bare /report opens the form — plus
+// a second button straight into "My reports", where every past issue and its
+// conversation is waiting. "/report <message>" still works and files a
+// tracked report with an id.
 
 bot.onText(/\/report$/, (msg) => {
   trackMessage(msg, "command:report");
-  bot.sendMessage(
-    msg.chat.id,
-    `🐞 <b>Report an issue</b>\n\n` +
-      `Open the form and describe what went wrong. You'll get an issue id like <code>QIK-0012</code>, and I'll reply here in chat.`,
-    {
-      parse_mode: "HTML",
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "🐞 Report an issue", web_app: { url: REPORT_WEBAPP_URL } }],
-        ],
+
+  // Telegram only allows web_app buttons in private chats
+  const isPrivate = msg.chat.type === "private";
+  const button = (text: string, url: string) =>
+    isPrivate ? { text, web_app: { url } } : { text, url };
+
+  bot
+    .sendMessage(
+      msg.chat.id,
+      `🐞 <b>Report an issue</b>\n\n` +
+        `Open the form and describe what went wrong. You'll get an issue id like <code>QIK-0012</code>, and I'll reply here in chat.`,
+      {
+        parse_mode: "HTML",
+        reply_markup: {
+          inline_keyboard: [
+            [button("🐞 Report an issue", REPORT_WEBAPP_URL)],
+            [button("🗂 My reports", REPORT_LIST_WEBAPP_URL)],
+          ],
+        },
       },
-    },
-  );
+    )
+    .catch((e: Error) =>
+      logger.warn("[report] form message failed:", e?.message ?? e),
+    );
 });
 
 bot.onText(/\/report ([\s\S]+)/, async (msg, match) => {

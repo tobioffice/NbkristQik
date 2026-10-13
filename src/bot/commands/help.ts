@@ -9,7 +9,7 @@ Send your roll number, like <code>23KB1A0599</code>, and I'll show your attendan
 
 <b>In a hurry?</b> /register saves your roll once, then /attendance, /midmarks and /bunk work in one tap.
 
-Spotted a problem? /report files it with a trackable issue id.`;
+Spotted a problem? /report files it with a trackable issue id — its 🗂 My reports button keeps every past issue and the conversation around it.`;
 
   bot.sendMessage(msg.chat.id, helpMessage, { parse_mode: "HTML" });
 });

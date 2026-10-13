@@ -40,6 +40,9 @@ const bot = async (): Promise<import("node-telegram-bot-api") | null> => {
 export const reportThreadUrl = (issueId: string): string =>
   `${REPORT_WEBAPP_URL}?issue=${encodeURIComponent(issueId)}`;
 
+/** Deep link into the reporter's own issue list. */
+export const reportListUrl = (): string => `${REPORT_WEBAPP_URL}?view=reports`;
+
 export interface ReportSubmission {
   userId: number;
   username?: string | null;
@@ -122,7 +125,14 @@ export const createAndAnnounce = async (
         `✅ <b>Report ${issueId} received</b>\n\n` +
           `<i>${escapeHtml(sub.message.slice(0, 200))}${sub.message.length > 200 ? "…" : ""}</i>\n\n` +
           `I'll look into it and reply here in the chat. You can also add to the thread from My reports.`,
-        { parse_mode: "HTML" },
+        {
+          parse_mode: "HTML",
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "🗂 My reports", web_app: { url: reportListUrl() } }],
+            ],
+          },
+        },
       )
       .catch((e: Error) =>
         logger.warn("[report] reporter confirm failed:", e?.message ?? e),
@@ -271,7 +281,7 @@ export const adminCloseReport = async (
             inline_keyboard: [
               [
                 {
-                  text: "🗂 My reports",
+                  text: "💬 Open the thread",
                   web_app: { url: reportThreadUrl(issueId) },
                 },
               ],

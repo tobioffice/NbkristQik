@@ -79,7 +79,9 @@ pnpm start
 - `/start` - Initialize the bot
 - `/help` - Get usage instructions
 - `/report` - Report an issue (opens the web form; gets an issue id like QIK-0007;
-  you can also type `/report <message>` directly)
+  you can also type `/report <message>` directly). The message carries a
+  second button, **🗂 My reports**, which opens your own issue list
+  (`report.html?view=reports`)
 - `/leaderboard` - Open the live leaderboard
 - `/register` - Set your roll number once (via the web app) for instant lookups
 - `/attendance`, `/midmarks`, `/bunk` - Instant lookups for registered users
