@@ -51,7 +51,11 @@ verifies it is active. Defaults: host `oracle3`, directory
 `DEPLOY_DIR`, `DEPLOY_SERVICE`.
 
 The web leaderboard deploys separately as a static site to GitHub Pages via
-`src/web`'s `deploy` script (`gh-pages -d dist`).
+`src/web`'s `deploy` script (`gh-pages -d dist`). The Telegram WebApp SDK is
+vendored into `src/web/public/telegram-web-app.js` (rev 59) instead of loaded
+from telegram.org — telegram.org is slow on Indian networks and the SDK was
+the render-blocking first script on the page. Re-vendor when bumping the
+revision; the rev is noted in each mini app's HTML head.
 
 ## CI
 

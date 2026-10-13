@@ -133,6 +133,22 @@ const cacheLeaderboard = async (cacheKey: string, payload: object) => {
   }
 };
 
+const buildLeaderboardPayload = async (query: LeaderboardQuery) => {
+  const { rows, total } = await getLeaderboard(
+    query.sortBy,
+    query.limit,
+    (query.page - 1) * query.limit,
+    query.filters,
+  );
+  return {
+    success: true,
+    page: query.page,
+    limit: query.limit,
+    total,
+    data: rows,
+  };
+};
+
 // API Routes
 app.get(
   "/api/leaderboard",
@@ -148,22 +164,13 @@ app.get(
         return;
       }
 
-      const { rows, total } = await getLeaderboard(
-        query.sortBy,
-        query.limit,
-        (query.page - 1) * query.limit,
-        query.filters,
-      );
-
-      const payload = {
-        success: true,
-        page: query.page,
-        limit: query.limit,
-        total,
-        data: rows,
-      };
+      const payload = await buildLeaderboardPayload(query);
       await cacheLeaderboard(cacheKey, payload);
 
+      // same payload for everyone, and the source data is refreshed by
+      // /syncdb anyway — let the webview serve repeat opens from its own
+      // cache instead of the network
+      res.set("Cache-Control", "public, max-age=30");
       res.json(payload);
     } catch (error) {
       logger.error("Error fetching leaderboard:", error);
@@ -235,6 +242,33 @@ app.get("/health", securityLogger, (_req: Request, res: Response) => {
   });
 });
 
+/**
+ * The 60 s Redis cache only helps while traffic is flowing. With a small user
+ * base, the first student to open the app after a quiet minute otherwise pays
+ * the full ~1 s cold Turso query before the first row renders. Keeping the
+ * two default views warm costs two queries every 50 s, before the TTL can
+ * lapse, so every open hits the cache.
+ */
+const WARM_LEADERBOARD_QUERIES: LeaderboardQuery[] = [
+  { page: 1, limit: 20, sortBy: "attendance", filters: {} },
+  { page: 1, limit: 20, sortBy: "midmarks", filters: {} },
+];
+
+const warmLeaderboardCache = async () => {
+  await Promise.all(
+    WARM_LEADERBOARD_QUERIES.map(async (query) => {
+      try {
+        await cacheLeaderboard(
+          leaderboardCacheKey(query),
+          await buildLeaderboardPayload(query),
+        );
+      } catch (e) {
+        logger.debug("[API] leaderboard warm refresh failed:", e);
+      }
+    }),
+  );
+};
+
 // Pro status page — 90-day uptime summary + daily bars.
 // The underlying data only changes on the 5-min probe, so the assembled
 // payload is cached in-memory for 5 minutes instead of rebuilt per request.
@@ -290,5 +324,13 @@ export const startServer = () => {
   server.on("error", (e) => {
     logger.error("[API] server error:", e);
   });
+
+  // keep the default views warm forever: the first student to open the app
+  // after a quiet minute must not pay the full cold Turso query
+  void warmLeaderboardCache();
+  const warmTimer = setInterval(() => {
+    void warmLeaderboardCache();
+  }, 50_000);
+  warmTimer.unref();
   return server;
 };
