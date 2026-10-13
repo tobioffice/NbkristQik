@@ -3,9 +3,7 @@ import {
   listReports,
   setReportStatus,
   formatIssueId,
-  getReportReadMarker,
-  getReportWithReporter,
-  listReportMessages,
+  getReportThread,
   markReportRead,
   parseIssueId,
   type ReportStatus,
@@ -83,24 +81,23 @@ export const registerReportsRoutes = (
     },
   );
 
-  // GET {base}/api/reports/:id — the whole conversation behind one issue id.
-  // Opening it clears the "new" stamp for the panel.
+  // GET {base}/api/reports/:id — the whole conversation behind one issue id,
+  // read in a single round trip. Opening it clears the "new" stamp.
   app.get(
     `${base}/api/reports/:id`,
     requireAdmin,
     async (req: Request, res: Response) => {
       try {
         const id = parseIssueId(String(req.params.id));
-        const report = id ? await getReportWithReporter(id) : null;
-        if (!id || !report) {
+        const data = id ? await getReportThread(id, "admin") : null;
+        if (!id || !data) {
           res.status(404).json({ error: "Unknown report" });
           return;
         }
 
-        const messages = await listReportMessages(id);
+        const messages = data.messages;
         const lastId = messages.length ? messages[messages.length - 1].id : 0;
-        // a write only when there was something unread to clear
-        if (lastId > (await getReportReadMarker(id, "admin"))) {
+        if (lastId > data.last_seen_id) {
           try {
             await markReportRead(id, "admin", lastId);
             invalidate("reports:");
@@ -113,11 +110,11 @@ export const registerReportsRoutes = (
           ok: true,
           thread: {
             issueId: formatIssueId(id),
-            userId: report.user_id,
-            name: report.name,
-            username: report.username,
-            status: report.status,
-            createdAt: report.created_at,
+            userId: data.user_id,
+            name: data.name,
+            username: data.username,
+            status: data.status,
+            createdAt: data.created_at,
             messageCount: messages.length,
             messages: messages.map((m) => ({
               id: m.id,

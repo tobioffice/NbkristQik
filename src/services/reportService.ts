@@ -7,11 +7,10 @@
  * report or a message in it.
  */
 import {
-  addReportMessage,
+  appendUserThreadMessage,
   createReport,
   getReport,
-  markReportRead,
-  replyReport,
+  recordAdminReply,
   setReportStatus,
   formatIssueId,
   parseIssueId,
@@ -201,10 +200,10 @@ const notifyAdminOfMessage = async (
 };
 
 /**
- * Admin message via /reply or the panel: it becomes the next entry in the
- * thread, the legacy reply columns are updated, the status flips to
- * answered, and the reporter is DM'd with a link back to the conversation.
- * Returns the issueId or null when the report id is unknown.
+ * Admin message via /reply or the panel: one write round trip appends the
+ * message, updates the legacy reply columns and the status, and clears the
+ * admin's own unread stamp. The reporter is DM'd with a link back to the
+ * conversation. Returns the issueId or null when the report id is unknown.
  */
 export const adminReplyToReport = async (
   rawId: string,
@@ -214,15 +213,15 @@ export const adminReplyToReport = async (
   if (!id) return null;
   const report = await getReport(id);
   if (!report) return null;
-  await addReportMessage(id, "admin", reply);
-  await replyReport(id, reply);
+  await recordAdminReply(id, reply);
   await notifyReporterOfMessage(report, reply);
   return formatIssueId(id);
 };
 
 /**
- * Reporter follow-up on a thread: appends the message, reopens the issue so
- * it lands in the admin's "Open" inbox, and DMs the admin.
+ * Reporter follow-up on a thread: one write round trip appends the message,
+ * moves the author's read marker to it, and reopens a resolved issue so it
+ * lands back in the admin's "Open" inbox. The admin is DM'd.
  * Returns the issueId, or null when the report is unknown or not theirs.
  */
 export const appendUserMessage = async (
@@ -236,11 +235,7 @@ export const appendUserMessage = async (
   const report = await getReport(id);
   if (!report || report.user_id !== userId) return null;
 
-  const messageId = await addReportMessage(id, "user", body);
-  // the author has obviously read their own message
-  await markReportRead(id, "user", messageId).catch(() => {});
-  // a follow-up means the admin owes an answer again
-  if (report.status !== "open") await setReportStatus(id, "open");
+  await appendUserThreadMessage(id, body, report.status !== "open");
 
   const issueId = formatIssueId(id);
   trackActivity({

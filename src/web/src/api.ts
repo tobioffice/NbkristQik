@@ -189,6 +189,21 @@ export interface ReportThread {
   messages: ThreadMessage[];
 }
 
+/**
+ * Warm conversations. A thread fetched once renders instantly the next time
+ * it is opened, instead of waiting on the network again.
+ */
+const threadCache = new Map<string, ReportThread>();
+
+/** Synchronous cache read for optimistic rendering before the fetch lands. */
+export const peekThread = (issueId: string): ReportThread | undefined =>
+  threadCache.get(issueId);
+
+/** Put a thread (or an optimistic sketch of one) into the warm cache. */
+export const cacheThread = (thread: ReportThread): void => {
+  threadCache.set(thread.issueId, thread);
+};
+
 const identityParams = (identity: {
   initData?: string;
   userId?: string;
@@ -216,6 +231,7 @@ export const fetchThread = async (
   if (!res.ok || !data.ok || !data.thread) {
     throw new Error(data.error ?? `thread failed: ${res.status}`);
   }
+  cacheThread(data.thread);
   return data.thread;
 };
 

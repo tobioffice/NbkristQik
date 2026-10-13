@@ -7,10 +7,12 @@ vi.mock("../../src/db/db.js", () => ({ turso: client }));
 const {
   createReport,
   getReport,
-  getReportWithReporter,
   addReportMessage,
+  appendUserThreadMessage,
+  getReportThread,
   listReportMessages,
   markReportRead,
+  recordAdminReply,
   replyReport,
   setReportStatus,
   listUserReports,
@@ -167,12 +169,59 @@ describe("report threads", () => {
     expect((await listUserReports(42))[0].unread).toBe(1);
   });
 
-  it("reads one report with the reporter's name attached", async () => {
-    const id = await createReport(42, "Name should be joined onto this one");
-    const row = await getReportWithReporter(id);
+  it("reads a conversation and both markers in a single query", async () => {
+    const id = await createReport(42, "Single round trip thread read");
+    await addReportMessage(id, "admin", "Answer arrives");
 
-    expect(row?.name).toBe("Alice");
-    expect(row?.username).toBe("alice");
-    expect(await getReportWithReporter(999999)).toBeNull();
+    const mine = await getReportThread(id, "user");
+    expect(mine?.messages.map((m) => `${m.author}:${m.body}`)).toEqual([
+      "user:Single round trip thread read",
+      "admin:Answer arrives",
+    ]);
+    expect(mine?.last_seen_id).toBe(mine?.messages[0].id); // own opening is read
+    expect(mine?.last_seen_id).toBeGreaterThan(0);
+
+    const admin = await getReportThread(id, "admin");
+    expect(admin?.last_seen_id).toBe(0); // the admin has not opened it yet
+    expect(await getReportThread(999999, "user")).toBeNull();
+  });
+
+  it("appends a user follow-up with marker and reopen in one batch", async () => {
+    const id = await createReport(42, "Batched follow-up starts here");
+    await setReportStatus(id, "resolved");
+
+    await appendUserThreadMessage(id, "It broke again after the fix", true);
+
+    const row = await getReport(id);
+    expect(row?.status).toBe("open");
+    const messages = await listReportMessages(id);
+    expect(messages[messages.length - 1]?.body).toBe(
+      "It broke again after the fix",
+    );
+    // the author has obviously read their own message
+    const [mine] = await listUserReports(42);
+    expect(mine.unread).toBe(0);
+  });
+
+  it("records an admin reply with the legacy columns and its own marker", async () => {
+    const id = await createReport(42, "Batched admin reply lands here");
+
+    await recordAdminReply(id, "Fixed, check now");
+
+    const row = await getReport(id);
+    expect(row?.status).toBe("answered");
+    expect(row?.admin_reply).toBe("Fixed, check now");
+    expect(row?.replied_at).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+
+    // the admin's own reply never counts as unread to the admin
+    const admin = await getReportThread(id, "admin");
+    expect(admin?.last_seen_id).toBe(
+      admin?.messages[admin.messages.length - 1].id,
+    );
+    const listed = (await listReports(null, 50)).find((r) => r.id === id);
+    expect(listed?.unread).toBe(0);
+    // ...but it is news to the reporter
+    const [mine] = await listUserReports(42);
+    expect(mine.unread).toBe(1);
   });
 });

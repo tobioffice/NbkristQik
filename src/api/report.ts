@@ -8,9 +8,7 @@ import {
 } from "../services/reportService.js";
 import {
   formatIssueId,
-  getReport,
-  getReportReadMarker,
-  listReportMessages,
+  getReportThread,
   listUserReports,
   markReportRead,
   parseIssueId,
@@ -99,8 +97,8 @@ reportRouter.get("/myreports", async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/thread/:issue — one conversation (the caller's own only).
-// Opening it marks every message in it as read for the caller.
+// GET /api/thread/:issue — one conversation (the caller's own only), read in
+// a single round trip. Opening it marks everything in it as read.
 reportRouter.get("/thread/:issue", async (req: Request, res: Response) => {
   try {
     const resolved = resolveUserId(req);
@@ -110,18 +108,18 @@ reportRouter.get("/thread/:issue", async (req: Request, res: Response) => {
     }
 
     const id = parseIssueId(String(req.params.issue));
-    const report = id ? await getReport(id) : null;
+    const data = id ? await getReportThread(id, "user") : null;
     // somebody else's issue must look exactly like a missing one
-    if (!id || !report || report.user_id !== Number(resolved.userId)) {
+    if (!id || !data || data.user_id !== Number(resolved.userId)) {
       res.status(404).json({ ok: false, error: "Unknown report" });
       return;
     }
 
-    const messages = await listReportMessages(id);
+    const messages = data.messages;
     const lastId = messages.length ? messages[messages.length - 1].id : 0;
-    // only stamp the marker when something new actually arrived — this read
-    // runs on every poll, and a write per poll would burn the write quota
-    if (lastId > (await getReportReadMarker(id, "user"))) {
+    // one write, and only when something actually arrived — this read runs
+    // on every poll, and a write per poll would burn the write quota
+    if (lastId > data.last_seen_id) {
       await markReportRead(id, "user", lastId).catch((e) =>
         logger.warn("[report] mark read failed:", e),
       );
@@ -131,8 +129,8 @@ reportRouter.get("/thread/:issue", async (req: Request, res: Response) => {
       ok: true,
       thread: {
         issueId: formatIssueId(id),
-        status: report.status,
-        createdAt: report.created_at,
+        status: data.status,
+        createdAt: data.created_at,
         messageCount: messages.length,
         messages: messages.map((m) => ({
           id: m.id,

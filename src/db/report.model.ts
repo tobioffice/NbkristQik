@@ -149,19 +149,6 @@ export const listReportMessages = async (
   }));
 };
 
-/** A reader's marker (0 when they have never opened the thread). */
-export const getReportReadMarker = async (
-  reportId: number,
-  reader: MessageAuthor,
-): Promise<number> => {
-  const result = await turso.execute({
-    sql: `SELECT last_seen_id FROM report_reads
-          WHERE report_id = ? AND reader = ?`,
-    args: [reportId, reader],
-  });
-  return Number(result.rows[0]?.last_seen_id ?? 0);
-};
-
 /** Moves a reader's marker forward (never backwards). */
 export const markReportRead = async (
   reportId: number,
@@ -191,6 +178,154 @@ export const listUserReports = async (
     args: ["user", userId, Math.min(Math.max(limit, 1), 50)],
   });
   return result.rows.map(toRow);
+};
+
+export interface ReportThreadData {
+  id: number;
+  user_id: number;
+  status: ReportStatus;
+  created_at: string;
+  name: string | null;
+  username: string | null;
+  messages: ReportMessageRow[];
+  /** how far `reader` has followed the conversation */
+  last_seen_id: number;
+}
+
+/**
+ * One conversation in a SINGLE round trip: the report head, every message
+ * oldest first, the reporter's profile and the caller's read marker.
+ * The database is ~250 ms away — the previous three sequential queries are
+ * what made opening a thread feel slow.
+ */
+export const getReportThread = async (
+  reportId: number,
+  reader: MessageAuthor,
+): Promise<ReportThreadData | null> => {
+  const result = await turso.execute({
+    sql: `SELECT r.id, r.user_id, r.status, r.created_at,
+                 u.first_name AS name, u.username,
+                 m.id AS message_id, m.author, m.body, m.created_at AS message_at,
+                 (SELECT COALESCE(rd.last_seen_id, 0) FROM report_reads rd
+                   WHERE rd.report_id = r.id AND rd.reader = ?) AS last_seen_id
+          FROM reports r
+          LEFT JOIN botusers u ON u.user_id = r.user_id
+          JOIN report_messages m ON m.report_id = r.id
+          WHERE r.id = ?
+          ORDER BY m.id`,
+    args: [reader, reportId],
+  });
+
+  if (result.rows.length === 0) {
+    // a report with no messages yet: fall back to the bare head so a valid
+    // thread never 404s (threads are seeded at creation, so this is rare)
+    const report = await getReport(reportId);
+    if (!report) return null;
+    return {
+      id: report.id,
+      user_id: report.user_id,
+      status: report.status,
+      created_at: report.created_at,
+      name: null,
+      username: null,
+      messages: [],
+      last_seen_id: 0,
+    };
+  }
+
+  const head = result.rows[0];
+  return {
+    id: Number(head.id),
+    user_id: Number(head.user_id),
+    status: String(head.status) as ReportStatus,
+    created_at: String(head.created_at),
+    name: head.name ? String(head.name) : null,
+    username: head.username ? String(head.username) : null,
+    messages: result.rows.map((row) => ({
+      id: Number(row.message_id),
+      report_id: reportId,
+      author: String(row.author) as MessageAuthor,
+      body: String(row.body),
+      created_at: String(row.message_at),
+    })),
+    last_seen_id: Number(head.last_seen_id ?? 0),
+  };
+};
+
+/**
+ * Reporter follow-up in ONE write round trip: the message, the author's read
+ * marker at their own new message, and the reopen flip. The marker subquery
+ * sees the message inserted earlier in the same batch.
+ */
+export const appendUserThreadMessage = async (
+  reportId: number,
+  body: string,
+  reopen: boolean,
+): Promise<void> => {
+  await turso.batch(
+    [
+      {
+        sql: `INSERT INTO report_messages (report_id, author, body) VALUES (?, 'user', ?)`,
+        args: [reportId, body],
+      },
+      {
+        sql: `INSERT INTO report_reads (report_id, reader, last_seen_id, seen_at)
+              VALUES (?, 'user',
+                      (SELECT COALESCE(MAX(id), 0) FROM report_messages WHERE report_id = ?),
+                      datetime('now'))
+              ON CONFLICT(report_id, reader) DO UPDATE SET
+                last_seen_id = MAX(report_reads.last_seen_id, excluded.last_seen_id),
+                seen_at = excluded.seen_at`,
+        args: [reportId, reportId],
+      },
+      // a follow-up means the admin owes an answer again
+      ...(reopen
+        ? [
+            {
+              sql: `UPDATE reports SET status = 'open' WHERE id = ?`,
+              args: [reportId],
+            },
+          ]
+        : []),
+    ],
+    "write",
+  );
+};
+
+/**
+ * Admin reply in ONE write round trip: the thread entry, the legacy reply
+ * columns, and the admin's read marker — so the panel never flags the
+ * admin's own message as "new" to them.
+ */
+export const recordAdminReply = async (
+  reportId: number,
+  reply: string,
+): Promise<void> => {
+  await turso.batch(
+    [
+      {
+        sql: `INSERT INTO report_messages (report_id, author, body) VALUES (?, 'admin', ?)`,
+        args: [reportId, reply],
+      },
+      {
+        sql: `UPDATE reports
+              SET admin_reply = ?, status = 'answered', replied_at = datetime('now')
+              WHERE id = ?`,
+        args: [reply, reportId],
+      },
+      {
+        sql: `INSERT INTO report_reads (report_id, reader, last_seen_id, seen_at)
+              VALUES (?, 'admin',
+                      (SELECT COALESCE(MAX(id), 0) FROM report_messages WHERE report_id = ?),
+                      datetime('now'))
+              ON CONFLICT(report_id, reader) DO UPDATE SET
+                last_seen_id = MAX(report_reads.last_seen_id, excluded.last_seen_id),
+                seen_at = excluded.seen_at`,
+        args: [reportId, reportId],
+      },
+    ],
+    "write",
+  );
 };
 
 export interface AdminReport extends ReportRow {
@@ -224,21 +359,6 @@ export const listReports = async (
     args,
   });
   return result.rows.map(toAdminRow);
-};
-
-/** One report with the reporter's Telegram profile joined (admin drill-down). */
-export const getReportWithReporter = async (
-  id: number,
-): Promise<AdminReport | null> => {
-  const result = await turso.execute({
-    sql: `SELECT r.id, r.user_id, r.message, r.status, r.admin_reply, r.replied_at, r.created_at,
-                 u.first_name AS name, u.username
-          FROM reports r
-          LEFT JOIN botusers u ON u.user_id = r.user_id
-          WHERE r.id = ?`,
-    args: [id],
-  });
-  return result.rows[0] ? toAdminRow(result.rows[0]) : null;
 };
 
 /** Record the admin's reply; flips status to answered. */

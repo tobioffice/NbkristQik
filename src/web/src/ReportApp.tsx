@@ -385,6 +385,7 @@ function ReportApp() {
             <ReportThreadView
               identity={identity}
               issueId={openIssue}
+              seed={reports?.find((r) => r.issueId === openIssue) ?? null}
               onBack={back}
             />
           )}

@@ -1,9 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import { fetchThread, sendThreadMessage, type ReportThread } from "../api";
+import {
+  cacheThread,
+  fetchThread,
+  peekThread,
+  sendThreadMessage,
+  type MyReport,
+  type ReportThread,
+  type ThreadMessage,
+} from "../api";
 
 interface ReportThreadViewProps {
   identity: { initData?: string; userId?: string };
   issueId: string;
+  /** the row the caller already has: enough to paint the thread immediately */
+  seed: MyReport | null;
   onBack: () => void;
 }
 
@@ -36,24 +46,58 @@ const STATUS_NOTE: Record<ReportThread["status"], string> = {
 };
 
 /**
- * One issue, as a conversation. Every message from either side sits in the
- * same ruled column; the admin's entries are marked in the margin. While the
- * page is open it re-reads the thread every few seconds, so a reply typed on
- * the other side lands without a reload — the same reply also arrives in
- * Telegram.
+ * What the reports list already knows about an issue is enough to paint its
+ * thread immediately: the opening message, and the admin's latest reply if
+ * there is one. The fetch that follows silently replaces the sketch with
+ * the full conversation.
+ */
+const threadFromSeed = (seed: MyReport): ReportThread => ({
+  issueId: seed.issueId,
+  status: seed.status,
+  createdAt: seed.createdAt,
+  messageCount: seed.messageCount,
+  messages: [
+    { id: 0, author: "user", body: seed.message, createdAt: seed.createdAt },
+    ...(seed.adminReply
+      ? [
+          {
+            id: 1,
+            author: "admin" as const,
+            body: seed.adminReply,
+            createdAt: seed.repliedAt ?? seed.createdAt,
+          },
+        ]
+      : []),
+  ],
+});
+
+const knownThread = (
+  issueId: string,
+  seed: MyReport | null,
+): ReportThread | null => peekThread(issueId) ?? (seed ? threadFromSeed(seed) : null);
+
+/**
+ * One issue, as a conversation. It paints the moment the row is tapped —
+ * from the warm cache, or from the sketch the reports list already holds —
+ * and then re-reads the thread quietly so the authoritative copy replaces
+ * the sketch without a skeleton flash. While the page is open it polls
+ * every few seconds, so a reply typed on the other side lands without a
+ * reload — the same reply also arrives in Telegram.
  */
 export default function ReportThreadView({
   identity,
   issueId,
+  seed,
   onBack,
 }: ReportThreadViewProps) {
-  const [thread, setThread] = useState<ReportThread | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [initial] = useState(() => knownThread(issueId, seed));
+  const [thread, setThread] = useState<ReportThread | null>(initial);
+  const [loading, setLoading] = useState(initial === null);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const bottom = useRef<HTMLDivElement | null>(null);
-  const seenCount = useRef(0);
+  const seenCount = useRef(initial?.messageCount ?? 0);
 
   const load = (silent: boolean) => {
     if (!silent) {
@@ -74,8 +118,15 @@ export default function ReportThreadView({
       });
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => load(false), [issueId]);
+  // paint what we know, then refresh silently when anything is on screen
+  useEffect(() => {
+    const known = knownThread(issueId, seed);
+    setThread(known);
+    setLoading(known === null);
+    seenCount.current = known?.messageCount ?? 0;
+    load(known !== null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [issueId]);
 
   // light polling so the admin's side of the conversation shows up live
   useEffect(() => {
@@ -100,6 +151,25 @@ export default function ReportThreadView({
     if (!clean || sending) return;
     setSending(true);
     setError(null);
+
+    // the message shows immediately; the quiet refetch below reconciles it
+    const optimistic: ThreadMessage = {
+      id: -Date.now(),
+      author: "user",
+      body: clean,
+      createdAt: new Date().toISOString().slice(0, 19).replace("T", " "),
+    };
+    if (thread) {
+      const next: ReportThread = {
+        ...thread,
+        messages: [...thread.messages, optimistic],
+        messageCount: thread.messageCount + 1,
+        status: thread.status === "resolved" ? "open" : thread.status,
+      };
+      cacheThread(next);
+      setThread(next);
+    }
+
     try {
       await sendThreadMessage(identity, issueId, clean);
       setDraft("");
