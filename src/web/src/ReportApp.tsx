@@ -387,6 +387,7 @@ function ReportApp() {
               issueId={openIssue}
               seed={reports?.find((r) => r.issueId === openIssue) ?? null}
               onBack={back}
+              onNewReport={() => navigate({ view: "form" })}
             />
           )}
         </div>

@@ -1263,6 +1263,13 @@ a:focus-visible {
   border-top: 1px solid var(--rule);
 }
 
+/* a resolved thread: read-only, same separation as the composer it replaces */
+.thread-closed {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+}
+
 /* ---------- ticket ---------- */
 .ticket {
   margin-top: 22px;

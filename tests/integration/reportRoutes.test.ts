@@ -193,4 +193,37 @@ describe("report API", () => {
       .send({ userId: USER, message: "   " });
     expect(res.status).toBe(400);
   });
+
+  it("closes the thread on resolve: follow-ups get a 410, nothing is stored", async () => {
+    const { createReport, setReportStatus, formatIssueId } = await import(
+      "../../src/db/report.model.js"
+    );
+    // filed straight into the DB: the HTTP filing limiter is already spent
+    // by the earlier tests in this file
+    const FRESH_USER = 424242;
+    const id = await createReport(
+      FRESH_USER,
+      "This issue will be resolved soon",
+    );
+    const issueId = formatIssueId(id);
+    await setReportStatus(id, "resolved");
+
+    const write = await request(app)
+      .post(`/api/thread/${issueId}`)
+      .send({
+        userId: String(FRESH_USER),
+        message: "Trying to write on a closed thread",
+      });
+    expect(write.status).toBe(410);
+    expect(write.body.ok).toBe(false);
+
+    // nothing was appended and the admin was not pinged
+    const thread = await request(app).get(
+      `/api/thread/${issueId}?userId=${FRESH_USER}`,
+    );
+    expect(thread.body.thread.messages).toHaveLength(1);
+    expect(
+      sent.some((s) => s.text.includes("Trying to write on a closed thread")),
+    ).toBe(false);
+  });
 });

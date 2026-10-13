@@ -131,7 +131,7 @@ thread is opened.
 | `POST` | `/api/report` | Submit `{message}` (10–1000 chars) with initData; limited 5/15min/IP + a 60s per-user gate; announces to the admin and confirms to the reporter; returns `{ok:true, issueId}` |
 | `GET` | `/api/myreports` | The caller's reports, newest first: `{issueId, message, status, adminReply, repliedAt, createdAt, messageCount, lastAuthor, lastMessageAt, unread}` |
 | `GET` | `/api/thread/:issue` | One conversation (`:issue` = `QIK-0007`, `QIK-7` or `7`); the caller's own only, 404 otherwise; opening it clears the caller's unread stamp |
-| `POST` | `/api/thread/:issue` | The reporter adds `{message}` (1–1000 chars) to the thread; reopens the issue and DMs the admin. Limited 120/15min/IP + a 3s per-user gate |
+| `POST` | `/api/thread/:issue` | The reporter adds `{message}` (1–1000 chars) to an open thread; a follow-up on an answered issue reopens it and DMs the admin. Resolved threads are closed and answer `410` — file a new report instead. Limited 120/15min/IP + a 3s per-user gate |
 | `GET` | `{base}/api/reports` | Admin panel: list all reports with names and thread roll-ups, `?status=open\|answered\|resolved` |
 | `GET` | `{base}/api/reports/:id` | Admin panel: the whole conversation behind one issue, and clears its unread stamp |
 | `POST` | `{base}/api/reports/:id/reply` | Admin panel: append a message to the thread and DM the reporter |

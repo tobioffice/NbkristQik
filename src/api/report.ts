@@ -173,7 +173,7 @@ reportRouter.post("/thread/:issue", async (req: Request, res: Response) => {
       return;
     }
 
-    const issueId = await appendUserMessage(
+    const result = await appendUserMessage(
       String(req.params.issue),
       userId,
       message,
@@ -182,12 +182,20 @@ reportRouter.post("/thread/:issue", async (req: Request, res: Response) => {
         firstName: resolved.user?.first_name ?? null,
       },
     );
-    if (!issueId) {
+    if (!result) {
       res.status(404).json({ ok: false, error: "Unknown report" });
       return;
     }
+    if ("closed" in result) {
+      res.status(410).json({
+        ok: false,
+        error:
+          "This issue is resolved and the thread is closed. File a new report if it came back.",
+      });
+      return;
+    }
 
-    res.json({ ok: true, issueId });
+    res.json({ ok: true, issueId: result.issueId });
   } catch (e) {
     logger.error("[report] thread message failed:", e);
     res.status(500).json({ ok: false, error: "Internal Server Error" });

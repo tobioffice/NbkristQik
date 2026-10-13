@@ -15,6 +15,7 @@ interface ReportThreadViewProps {
   /** the row the caller already has: enough to paint the thread immediately */
   seed: MyReport | null;
   onBack: () => void;
+  onNewReport: () => void;
 }
 
 /** Wall-clock times read IST, 12-hour AM/PM — same as everywhere else. */
@@ -89,6 +90,7 @@ export default function ReportThreadView({
   issueId,
   seed,
   onBack,
+  onNewReport,
 }: ReportThreadViewProps) {
   const [initial] = useState(() => knownThread(issueId, seed));
   const [thread, setThread] = useState<ReportThread | null>(initial);
@@ -164,7 +166,6 @@ export default function ReportThreadView({
         ...thread,
         messages: [...thread.messages, optimistic],
         messageCount: thread.messageCount + 1,
-        status: thread.status === "resolved" ? "open" : thread.status,
       };
       cacheThread(next);
       setThread(next);
@@ -199,7 +200,9 @@ export default function ReportThreadView({
         {thread && (
           <p className="thread-head__note">
             Opened {istDay(thread.createdAt)} · {STATUS_NOTE[thread.status]}.
-            Replies reach the admin in Telegram.
+            {thread.status === "resolved"
+              ? " The thread is closed."
+              : " Replies reach the admin in Telegram."}
           </p>
         )}
       </div>
@@ -239,41 +242,48 @@ export default function ReportThreadView({
           <div ref={bottom} />
 
           {thread.status === "resolved" ? (
-            <p className="form-note">
-              This one is closed. Sending a message reopens it for the admin.
-            </p>
-          ) : null}
-
-          <form
-            className="thread-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              send();
-            }}
-            noValidate
-          >
-            <label className="field">
-              <span>Add to this thread</span>
-              <textarea
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                rows={3}
-                maxLength={1000}
-                placeholder="Anything else that helps: what you tried, what you expected."
-              />
-              <span className="char-count">{draft.length}/1000</span>
-            </label>
-            {error && thread ? (
-              <p className="note note--err mt-4">{error}</p>
-            ) : null}
-            <button
-              type="submit"
-              disabled={sending || draft.trim().length === 0}
-              className="btn-ink w-full mt-4"
+            <div className="thread-closed">
+              <p className="form-note">
+                This issue is resolved, so the thread is closed. If it came
+                back, file it as a new report and mention {issueId}.
+              </p>
+              {error ? <p className="note note--err mt-4">{error}</p> : null}
+              <button onClick={onNewReport} className="btn-ink w-full mt-4">
+                File a new report
+              </button>
+            </div>
+          ) : (
+            <form
+              className="thread-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                send();
+              }}
+              noValidate
             >
-              {sending ? "Sending..." : "Send message"}
-            </button>
-          </form>
+              <label className="field">
+                <span>Add to this thread</span>
+                <textarea
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  rows={3}
+                  maxLength={1000}
+                  placeholder="Anything else that helps: what you tried, what you expected."
+                />
+                <span className="char-count">{draft.length}/1000</span>
+              </label>
+              {error ? (
+                <p className="note note--err mt-4">{error}</p>
+              ) : null}
+              <button
+                type="submit"
+                disabled={sending || draft.trim().length === 0}
+                className="btn-ink w-full mt-4"
+              >
+                {sending ? "Sending..." : "Send message"}
+              </button>
+            </form>
+          )}
         </>
       )}
     </div>

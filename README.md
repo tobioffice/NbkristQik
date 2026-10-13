@@ -88,8 +88,10 @@ pnpm start
 - Check attendance and marks by sending your roll number (works for everyone)
 
 Every report is a conversation: open it under **My reports** on the report
-page, add to the thread any time, and the admin's reply arrives there and as
-a Telegram DM (`report.html?issue=QIK-0007` deep-links straight to it).
+page, add to the thread while it's open, and the admin's reply arrives there
+and as a Telegram DM (`report.html?issue=QIK-0007` deep-links straight to
+it). Resolving closes the thread read-only — if the issue comes back, file
+it as a new report.
 
 Admin commands: `/reply QIK-0007 <answer>` appends to a report's thread and DMs
 the reporter, `/close QIK-0007` marks it resolved. The admin panel lists every

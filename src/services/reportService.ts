@@ -218,22 +218,29 @@ export const adminReplyToReport = async (
   return formatIssueId(id);
 };
 
+export type AppendUserMessageResult =
+  | { issueId: string }
+  | { closed: true }
+  | null;
+
 /**
  * Reporter follow-up on a thread: one write round trip appends the message,
- * moves the author's read marker to it, and reopens a resolved issue so it
- * lands back in the admin's "Open" inbox. The admin is DM'd.
- * Returns the issueId, or null when the report is unknown or not theirs.
+ * moves the author's read marker to it, and reopens an answered issue so it
+ * lands back in the admin's "Open" inbox. A resolved thread stays shut —
+ * "resolved" means closed, so follow-ups are refused and the reporter files
+ * a new report instead. The admin is DM'd on every accepted message.
  */
 export const appendUserMessage = async (
   rawId: string,
   userId: number,
   body: string,
   who?: { username?: string | null; firstName?: string | null },
-): Promise<string | null> => {
+): Promise<AppendUserMessageResult> => {
   const id = parseIssueId(rawId);
   if (!id) return null;
   const report = await getReport(id);
   if (!report || report.user_id !== userId) return null;
+  if (report.status === "resolved") return { closed: true };
 
   await appendUserThreadMessage(id, body, report.status !== "open");
 
@@ -248,7 +255,7 @@ export const appendUserMessage = async (
   });
 
   await notifyAdminOfMessage(issueId, report, body, who);
-  return issueId;
+  return { issueId };
 };
 
 /** Admin close: flips status to resolved and tells the reporter. */
