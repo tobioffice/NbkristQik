@@ -25,6 +25,8 @@ export const redisKeys = {
   broadcastUsers: "qik:users",
   /** Per-user report submission throttle (SET NX, 60 s) */
   reportGate: (userId: number | string) => `report:gate:${userId}`,
+  /** Per-user report thread reply throttle (SET NX, 3 s) */
+  reportThreadGate: (userId: number | string) => `report:thread:${userId}`,
 } as const;
 
 /** SCAN patterns for the caches flushed after /syncdb */

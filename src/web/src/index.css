@@ -1131,6 +1131,138 @@ a:focus-visible {
   color: var(--ink-3);
 }
 
+/* the row itself is the tap target — it opens the conversation */
+.report-entry__open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.report-entry__open:hover .issue-id {
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+}
+
+.report-entry__open:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 4px;
+}
+
+.report-entry__marks {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* the unread count is a stamp: red ballpoint on paper, never a fill */
+.report-entry__new {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--red-ink);
+  border: 1.5px solid var(--red);
+  border-radius: 1px;
+  padding: 1px 6px;
+  font-variant-numeric: tabular-nums;
+  transform: rotate(-2deg);
+}
+
+.report-entry__foot {
+  display: block;
+  margin-top: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- report thread ---------- */
+.thread-head {
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid var(--ink);
+}
+
+.thread-head__ids {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.thread-head__note {
+  margin: 8px 0 0;
+  max-width: 46ch;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.thread {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.thread__msg {
+  padding: 12px 0 13px;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* the admin's entries sit under the same rule as a correction in the margin */
+.thread__msg--admin {
+  padding: 12px 12px 13px 13px;
+  border-left: 1.5px solid var(--ink);
+  background: var(--paper-2);
+}
+
+.thread__meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.thread__msg--admin .thread__meta b {
+  color: var(--ink);
+}
+
+.thread__time {
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.thread__body {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.thread-form {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+}
+
 /* ---------- ticket ---------- */
 .ticket {
   margin-top: 22px;

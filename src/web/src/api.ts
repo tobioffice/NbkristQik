@@ -84,18 +84,20 @@ export interface RegisterRequest {
 
 export const ROLL_REGEX = /^\d{2}[a-zA-Z0-9]{2}[a-zA-Z0-9]{6}$/;
 
-export const buildProfileUrl = (
-  identity: { initData?: string; userId?: string },
-): string => {
+export const buildProfileUrl = (identity: {
+  initData?: string;
+  userId?: string;
+}): string => {
   const params = new URLSearchParams();
   if (identity.initData) params.set("initData", identity.initData);
   else if (identity.userId) params.set("userId", identity.userId);
   return `${API_BASE}/api/profile?${params.toString()}`;
 };
 
-export const getProfile = async (
-  identity: { initData?: string; userId?: string },
-): Promise<ProfileResponse> => {
+export const getProfile = async (identity: {
+  initData?: string;
+  userId?: string;
+}): Promise<ProfileResponse> => {
   const res = await fetch(buildProfileUrl(identity));
   if (!res.ok) throw new Error(`profile request failed: ${res.status}`);
   return (await res.json()) as ProfileResponse;
@@ -128,6 +130,11 @@ export interface MyReport {
   adminReply: string | null;
   repliedAt: string | null;
   createdAt: string;
+  /** thread roll-up: total messages, who spoke last, how many the caller has not seen */
+  messageCount: number;
+  lastAuthor: "user" | "admin";
+  lastMessageAt: string;
+  unread: number;
 }
 
 export const submitReport = async (
@@ -143,16 +150,21 @@ export const submitReport = async (
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  const data = (await res.json().catch(() => ({}))) as { ok?: boolean; issueId?: string; error?: string };
+  const data = (await res.json().catch(() => ({}))) as {
+    ok?: boolean;
+    issueId?: string;
+    error?: string;
+  };
   if (!res.ok || !data.ok || !data.issueId) {
     throw new Error(data.error ?? `report failed: ${res.status}`);
   }
   return { issueId: data.issueId };
 };
 
-export const fetchMyReports = async (
-  identity: { initData?: string; userId?: string },
-): Promise<MyReport[]> => {
+export const fetchMyReports = async (identity: {
+  initData?: string;
+  userId?: string;
+}): Promise<MyReport[]> => {
   const params = new URLSearchParams();
   if (identity.initData) params.set("initData", identity.initData);
   else if (identity.userId) params.set("userId", identity.userId);
@@ -160,4 +172,76 @@ export const fetchMyReports = async (
   if (!res.ok) throw new Error(`myreports failed: ${res.status}`);
   const data = (await res.json()) as { reports: MyReport[] };
   return data.reports ?? [];
+};
+
+export interface ThreadMessage {
+  id: number;
+  author: "user" | "admin";
+  body: string;
+  createdAt: string;
+}
+
+export interface ReportThread {
+  issueId: string;
+  status: "open" | "answered" | "resolved";
+  createdAt: string;
+  messageCount: number;
+  messages: ThreadMessage[];
+}
+
+const identityParams = (identity: {
+  initData?: string;
+  userId?: string;
+}): URLSearchParams => {
+  const params = new URLSearchParams();
+  if (identity.initData) params.set("initData", identity.initData);
+  else if (identity.userId) params.set("userId", identity.userId);
+  return params;
+};
+
+/** One conversation, oldest message first. Opening it marks it read. */
+export const fetchThread = async (
+  identity: { initData?: string; userId?: string },
+  issueId: string,
+): Promise<ReportThread> => {
+  const params = identityParams(identity);
+  const res = await fetch(
+    `${API_BASE}/api/thread/${encodeURIComponent(issueId)}?${params.toString()}`,
+  );
+  const data = (await res.json().catch(() => ({}))) as {
+    ok?: boolean;
+    thread?: ReportThread;
+    error?: string;
+  };
+  if (!res.ok || !data.ok || !data.thread) {
+    throw new Error(data.error ?? `thread failed: ${res.status}`);
+  }
+  return data.thread;
+};
+
+/** The reporter's side of the conversation. */
+export const sendThreadMessage = async (
+  identity: { initData?: string; userId?: string },
+  issueId: string,
+  message: string,
+): Promise<void> => {
+  const body: Record<string, unknown> = { message };
+  if (identity.initData) body.initData = identity.initData;
+  else if (identity.userId) body.userId = identity.userId;
+
+  const res = await fetch(
+    `${API_BASE}/api/thread/${encodeURIComponent(issueId)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+  );
+  const data = (await res.json().catch(() => ({}))) as {
+    ok?: boolean;
+    error?: string;
+  };
+  if (!res.ok || !data.ok) {
+    throw new Error(data.error ?? `send failed: ${res.status}`);
+  }
 };

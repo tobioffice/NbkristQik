@@ -7,6 +7,10 @@ vi.mock("../../src/db/db.js", () => ({ turso: client }));
 const {
   createReport,
   getReport,
+  getReportWithReporter,
+  addReportMessage,
+  listReportMessages,
+  markReportRead,
   replyReport,
   setReportStatus,
   listUserReports,
@@ -26,6 +30,20 @@ beforeAll(async () => {
         admin_reply TEXT,
         replied_at TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
+      `CREATE TABLE report_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        report_id INTEGER NOT NULL,
+        author TEXT NOT NULL,
+        body TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
+      `CREATE TABLE report_reads (
+        report_id INTEGER NOT NULL,
+        reader TEXT NOT NULL,
+        last_seen_id INTEGER NOT NULL DEFAULT 0,
+        seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (report_id, reader)
       )`,
       `CREATE TABLE botusers (user_id INTEGER PRIMARY KEY, username TEXT, first_name TEXT)`,
       `INSERT INTO botusers VALUES (42, 'alice', 'Alice')`,
@@ -106,5 +124,55 @@ describe("report lifecycle", () => {
     const openOnly = await listReports("open", 50);
     expect(openOnly.every((r) => r.status === "open")).toBe(true);
     expect(openOnly.find((r) => r.id === second)).toBeUndefined();
+  });
+});
+
+describe("report threads", () => {
+  it("seeds the thread with the opening message", async () => {
+    const id = await createReport(42, "Opening message of the thread");
+    const messages = await listReportMessages(id);
+
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toMatchObject({
+      author: "user",
+      body: "Opening message of the thread",
+    });
+  });
+
+  it("keeps both sides in order and tracks unread counts", async () => {
+    const id = await createReport(42, "Nothing loads on the marks page");
+    await addReportMessage(id, "admin", "Which roll number?");
+
+    const messages = await listReportMessages(id);
+    expect(messages.map((m) => m.author)).toEqual(["user", "admin"]);
+
+    // the reporter has not opened the thread: the admin's message is unseen
+    const [mine] = await listUserReports(42);
+    expect(mine.id).toBe(id);
+    expect(mine.message_count).toBe(2);
+    expect(mine.last_author).toBe("admin");
+    expect(mine.unread).toBe(1);
+
+    await markReportRead(id, "user", messages[1].id);
+    expect((await listUserReports(42))[0].unread).toBe(0);
+
+    // the admin side counts the reporter's follow-up the same way
+    await markReportRead(id, "admin", messages[1].id);
+    await addReportMessage(id, "user", "Roll 23BQ1A0501");
+    const row = (await listReports(null, 50)).find((r) => r.id === id);
+    expect(row?.unread).toBe(1);
+
+    // reading again never moves the marker backwards
+    await markReportRead(id, "user", messages[0].id);
+    expect((await listUserReports(42))[0].unread).toBe(1);
+  });
+
+  it("reads one report with the reporter's name attached", async () => {
+    const id = await createReport(42, "Name should be joined onto this one");
+    const row = await getReportWithReporter(id);
+
+    expect(row?.name).toBe("Alice");
+    expect(row?.username).toBe("alice");
+    expect(await getReportWithReporter(999999)).toBeNull();
   });
 });

@@ -85,9 +85,13 @@ pnpm start
 - `/attendance`, `/midmarks`, `/bunk` - Instant lookups for registered users
 - Check attendance and marks by sending your roll number (works for everyone)
 
-Admin commands: `/reply QIK-0007 <answer>` replies to a report (DMs the
-reporter), `/close QIK-0007` marks it resolved. Reports are also listed and
-replyable in the admin panel.
+Every report is a conversation: open it under **My reports** on the report
+page, add to the thread any time, and the admin's reply arrives there and as
+a Telegram DM (`report.html?issue=QIK-0007` deep-links straight to it).
+
+Admin commands: `/reply QIK-0007 <answer>` appends to a report's thread and DMs
+the reporter, `/close QIK-0007` marks it resolved. The admin panel lists every
+issue with its unread stamp and opens the full thread in the side drawer.
 
 ## Environment Variables
 

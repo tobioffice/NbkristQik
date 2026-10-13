@@ -55,6 +55,27 @@ built as `<year>-<branch>-<section>-<type>` where type is `att` or `mid`.
 `id` INTEGER PRIMARY KEY AUTOINCREMENT, `user_id`, `chat_type`,
 `action`, `detail`, `created_at` (UTC). Retained 95 days.
 
+### `reports` — one row per issue (the thread's head)
+
+`id` INTEGER PRIMARY KEY AUTOINCREMENT (rendered as `QIK-0007`), `user_id`,
+`message` (the opening message), `status` (`open`/`answered`/`resolved`),
+`admin_reply` + `replied_at` (the latest admin reply, mirrored from the
+thread so older clients keep working), `created_at` (UTC).
+
+### `report_messages` — the conversation itself
+
+`id` INTEGER PRIMARY KEY AUTOINCREMENT, `report_id`, `author`
+(`user`/`admin`), `body`, `created_at` (UTC). Oldest first; `createReport`
+seeds it with the opening message, and `backfillReportThreads()` in
+`initDatabase()` replays pre-thread reports and their single reply as the
+first two entries (idempotent, runs every boot).
+
+### `report_reads` — how far each side has read
+
+`report_id`, `reader` (`user`/`admin`), `last_seen_id`, `seen_at`, keyed on
+`(report_id, reader)`. Drives the "2 new" stamp on the report list and the
+panel's unread markers; opening a thread moves the marker forward only.
+
 ### `admin_sessions` — panel sessions
 
 `token_hash` TEXT PRIMARY KEY (HMAC of the token keyed with the admin
@@ -71,6 +92,9 @@ Retained 95 days.
 |---|---|---|
 | `idx_activity_created` | `activity_log` | `created_at` |
 | `idx_activity_user` | `activity_log` | `user_id, created_at` |
+| `idx_report_messages` | `report_messages` | `report_id, id` |
+| `idx_reports_created` | `reports` | `created_at` |
+| `idx_reports_user` | `reports` | `user_id, created_at` |
 | `idx_studentsnew_filters` | `studentsnew` | `year, branch, section` |
 | `idx_uptime_component_time` | `uptime_log` | `component, created_at` |
 

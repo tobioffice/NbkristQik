@@ -8,7 +8,7 @@ export const panelJs = `(function () {
     "roll_lookup": "Roll lookup", "attendance": "Attendance", "midmarks": "Mid marks",
     "bunk": "Bunk plan", "daily_checkin": "Daily check-in", "leaderboard_webapp": "Opened leaderboard",
     "command:start": "/start", "command:help": "/help", "command:leaderboard": "/leaderboard",
-    "report": "Report to admin"
+    "report": "Report to admin", "report_followup": "Thread follow-up"
   };
   var SURFACES = [
     { key: "private", label: "Private chat", color: "#3f6457" },
@@ -423,8 +423,90 @@ export const panelJs = `(function () {
 
   /* ---------- reports ---------- */
   var reportStatus = "open";
-  var repOpenId = null;
   var REPORT_DOT = { open: "var(--text-3)", answered: "var(--amber)", resolved: "var(--green)" };
+
+  var reporterLabel = function (r) {
+    return esc(r.name || r.username || ("ID " + r.userId));
+  };
+
+  // Every issue is a thread now: the row is a summary, the drawer is the
+  // conversation. Replying there is the same action as /reply in Telegram.
+  var openThread = function (issueId) {
+    api("reports/" + issueId).then(function (d) {
+      var t = d.thread;
+      var html = '<div class="dhead"><div><h3>' + esc(t.issueId) + "</h3>" +
+        '<div class="meta">' + reporterLabel(t) + ' <span class="mono">' + esc(String(t.userId)) + "</span>" +
+        " · " + esc(t.status) + " · opened " + istDate(parseUtc(t.createdAt)) + "</div></div>" +
+        '<button class="x" id="dclose" aria-label="Close">&times;</button></div>' +
+        '<div class="dthread">';
+      for (var i = 0; i < t.messages.length; i++) {
+        var m = t.messages[i];
+        html += '<div class="tmsg ' + (m.author === "admin" ? "admin" : "student") + '">' +
+          '<div class="tmeta"><b>' + (m.author === "admin" ? "you · admin" : "student") + "</b>" +
+          "<span>" + istDate(parseUtc(m.createdAt)).slice(5) + " " + istTime(m.createdAt) + "</span></div>" +
+          '<div class="tbody">' + esc(m.body) + "</div></div>";
+      }
+      html += "</div>" +
+        '<div class="rform show"><textarea id="dreply" placeholder="Write to the reporter. It is added to the thread and DM\\'d to them."></textarea>' +
+        '<button class="send" id="dsend">Send</button></div>' +
+        '<div class="rbtns" id="dactions"></div>';
+      $("drawer").innerHTML = html;
+
+      $("dactions").innerHTML = t.status === "resolved"
+        ? '<button id="dreopen">Reopen</button>'
+        : '<button id="dresolve">Mark resolved</button>';
+
+      $("dclose").addEventListener("click", closeDrawer);
+
+      var ta = $("dreply");
+      var sendBtn = $("dsend");
+      if (t.status === "resolved")
+        ta.placeholder = "This issue is resolved. A message reopens it.";
+
+      var send = function () {
+        var text = ta.value.trim();
+        if (!text || sendBtn.disabled) return;
+        sendBtn.disabled = true;
+        sendBtn.textContent = "Sending...";
+        fetch(BASE + "/api/reports/" + t.issueId + "/reply", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reply: text })
+        }).then(function (r) { return r.json(); }).then(function () {
+          loadReports();
+          openThread(t.issueId); // re-render in place with the new message
+        }).catch(function () {
+          sendBtn.disabled = false;
+          sendBtn.textContent = "Send";
+        });
+      };
+      sendBtn.addEventListener("click", send);
+      ta.addEventListener("keydown", function (e) {
+        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") send();
+      });
+
+      if (t.status === "resolved") {
+        $("dreopen").addEventListener("click", function () {
+          fetch(BASE + "/api/reports/" + t.issueId + "/reopen", { method: "POST" })
+            .then(function () { loadReports(); closeDrawer(); })
+            .catch(function () {});
+        });
+      } else {
+        $("dresolve").addEventListener("click", function () {
+          fetch(BASE + "/api/reports/" + t.issueId + "/close", { method: "POST" })
+            .then(function () { loadReports(); closeDrawer(); })
+            .catch(function () {});
+        });
+      }
+
+      var drawer = $("drawer");
+      drawer.classList.add("open");
+      $("scrim").classList.add("open");
+      drawer.setAttribute("aria-hidden", "false");
+      drawer.scrollTop = drawer.scrollHeight;
+      loadReports(); // opening a thread clears its "new" stamp on the list
+    }).catch(function () {});
+  };
 
   var renderReports = function (rows) {
     var el = $("reports");
@@ -435,56 +517,50 @@ export const panelJs = `(function () {
     var html = "";
     for (var i = 0; i < rows.length; i++) {
       var r = rows[i];
-      var who = esc(r.name || r.username || ("ID " + r.userId));
+      var stamp = r.unread > 0 ? '<span class="rnew">' + r.unread + " new</span>" : "";
+      var threadLine = r.messageCount > 1
+        ? '<div class="rsum">' + r.messageCount + " messages · " +
+          (r.lastAuthor === "admin" ? "you wrote last" : "student wrote last") +
+          (r.lastMessageAt ? " · " + esc(ago(r.lastMessageAt)) : "") + "</div>"
+        : '<div class="rsum">1 message · waiting for an answer</div>';
       var replied = r.adminReply
-        ? '<div class="rreplyblock"><b>your reply</b>' + esc(r.adminReply) + "</div>"
+        ? '<div class="rreplyblock"><b>your last reply</b>' + esc(r.adminReply) + "</div>"
         : "";
-      var open = repOpenId === r.issueId
-        ? '<div class="rform show" id="rf-' + r.issueId + '"><textarea placeholder="Type your reply. It is recorded on the issue and DM\\'d to the reporter."></textarea><button class="send" data-send="' + r.issueId + '">Send</button></div>'
-        : "";
-      var btns = r.status === "resolved"
-        ? ""
-        : '<div class="rbtns"><button data-reply="' + r.issueId + '">' + (r.status === "answered" ? "Edit reply" : "Reply") + '</button><button data-close="' + r.issueId + '">Mark resolved</button></div>';
+      var btns = '<div class="rbtns">' +
+        '<button data-thread="' + r.issueId + '">Open thread' +
+        (r.messageCount > 1 ? " (" + r.messageCount + ")" : "") + "</button>" +
+        (r.status === "resolved"
+          ? '<button data-reopen="' + r.issueId + '">Reopen</button>'
+          : '<button data-close="' + r.issueId + '">Mark resolved</button>') +
+        "</div>";
       html +=
-        '<div class="rrow ' + r.status + '">' +
-        '<div class="rhead"><span class="rid">' + esc(r.issueId) + '</span>' +
+        '<div class="rrow ' + r.status + (r.unread > 0 ? " hasnew" : "") + '">' +
+        '<div class="rhead"><span class="rid">' + esc(r.issueId) + '</span>' + stamp +
         '<span class="rstatus ' + r.status + '"><span class="dot" style="background:' + (REPORT_DOT[r.status] || "") + '"></span>' + esc(r.status) + '</span>' +
-        '<span class="rname">' + who + '  <span class="mono" style="opacity:.7">' + esc(String(r.userId)) + "</span></span>" +
+        '<span class="rname">' + reporterLabel(r) + '  <span class="mono" style="opacity:.7">' + esc(String(r.userId)) + "</span></span>" +
         '<span class="rtime">' + esc(clockOrAgo(r.createdAt)) + "</span></div>" +
-        '<div class="rmsg">' + esc(r.message) + "</div>" + replied + open + btns + "</div>";
+        '<div class="rmsg">' + esc(r.message) + "</div>" + threadLine + replied + btns + "</div>";
     }
     el.innerHTML = html;
 
-    var replyBtns = el.querySelectorAll("[data-reply]");
-    for (var rb = 0; rb < replyBtns.length; rb++) {
-      replyBtns[rb].addEventListener("click", function () {
-        repOpenId = this.dataset.reply;
-        renderReports(lastReports || []);
-      });
-    }
-    var sendBtns = el.querySelectorAll("[data-send]");
-    for (var sb2 = 0; sb2 < sendBtns.length; sb2++) {
-      sendBtns[sb2].addEventListener("click", function () {
-        var wrap = this.closest(".rform");
-        var ta = wrap ? wrap.querySelector("textarea") : null;
-        var text = ta ? ta.value.trim() : "";
-        if (!text) return;
-        this.textContent = "Sending...";
-        this.disabled = true;
-        fetch(BASE + "/api/reports/" + this.dataset.send + "/reply", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reply: text })
-        }).then(function (r) { return r.json(); }).then(function () {
-          repOpenId = null;
-          loadReports();
-        }).catch(function () { loadReports(); });
+    var threadBtns = el.querySelectorAll("[data-thread]");
+    for (var tb = 0; tb < threadBtns.length; tb++) {
+      threadBtns[tb].addEventListener("click", function () {
+        openThread(this.dataset.thread);
       });
     }
     var closeBtns = el.querySelectorAll("[data-close]");
     for (var cb2 = 0; cb2 < closeBtns.length; cb2++) {
       closeBtns[cb2].addEventListener("click", function () {
         fetch(BASE + "/api/reports/" + this.dataset.close + "/close", { method: "POST" })
+          .then(function () { loadReports(); })
+          .catch(function () {});
+      });
+    }
+    var reopenBtns = el.querySelectorAll("[data-reopen]");
+    for (var ob = 0; ob < reopenBtns.length; ob++) {
+      reopenBtns[ob].addEventListener("click", function () {
+        fetch(BASE + "/api/reports/" + this.dataset.reopen + "/reopen", { method: "POST" })
           .then(function () { loadReports(); })
           .catch(function () {});
       });

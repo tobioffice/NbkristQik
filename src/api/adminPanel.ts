@@ -128,7 +128,7 @@ ${panelCss}
   <section class="view" id="view-reports">
     <div class="section-head" style="margin-bottom:12px">
       <h2>Issue reports</h2>
-      <span class="hint">replies reach the reporter in Telegram</span>
+      <span class="hint">each issue is a thread — replies reach the reporter in Telegram</span>
     </div>
     <div class="toolbar">
       <div class="seg" role="tablist" id="reportfilter">

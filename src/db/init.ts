@@ -86,6 +86,31 @@ export const initDatabase = async () => {
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
+  // One row per message in a report's conversation. The reports row keeps the
+  // opening message and the latest admin reply so older clients and the
+  // Telegram notices keep working; the thread is the source of truth.
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS report_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        report_id INTEGER NOT NULL,
+        author TEXT NOT NULL,
+        body TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+  // How far each side has read a thread (drives the "new" stamps).
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS report_reads (
+        report_id INTEGER NOT NULL,
+        reader TEXT NOT NULL,
+        last_seen_id INTEGER NOT NULL DEFAULT 0,
+        seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (report_id, reader)
+    );
+  `);
+  await turso.execute(
+    `CREATE INDEX IF NOT EXISTS idx_report_messages ON report_messages (report_id, id);`,
+  );
   await turso.execute(
     `CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_log (created_at);`,
   );
@@ -101,4 +126,32 @@ export const initDatabase = async () => {
   await initStatsTable();
   await initUptimeTable();
   await initLeaderboardIndexes();
+  await backfillReportThreads();
+};
+
+/**
+ * Idempotent one-time backfill: reports filed before threads existed get
+ * their opening message and their single admin reply replayed as the first
+ * two entries of the conversation. The NOT EXISTS guards make this a no-op
+ * once a report has a thread, so it is safe on every boot.
+ */
+const backfillReportThreads = async () => {
+  await turso.execute(`
+    INSERT INTO report_messages (report_id, author, body, created_at)
+    SELECT r.id, 'user', r.message, r.created_at
+    FROM reports r
+    WHERE NOT EXISTS (
+      SELECT 1 FROM report_messages m WHERE m.report_id = r.id
+    );
+  `);
+  await turso.execute(`
+    INSERT INTO report_messages (report_id, author, body, created_at)
+    SELECT r.id, 'admin', r.admin_reply, COALESCE(r.replied_at, r.created_at)
+    FROM reports r
+    WHERE r.admin_reply IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM report_messages m
+        WHERE m.report_id = r.id AND m.author = 'admin'
+      );
+  `);
 };

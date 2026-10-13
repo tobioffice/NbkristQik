@@ -46,6 +46,20 @@ beforeAll(async () => {
         admin_reply TEXT, replied_at TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       )`,
+      `CREATE TABLE report_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        report_id INTEGER NOT NULL,
+        author TEXT NOT NULL,
+        body TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
+      `CREATE TABLE report_reads (
+        report_id INTEGER NOT NULL,
+        reader TEXT NOT NULL,
+        last_seen_id INTEGER NOT NULL DEFAULT 0,
+        seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (report_id, reader)
+      )`,
       `CREATE TABLE botusers (user_id INTEGER PRIMARY KEY, username TEXT, first_name TEXT)`,
       `INSERT INTO botusers VALUES (7, 'bobby', 'Bobby')`,
       `CREATE TABLE admin_sessions (token_hash TEXT PRIMARY KEY, created_at TEXT, expires_at TEXT)`,
@@ -146,5 +160,63 @@ describe("admin reports endpoints", () => {
       .set("Cookie", cookie)
       .send({ reply: "" });
     expect(empty.status).toBe(400);
+  });
+
+  it("opens a thread, clears its new stamp and shows both sides", async () => {
+    const { appendUserMessage } = await import(
+      "../../src/services/reportService.js"
+    );
+    const id = await createReport(7, "Panel thread drill-down check");
+    const issueId = formatIssueId(id);
+    await appendUserMessage(issueId, 7, "One more detail from the student");
+
+    // before the panel opens it, the follow-up is a new message
+    const list = await request(app)
+      .get(`${BASE}/api/reports?status=open`)
+      .set("Cookie", cookie);
+    const row = list.body.reports.find(
+      (r: { issueId: string }) => r.issueId === issueId,
+    );
+    expect(row.unread).toBeGreaterThan(0);
+    expect(row.messageCount).toBe(2);
+    expect(row.lastAuthor).toBe("user");
+
+    const opened = await request(app)
+      .get(`${BASE}/api/reports/${issueId}`)
+      .set("Cookie", cookie);
+    expect(opened.status).toBe(200);
+    expect(
+      opened.body.thread.messages.map((m: { author: string }) => m.author),
+    ).toEqual(["user", "user"]);
+    expect(opened.body.thread.name).toBe("Bobby");
+
+    // reading the thread is what clears the stamp
+    const after = await request(app)
+      .get(`${BASE}/api/reports?status=open`)
+      .set("Cookie", cookie);
+    const cleared = after.body.reports.find(
+      (r: { issueId: string }) => r.issueId === issueId,
+    );
+    expect(cleared.unread).toBe(0);
+  });
+
+  it("reopens a resolved report", async () => {
+    const id = await createReport(7, "Closed too early, reopening it");
+    const issueId = formatIssueId(id);
+    await request(app)
+      .post(`${BASE}/api/reports/${issueId}/close`)
+      .set("Cookie", cookie);
+
+    const reopened = await request(app)
+      .post(`${BASE}/api/reports/${issueId}/reopen`)
+      .set("Cookie", cookie);
+    expect(reopened.status).toBe(200);
+
+    const open = await request(app)
+      .get(`${BASE}/api/reports?status=open`)
+      .set("Cookie", cookie);
+    expect(
+      open.body.reports.some((r: { issueId: string }) => r.issueId === issueId),
+    ).toBe(true);
   });
 });

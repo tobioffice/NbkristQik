@@ -119,14 +119,24 @@ There is no delete endpoint by design; registering again overwrites.
 ## Issue report endpoints
 
 Reports moved to the web form (`report.html` mini app, opened by `/report`).
-Every report gets an issue id formatted as `QIK-0007`.
+Every report gets an issue id formatted as `QIK-0007`, and every report is a
+**thread**: the opening message plus every follow-up from either side, oldest
+first. The admin answers from the panel or `/reply`; the reporter answers on
+the thread page (`report.html?issue=QIK-0007`). Both directions notify the
+other side in Telegram, and each side carries an unread stamp until the
+thread is opened.
 
 | Method | Path | Purpose |
 |---|---|---|
 | `POST` | `/api/report` | Submit `{message}` (10–1000 chars) with initData; limited 5/15min/IP + a 60s per-user gate; announces to the admin and confirms to the reporter; returns `{ok:true, issueId}` |
-| `GET` | `/api/myreports` | The caller's reports: `{issueId, message, status, adminReply, repliedAt, createdAt}` |
-| `POST` | `{base}/api/reports` | Admin panel: list all reports with names, `?status=open\|answered\|resolved` |
-| `POST` | `{base}/api/reports/:id/reply` | Admin panel: record a reply and DM the reporter |
+| `GET` | `/api/myreports` | The caller's reports, newest first: `{issueId, message, status, adminReply, repliedAt, createdAt, messageCount, lastAuthor, lastMessageAt, unread}` |
+| `GET` | `/api/thread/:issue` | One conversation (`:issue` = `QIK-0007`, `QIK-7` or `7`); the caller's own only, 404 otherwise; opening it clears the caller's unread stamp |
+| `POST` | `/api/thread/:issue` | The reporter adds `{message}` (1–1000 chars) to the thread; reopens the issue and DMs the admin. Limited 120/15min/IP + a 3s per-user gate |
+| `GET` | `{base}/api/reports` | Admin panel: list all reports with names and thread roll-ups, `?status=open\|answered\|resolved` |
+| `GET` | `{base}/api/reports/:id` | Admin panel: the whole conversation behind one issue, and clears its unread stamp |
+| `POST` | `{base}/api/reports/:id/reply` | Admin panel: append a message to the thread and DM the reporter |
 | `POST` | `{base}/api/reports/:id/close` | Admin panel: mark resolved and notify the reporter |
+| `POST` | `{base}/api/reports/:id/reopen` | Admin panel: put a closed issue back in the open inbox |
 
-Bot-side admin replies: `/reply QIK-0007 <answer>` and `/close QIK-0007`.
+Bot-side admin replies: `/reply QIK-0007 <answer>` and `/close QIK-0007` —
+`/reply` writes the same thread entry the panel does.

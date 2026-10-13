@@ -63,6 +63,17 @@ const reportWriteLimit = createRateLimit(
   "Too many reports, please try again later.",
 );
 app.use("/api/report", reportWriteLimit);
+
+// Report threads: reads and follow-up messages are conversation-paced, so
+// they get a roomier IP limit on top of the per-user 3 s gate in the service.
+// Mounted before the report router for clarity; `/api/report` above never
+// matches `/api/thread`.
+const threadLimit = createRateLimit(
+  15 * 60 * 1000,
+  120,
+  "Too many thread requests, please try again later.",
+);
+app.use("/api/thread", threadLimit);
 app.use("/api", reportRouter);
 
 interface LeaderboardQuery {

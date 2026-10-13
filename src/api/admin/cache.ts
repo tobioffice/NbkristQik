@@ -3,6 +3,13 @@
 // read-heavy endpoints — staleness of a few seconds is fine here.
 const responseCache = new Map<string, { at: number; payload: unknown }>();
 
+/** Drop every cached payload whose key starts with `prefix`. */
+export const invalidate = (prefix: string): void => {
+  for (const key of [...responseCache.keys()]) {
+    if (key.startsWith(prefix)) responseCache.delete(key);
+  }
+};
+
 export const cached = async <T>(
   key: string,
   ttlMs: number,

@@ -351,4 +351,37 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
 }
 .rbtns button:hover { color: var(--ink); background: var(--paper-3); }
 .rform + .rbtns { margin-top: 8px; }
+
+/* a thread that moved on since it was last read */
+.rrow.hasnew { border-color: var(--red); }
+.rnew {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--red-ink); border: 1.5px solid var(--red); border-radius: 1px;
+  padding: 1px 6px; transform: rotate(-2deg); display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+.rsum {
+  margin-top: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-3); font-variant-numeric: tabular-nums;
+}
+/* ---------- thread drawer ---------- */
+.dthread {
+  margin-top: 16px; border-top: 1.5px solid var(--ink);
+}
+.tmsg { padding: 12px 0 13px; border-bottom: 1px solid var(--line-soft); }
+.tmsg.admin {
+  padding: 12px 12px 13px 13px; border-left: 1.5px solid var(--ink);
+  background: var(--paper-3);
+}
+.tmsg .tmeta {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.tmsg.admin .tmeta b { color: var(--ink); }
+.tmsg .tmeta span { font-weight: 500; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+.tmsg .tbody {
+  margin-top: 6px; font-size: 13.5px; line-height: 1.55; color: var(--ink);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
 `;

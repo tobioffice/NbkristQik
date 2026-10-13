@@ -1,10 +1,20 @@
 import { Request, Response, Router } from "express";
 import { resolveUserId } from "./resolveUser.js";
 import {
+  appendUserMessage,
   createAndAnnounce,
+  tooSoonToFollowUp,
   tooSoonToReport,
 } from "../services/reportService.js";
-import { listUserReports, formatIssueId } from "../db/report.model.js";
+import {
+  formatIssueId,
+  getReport,
+  getReportReadMarker,
+  listReportMessages,
+  listUserReports,
+  markReportRead,
+  parseIssueId,
+} from "../db/report.model.js";
 import { logger } from "../config/logger.js";
 
 export const reportRouter = Router();
@@ -58,7 +68,8 @@ reportRouter.post("/report", async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/myreports — the caller's own reports with status + replies
+// GET /api/myreports — the caller's own reports, newest first, each with a
+// thread roll-up: how many messages, who spoke last, how many are unseen
 reportRouter.get("/myreports", async (req: Request, res: Response) => {
   try {
     const resolved = resolveUserId(req);
@@ -76,10 +87,111 @@ reportRouter.get("/myreports", async (req: Request, res: Response) => {
         adminReply: r.admin_reply,
         repliedAt: r.replied_at,
         createdAt: r.created_at,
+        messageCount: r.message_count,
+        lastAuthor: r.last_author,
+        lastMessageAt: r.last_message_at,
+        unread: r.unread,
       })),
     });
   } catch (e) {
     logger.error("[report] myreports failed:", e);
+    res.status(500).json({ ok: false, error: "Internal Server Error" });
+  }
+});
+
+// GET /api/thread/:issue — one conversation (the caller's own only).
+// Opening it marks every message in it as read for the caller.
+reportRouter.get("/thread/:issue", async (req: Request, res: Response) => {
+  try {
+    const resolved = resolveUserId(req);
+    if (!resolved || resolved.error) {
+      unauthorized(res, resolved?.error);
+      return;
+    }
+
+    const id = parseIssueId(String(req.params.issue));
+    const report = id ? await getReport(id) : null;
+    // somebody else's issue must look exactly like a missing one
+    if (!id || !report || report.user_id !== Number(resolved.userId)) {
+      res.status(404).json({ ok: false, error: "Unknown report" });
+      return;
+    }
+
+    const messages = await listReportMessages(id);
+    const lastId = messages.length ? messages[messages.length - 1].id : 0;
+    // only stamp the marker when something new actually arrived — this read
+    // runs on every poll, and a write per poll would burn the write quota
+    if (lastId > (await getReportReadMarker(id, "user"))) {
+      await markReportRead(id, "user", lastId).catch((e) =>
+        logger.warn("[report] mark read failed:", e),
+      );
+    }
+
+    res.json({
+      ok: true,
+      thread: {
+        issueId: formatIssueId(id),
+        status: report.status,
+        createdAt: report.created_at,
+        messageCount: messages.length,
+        messages: messages.map((m) => ({
+          id: m.id,
+          author: m.author,
+          body: m.body,
+          createdAt: m.created_at,
+        })),
+      },
+    });
+  } catch (e) {
+    logger.error("[report] thread read failed:", e);
+    res.status(500).json({ ok: false, error: "Internal Server Error" });
+  }
+});
+
+// POST /api/thread/:issue — the reporter adds a message to the conversation
+reportRouter.post("/thread/:issue", async (req: Request, res: Response) => {
+  try {
+    const resolved = resolveUserId(req);
+    if (!resolved || resolved.error) {
+      unauthorized(res, resolved?.error);
+      return;
+    }
+
+    const message = String(req.body?.message ?? "").trim();
+    if (message.length < 1 || message.length > 1000) {
+      res.status(400).json({
+        ok: false,
+        error: "Between 1 and 1000 characters.",
+      });
+      return;
+    }
+
+    const userId = Number(resolved.userId);
+    if (await tooSoonToFollowUp(userId)) {
+      res.status(429).json({
+        ok: false,
+        error: "Hold on a moment before sending again.",
+      });
+      return;
+    }
+
+    const issueId = await appendUserMessage(
+      String(req.params.issue),
+      userId,
+      message,
+      {
+        username: resolved.user?.username ?? null,
+        firstName: resolved.user?.first_name ?? null,
+      },
+    );
+    if (!issueId) {
+      res.status(404).json({ ok: false, error: "Unknown report" });
+      return;
+    }
+
+    res.json({ ok: true, issueId });
+  } catch (e) {
+    logger.error("[report] thread message failed:", e);
     res.status(500).json({ ok: false, error: "Internal Server Error" });
   }
 });

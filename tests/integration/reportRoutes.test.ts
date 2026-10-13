@@ -51,6 +51,20 @@ beforeAll(async () => {
         admin_reply TEXT, replied_at TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       )`,
+      `CREATE TABLE report_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        report_id INTEGER NOT NULL,
+        author TEXT NOT NULL,
+        body TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
+      `CREATE TABLE report_reads (
+        report_id INTEGER NOT NULL,
+        reader TEXT NOT NULL,
+        last_seen_id INTEGER NOT NULL DEFAULT 0,
+        seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (report_id, reader)
+      )`,
       `CREATE TABLE botusers (user_id INTEGER PRIMARY KEY, username TEXT, first_name TEXT)`,
       `INSERT INTO botusers VALUES (6407457375, 'prasanth', 'PRASANTH')`,
     ],
@@ -117,5 +131,66 @@ describe("report API", () => {
       message: "Attendance shows zero for my section",
     });
     expect(Object.keys(res.body.reports[0])).toContain("issueId");
+  });
+
+  it("opens the thread behind an issue and keeps the follow-up", async () => {
+    const list = await request(app).get(`/api/myreports?userId=${USER}`);
+    const issueId: string = list.body.reports[0].issueId;
+    expect(list.body.reports[0].messageCount).toBe(1);
+
+    const thread = await request(app).get(
+      `/api/thread/${issueId}?userId=${USER}`,
+    );
+    expect(thread.status).toBe(200);
+    expect(thread.body.thread.messages).toHaveLength(1);
+    expect(thread.body.thread.messages[0]).toMatchObject({ author: "user" });
+
+    const followUp = await request(app)
+      .post(`/api/thread/${issueId}`)
+      .send({ userId: USER, message: "Still wrong after the nightly sync" });
+    expect(followUp.status).toBe(200);
+
+    const after = await request(app).get(
+      `/api/thread/${issueId}?userId=${USER}`,
+    );
+    expect(
+      after.body.thread.messages.map((m: { author: string }) => m.author),
+    ).toEqual(["user", "user"]);
+
+    // the admin was pinged about the follow-up
+    expect(
+      sent.some(
+        (s) =>
+          s.to === process.env.ADMIN_ID &&
+          s.text.includes("Still wrong after the nightly sync"),
+      ),
+    ).toBe(true);
+
+    // and the reporter's own message is never "unread" to them
+    const relisted = await request(app).get(`/api/myreports?userId=${USER}`);
+    expect(relisted.body.reports[0].unread).toBe(0);
+  });
+
+  it("refuses to read or extend somebody else's thread", async () => {
+    const list = await request(app).get(`/api/myreports?userId=${USER}`);
+    const issueId: string = list.body.reports[0].issueId;
+
+    const read = await request(app).get(`/api/thread/${issueId}?userId=999999`);
+    expect(read.status).toBe(404);
+
+    const write = await request(app)
+      .post(`/api/thread/${issueId}`)
+      .send({ userId: "999999", message: "Not my issue, but replying anyway" });
+    expect(write.status).toBe(404);
+  });
+
+  it("rejects an empty thread message", async () => {
+    const list = await request(app).get(`/api/myreports?userId=${USER}`);
+    const issueId: string = list.body.reports[0].issueId;
+
+    const res = await request(app)
+      .post(`/api/thread/${issueId}`)
+      .send({ userId: USER, message: "   " });
+    expect(res.status).toBe(400);
   });
 });
