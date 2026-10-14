@@ -1111,6 +1111,7 @@ a:focus-visible {
 }
 
 .report-entry__reply {
+  display: block;
   margin: 9px 0 0;
   padding: 8px 0 8px 12px;
   border-left: 1px solid var(--ink-3);

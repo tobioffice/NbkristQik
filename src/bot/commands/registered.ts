@@ -16,7 +16,6 @@ import { botSecurityHandler } from "../../middleware/security.js";
 import { ADMIN_ID, CHANNEL_ID } from "../../config/environmentals.js";
 import { logger } from "../../config/logger.js";
 import { trackMessage } from "../../services/tracker.js";
-import { isDailyUnlocked, getCheckInLink } from "../dailyCheckIn.js";
 import { REGISTER_WEBAPP_URL } from "../../constants/webapp.js";
 
 const getCachedMembership = async (userId: number): Promise<boolean> => {
@@ -33,7 +32,6 @@ const getCachedMembership = async (userId: number): Promise<boolean> => {
 const isAuthorizedUser = async (
   userId: number,
   chatId: number,
-  replyToMessageId?: number,
 ): Promise<boolean> => {
   if (userId === ADMIN_ID) return true;
 
@@ -49,24 +47,6 @@ const isAuthorizedUser = async (
 
   if (!isMember && !(chatId === PROTECTED_CHAT_ID)) {
     await sendJoinChannelMsg(chatId);
-    return false;
-  }
-
-  if (!(await isDailyUnlocked(userId))) {
-    const checkInLink = await getCheckInLink();
-    const target = chatId < 0 ? chatId : userId;
-    await bot.sendMessage(
-      target,
-      "🔓 <b>Quick human check</b>\n\nTap <b>\"I'm not a robot\"</b> below and you're in.",
-      {
-        parse_mode: "HTML",
-        // show as a reply to the command message so it's clearly for them
-        ...(replyToMessageId ? { reply_to_message_id: replyToMessageId } : {}),
-        reply_markup: {
-          inline_keyboard: [[{ text: "👇 I'm not a robot", url: checkInLink }]],
-        },
-      },
-    );
     return false;
   }
 
@@ -169,7 +149,7 @@ const handleRegisteredLookup = async (
     return;
   }
 
-  if (!(await isAuthorizedUser(from.id, chatId, msg.message_id))) return;
+  if (!(await isAuthorizedUser(from.id, chatId))) return;
 
   trackMessage(
     msg,
