@@ -12,6 +12,9 @@ process.env.ADMIN_ID = "123456789";
 process.env.REDIS_URL = "redis://localhost:6379";
 process.env.TURSO_DATABASE_URL = "file::memory:";
 process.env.TURSO_AUTH_TOKEN = "test_token";
+// db.ts prefers LOCAL_DB_URL over Turso, so a stray embedded-DB path in a
+// developer's .env must be blanked here or tests could touch production.
+process.env.LOCAL_DB_URL = "";
 process.env.TEST_CHANNEL = "@test_channel";
 process.env.PROD_CHANNEL = "@test_channel";
 process.env.PORTAL_BASE_URL = "http://127.0.0.1:9";
