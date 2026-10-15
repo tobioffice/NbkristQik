@@ -43,8 +43,9 @@ const SECTIONS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "-"];
 const CONCURRENCY = 3;
 
 interface SyncProgress {
-  chatId: number;
-  msgId: number;
+  /** Telegram message to edit; absent when run from the CLI. */
+  chatId?: number;
+  msgId?: number;
   lines: string[];
   updated: number;
   upsertFailed: number;
@@ -58,11 +59,33 @@ interface SyncContext {
   yearSems: string[];
   students: Map<string, StudentRow>;
   p: SyncProgress;
+  /** Custom progress sink (CLI). When absent, the Telegram message is edited. */
+  onProgress?: (p: SyncProgress) => void | Promise<void>;
+}
+
+export interface SyncRunResult {
+  lines: string[];
+  students: number;
+  updated: number;
+  upsertFailed: number;
+  perYear: string;
+}
+
+export interface SyncRunOptions {
+  /** "1" (11/21/31/41), "2" (12/22/32/42) or null for all 8 sessions. */
+  semType?: string | null;
+  /** Explicit academic year like "2025-26"; auto-detected when omitted. */
+  yearArg?: string;
+  /** Reuse an existing progress record (the Telegram handler shows one). */
+  p?: SyncProgress;
+  /** Where progress lines go; defaults to editing the Telegram message. */
+  onProgress?: (p: SyncProgress) => void | Promise<void>;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function editProgress(p: SyncProgress) {
+  if (!p.chatId || !p.msgId) return; // CLI run — no Telegram message to edit
   try {
     await bot.editMessageText(
       `<b>🔄 Semester Sync in progress...</b>\n\n${p.lines.join("\n")}`,
@@ -71,6 +94,19 @@ async function editProgress(p: SyncProgress) {
   } catch {
     /* edit race — ignore */
   }
+}
+
+/** Report progress: the given sink (CLI) or the Telegram message. Never throws. */
+async function reportProgress(ctx: SyncContext): Promise<void> {
+  if (ctx.onProgress) {
+    try {
+      await ctx.onProgress(ctx.p);
+    } catch {
+      /* progress must never break the sync */
+    }
+    return;
+  }
+  await editProgress(ctx.p);
 }
 
 // ---------- phase 1: login ----------
@@ -194,10 +230,26 @@ async function scrapeCombos(ctx: SyncContext): Promise<void> {
         valid++;
 
         const $ = cheerio.load(res.data);
+        // The canonical roll is the row's id ("26KB101001"): the roll cell's
+        // own id is "td" + roll ("td26KB101001") and its text can carry a
+        // display space ("26KB1010 01"). Reading only the cell id and trimming
+        // a single character used to leave a stray "d" — which uppercased into
+        // a bogus leading "D" ("D26KB101001") that no student ever types, so
+        // every lookup failed. Prefer the row id, then the cell id without its
+        // "td" prefix, then the cell text without spaces.
+        const looksLikeRoll = (s: string): boolean =>
+          /^[A-Za-z0-9]{6,16}$/.test(s);
         const rolls = $("td.tdRollNo")
-          .map((_, el) => $(el).attr("id"))
+          .map((_, el) => {
+            const rowRoll = ($(el).closest("tr").attr("id") || "").trim();
+            const cellId = ($(el).attr("id") || "").replace(/^td/i, "").trim();
+            const cellText = ($(el).text() || "").replace(/\s+/g, "");
+            return (
+              [rowRoll, cellId, cellText].find((c) => c && looksLikeRoll(c)) ||
+              ""
+            );
+          })
           .get()
-          .map((id) => (id || "").replace(/^./, ""))
           .filter(Boolean);
 
         for (const roll of rolls) {
@@ -221,7 +273,7 @@ async function scrapeCombos(ctx: SyncContext): Promise<void> {
       if (Date.now() - lastEdit > 5000) {
         lastEdit = Date.now();
         p.lines[2] = `🔍 Scanned ${done}/${combos.length} — ${valid} classes found, ${students.size} students`;
-        await editProgress(p);
+        await reportProgress(ctx);
       }
     }
   };
@@ -242,7 +294,7 @@ async function scrapeCombos(ctx: SyncContext): Promise<void> {
   p.lines.push(
     `🔍 Scanned ${done}/${combos.length} — ${valid} classes, ${failed} skipped, ${students.size} students`,
   );
-  await editProgress(p);
+  await reportProgress(ctx);
 }
 
 // ---------- phase 4: fetch each student's name ----------
@@ -273,7 +325,7 @@ async function fetchStudentNames(ctx: SyncContext): Promise<void> {
   await Promise.all(Array.from({ length: CONCURRENCY }, () => nameWorker()));
 
   p.lines.push(`👤 Names fetched for ${nameFetched}/${students.size}`);
-  await editProgress(p);
+  await reportProgress(ctx);
 }
 
 // ---------- phase 5: upsert studentsnew ----------
@@ -311,11 +363,12 @@ async function upsertStudents(ctx: SyncContext): Promise<void> {
       ? `💾 Upserted ${p.updated}/${rows.length} students — ${p.upsertFailed} FAILED (rerun /syncdb)`
       : `💾 Upserted ${rows.length} students (sections + year updated)`,
   );
-  await editProgress(p);
+  await reportProgress(ctx);
 }
 
 // ---------- phase 6: flush stale caches ----------
-async function flushCaches(p: SyncProgress): Promise<void> {
+async function flushCaches(ctx: SyncContext): Promise<void> {
+  const { p } = ctx;
   const redis = await getClient();
   const patterns = cacheFlushPatterns;
   for (const pattern of patterns) {
@@ -330,6 +383,77 @@ async function flushCaches(p: SyncProgress): Promise<void> {
     } while (cursor !== "0");
   }
   p.lines.push(`🗑️ Cache flushed (student/attendance/midmarks/leaderboard)`);
+}
+
+/**
+ * Run a full semester sync: log in, detect the sessions, scrape every
+ * year x branch x section, fetch names, upsert `studentsnew`, flush caches.
+ *
+ * Shared by the /syncdb command and the CLI (dist/bot/syncdbCli.js) so both
+ * paths behave identically — the bot can be re-synced without Telegram.
+ */
+export async function runSyncDb(
+  opts: SyncRunOptions = {},
+): Promise<SyncRunResult> {
+  const p: SyncProgress = opts.p ?? {
+    lines: [],
+    updated: 0,
+    upsertFailed: 0,
+    inserted: 0,
+    total: 0,
+  };
+
+  const sessionToken = await loginToPortal();
+  p.lines.push("✅ Logged in");
+
+  const ctx: SyncContext = {
+    sessionToken,
+    acadYear: "",
+    yearSems: [],
+    students: new Map(),
+    p,
+    onProgress: opts.onProgress,
+  };
+  await reportProgress(ctx);
+
+  const detected = await detectSessions(
+    sessionToken,
+    opts.yearArg,
+    opts.semType ?? null,
+  );
+  ctx.acadYear = detected.acadYear;
+  ctx.yearSems = detected.yearSems;
+
+  if (ctx.yearSems.length === 0) {
+    throw new Error(
+      `No matching sessions found for semester type ${opts.semType}. Check /setsem.`,
+    );
+  }
+
+  p.lines.push(`📅 Academic year: <b>${ctx.acadYear}</b>`);
+  p.lines.push(`📚 Sessions to scan: ${ctx.yearSems.join(", ")}`);
+  await reportProgress(ctx);
+
+  await scrapeCombos(ctx);
+  await fetchStudentNames(ctx);
+  await upsertStudents(ctx);
+  await flushCaches(ctx);
+
+  const yearCounts = new Map<string, number>();
+  for (const row of ctx.students.values()) {
+    yearCounts.set(row.year, (yearCounts.get(row.year) || 0) + 1);
+  }
+  const perYear = [...yearCounts.entries()]
+    .map(([y, n]) => `${y}: ${n}`)
+    .join(" | ");
+
+  return {
+    lines: p.lines,
+    students: ctx.students.size,
+    updated: p.updated,
+    upsertFailed: p.upsertFailed,
+    perYear,
+  };
 }
 
 export const registerSyncDbCommand = () => {
@@ -405,56 +529,23 @@ export const registerSyncDbCommand = () => {
     };
 
     try {
-      const sessionToken = await loginToPortal();
-      p.lines.push("✅ Logged in");
-      await editProgress(p);
-
-      const { acadYear, yearSems } = await detectSessions(
-        sessionToken,
-        yearArg,
+      const res = await runSyncDb({
         semType,
-      );
-
-      if (yearSems.length === 0) {
-        await bot.editMessageText(
-          `❌ No matching sessions found for semester type <b>${semType}</b>. Check /setsem.`,
-          { chat_id: p.chatId, message_id: p.msgId, parse_mode: "HTML" },
-        );
-        return;
-      }
-
-      p.lines.push(`📅 Academic year: <b>${acadYear}</b>`);
-      p.lines.push(`📚 Sessions to scan: ${yearSems.join(", ")}`);
-      await editProgress(p);
-
-      const ctx: SyncContext = {
-        sessionToken,
-        acadYear,
-        yearSems,
-        students: new Map(),
+        yearArg,
         p,
-      };
-
-      await scrapeCombos(ctx);
-      await fetchStudentNames(ctx);
-      await upsertStudents(ctx);
-      await flushCaches(p);
-
-      // summary
-      const yearCounts = new Map<string, number>();
-      for (const row of ctx.students.values()) {
-        yearCounts.set(row.year, (yearCounts.get(row.year) || 0) + 1);
-      }
-      const summary = [...yearCounts.entries()]
-        .map(([y, n]) => `${y}: ${n}`)
-        .join(" | ");
+        onProgress: editProgress,
+      });
 
       await bot.editMessageText(
         `✅ <b>Sync complete!</b>\n\n` +
-          p.lines.join("\n") +
-          `\n\n📊 <b>Per-session students:</b>\n<code>${summary}</code>\n\n` +
+          res.lines.join("\n") +
+          `\n\n📊 <b>Per-session students:</b>\n<code>${res.perYear}</code>\n\n` +
           `<i>Bot is now serving updated sections. Students get their new sections on next check.</i>`,
-        { chat_id: p.chatId, message_id: p.msgId, parse_mode: "HTML" },
+        {
+          chat_id: chatId,
+          message_id: progress.message_id,
+          parse_mode: "HTML",
+        },
       );
     } catch (e: unknown) {
       const err = e as Error;
