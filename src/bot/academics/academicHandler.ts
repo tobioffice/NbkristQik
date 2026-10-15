@@ -24,6 +24,7 @@ import {
 import { ADMIN_ID } from "../../config/environmentals.js";
 import { logger } from "../../config/logger.js";
 import { trackActivity, ChatSurface } from "../../services/tracker.js";
+import { checkGroupUse } from "../groupLimit.js";
 import { WEBAPP_URL } from "../../constants/webapp.js";
 
 const getCachedMembership = async (userId: number): Promise<boolean> => {
@@ -132,6 +133,9 @@ const handleRollNumberMessage = async (msg: Message): Promise<void> => {
   const authorized = await isAuthorizedUser(userId, chatId);
   if (!authorized) return;
 
+  // group chats get 2 lifetime answers; past that, point the user to DM
+  if (!(await checkGroupUse(userId, chatId, msg.message_id))) return;
+
   trackActivity({
     userId,
     username: from.username,
@@ -232,6 +236,13 @@ const handleCallbackQuery = async (
       text: "❌ You need to be authorized first",
       show_alert: true,
     });
+    return;
+  }
+
+  // same group gate as the message flow; the redirect goes to the group,
+  // so just dismiss the spinner here
+  if (!(await checkGroupUse(userId, msg.chat.id, msg.message_id))) {
+    await bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
     return;
   }
 

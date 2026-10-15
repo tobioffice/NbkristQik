@@ -23,8 +23,9 @@ export const redisKeys = {
   reportGate: (userId: number | string) => `report:gate:${userId}`,
   /** Per-user report thread reply throttle (SET NX, 3 s) */
   reportThreadGate: (userId: number | string) => `report:thread:${userId}`,
+  /** Lifetime academic answers served in group chats: groupUses:{userId} */
+  groupUses: (userId: number | string) => `groupUses:${userId}`,
 } as const;
-
 /** SCAN patterns for the caches flushed after /syncdb */
 export const cacheFlushPatterns = [
   "student:*",

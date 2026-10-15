@@ -16,6 +16,7 @@ import { botSecurityHandler } from "../../middleware/security.js";
 import { ADMIN_ID, CHANNEL_ID } from "../../config/environmentals.js";
 import { logger } from "../../config/logger.js";
 import { trackMessage } from "../../services/tracker.js";
+import { checkGroupUse } from "../groupLimit.js";
 import { REGISTER_WEBAPP_URL } from "../../constants/webapp.js";
 
 const getCachedMembership = async (userId: number): Promise<boolean> => {
@@ -150,6 +151,9 @@ const handleRegisteredLookup = async (
   }
 
   if (!(await isAuthorizedUser(from.id, chatId))) return;
+
+  // group chats get 2 lifetime answers; past that, point the user to DM
+  if (!(await checkGroupUse(from.id, chatId, msg.message_id))) return;
 
   trackMessage(
     msg,
