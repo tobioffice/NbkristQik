@@ -3,12 +3,11 @@ type: reference
 title: REST API and Security
 description: Express API endpoints for the leaderboard, per-user rank lookup, profile registration, health, and status pages, with query validation, Redis response caching, Telegram initData verification, rate limiting, and configurable CORS.
 tags: [api, express, security, rate-limiting, telegram-auth]
-verified:
-  - by: openwiki/0.7.1
-    at: 2026-10-09T23:13:13.880Z
 sources:
   - id: openwiki-source-44d9bd7e30623f9a7e846be3
     resource: repo://src/api/profile.ts
+  - id: openwiki-source-e6a804e45d684c288e262327
+    resource: repo://src/api/report.ts
   - id: openwiki-source-a88078296dd210c623bc0e96
     resource: repo://src/api/resolveUser.ts
   - id: openwiki-source-714e0c91fd122c36f3217aa4
@@ -23,16 +22,19 @@ sources:
     resource: repo://src/services/tracker.ts
   - id: openwiki-source-0be99d3f1664956f03d52278
     resource: repo://src/services/uptime.ts
-generated: { by: "opencode", at: "2026-10-09T23:13:13.880Z" }
+generated: { by: "opencode", at: "2026-10-15T21:12:57.495Z" }
+verified:
+  - by: openwiki/0.7.2
+    at: 2026-10-15T21:12:57.495Z
 ---
 
 # REST API and Security
 
-The Express app in `src/api/server.ts` is created at module load and started from the bot process (`startServer`, `src/api/server.ts:264-272`). It serves the public leaderboard API consumed by the Telegram Web App, a per-user rank lookup, the optional profile/registration endpoints, an internal health probe, and the public status page data. Admin routes are mounted first (see [Admin Panel](admin-panel.md)); everything below runs through the shared security middleware.
+The Express app in `src/api/server.ts` is created at module load and started from the bot process (`startServer`, `src/api/server.ts:321`). It serves the public leaderboard API consumed by the Telegram Web App, a per-user rank lookup, the optional profile/registration endpoints, issue reports and their threads, an internal health probe, and the public status page data. Admin routes are mounted first (see [Admin Panel](admin-panel.md)); everything below runs through the shared security middleware.
 
 ## Middleware stack and trust model
 
-The app sets `trust proxy` to `1` (`src/api/server.ts:29`): it runs behind a single nginx hop on the production server, so `req.ip` and `express-rate-limit` see the real client IP rather than `127.0.0.1`.
+The app sets `trust proxy` to `1` (`src/api/server.ts:30`): it runs behind a single nginx hop on the production server, so `req.ip` and `express-rate-limit` see the real client IP rather than `127.0.0.1`.
 
 CORS allows the origins in `CORS_ORIGINS` (`src/config/environmentals.ts:26-30`), a comma-separated list defaulting to `https://tobioffice.github.io` — the GitHub Pages host of the web apps. Override it in `.env` for additional origins (e.g. a local dev origin).
 
@@ -60,9 +62,9 @@ Validation failures return `400 {success:false, error:"Validation failed", detai
 
 ### `GET /api/leaderboard`
 
-Paginated, filterable student statistics. Query parsing (`parseLeaderboardQuery`, `src/api/server.ts:69-85`) defaults `page=1`, `limit=50`, `sort=attendance`; the literal `all` for `year`/`branch`/`section` becomes `undefined`, and `search` is trimmed and capped at 20 chars.
+Paginated, filterable student statistics. Query parsing (`parseLeaderboardQuery`, `src/api/server.ts:91`) defaults `page=1`, `limit=50`, `sort=attendance`; the literal `all` for `year`/`branch`/`section` becomes `undefined`, and `search` is trimmed and capped at 20 chars.
 
-Responses are cached in Redis for 60 seconds per unique query key built via `redisKeys.leaderboard(...)` (`src/api/server.ts:87-110`). Cache read/write failures are logged and ignored — the endpoint still serves from Turso. Successful payload:
+Responses are cached in Redis for 60 seconds per unique query key built via `redisKeys.leaderboard(...)` (`leaderboardCacheKey`, `src/api/server.ts:108-125`). Cache read/write failures are logged and ignored — the endpoint still serves from the database. Successful payload:
 
 ```json
 { "success": true, "page": 1, "limit": 50, "total": 245, "data": [ { "roll_no": "…", "name": "…", "attendance_percentage": 95.5, "mid_marks_avg": 18.75, "rank": 1 } ] }
@@ -91,7 +93,7 @@ Ranks are computed by `getStudentRank` for both sorts in parallel; a `null` rank
 
 ### Profile / registration endpoints
 
-Mounted from `src/api/profile.ts` at `/api` (`src/api/server.ts:47-55`):
+Mounted from `src/api/profile.ts` at `/api` (`src/api/server.ts:56`):
 
 | Method | Path | Auth | Extra limit | Purpose |
 |---|---|---|---|---|
@@ -100,13 +102,26 @@ Mounted from `src/api/profile.ts` at `/api` (`src/api/server.ts:47-55`):
 
 Both endpoints use the same `resolveUserId` identity rules (initData in query or JSON body; dev shortcut outside production). Details and response shapes are in [Registration and Profile](../registration.md).
 
+### Issue reports and threads
+
+Mounted from `src/api/report.ts` (`src/api/server.ts:56`, `76-77`). Every route is identity-authenticated; the per-IP limits sit on top of per-user throttles in the service:
+
+| Method | Path | Extra limit | Purpose |
+|---|---|---|---|
+| `POST` | `/api/report` | 5 req / 15 min / IP (`reportWriteLimit`) | file an issue, returns its `QIK-####` id |
+| `GET` | `/api/myreports` | global | the caller's own issues with status and unread counts |
+| `GET` | `/api/thread/:issue` | 120 req / 15 min / IP (`threadLimit`) | one conversation (report + messages) |
+| `POST` | `/api/thread/:issue` | as above | a follow-up message; `410` once the issue is resolved |
+
+`threadLimit` is deliberately roomier than the report limit: threads are conversation-paced, and the tight per-user 3-second gate lives in the service. `/api/report` never matches `/api/thread`, so the two limits stay independent.
+
 ### `GET /health`
 
-Unrate-limited liveness probe (`src/api/server.ts:207-214`) returning `{status:"ok", timestamp, uptime, version:"1.0.0"}`. The uptime monitor probes this endpoint every 5 minutes.
+Unrate-limited liveness probe (`src/api/server.ts:237`) returning `{status:"ok", timestamp, uptime, version:"1.0.0"}`. The uptime monitor probes this endpoint every 5 minutes.
 
 ### `GET /api/status`
 
-Public status payload for the 90-day status page. It aggregates `getUptimeSummary` and `getUptimeDailyBuckets` per component, marks a component `up` when its last ping is younger than 15 minutes, and caches the assembled JSON **in memory** for 5 minutes (`STATUS_TTL_MS`, `src/api/server.ts:219-262`) because the underlying data changes only on the 5-minute probe. The static status page in `src/status/index.html` fetches this endpoint and renders 90 day-bars per component in IST.
+Public status payload for the 90-day status page. It aggregates `getUptimeSummary` and `getUptimeDailyBuckets` per component, marks a component `up` when its last ping is younger than 15 minutes, and caches the assembled JSON **in memory** for 5 minutes (`STATUS_TTL_MS`, `src/api/server.ts:276-319`) because the underlying data changes only on the 5-minute probe. The static status page in `src/status/index.html` fetches this endpoint and renders 90 day-bars per component in IST.
 
 ## Shared identity resolution
 
@@ -127,7 +142,9 @@ Public status payload for the 90-day status page. It aggregates `getUptimeSummar
 
 ## Uptime probing
 
-The monitor in `src/services/uptime.ts` probes four components on a 5-minute interval: `api` (the local `/health` endpoint), `turso` (`SELECT 1`), `redis` (PING via the shared client), and `portal` (an HTTP GET of the college portal base URL). Each component's heartbeats are recorded to Turso with status and latency; transitions between up and down DM the admin.
+The monitor in `src/services/uptime.ts` probes four components on a 5-minute interval (`INTERVAL_MS`, `src/services/uptime.ts:15`): `api` (the local `/health` endpoint), `turso` (a `SELECT 1` through the shared client), `redis` (PING via the shared client), and `portal` (an HTTP GET of the college portal base URL). Each component's heartbeats are recorded to the database with status and latency; transitions between up and down DM the admin.
+
+Note the `turso` component name is historical: the probe runs through the same client the app uses, so with an embedded database configured (`LOCAL_DB_URL`) it checks the local file, not Turso Cloud. Renaming it would split the existing heartbeat history, so the label stays.
 
 ## Related pages
 

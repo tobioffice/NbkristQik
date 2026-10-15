@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:addda0025439bd25da4f1d8276bea1e0fca28c6dc35c2473e6c43b487e183b39",
+  "pageVersion": "sha256:d3eba97c9bfdae34b53989821d479d0d01c9c3ebfaf764dcf749cd2f3afc042c",
   "claims": [
     {
       "id": "claim_995d939b0856440392aae1ce3347c7a3",
       "statement": "NbkristQik starts the Telegram bot and Express API in a single Node process from src/bot/index.ts, beginning bot polling only after database init, handler imports, and server startup.",
       "evidence": [
         {
-          "resource": "repo://src/bot/index.ts#L38-L85",
-          "version": "repo-lines-v1:sha256:c4bc2c8efc16d7d7dd02629e6850a36c7f61e3e6994b6811e943c69e0447fcee:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZmY3ZDEzMTA2NmM2MDE2NjU5Yjc0Y2UxMzc2NGI0OTAzMmIwNTI5OTIzOTNkZDhlMTUyMjFjZjhlNTAxNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3YjQ1MzEyOGRkNTU2MDFmMjg2MDg2NGM0OWM4OGY4ODE2NjM3MzliZDRkNzBiYzIwNmQ4YjZiYmQ4YWUzYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjNWI1MTVjZTBkOTFlZjNiYzg5YzgwNzZhYWNhYmE0YjRiYTEyYTk2NjRlM2E0ZTlhZDE2YTdkMmYzNzQ5MmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://src/bot/index.ts#L41-L79",
+          "version": "repo-lines-v1:sha256:c518ea46252fb79b97292658206aae040ad16ef27320c0b3c80f8f7569a081b5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZmY3ZDEzMTA2NmM2MDE2NjU5Yjc0Y2UxMzc2NGI0OTAzMmIwNTI5OTIzOTNkZDhlMTUyMjFjZjhlNTAxNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4ZDEwN2RhZjkzMzMzYTY5YzI4MTViNDBiZDgwZjg3OTU2NGJjZTFlMDU0MDNiOTY5M2NjY2QxNTAyODQ1NWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjNWI1MTVjZTBkOTFlZjNiYzg5YzgwNzZhYWNhYmE0YjRiYTEyYTk2NjRlM2E0ZTlhZDE2YTdkMmYzNzQ5MmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM3ZDMxZjM1YzRhNmIyZDVmMDQwNTIxODU1NTNjNmMwZDk0NWY0NjBkMjg1Yzc0NmViZjliM2JhOTQ3ZjYyNWUifQ"
         }
       ]
     },
@@ -57,8 +57,12 @@
       "statement": "Optional registration pins a default roll and unlocks the registered-only /attendance, /midmarks, and /bunk shortcut commands.",
       "evidence": [
         {
-          "resource": "repo://src/bot/commands/registered.ts",
-          "version": "repo-file-v1:sha256:134eb68084e1d2728a4e6ce4a34d020aa8bb3f29c89b9ad483d0420c17a58a1c"
+          "resource": "repo://src/bot/commands/registered.ts#L104-L129",
+          "version": "repo-lines-v1:sha256:397c75c4217c8f22dbefa93ad3915af819f3120643e53a95bf93cc073775d11a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyODEzMmJhZTY5NDg0MGY5MTQ4MGFhNzg5YzgwMDVkM2JiYWQ1NTVlMmVkOTdmODZlOThjNjFiMDEwNjQ5OTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkZDg3OWRhOTU2MGNmMzU4ZGRjMGE0OThmZmE0YTljZWE4YjJkYmNmYTU5NTIxOTMzMzlkYTg4NDE3OTYzYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllNTI0OGI1YTFkYWQ5ZDIxNzcyMmExMDdhNWY1NDNjNzVjNDFkM2Y5MjRjZmQwYTAwYmI4N2Q2M2E2OGI4MzkifQ"
+        },
+        {
+          "resource": "repo://src/bot/commands/registered.ts#L189-L191",
+          "version": "repo-lines-v1:sha256:52c368d236dece89d04a98f68b8a70b8435ed372859222ea66a0580674902b43:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODE1OTkyODcwZDg3MTMwMWVhNzY4NzdhNWMyYzNkYzQxZTYwMTBjMDEzMTVkNTZhOWE3ZjJmYzVmZjNjNTViMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDA2YzMwNDk0NzJhMjg5YWJlMWRmMGVhNTA3M2Q2YTVlNGE5MGE0OTY1NmQwY2VlOWNmMTZhY2Y2ZjU0YTRmMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzczYjBkYmUyMThjNzg1YjhhZjgwM2E4YmVkMGVlZWY1Nzc2ZTE1M2QzYWM5MWUzMWJjOWE5MmY1MmVhMjEwNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
         },
         {
           "resource": "repo://src/db/registration.model.ts",
@@ -71,8 +75,8 @@
       "statement": "The admin panel health view and status page are backed by multi-component uptime probes (api, turso, redis, portal) with admin alerts on status transitions.",
       "evidence": [
         {
-          "resource": "repo://src/services/uptime.ts#L90-L111",
-          "version": "repo-lines-v1:sha256:3f476c6e6e78ba9617f067f5690afc6aa7441e4da6e74f6ad62000f23afa1c7c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzYzVjNTE2ZjE1M2U0ZDVmNWQ2NmI3ZDc3NTZmMDg3YTQ0NzgwMzA4ZWE4Yjg4ZmM1NWQyNWEyOGExMDY4NDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmODgxNjE4MGZiZTUxMGY4MzM0OWUwMTM1Y2ViMmU2ZmZkYTkzNWQ5YjQ1NTQyNGJkNDE0OThjMmE4ZDYwNzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk2Y2ZhODYzNTI4ZGI4NTA0YzY4NWE1MmMzOTJlZTg1YTZmOTkxNmEyNTJjYWZmNjg0YmIwMzMwYzFiYzFiY2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM1YTJlNmRmYjA1ZGJjNWMzZTAwMmVjZTQzYzgxYmE1NWM4MjFjMzAyODcxMjQxZWEzY2YxYWQyNGUyZGYwODEifQ"
+          "resource": "repo://src/services/uptime.ts#L92-L124",
+          "version": "repo-lines-v1:sha256:8c5e4d366913d239422f1c762d52e471d26c84d5c461df484a9d3438f1597318:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiOWNjYzU4ZDI2NjdjZTY3NDdmMTVjNTUwZWM1MzAxMzM4ZGNmYjcwNjYyNTgyOTgxMzA5MTQ3Yjk0ZDU1YWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4YTM2MTBjNzE1Y2FkOTljNjc3MzI5ZTUwZjM0NDFhZmNhZDk3MjEzM2I2NzNiMDViZWI4NTE5N2Y0MWQxNjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlhODY0MDhjMDY2MTQyNzExM2ZkM2YwNmI1ZDljMzVhMTkwZmYxNGJlNmNjZDRkZDQwY2MwYzMzZmRmMGExOWQifQ"
         }
       ]
     },
@@ -81,7 +85,7 @@
       "statement": "Semester sync covers the portal's full academic branch list via the expanded BRANCHES map.",
       "evidence": [
         {
-          "resource": "repo://src/bot/syncdb.ts#L137-L137",
+          "resource": "repo://src/bot/syncdb.ts#L173-L173",
           "version": "repo-lines-v1:sha256:0cb1453641786b6e62d667094d19d0f520775336bc49a0a1c4ef29321266b02f:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGNiMTQ1MzY0MTc4NmI2ZTYyZDY2NzA5NGQxOWQwZjUyMDc3NTMzNmJjNDlhMGExYzRlZjI5MzIxMjY2YjAyZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMGNiMTQ1MzY0MTc4NmI2ZTYyZDY2NzA5NGQxOWQwZjUyMDc3NTMzNmJjNDlhMGExYzRlZjI5MzIxMjY2YjAyZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGJjZDAzOTY0ZTE5MDQwYTBlMTQ2YTYxYzIyNjU2MzVkZjlkNGYzZTEzNGM4OTY0N2YxNWRmZDAxOTM2YjJiMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODhmM2NhZDk1YjkwNzdlNTRmYzk0MDc3NmZmZGQ0MjllZGI4MGZjNjg0MTg5MzYzNWJiZDkyNTY0ZDgxZjRiNSJ9"
         },
         {
@@ -89,10 +93,44 @@
           "version": "repo-lines-v1:sha256:9b90028380a0b005b9eb6ccbaf092b9d6b75c813c7ca5d98f13ed21afd17e9df:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0YzllODEzM2JkYjcxYjM3NWY1ZTY1ZWNkYzkyZmQ5MGE1OTU3MWM5YmVhMTYxYjJlYWY4NTBhN2ViMTUyMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFlMDY4M2E5ZjExOTBiODFiMTAyYWY0OGI1NzA4ZTUzZTkyYzRjZWFlYTQwZDc3M2QzNjc4ZDczZjRkYzJmNjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
+    },
+    {
+      "id": "claim_22d0cd5b061c424c86223e95df1ccfef",
+      "statement": "Group chats get 2 academic answers per student for life via the group-use funnel, then a one-tap redirect to the bot's DM; private chats and the admin stay unlimited.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/groupLimit.ts",
+          "version": "repo-file-v1:sha256:dcd3d95a7ecc29efb2d9e3726cebe03a1e639608b85ed9e0408bf56d0ca95452"
+        }
+      ]
+    },
+    {
+      "id": "claim_3faad0a44aa640c08292dfcf24de8953",
+      "statement": "Students can file an issue via /report or the web form; each gets a QIK-#### id and a two-way thread, and the admin answers from the panel.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/commands/report.ts",
+          "version": "repo-file-v1:sha256:ef5ee63c4782018e62ef8ce00367e3986b9d813bcc83467ac4a0b9e029479901"
+        },
+        {
+          "resource": "repo://src/db/report.model.ts",
+          "version": "repo-file-v1:sha256:3e1c520acf5cb4e1b65892fc55120d04c0bbc254bd52a0e8cb830dff1170f4be"
+        }
+      ]
+    },
+    {
+      "id": "claim_51e4f2f853c5419c9bec9f844a48d692",
+      "statement": "The database is a single libSQL/SQLite store behind one shared client: an embedded file when LOCAL_DB_URL is set, otherwise Turso Cloud.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/db.ts#L13-L20",
+          "version": "repo-lines-v1:sha256:3e622b2c7c16c59459a21b741c7c86a9bcc74f646c11d10a60c8d6685f64aa12:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGUwNmMxYjc5ODAwNDE3Y2Y5NWE5MjBjZWUzODU3Mzc4NGI3YjM3NTk4YzY5NjVjYTQyNGM3M2RlZWQ3MjIxZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjJkMTFjYWY0M2U5N2VmMzY5ZTZiZWVkMWEyNjhiZDA1ODM4ZjI5YjlkZDI1NGJmNjliYTY0ODg0MTQ3MjM0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjE1MDQ3YTkzN2U2YTQ3ZmQxYTdmM2ZkZWEwNzY5MmQyNjZkZTBiZDY5MTNkYWY5YzZhZjMwODVjMTQ2YjlhMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
     }
   ],
   "verification": {
-    "by": "openwiki/0.7.1",
-    "at": "2026-10-09T23:13:13.880Z"
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-15T21:12:57.495Z"
   }
 }

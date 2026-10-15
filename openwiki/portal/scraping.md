@@ -20,10 +20,10 @@ sources:
     resource: repo://src/services/student.utils/parsers.ts
   - id: openwiki-source-b930379b15b9226a3c0602bc
     resource: repo://src/services/student.utils/portalSession.ts
-generated: { by: "opencode", at: "2026-10-09T23:13:13.880Z" }
+generated: { by: "opencode", at: "2026-10-15T21:12:57.495Z" }
 verified:
-  - by: openwiki/0.7.1
-    at: 2026-10-09T23:13:13.880Z
+  - by: openwiki/0.7.2
+    at: 2026-10-15T21:12:57.495Z
 ---
 
 # College Portal Scraping
@@ -39,7 +39,7 @@ The academic feature's data comes from the college's attendance and mid-marks po
 - `urls.attendance` — `/attendance/attendanceTillTodayReport.php`
 - `urls.midmarks` — `/mid_marks/marksConsolidateReport.php`
 
-`/syncdb` additionally uses `/attendance/attendanceTillADate.php` and `/attendance/getStudentName.php?q=` (`src/bot/syncdb.ts:32-35`).
+`/syncdb` additionally uses `/attendance/attendanceTillADate.php` and `/attendance/getStudentName.php?q=` (`src/bot/syncdb.ts:33-36`).
 
 Request headers (`headers(command)` in `src/constants/index.ts:18-35`) mimic a desktop browser, set the `Referer` to the matching report page, and start with an empty `Cookie` that the session layer fills in.
 
@@ -49,10 +49,10 @@ The portal authenticates via a PHP session cookie. Rather than parsing `Set-Cook
 
 - `sessionCookie` is module-level state in `portalSession.ts`.
 - `isSessionValid()` GETs the attendance page and checks for the marker `function selectHour(obj)` (`src/services/student.utils/portalSession.ts:28-46`).
-- `renewSession()` generates a fresh token, POSTs `username`/`password`/`captcha=` with a `Referer` to the login page, accepts statuses 200–302 without following redirects, and stores the new cookie. Failure throws `InvalidCredentialsError` (`src/services/student.utils/portalSession.ts:51-73`).
-- `getAcadYearForDate()` computes the academic year the portal expects, flipping in July, in IST (`Intl.DateTimeFormat` with `Asia/Kolkata`) (`src/services/student.utils/portalSession.ts:76-86`).
+- `renewSession()` generates a fresh token, POSTs `username`/`password`/`captcha=` with a `Referer` to the login page, accepts statuses 200–302 without following redirects, and stores the new cookie. Failure throws `InvalidCredentialsError` (`src/services/student.utils/portalSession.ts:51-76`).
+- `getAcadYearForDate()` computes the academic year the portal expects, flipping in July, in IST (`Intl.DateTimeFormat` with `Asia/Kolkata`) (`src/services/student.utils/portalSession.ts:79-89`).
 
-`/syncdb` performs its own login with the same token trick rather than sharing this session state (`loginToPortal`, `src/bot/syncdb.ts:76-95`).
+`/syncdb` performs its own login with the same token trick rather than sharing this session state (`loginToPortal`, `src/bot/syncdb.ts:113-132`).
 
 ## Request pipeline
 

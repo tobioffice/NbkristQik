@@ -1,14 +1,18 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:d33413093265b6b7fa86535b4638885d0d3efc071cc210788e02d8dff27aa5f6",
+  "pageVersion": "sha256:f0fd4a0fc3fa6db87eac13e32c015dabfdb79ac687185f7436628a661dc64b9d",
   "claims": [
     {
       "id": "claim_5e511cd255fd46348e8a4080651eb721",
-      "statement": "initDatabase is the single schema entry point, creating fallbackResponses, tgusers, studentsnew, botusers, activity_log, admin_sessions, registrations, student_stats, and uptime_log idempotently before handlers or API start.",
+      "statement": "initDatabase is the single schema entry point, creating twelve tables (fallbackResponses, tgusers, studentsnew, botusers, activity_log, admin_sessions, registrations, reports, report_messages, report_reads, student_stats, uptime_log) and their indexes idempotently before handlers or the API start, then running the idempotent report-thread backfill.",
       "evidence": [
         {
-          "resource": "repo://src/db/init.ts#L12-L86",
-          "version": "repo-lines-v1:sha256:c2d63ab8d6bc298773b9be8de9faf7ed421b59da4d9f1225a6b7fa455c79ebc2:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlMWE2NGE0YmEzYmFlZmM1ZTc2MmVjY2Y0ZGQwZDU5NDk4MmZlNWY2OWJiZTExYTAyNzIxZTUwZjVmMTUxMTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhYzlmNWNjN2RjN2YyOGRjMDgyMjIwYWMzMDM3NzQyZmZlNDkzNzNiZWI4MDM5ZDlkYzUzNGViZTU1ZGY4ODIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRkNjJlZjZhMDY2NmQ3YzA4Zjc5NzFhYWZhN2MyNWJkNzFjMmFjMDk4M2MzNjUxNzE3ZjI4ODIwNmFlNmRjNmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAifQ"
+          "resource": "repo://src/db/init.ts#L12-L133",
+          "version": "repo-lines-v1:sha256:81206e881ccb393ce80acbb41f3707f8d88bab27177712f470f211be649b3d4c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIyZTFhNjRhNGJhM2JhZWZjNWU3NjJlY2NmNGRkMGQ1OTQ5ODJmZTVmNjliYmUxMWEwMjcyMWU1MGY1ZjE1MTE0IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJhYTFkMWE2MzM5MDIyOWM3OTgzNDdlODNhMDQwNTQ0MWM5NDAwMDM1Mjg0YWQxNjhjMWJmNmNkZjFkNzBhMzcwIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI0ZDYyZWY2YTA2NjZkN2MwOGY3OTcxYWFmYTdjMjViZDcxYzJhYzA5ODNjMzY1MTcxN2YyODgyMDZhZTZkYzZkIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJkYjY5MjkwNzgwYmJmY2UxMTIwNzY4Nzc2ZTBkNjQxOWE5YTM2ZDIxYzdhZDdiY2ZkMTExMDE3Yjg5NTdkYjAwIn0"
+        },
+        {
+          "resource": "repo://src/db/init.ts#L141-L173",
+          "version": "repo-lines-v1:sha256:9da38234912932f3050d13cd7c1e72f085b2f1147daf39412ff8d685f366f817:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0MWZkODNkYjBhZGY0NTZhMGI1Zjc4ZjQ5NWUyN2Y0YTkzYmQ1OWI5ZGJkY2YwZTk5MmM2NGE3ZGExZTQyOTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMTgyOGM5MWFhNWQzMDNmZGMxNGFmYWM5Y2Q1YWM4NGY1OTFjMTY2MzdiYjYxZWM0ZTg5NTU4MzE1Zjk4NGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     },
@@ -82,11 +86,11 @@
     },
     {
       "id": "claim_905c32447cba41f895af12712e164d7a",
-      "statement": "uptime_log records component, status, latency_ms, and created_at, and four indexes exist: idx_activity_created, idx_activity_user, idx_studentsnew_filters, and idx_uptime_component_time.",
+      "statement": "uptime_log records component, status, latency_ms, and created_at; the schema also creates eight indexes — idx_report_messages, idx_activity_created, idx_activity_user, idx_reports_created, idx_reports_user, idx_reports_status, idx_studentsnew_filters, and idx_uptime_component_time.",
       "evidence": [
         {
-          "resource": "repo://src/db/init.ts#L78-L86",
-          "version": "repo-lines-v1:sha256:d028b604415b3a66ac2c4435d4066d61e0b1ea3536ba6f0cf4736158394ad8ab:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTVkOTlkN2RhNTgyNmY0OGNhZWFlODBhODZjNTZmZjc0MmYyYzFmMTA2ZjM1Yjg1ODc0MjBlOWIwZGIyYmVhMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmFjOWY1Y2M3ZGM3ZjI4ZGMwODIyMjBhYzMwMzc3NDJmZmU0OTM3M2JlYjgwMzlkOWRjNTM0ZWJlNTVkZjg4MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmY1MDNiY2M3M2QzZjY2M2ZjZTdlZTc4NDIwNzk5NGI2NTNlYWU4NzQ0ZDc4MGRiNGQ5YmE3Zjk0ZjU0MzczZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWExZDFhNjMzOTAyMjljNzk4MzQ3ZTgzYTA0MDU0NDFjOTQwMDAzNTI4NGFkMTY4YzFiZjZjZGYxZDcwYTM3MCJ9"
+          "resource": "repo://src/db/init.ts#L111-L128",
+          "version": "repo-lines-v1:sha256:056b137db8f824e358ad4160dcab0d9d4ab5d0815309aa7d4f7b94f2391d0611:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE1ZDk5ZDdkYTU4MjZmNDhjYWVhZTgwYTg2YzU2ZmY3NDJmMmMxZjEwNmYzNWI4NTg3NDIwZTliMGRiMmJlYTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1ZWYwMWJjMDhkYmMzYjYzZTRlNzVlYTNkMjZhNWI5NDE4OTE4NzdlMjdhZDg5MTMyOWM4NDExZDdkOGRjNGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYzMGI1MzE4MTBmMGEyZDYzNmU0ODVmNDU0Yzk3OWM3MGQ0MWYxMTNmN2YxNTZjZDVhNWY1NDQzNGQ4Nzc3NjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ4OGEzZjk4YzNlNjYxNmIxYTk2ZjIwNjA4ZjI3YTk0YTg4ZWNmOTdiNmZjYzdlYjIxM2U1NjA0OGNiMjFjYjkifQ"
         },
         {
           "resource": "repo://src/db/student_stats.model.ts#L275-L289",
@@ -103,7 +107,7 @@
           "version": "repo-lines-v1:sha256:8c93790517891a610ed66efe19d153fc4054957e5863c53e7047943a6d3b23bf:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGU3ZjdjM2I3ZDc2ZTBjMjYwNDdjZWNmOGQ3MWNhZDQyYjFmMmE0YjNlZjg4ZmY3ZjBmMTIxYTIxMzYyOTk1NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzQzM2RhNzM1ZWFmMTNiYWUyZjMxYjhkZDBhMTE2YmY2MWJlZDRhNzQ5NDkyOTNkZGFkYTg4ZmQxMTc3OTAyNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTc5ODk2ZDY0MzNlNWVmMjZmNWUxMjk0N2ExYmZjY2YyMDI5YWFmZWM2N2EzYjJhM2VhNTExNTc2NDc4MDUyOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjMxM2JhMzJhNDM3OThlZDYwNTA1YWRlNDNjOWJhMTI4ZWNlMmI1MDRmYTRlZTEzMzJjMjgzNzYwYjAzN2ViYyJ9"
         },
         {
-          "resource": "repo://src/services/uptime.ts#L128-L143",
+          "resource": "repo://src/services/uptime.ts#L168-L183",
           "version": "repo-lines-v1:sha256:1988d23aa579ddda4c01b790b4a46139f140d704d8150600d94155a037c2a494:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgwYzNlYjhhZTZjN2ZhYzQ3NDgxNGM4NDIxZDYzOThiODFlY2Q3NGEwMGQzNTNkYzM4NjY0MjM4YmEwMjE1MzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0ZTQyMDhjZDZmZmI4YzRhMzU0N2IyZjU0YWRhMTk5NzhjM2YzNjVlNzhmOTUwMmVmNTE0NWNkZDJhYTg1NDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2NGZiNzdlYjRjYTdmZDVkMDMwM2JlNzJkOTRiNzE3MTFhZGJkNGU0ODQ4ZWQyN2MxYWFkMWExYThhNzA1OGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI3ZTBkMTE0YzFjMTZlOTFhMGM2ZDU4MTk0Y2QwNGI3ZTA0OTIyZGI1N2RjZTE0ZmJjNDFmYWYxNzc5OTFkZWQifQ"
         }
       ]
@@ -141,14 +145,68 @@
           "version": "repo-lines-v1:sha256:686a6217bbfb3e87a08fe0acafd37cd923005dc52e7a4d29246b00ccb6e042c2:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODAxZmE2MTk1OGUyN2RiYWM4MGI0OTYwZmZjYzJlODU2Mjc2NjZmNDFlNDQ1N2NhNjExNjgyNTg0NjRiYjExOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmRmMjExZmIzNTVhY2EzZWFiZTQwYWViMTI1NGMyNzRlZTNiMWUyOWYxMzNkMGU3NjYyMWMxZTJmZmJkOGY0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWNkZjdiNzU0NjQyOTdmMmIwYzFmZjU1NjU1M2E1NGZlMjBhODQ0MzdiMWQzNmQ2MWE1NWFiOTJkNTllM2FjYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTgzNDYzNTkyZjYwZjNhZjJkNTFjMmE4ZjMyY2VmYzJmMWUyMzFjMTkwMWVjZTcxOTM4OTJjOGNjMGM3NDNkZiJ9"
         },
         {
-          "resource": "repo://src/services/uptime.ts#L51-L72",
+          "resource": "repo://src/services/uptime.ts#L56-L77",
           "version": "repo-lines-v1:sha256:fa627dfac6c8e9ce0367ebb2a5eb71a0720a12061655c38d1f104484cb8f0b1c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NjY1MzE4Nzg2YjcyNGI0N2Y5OTlhOWUzNTkzZmNkYTk0NGRlMWY2YjM5MzE5NGM0YjM3NjQ2YjI4ZmQwNDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYjJkMjk1YjQ2ZTg0Y2ZlY2I5YTFjMTVmMDBlYjdlZmE4YjAyZDViN2QwOTQ3N2RjODVhOGU0MTcyYzUzM2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgwMTkyOWY2YjQzNjNmYTE5YjRlODNmOWQ4MWVlZmFlZGRkOGE1NjkyMWFjYjc0YmY1OGY5NTliYTY1MzMwYTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU5MTEwMWViNTQ0ZTZjMjFhNTE2NjI2NzI0MTMzMTc2MjRiNjdlOGEyMmJlNTRkNzVlNDUyNjIwZDkwZDk5M2UifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6e164c1a25a5476786bfab97a0514654",
+      "statement": "With LOCAL_DB_URL set the shared client opens an embedded libSQL/SQLite file on the same box; unset it uses Turso Cloud via TURSO_DATABASE_URL/TURSO_AUTH_TOKEN. Every module imports that one client, so switching modes needs no code change.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/db.ts#L13-L20",
+          "version": "repo-lines-v1:sha256:3e622b2c7c16c59459a21b741c7c86a9bcc74f646c11d10a60c8d6685f64aa12:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGUwNmMxYjc5ODAwNDE3Y2Y5NWE5MjBjZWUzODU3Mzc4NGI3YjM3NTk4YzY5NjVjYTQyNGM3M2RlZWQ3MjIxZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjJkMTFjYWY0M2U5N2VmMzY5ZTZiZWVkMWEyNjhiZDA1ODM4ZjI5YjlkZDI1NGJmNjliYTY0ODg0MTQ3MjM0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjE1MDQ3YTkzN2U2YTQ3ZmQxYTdmM2ZkZWEwNzY5MmQyNjZkZTBiZDY5MTNkYWY5YzZhZjMwODVjMTQ2YjlhMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f2c3c7de2fff406f8916fda9665c31c0",
+      "statement": "reports holds the inbox head (status open/answered/resolved, latest admin reply), report_messages is a report's conversation with author user/admin, and report_reads tracks how far each side has read without ever moving a marker backwards.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/init.ts#L78-L110",
+          "version": "repo-lines-v1:sha256:ece386c934e83c5ce29adb5c8f500af2291395bf99c8fef3328cc01625512530:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgwMWZhNjE5NThlMjdkYmFjODBiNDk2MGZmY2MyZTg1NjI3NjY2ZjQxZTQ0NTdjYTYxMTY4MjU4NDY0YmIxMTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkZjIxMWZiMzU1YWNhM2VhYmU0MGFlYjEyNTRjMjc0ZWUzYjFlMjlmMTMzZDBlNzY2MjFjMWUyZmZiZDhmNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4NWNmMTI1NmEyNmYzYTFkNTkzYjc2YWNmOTE1ODIzMTM1ZmE1YjNjNTQ5MDBlOGI4NjBiZmVjYzRlYzAwODMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdmZDA3ZmMzNmI4MjIzMjFiOTIzNDc2NjNhZDg3ZTUxYzIzOTA5M2Y4YmQwMTgwNmFkZjU5OWEyMTQyOGIyZWYifQ"
+        },
+        {
+          "resource": "repo://src/db/report.model.ts",
+          "version": "repo-file-v1:sha256:3e1c520acf5cb4e1b65892fc55120d04c0bbc254bd52a0e8cb830dff1170f4be"
+        }
+      ]
+    },
+    {
+      "id": "claim_b0f08be9e01c424f96ce8eee944bd3d6",
+      "statement": "backfillReportThreads replays legacy opening messages and single admin replies into report_messages and seeds the student read marker, guarded by NOT EXISTS so it is a no-op after the first run.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/init.ts#L141-L173",
+          "version": "repo-lines-v1:sha256:9da38234912932f3050d13cd7c1e72f085b2f1147daf39412ff8d685f366f817:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0MWZkODNkYjBhZGY0NTZhMGI1Zjc4ZjQ5NWUyN2Y0YTkzYmQ1OWI5ZGJkY2YwZTk5MmM2NGE3ZGExZTQyOTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMTgyOGM5MWFhNWQzMDNmZGMxNGFmYWM5Y2Q1YWM4NGY1OTFjMTY2MzdiYjYxZWM0ZTg5NTU4MzE1Zjk4NGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_aacd5f0b57c043e0894bcc3fdde82164",
+      "statement": "scripts/backup-db.sh takes a nightly VACUUM INTO snapshot of the embedded database (safe under WAL), keeps the 7 newest archives, and best-effort copies the file to oracle2; a failed off-box copy warns but never fails the local backup.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/backup-db.sh#L1-L54",
+          "version": "repo-lines-v1:sha256:86a3b9bc58389d5d66b14709dbbc8cb37ae52ee9973d8702b71e1f03bf6dc4f0:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkOTVmYzA0YTgwYzk1MmY0OWNlNDE4ODYyN2M1M2IwZmJlOGM0NDA0MWI5NTJkNTkyYWNkMWRlOTk4NjE0NjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3OTViMTJlZjhjNmI3M2E5ZjJhZTBjNTQxOGZjMTAwZDllZDVkZjY5NDE0NjVlOTBlYTFiOWMzOTYyMjJhMmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ebac4e6d8a874a5a8542fa4abfea5191",
+      "statement": "scripts/import-turso-snapshot.mjs merges a Turso export idempotently: reports/report_messages are copied verbatim only while the local tables are empty, report_reads/registrations/tgusers/botusers use INSERT OR IGNORE, uptime_log rows are deduplicated, and student_stats, admin_sessions, and activity_log are deliberately skipped.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/import-turso-snapshot.mjs#L1-L36",
+          "version": "repo-lines-v1:sha256:da91de37bd8ead59e5baea1c29a54b8aef25e23f63ef9826aaa162193adfea95:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3MmE0MjkzODJiMmUxNDcxOGUwZTM3YjA1NzBhOGExNzAyOTkxZmNkODQ5OGNkODQwNjBhOGJmNGYwNTAxN2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUwYjlhYjRiZmVlYjc4NDE1NmRjZWMyYmEzOWMyOTRmM2E1NjIzNDExMmM5ZjMyNjlmNjBlMTI5NjE0NGQwMTUifQ"
         }
       ]
     }
   ],
   "verification": {
-    "by": "openwiki/0.7.1",
-    "at": "2026-10-09T23:13:13.880Z"
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-15T21:12:57.495Z"
   }
 }

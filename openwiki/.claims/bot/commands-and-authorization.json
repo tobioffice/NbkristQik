@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:c5660ab3cdffe30b6d235c5ca9d59c53ce7dfd5a8e31fd633bf3d02bc2e55007",
+  "pageVersion": "sha256:87c6e9923804a73ad74c1522d6f5026fd83ac69794aa268c38d9557029f750d3",
   "claims": [
     {
       "id": "claim_6b4f2174dc7445fb88ceca1b3f9775c7",
@@ -14,21 +14,25 @@
     },
     {
       "id": "claim_4a9ea68fca154a46b1297e4694015a76",
-      "statement": "/report without a message explains syntax, while /report with a message forwards the HTML-escaped report to ADMIN_ID and confirms to the user; an unset ADMIN_ID drops the report with a warning.",
+      "statement": "Bare /report opens the web issue form plus a My reports button (web_app buttons in private chats, URL buttons in groups); /report <message> validates 10-1000 characters, enforces a one-per-minute per-user gate, files the report through the report service which DMs the issue id, and confirms inline in groups.",
       "evidence": [
         {
-          "resource": "repo://src/bot/commands/report.ts#L10-L53",
-          "version": "repo-lines-v1:sha256:5136d3d525c6e6c35bb2fce230f7b059b32dc3e7d79f8a3b90968435ce05099a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkZGE4MmYxMzAzMWZjMTMzNDFmMzMwZWQwMTUxZDUxZWYxNDdjOWQxY2U4MjE4OTZmMjEzNzJlOGYwY2I3ZGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM0MmRmYzE1ZTcwZTcxNjU4MTE5MzhkZDY5NzdkODJiMjFjMjk2NDc3ZWQwN2I1OTI3Y2Q5OTBjYzU2MzE3NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://src/bot/commands/report.ts#L20-L46",
+          "version": "repo-lines-v1:sha256:d5a6c69e8f30f82b59469f9f4de9b75c50343585cba6fcc9e131e74961a9d6ed:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkZGE4MmYxMzAzMWZjMTMzNDFmMzMwZWQwMTUxZDUxZWYxNDdjOWQxY2U4MjE4OTZmMjEzNzJlOGYwY2I3ZGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5M2IxNDMxZjkzMjU1ZTVkZjUyMTUxN2E2OWE0MDA3MDU2NmU0MzBjYzcwNmIzMmJhMTU5YzFmZDM3OTc3YTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM5ZGI3MzAyMTRiZDMxYjZlMDkyMTM5Yzk1MmU1NjNkNWQyNTI1MjNkMGQ5OGNiYzQwNzEzNzkwY2QzNzg0OGEifQ"
+        },
+        {
+          "resource": "repo://src/bot/commands/report.ts#L48-L92",
+          "version": "repo-lines-v1:sha256:d51046597876983bb074f7abf3ada8c9c01c25e5c84a6fc73af7c4816d453ef2:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3MGViMjYxY2UzM2E5OTg1YTcwYzNmM2Y4MTY5M2ZhN2ZlZjc5MzAyOTcyYTViZTZkZjMwNzU1ZTZmN2RmMzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5MjUxNWI0NGYyMjFmMWI2NmVlODhiNzFlMjBlMTQwMjk3ZWJhZDY5Zjg2NGVkY2Q1NmZhODZlMmNiZDRiMmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     },
     {
       "id": "claim_dade604cc7fc41e48dd47af0b82dfc56",
-      "statement": "/start welcomes the user (with a special message for the unlocked deep-link), /help gives usage instructions including the registered shortcuts, and /leaderboard sends a button to the Web App leaderboard.",
+      "statement": "/start welcomes the user with a first-name greeting and asks for a roll number, /help gives usage instructions including the registered shortcuts and /report, and /leaderboard sends a button to the Web App leaderboard; the group funnel's ?start=fromgroup link lands on the plain welcome.",
       "evidence": [
         {
           "resource": "repo://src/bot/commands/help.ts",
-          "version": "repo-file-v1:sha256:403b0da8b9e57edb4d7cddc051be9859f7b5739f50890baa40df9d8439432ec0"
+          "version": "repo-file-v1:sha256:73f740d6ed5c9bca67792c2e3b648709ede717597cc03854757b2e17afadeeba"
         },
         {
           "resource": "repo://src/bot/commands/leaderboard.ts",
@@ -36,31 +40,31 @@
         },
         {
           "resource": "repo://src/bot/commands/start.ts",
-          "version": "repo-file-v1:sha256:eb70ea15089ff24f19a4c812f75b36e36c616fa6e448c2a4f728b935eb60e6a8"
+          "version": "repo-file-v1:sha256:ee4a4c713f94c75c88e78503e3ef8460f23e7eb021076c00243b2b41eee3ed91"
         }
       ]
     },
     {
       "id": "claim_25d46f06f0934f3190e70a6fc1d98f83",
-      "statement": "Admin commands /setsem, /syncdb, and /postcheckin check msg.from.id against ADMIN_ID and silently return for non-admins.",
+      "statement": "Admin commands /setsem and /syncdb check msg.from.id against ADMIN_ID and silently return for non-admins.",
       "evidence": [
         {
-          "resource": "repo://src/bot/dailyCheckIn.ts#L104-L106",
-          "version": "repo-lines-v1:sha256:50073d3aa5b46d1647bb7dd2238c9862f5555244c3ce921ed7bb5e540ea65710:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWU5NmM3YzBmMzUyMWZjMWRmMWE5NzEyNTEwMGI3ZTMyZDE5ZGNlZWRmZTJjNzJiMGExMzI2ZmZmYWUxMmQ0OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODY4NDkwODYwMmMyMTY0MzE4YzQ0ZGZlZWY1N2IxYzEyNGViMDY1NDVhYjE2Yzk1ZjIyMjc4NzFlNWVhY2EyYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDBjZTkyYzEzM2M3MGZhYTEwNWIwOTJiYjgwYTEwZDg4YmY2YjYyNjMyNzEwNDAxYzRkZTA0YTBlYjZjODRiOSJ9"
+          "resource": "repo://src/bot/syncdb.ts#L461-L462",
+          "version": "repo-lines-v1:sha256:64e435372d690d604d0bab3980fed4c80c7c7fa1d9482f0471a48c4a915e706b:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTk1NGM4Y2VmMDYwMjhjOWFiNzAwN2FiNzk5ZmFjZmRmM2JkZTZhNWNhMTdjNWEzZDJhOTI2ZjU3MWMwNmFhMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODM1NTU4MzI0OWJmNjAyZTA4ODgzMGFmNDE3MjkzYjZmY2YzMGQwZWQ2NmUzMTViNGVkY2U0ZmY2YjEwNjY1ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmE0ZGIwMzViYmZjNTg3MTBlZDBjZDIzZTNkMzIzNDg1YjlmMGQzMTdmN2IyZDVlZTJlMzE2YzFjMTQ0MDRmMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTc1YzNiOWQwZTkxMzY1M2I4MDFmNDcxYmZjYWZmOWRjMGQ5ZjVlNzcyMTNjYjg3NTc0YjhkNjgzMWVmMmE2MiJ9"
         },
         {
-          "resource": "repo://src/bot/syncdb.ts#L337-L388",
-          "version": "repo-lines-v1:sha256:ac4a14aada7655247d5f8b1e83a3f927b1148889b6676478d67f72e68cdbb6af:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NTRjOGNlZjA2MDI4YzlhYjcwMDdhYjc5OWZhY2ZkZjNiZGU2YTVjYTE3YzVhM2QyYTkyNmY1NzFjMDZhYTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViMTM5YTE2MGRkOWI2ZmMyMmMzYjMxNzZjYTEwNzhhZGFlODFlZjhiZjk5NTZkYjVhMzY5YzRhOGZhMGYzMzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZhNGRiMDM1YmJmYzU4NzEwZWQwY2QyM2UzZDMyMzQ4NWI5ZjBkMzE3ZjdiMmQ1ZWUyZTMxNmMxYzE0NDA0ZjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRlOWU0MGEyZTI1ZDY0NjhmYjNkNzlhYzM5ZGI1MzA1MDZkYmUzMWU1ZTA2OWMzMWFjOTEwN2FmZjEyNTE1ZDYifQ"
+          "resource": "repo://src/bot/syncdb.ts#L490-L491",
+          "version": "repo-lines-v1:sha256:19c3bb3c7d695cfe502c51365671ad8b639b83dd67a4990c2911f06cb25278d0:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDUyY2Q0ZmYzOWRlNjYzZGY3M2QxMWE2MTQ3MjhjYWNkNGYzNGRhNzliNWEzODBmNTU3M2Q0YWE5NGE4ZTcyOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODM1NTU4MzI0OWJmNjAyZTA4ODgzMGFmNDE3MjkzYjZmY2YzMGQwZWQ2NmUzMTViNGVkY2U0ZmY2YjEwNjY1ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2U0MDhmOWYyZmQ0N2FlNWFjYWYyMGIyNGU5ZjRlZTJkMzJlYWEwYmVmMzIxN2UwN2Q2NGE2OWY1NWNkNGVmOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2I1MmVmM2NkYmVhNTk4NGJkNDFiMWYwN2MyODY1YmU4MjA0ZmUxMzA5MzUxOGIwNDEwOGE4MGY5ODNkOWQ2NCJ9"
         }
       ]
     },
     {
       "id": "claim_95e14f61648743179e6799f98dc317fd",
-      "statement": "isAuthorizedUser checks in order: admin bypass, Redis-cached membership (degrading on Redis failure), live channel membership (treating check errors as allow), a join-channel prompt for non-members outside PROTECTED_CHAT_ID, then the daily check-in gate.",
+      "statement": "isAuthorizedUser checks in order: admin bypass, Redis-cached membership (degrading on Redis failure), live channel membership (treating check errors as allow), a join-channel prompt for non-members outside PROTECTED_CHAT_ID, then adds the user to the broadcast set; the group-use gate is applied separately by each entry point.",
       "evidence": [
         {
-          "resource": "repo://src/bot/academics/academicHandler.ts#L40-L90",
-          "version": "repo-lines-v1:sha256:410a07b6efdbd1c33060d437529036b93092c19e456077eeb9d7d502172ddb8d:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkZDgyYjliNjZlZGNkMDQ0NDUxYzY5MDRhMjJlNDk0NGRkNDhjZWFjOGUxOGQ3MWZkZGQyZjFjMzlmMmM4MzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjY2U2OTA3YzBmMDNiN2NmZDZjNTBhZDJmM2QyMDU3NzcwY2RmZTAyZDY4MWUwMDhlNGMxOGE1ZWE1Mjc5OGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNhZmRlZjhlOTkyNzI1ZjI2MTg5OWJjZmM3OTUyMzU5YjJjYTViYTk3MzY1ZDczZTMyMDRhNzEwYTA4ZDdkYjYifQ"
+          "resource": "repo://src/bot/academics/academicHandler.ts#L41-L73",
+          "version": "repo-lines-v1:sha256:88314d6f31df8542fb2603a9d6218a369ac8bb30ebb4e587a641f1fc4eba6ba5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjYTI1MjBhMDEyZjBkNDBkOTM5MmUyOWVlY2UzODVhMjdkYTlhNDlhZGI1NTAwOWE5YmI0OWZmYTBiMjBkNWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk2NDNiMWUyNTZmYmEwZTExYmMxZjZhOGJjODdmNjU5ZjA2ZmEwYzQxNjA1MmRmNzkwYzE3ODE3ODNlMzE3NjUifQ"
         }
       ]
     },
@@ -79,8 +83,8 @@
       "statement": "Authorized user IDs are added to the qik:users Redis set best-effort, with failures logged and never blocking the reply.",
       "evidence": [
         {
-          "resource": "repo://src/bot/academics/academicHandler.ts#L67-L73",
-          "version": "repo-lines-v1:sha256:f4d33ee33fdff9bb1172ff0217b991966d2f7cedee8dc842363de3435dcec1bb:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2ZjM2M3MzdkZThjMmFiOThkOWU3Y2Y2NTIyOTUyYjcxMDdkNTg1ODAwY2VkZDk5YjQ2YmEyOWU3MmI5NjY3YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDk1YjhjNWJmODYzNzQzNjcxZGVmM2Y2MzBlYjIzMmQ1OWE3YTYzNGEwNzBmYzQzNmVlYzM3YTg2NzRlNmMzMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTZjMzdhMmFmNWE3N2E2ZjY3MDFjNDIyYTMyNzQ4OWQ3NDM5MjY1ZGZlNWQ1MzVkZjBmMDQzOWRlZGZmZTdmNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTM4NmZjNmI3Y2VhODAyZDY0YmFjMTU0ZDlkMGQwY2MxMzRlYTIzMDM3MDYwMDllOWI2NWNlZWEwYzg5ZTc3NCJ9"
+          "resource": "repo://src/bot/academics/academicHandler.ts#L65-L71",
+          "version": "repo-lines-v1:sha256:d8943c30514bb9422684c4ecaf67583a3dd1b7945d48fede922430c7eb19e179:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDYzMjcxNDBlN2UyYmUyOTc1MzE5ZDYzNjAzMjVkNjEwN2E3ZTIzNmE5N2UwNTQxOTk0N2JhYTM4OTRlOTZlNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzYwNzE1ZjY1ZWE5MzcxMDExNzUwYzg4ODQ0MzYyOWJhZWIzNmM3NjllNDA0ZDQ5YzQyM2ZkNWJmM2M1Nzc2NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWViYjliOTZjNWNmN2EyZDJhYTEyYTc1MThlM2QxZjg5MTJiZDU1MjNhNjczYzVjZDA4OWQ0YjVlYTU5MjdlMCJ9"
         }
       ]
     },
@@ -99,22 +103,8 @@
       "statement": "Chit-chat roll messages are deleted and replaced with a 15-second self-deleting notice, and chit-chat callbacks get a show-alert answer.",
       "evidence": [
         {
-          "resource": "repo://src/bot/academics/academicHandler.ts#L167-L208",
+          "resource": "repo://src/bot/academics/academicHandler.ts#L152-L193",
           "version": "repo-lines-v1:sha256:bcbd213d96fbc916504de2957e80e1373e4eebb4e33cf970fa535370bf5e28f7:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3NWI0OWY0YzM3ZDgzOTcyNzkxN2E4NWM5OWQ3Zjk2ZDFmZWJjMWNmYWVlNWM2OGI4Nzc5YjAzYWE0MWY4MWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQxOGU2NDZhYjQzYWM3NWRjOTliYmI3MjBhMWNiMWI2ZDhmYzZkZDFkM2ZhOWFiZjA4OGY1ZDFiMDdlZTYyYzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyMzRjNDBmMDE4ZDZjNDBjNmFlZTM0ODVlYzUzY2E4N2IyNDdlN2U4MjkwMjg0MTJiODE5YjIxOGY5OWRiN2YifQ"
-        }
-      ]
-    },
-    {
-      "id": "claim_26efff710b1d485cbf40da02ae725fc1",
-      "statement": "The dailycheck callback is owned by dailyCheckIn.ts and explicitly ignored by the academic callback handler.",
-      "evidence": [
-        {
-          "resource": "repo://src/bot/academics/academicHandler.ts#L236-L238",
-          "version": "repo-lines-v1:sha256:df945e9fe98e9c71adcbfc9146ce630fca5d262e572b2e1ab9550d7380cb20f7:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGRiY2IyMjQxNjE0MzdjYjM0OGQ0NjM4ODcxYWFhNzgxNDFiOTY0ZThhZmYyNjgzYThiNmExMjg1ZGMyYzYwZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTUxYmI5NTViMWQ1NTY1Yzc1NTJiMzY4YzZjN2ZiZWRkM2U3ZWI5NzY5MjFjMjAzYzQzYjlkMWE3MWJhNmI0NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzZlNTFlMGQwMDhmMTZjN2EyYjcwMDJlOGJjNDY1NDg3YWUyZjVhMzNiMDhmNzNmNTM1ZDAwYmYyOGI4N2ZlMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2YxNjFjNThjODEzMGJhZDU5YTM2Yjg0Y2Y2MDc2MThhMDY4ODgzZGI1MjQzMTNjYWEwNTdiY2YzZmRlZDg2YiJ9"
-        },
-        {
-          "resource": "repo://src/bot/dailyCheckIn.ts#L126-L129",
-          "version": "repo-lines-v1:sha256:4fc9c1894e5bb1fac059a5fd73214b31f7a3eb3e1b31618e074f2932fc09263a:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTM0Y2EyNzhkZmUyNDMyY2UxMDhlNDRlOWJlNzIxN2ZkMDY4MTVmY2Q2OTQ1ZGE3ZTFhMDY5ODAyNWZhNDQ4YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWIxZWExNWEwZjdiMWQ3NzQxYzA5MmRlODAyZDM5ZmRhNDQzNGVjZjA1Zjk0MzU4YzZmMzY5Y2E5MTE2ZTIyZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGZhNjc5YzU1YjZiODIwZmVjNmJmMGIxYTY0MmI0MTc3NmQ0ZmY3ZDhhMWVkMzdlYTA1NmRkZWU5MmE4MjkwOCJ9"
         }
       ]
     },
@@ -123,24 +113,70 @@
       "statement": "/attendance, /midmarks, and /bunk are registered-only shortcuts: they resolve the caller's registered roll via resolveRegisteredRoll, prompt with a register web_app button when absent, and refresh the tgusers mapping on success.",
       "evidence": [
         {
-          "resource": "repo://src/bot/commands/registered.ts#L88-L145",
-          "version": "repo-lines-v1:sha256:a68786c44039308aaf706930c68b1c1c045227bcc290ff5f1de56b51d0ee9a05:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5NzhlMjUwM2I4Y2YzN2EwNmY3ZDZmMGEzYTZiNmZlMzU2OTFmYmNhYjUwYjg3NzVjYWI2ZmFiYzcxYzU5MmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY5MzZkNmY1Yzg0NzFiYjgxYTBkMjU2N2QwYzI4YWY5MzlkNWNmZjIwZDU3NDUzODliOWY5M2ExNGU4OTY5M2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllNTI0OGI1YTFkYWQ5ZDIxNzcyMmExMDdhNWY1NDNjNzVjNDFkM2Y5MjRjZmQwYTAwYmI4N2Q2M2E2OGI4MzkifQ"
+          "resource": "repo://src/bot/commands/registered.ts#L104-L129",
+          "version": "repo-lines-v1:sha256:397c75c4217c8f22dbefa93ad3915af819f3120643e53a95bf93cc073775d11a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyODEzMmJhZTY5NDg0MGY5MTQ4MGFhNzg5YzgwMDVkM2JiYWQ1NTVlMmVkOTdmODZlOThjNjFiMDEwNjQ5OTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkZDg3OWRhOTU2MGNmMzU4ZGRjMGE0OThmZmE0YTljZWE4YjJkYmNmYTU5NTIxOTMzMzlkYTg4NDE3OTYzYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllNTI0OGI1YTFkYWQ5ZDIxNzcyMmExMDdhNWY1NDNjNzVjNDFkM2Y5MjRjZmQwYTAwYmI4N2Q2M2E2OGI4MzkifQ"
+        },
+        {
+          "resource": "repo://src/bot/commands/registered.ts#L131-L175",
+          "version": "repo-lines-v1:sha256:4d7e58c51e4f5a2248f39a63ab69763fd08671e251bdebdbd179b8176b5c8af0:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyODUxMDA2NzllNDEyMGZkZDdhODYzYjE5MjMxODk3OTZiMzMwYmJlNzY4YjBkZDUyYjJlYjljOGI2N2E3ZTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlY2ViYjc5MmU4YWNlYzJlNzFmNTE4Y2M4MDFhMTA1OTIxYTdlZDI1MjBkYTBkYjc1OGE2NDhhYjA4MGQ2OGEifQ"
         }
       ]
     },
     {
       "id": "claim_e8c0ad23764e476a8d0dda9880cae4c0",
-      "statement": "Registered shortcut commands reuse the same rate limit, channel membership, and daily check-in gates as the roll-number flow, and stay silent in the chit-chat group.",
+      "statement": "Registered shortcut commands reuse the same rate limit, channel membership, and group-use gates as the roll-number flow, and stay silent in the chit-chat group.",
       "evidence": [
         {
-          "resource": "repo://src/bot/commands/registered.ts#L112-L140",
-          "version": "repo-lines-v1:sha256:a04152b60266ed2f75a7e965c92a52b23fe65eca315def82dac4378bb327464f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0YWYzMjZiOTRiYjc0M2UwMzY3ZTFmMjZlNzc4OTdiMTI3ZWFlN2RkNDE5NWQ3MDg3ZmI0ZTA3Yjg4Y2FhZTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2NTZlOGI5YTg1NGE3NGM4ODIyZGU4OWJlYmUyYTUyZjdkOTllZTgxZjFkM2VhNGQ1OTAzOGY4MTA5MmI1MGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhlOTEyMGI5NzlhNGJhZGYzZWE0ZTIwZGQyNTUyNmM4YjViMGFiOGFmOTA2ZjUyZDhiYmYwODNiZGRiNTQ5OGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhYTZhM2YwM2U1Zjk3YWI3NjVmMzg1Nzk0NDYzN2Q0ODViMDVmMzdiOGIzN2JiN2U4ODllMzRkYWFhMWI5M2QifQ"
+          "resource": "repo://src/bot/commands/registered.ts#L139-L156",
+          "version": "repo-lines-v1:sha256:c32e5b1a57536471efc0b844afa478fdc96d51ca217bda3bd3da4096bdcc73b8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNhMjQ2YTc4OGI5ODU1Y2Q5NTYzNzA0NjgwZTg4ODdjZGNlMmM5MzIyN2UxNGQ0MjZmOTU1ZmRjOTJlMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1OWQxMGZiNWFjY2YwYTA5MmMzOWU4ZGM3MzQ2NzBhNjlkOTcxNGZiOGUwYmU0MzEzOTMxMmM2ZmVjMjc5ZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyNjI5OTg0MjExMGVlOTdlN2FiNzNlMzgwYzVjZjAzOGY1YmIwZDFmOGI4Y2U4YmJiODVhYmRkNGU5M2Q3MGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRiYWYxMjk3YWUyNTA2NjZhNzM3MThlNTE5NmM4OWUxMGRlMGMxMGRiNTIxZmQwMzgzZTEyNjg0NWIxOTNmZjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5b9fae94489b4efcb5cd5562ad696ec6",
+      "statement": "checkGroupUse gives each user 2 academic answers for life in group chats via an atomic INCR on groupUses:{userId}; private chats and the admin bypass, Redis failures fail open, and the counter is deliberately not in cacheFlushPatterns so /syncdb never resets it.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/groupLimit.ts",
+          "version": "repo-file-v1:sha256:dcd3d95a7ecc29efb2d9e3726cebe03a1e639608b85ed9e0408bf56d0ca95452"
+        },
+        {
+          "resource": "repo://src/services/redis/keys.ts#L27-L35",
+          "version": "repo-lines-v1:sha256:afe6d17ed01e909fd47fd62a64c8c6d5ec7880a3b752bde317cfe233ce5887c3:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjE3YjE1YzJhZDMwMDE2Nzk1ZjE1YjM5ZWNmY2FiYzIwYzFmY2I1OTQ3NjUzZDk0ZjA5MDRmMzc3ODE5ZTYyZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmNkYzc2ZDEyZTUzMDRkMzA3OWVkYjVmODkwMDA3ZWEwNWYyMjZlNGQ5M2I2OTU2ODQ2MGNhZmFmODAwNzQ0YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODVmMTc1NDRkMmU0YjViODM5MmQxNDQ0OWZiODFhMGEwMWI5NDlhNGZmNmQwNDFjZmI3OTUyMDA5MThhMDQ3ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_fb329a70ac53473089ce2ee0c5758dbc",
+      "statement": "When the group limit is reached the bot replies with the discussion note and a one-tap deep-link button to the bot's DM (start=fromgroup), quoting the triggering message when one was given, and the request stops.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/groupLimit.ts#L43-L57",
+          "version": "repo-lines-v1:sha256:a5fa99114c68c7611d95711fb8d52a21b3bc9fada1a441ab93450dfe7cd32460:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2Mjg1YTUzZTdiZWJlNWNhNGNkYzEyNGNlYjJiZTc0OTVlN2JkZWZjYWFjMWEzYzBkNmE5MmU0ZWFiMDc2MmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRiOWQ2OThkODllMjJiNzg4NDk5MjcxM2RkOGVhOGE1OGQzNjdjNWUzNDJlNTdjM2Q2YmUzYTE5MDg5NWZmNGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM4MmE4M2IwZjQ1ODk3YWNjODQ0ODRlMzVlYmRlYTZhYzI2NmVjMzNjYzE3NTU0MzQ5MWRiYjE4MTJjZWUyNzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c8f59793772d41308e91064c02c9b58b",
+      "statement": "The group-use gate runs after authorization at all three academic entry points: roll-number messages, inline-menu callbacks (blocked taps just dismiss the spinner), and registered shortcuts; a roll message consumes one of the 2 uses.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/academics/academicHandler.ts#L136-L137",
+          "version": "repo-lines-v1:sha256:beccbfb622013ef263144c68af07d9498bfaf6c8316268501ef784c975b561f5:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2EyNGJmZWRiMTJmYmVkOWE0YjVkMDQwNTMxMWQ3NmU5NTU5ODk1Y2VkMjhlMzIwNzQ3Nzg1MDU2NTJkMDUwZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGIzMTdiZmM0ZjYwYzZmOGIwODgwODRiMDQ2NjBmMTVjZTVjOTM4M2MxNTgxMGJiNGM3NjRlODJjOTM1NjA5MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmRlODRmYTAzNTQ0MDQ0ZjBiM2EyNjE2YmIyY2NiZGQzNzFmOGRiZDQ3YTYwNDRiNTg4ZWNhMWJiZGY2MWI0NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjhjMDNhN2JjMjlkYTQ4YjA0NTU1Y2FhMGI4NGY0NDYwM2M2MWY2NWQwMDY2ZWQwNzkxOTVhZWE1YTQzYzQ4OCJ9"
+        },
+        {
+          "resource": "repo://src/bot/academics/academicHandler.ts#L242-L247",
+          "version": "repo-lines-v1:sha256:3ea11b5946b74a7b6d4f7a22664e279b411a00594d45b7180cd7461aef9f5821:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmI5Nzc1NmZmZTY2NGY5MzU3ZmFkZmNlZDI3Yjg2NmI3MmRlNzNiNDU5YjY1OWFjMDU4ZTgwZTY0MzFlM2ZhZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzZlNTFlMGQwMDhmMTZjN2EyYjcwMDJlOGJjNDY1NDg3YWUyZjVhMzNiMDhmNzNmNTM1ZDAwYmYyOGI4N2ZlMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmRmMjljYzJjN2U3MTQwODFiMWEzNzgxODA3OTBkYTc2YTViOTE3ZjQwNmY4YTc3MGMwYmNmMDc4ODU4ZjhlNyJ9"
+        },
+        {
+          "resource": "repo://src/bot/commands/registered.ts#L155-L156",
+          "version": "repo-lines-v1:sha256:affa885a2793f2c52b78fd66f1b640252c913873860dd687cc9b228b16f51a98:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2EyNGJmZWRiMTJmYmVkOWE0YjVkMDQwNTMxMWQ3NmU5NTU5ODk1Y2VkMjhlMzIwNzQ3Nzg1MDU2NTJkMDUwZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjU5ZDEwZmI1YWNjZjBhMDkyYzM5ZThkYzczNDY3MGE2OWQ5NzE0ZmI4ZTBiZTQzMTM5MzEyYzZmZWMyNzlkMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGRmYmI4N2QzZjdmMTg3ZDAwMDQ4ODk4YjJkM2IxOTVjODgxMGZkNzFlNDk2MjU4YmQzNTYxMmE3ZTg1MTlkNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGJhZjEyOTdhZTI1MDY2NmE3MzcxOGU1MTk2Yzg5ZTEwZGUwYzEwZGI1MjFmZDAzODNlMTI2ODQ1YjE5M2ZmMiJ9"
         }
       ]
     }
   ],
   "verification": {
-    "by": "openwiki/0.7.1",
-    "at": "2026-10-09T23:13:13.880Z"
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-15T21:12:57.495Z"
   }
 }

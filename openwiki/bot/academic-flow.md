@@ -3,14 +3,13 @@ type: workflow
 title: Academic Data Flow
 description: End-to-end trace of a roll-number lookup — validation, rate limiting, authorization, inline keyboard callbacks, the placeholder-then-edit reply pattern, and the student.service to AcademicTG to Academic chain that formats attendance, mid-marks, and bunk plans.
 tags: [telegram, workflow, attendance, midmarks, callbacks]
-verified:
-  - by: openwiki/0.7.1
-    at: 2026-10-09T23:13:13.880Z
 sources:
   - id: openwiki-source-04d02aea694a5ea720fe8290
     resource: repo://src/bot/academics/academicHandler.ts
   - id: openwiki-source-b454a8130fe1b59fd2ff52ab
     resource: repo://src/bot/academics/studentActions.ts
+  - id: openwiki-source-1248f2bddeea767a108637ab
+    resource: repo://src/bot/groupLimit.ts
   - id: openwiki-source-f3a065ecee23ee5a53fe9d83
     resource: repo://src/constants/index.ts
   - id: openwiki-source-4716507514d96417fd36a7bf
@@ -21,7 +20,10 @@ sources:
     resource: repo://src/services/student.utils/AcademicTG.ts
   - id: openwiki-source-9b164d771bbcef79db2bdcd4
     resource: repo://src/services/student.utils/formatters.ts
-generated: { by: "opencode", at: "2026-10-09T23:13:13.880Z" }
+generated: { by: "opencode", at: "2026-10-15T21:12:57.495Z" }
+verified:
+  - by: openwiki/0.7.2
+    at: 2026-10-15T21:12:57.495Z
 ---
 
 # Academic Data Flow
@@ -30,34 +32,35 @@ This page traces the primary user journey: a student sends their roll number, ta
 
 ## Roll-number message handling
 
-`bot.onText(ROLL_REGEX, …)` (`src/bot/academics/academicHandler.ts:183-197`) routes every text message matching the roll-number pattern. In the chit-chat group the message is deleted and a self-deleting notice is sent instead (`handleChitChatRoll`, `src/bot/academics/academicHandler.ts:167-181`). Otherwise `handleRollNumberMessage` (`src/bot/academics/academicHandler.ts:123-164`) runs in this order:
+`bot.onText(ROLL_REGEX, …)` (`src/bot/academics/academicHandler.ts:164`) routes every text message matching the roll-number pattern. In the chit-chat group the message is deleted and a self-deleting notice is sent instead (`handleChitChatRoll`, `src/bot/academics/academicHandler.ts:148-162`). Otherwise `handleRollNumberMessage` (`src/bot/academics/academicHandler.ts:104`) runs in this order:
 
 1. **Persist the userId→roll mapping** — `persistRollMapping` fire-and-forgets an upsert into `tgusers` (used later by "You are #N" on the web leaderboard); failures are swallowed.
 2. **Rate limit** — `botSecurityHandler(userId, "roll_number")` allows 10 requests per user per minute; over the limit the user gets a "Too many requests!" message (`src/middleware/security.ts`).
 3. **Validate format** — `isValidRollNumber` applies `ROLL_REGEX` (`/^\d{2}[a-zA-Z0-9]{2}[a-zA-Z0-9]{6}$/`) from `src/constants/index.ts`, shared between the bot and the API's security middleware. Invalid input gets a format warning and stops.
-4. **Authorize** — `isAuthorizedUser(userId, chatId)`; on failure it has already sent the appropriate prompt (join channel or daily check-in) and the handler returns.
-5. **Track** — `trackActivity` records a `roll_lookup` action with the roll number as detail.
-6. **Reply with options** — `sendRollOptions` sends an inline keyboard with `Attendance 🚀`, `Mid Marks 📊`, `Bunk Plan 🎯`, and a leaderboard URL button (`src/bot/academics/academicHandler.ts:101-121`).
+4. **Authorize** — `isAuthorizedUser(userId, chatId)`; on failure it has already sent the appropriate prompt (join channel) and the handler returns.
+5. **Group-use gate** — `checkGroupUse(userId, chatId, msg.message_id)`: in group chats each user gets 2 answers for life, then the bot replies with a deep-link button to DM and returns. Private chats and the admin are unlimited. See [Bot Commands and Authorization](commands-and-authorization.md).
+6. **Track** — `trackActivity` records a `roll_lookup` action with the roll number as detail.
+7. **Reply with options** — `sendRollOptions` sends an inline keyboard with `Attendance 🚀`, `Mid Marks 📊`, `Bunk Plan 🎯`, and a leaderboard URL button (`src/bot/academics/academicHandler.ts:82-102`).
 
-The top-level `.catch` on the roll handler now also replies to the user with "Something went wrong on my side. Please try again in a moment." before logging, so an unexpected failure is never silent (`src/bot/academics/academicHandler.ts:188-196`).
+The top-level `.catch` on the roll handler also replies to the user with "Something went wrong on my side. Please try again in a moment." before logging, so an unexpected failure is never silent (`src/bot/academics/academicHandler.ts:169-177`).
 
 Rate limiting also applies to callback taps with the `callback` action key, and the roll format is re-validated before each action runs.
 
 ## Callback dispatch
 
-Callback data uses prefixes `att_`, `mid_`, and `bunk_` followed by the roll number. The shared `callback_query` listener (`src/bot/academics/academicHandler.ts:210-222`) wraps the whole handler in a try/catch: on an unexpected throw it logs the error and answers the callback with a "Something went wrong" alert, so a tap can never hang unanswered. The inner `handleCallbackQuery` (`src/bot/academics/academicHandler.ts:224-291`):
+Callback data uses prefixes `att_`, `mid_`, and `bunk_` followed by the roll number. The shared `callback_query` listener (`src/bot/academics/academicHandler.ts:191`) wraps the whole handler in a try/catch: on an unexpected throw it logs the error and answers the callback with a "Something went wrong" alert, so a tap can never hang unanswered. The inner `handleCallbackQuery` (`src/bot/academics/academicHandler.ts:205`):
 
-1. Skips the `dailycheck` callback, which is fully owned by `dailyCheckIn.ts` (otherwise it would be rate-limited and its pinned channel post deleted).
-2. Answers chit-chat callbacks with an alert and returns.
-3. Rate-limits, then authorizes the actor (`callbackQuery.from.id` — in channels `msg.from` is the channel itself, so the actor always comes from the callback).
+1. Answers chit-chat callbacks with an alert and returns.
+2. Rate-limits, then authorizes the actor (`callbackQuery.from.id` — in channels `msg.from` is the channel itself, so the actor always comes from the callback).
+3. Applies the same group-use gate as the message flow, counting the tap as one of the user's 2 group answers; when blocked, the spinner is answered without a popup (the redirect already landed in the chat).
 4. Tracks the action (`attendance`, `midmarks`, or `bunk`) with the roll detail.
 5. Runs three tasks concurrently with `Promise.allSettled`: delete the menu message, run `handleCallbackAction`, and answer the callback query. Rejected steps are logged individually.
 
-`handleCallbackAction` (`src/bot/academics/academicHandler.ts:293-325`) slices the roll from the callback data, re-validates it, and dispatches to `sendAttendanceOrMidMarks` or `sendBunkPlan`.
+`handleCallbackAction` (`src/bot/academics/academicHandler.ts:270`) slices the roll from the callback data, re-validates it, and dispatches to `sendAttendanceOrMidMarks` or `sendBunkPlan`.
 
 ## Authorization degradation
 
-`isAuthorizedUser` (`src/bot/academics/academicHandler.ts:40-90`) degrades instead of locking users out when Redis is down: the cached-membership read is wrapped and returns false on error, and a throwing live membership check is treated as "allow" (the daily check-in gate still applies below). See [Bot Commands and Authorization](commands-and-authorization.md) for the full gate order.
+`isAuthorizedUser` (`src/bot/academics/academicHandler.ts:40`) degrades instead of locking users out when Redis is down: the cached-membership read is wrapped and returns false on error, and a throwing live membership check is treated as "allow". See [Bot Commands and Authorization](commands-and-authorization.md) for the full gate order.
 
 ## Placeholder-then-edit UX
 

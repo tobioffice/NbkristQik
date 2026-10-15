@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:ba640605e99170103a868711be0ca2f7787a85c2ddad08f46bc7c46fb839e620",
+  "pageVersion": "sha256:b665e668497d90f9fa77434f3bdf13928efe7e49d70fa1751c0d2d9fefc605e8",
   "claims": [
     {
       "id": "claim_bd912aa28bb94114a6e1f34d596d187f",
@@ -14,15 +14,19 @@
     },
     {
       "id": "claim_fe749cefa39b4d31a3083553ce6f0f0f",
-      "statement": "Required environment variables cover ENV, Telegram tokens, Turso credentials, Redis URL, portal credentials, ADMIN_ID, channels, admin panel path/password, and CORS_ORIGINS; PORTAL_BASE_URL and PORT are optional with defaults.",
+      "statement": "Environment variables cover ENV, Telegram tokens, Turso credentials, LOCAL_DB_URL (embedded database override), Redis URL, portal credentials, ADMIN_ID, channels, admin panel path/password, and CORS_ORIGINS; PORTAL_BASE_URL and PORT are optional with defaults.",
       "evidence": [
         {
-          "resource": "repo://.env.example#L1-L40",
-          "version": "repo-lines-v1:sha256:8dd120ace706d722c4bd14bafe8232ad3b73558c6130dc431fe49d5d3af98dad:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1ZjU1Y2RmZGIyNjA5NjFmYzI1NTc1MWUzOWJjZGFiNDQyOTU3NDhiOThiMmY0NDc2ZmM1MzM5ZWNlMGNiOWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmYWRmNjM1Y2U1N2JiN2I3N2ViMzM4YzIzYjhlZTIxZmMxZTAzYmMyM2ZiMmNjMDY1ZTZjNjZmOGRhYTU2YWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://.env.example#L9-L15",
+          "version": "repo-lines-v1:sha256:8609ff95ba1f46d3e40df1306ccfdbf27b6824badc34e872c4809005fbf6ea7d:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmMwNzcyZTA5MDRlOTA2NWFiYjJjMjczZGI4ODE1MzE0ZGQwZWVjNGZmYzgzOTUxNjE5ZjRkMWM4OWYwZWQ1MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzI3ZTQzNWRlM2U5MzczMjFkYmFjMmRhMjhjNWM4MTYwZDQ4MDc5ZDFjMzM4MzExN2QwZmIxNWE4ZmNmMTQ3NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzYxN2ExOGEwMmVkZmZlYTc0M2NlMDc4NWVmYTVlNDgyMDE3YmI1NTI1YTY4ZTQwMWY3Zjk4MDRiNTVmZjU0MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTZkYmIyMmQwYTkzNTIxZDI1YzRmNGY4NDViZDU2YzYxMmQ0OTAzYTQ4OTFmMDgwNWNjMjFlZTFmNmY5MDlmZSJ9"
         },
         {
           "resource": "repo://src/config/environmentals.ts#L5-L30",
           "version": "repo-lines-v1:sha256:ebe469cc89c03e6069dbb2c4951a165ac2b3c507f1d21bbcb4467b06bd785212:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4ODk2NDZhNDE2Yjk3MDE1ODQwZWFjMWZiMmFjM2I2ODVmOWY5YjFmY2QzNWVmOTEyNDcwOGZjZTgxMGU5YTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4MGNmNTQxZDUzYTc4N2EzMjA5YWZmNmQzNDI2N2U1OTY5ZWMyZDdlNzc0NjVjMTBlNDJmMWNjNDAxODQ0YmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdjNmU2YjA3Y2ZiMTVkM2E0MDljNjc2ZjBlZGI3NGE0NmU2Mjk0YWQ3OTAzYjU3YzhlY2YyMDAxYmVmZTY4ZDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA3OTA2MGExOWJlODcyNGI1MzcyMGQ3ZjdjNDVjODM0MDc2YWUxMzg3NWM0MzZkODhkYzk2NDE1OGQ3ZWY1YjcifQ"
+        },
+        {
+          "resource": "repo://src/db/db.ts#L13-L20",
+          "version": "repo-lines-v1:sha256:3e622b2c7c16c59459a21b741c7c86a9bcc74f646c11d10a60c8d6685f64aa12:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGUwNmMxYjc5ODAwNDE3Y2Y5NWE5MjBjZWUzODU3Mzc4NGI3YjM3NTk4YzY5NjVjYTQyNGM3M2RlZWQ3MjIxZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjJkMTFjYWY0M2U5N2VmMzY5ZTZiZWVkMWEyNjhiZDA1ODM4ZjI5YjlkZDI1NGJmNjliYTY0ODg0MTQ3MjM0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjE1MDQ3YTkzN2U2YTQ3ZmQxYTdmM2ZkZWEwNzY5MmQyNjZkZTBiZDY5MTNkYWY5YzZhZjMwODVjMTQ2YjlhMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
         }
       ]
     },
@@ -68,8 +72,12 @@
     },
     {
       "id": "claim_ae0181fba6b64bb29c82417607530ad6",
-      "statement": "Vitest forces TURSO_DATABASE_URL to file::memory: so stray production credentials cannot point tests at production, and enforces coverage thresholds.",
+      "statement": "Vitest forces TURSO_DATABASE_URL to file::memory: and tests/setup.ts blanks LOCAL_DB_URL, so neither stray production credentials nor the embedded-database override can point tests at production; coverage thresholds are enforced.",
       "evidence": [
+        {
+          "resource": "repo://tests/setup.ts#L13-L15",
+          "version": "repo-lines-v1:sha256:4a1d76e9b5b93b855e883e44f2b1cf90dcd193f445b3233577433db33aba07e0:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTE2YmU5ODQ2MWFlYzViOTE5YWY3NzgxNTQxNmE1OTZkNDk3NzgwZDYzN2YzMjhlZGE1NWI2ZGM2Njk5YjIwNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjQxNDg0MDhkZWU0Yjg1NTMwOTA3MGJmZDJmYzFjZTdlNzcxZjRkMTk1YjY4OWE4N2VmMTE1YTdjYjhhMWFiMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDI2Y2UzYTU2NTY1YTQ3MjllNjBiNGZmMGM1ZmY0NGZkM2JiNTQ5YzdkMjA0ODBiZGM1ZWM0MjRkZTNiMjE0YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzdmM2I2MDFkMGMxY2YzMTY1YWI5YTg3NTdhNDg1ZDMwZmRhYTFkZWI3ZjRkNTIyNjE3ZTYyYzJhZTIzYzc2NyJ9"
+        },
         {
           "resource": "repo://vitest.config.ts#L4-L32",
           "version": "repo-lines-v1:sha256:59285f8c7044a82caa7b4a8975eea398980cd7d4872f4c1eea2327b95f99af01:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyY2VjYjE0NGE0NmY1ZGNmMTJhNjE2OWZjZWVkNzY5NWU4Mjk0YjA5MGRlNzZmMzY2MWNkZDAyNDkzMDAxNDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2ZTYyNjU4MzQ1YjM3MjcwNjdlNzE1ODI5MTMxZTNhYzM4OGZlY2M2N2VkMmIwZDhjZjhlOGI2NzYwNzljYTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcxMzIyZmNlNjM4MmFlOWMwODU4ODcyZDMwNTgzNGFhOGI4NjM5YWI0NmQ4ZjA1ZDYzNjAzOWY4ZjE3NzAxM2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY0NTFiZjJiOWYyYTc5YjU2MjEyMjRlNmNlNDU0ODRlNDljM2M5ZGQ3NWM1MWQ4YjNmYmQ1ODVkYzNhMWUzODcifQ"
@@ -78,11 +86,11 @@
     },
     {
       "id": "claim_c162c3c11beb41ff877019c261d06f7c",
-      "statement": "Test setup seeds fake Telegram, portal, Redis, Turso, channel, and port values, disables the admin panel with empty (not deleted) vars, and clears mocks before each test.",
+      "statement": "Test setup seeds fake Telegram, portal, Redis, Turso, channel, and port values, blanks LOCAL_DB_URL so the embedded override cannot leak in, disables the admin panel with empty (not deleted) vars, and clears mocks before each test.",
       "evidence": [
         {
-          "resource": "repo://tests/setup.ts#L1-L28",
-          "version": "repo-lines-v1:sha256:4173e7d14a902182db5bb4f7656a090a04a42fe613508c9e17a6a116255c2282:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4OWJmNTBmYTk1ZjI2ZjM4NDMwYmJmMDZjMmIxYWVhOWFiN2JiNGQwMDFlYmQ1Zjg4YjJmNDhjMDc4OGVlOWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://tests/setup.ts#L1-L31",
+          "version": "repo-lines-v1:sha256:0244bce871b972776f494a8c9e31ea908a8f24cf928df136dc08f2cd76f3dd36:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4OWJmNTBmYTk1ZjI2ZjM4NDMwYmJmMDZjMmIxYWVhOWFiN2JiNGQwMDFlYmQ1Zjg4YjJmNDhjMDc4OGVlOWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     },
@@ -153,10 +161,68 @@
           "version": "repo-file-v1:sha256:d7836523e092a7bd27b96e623ccfbe3719a235e9a7735e59d7dd1d7eeecc835c"
         }
       ]
+    },
+    {
+      "id": "claim_3f8199fa923f46e1be0841921776ddb3",
+      "statement": "deploy.sh rsyncs dist/ with --delete from the local build, and because tsc does not prune orphaned outputs, dist must be cleared after source deletions or a stale handler keeps shipping.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/deploy.sh#L17-L23",
+          "version": "repo-lines-v1:sha256:61b720ba47ae3037a534a1809cb11c0da28c1d351a29fc543f593ce50907ac18:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjU2M2RjZjc3MzYyMDIwNTMzZGE5MzlmMjA1N2RlYTk3MzVhZjAyY2FiZDBkMjUxZTRmNjA3OTM2ZjlhOTFjNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2MxMGVhNGVkNGFkZDM5NzQxOWM2MDhjOGE5MDY2NThmMjNhOTA1ZDhhZjUxYTNmNzg1YTkyZDEyMTM3MjIxNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDhjMzhjNTk4NDU3NGVmMDM1MjYxZTcwNjI3YzJkYjJiMTg4NDFiOTEwOWFiYzEyMTUzMjJlM2FiYTMzMjIzNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjM5OTljOTU3ZjY1ZTk3ZDU5NTc4MjE0ZWU4NThiMmQyZjJmYTRmMTU1MzQ1MDE1MmU2ZmQwMGM4Yzg5NTZkNyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_59e81c39c1954d419ef7555bc4b86946",
+      "statement": "backup-db.sh runs from cron at 02:15 UTC, keeps 7 VACUUM INTO snapshots, and best-effort copies the newest to oracle2 — a failed copy warns without failing the local backup.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/backup-db.sh#L39-L52",
+          "version": "repo-lines-v1:sha256:83f1e6de3b3b9475215295643a59aa3dd32bc47bfd87ed201f54d2ecf8dce4b5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiNTc0NjA3ODAxZGNiZTZhNzA1ZGNlZDIyNzg0NjI5MWMyZWU4MzM1NzNiN2JmNjZiZTBlY2Q1M2E2YTIwZGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NjlkMjM3Y2Q0MjBiOWQzOGI5ODFhMGE0ZjY3NzAxOTBhNGE4M2RjYTFmZTU2YzRmNWJhMWUyY2JjMGVmNzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxZDIxOTk4ZDg0YmJmYTZhMTcxMGQ5NjExN2M0MjZiNmZhYTk0YmQyYWJjZWY4ODVlNGY0NjIzNGQxNDE3NDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcxNjYzNWJiNDViOTRhOGU0NzA1ZTYzM2I5NWU2OTgwZmEzMGZmZGM0NzZkZGU1MzU3OThiZTdlNWEwYTQ1NWEifQ"
+        },
+        {
+          "resource": "repo://scripts/backup-db.sh#L9-L17",
+          "version": "repo-lines-v1:sha256:a1f1584217e0ccb1c6bd06ece8ecc1678903b4e0f706b83930352fbdd41f507a:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDVlNzFmOTBlMzhiMmNmMThiODNiOTJhZjQyYThkM2I2YmZjZTA2MzVjYmI4OGExOWU5YjMwMWFjMmZiNjQxNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2FlZWI0ZTlmNGQ3MGY2MmZkZTY4ZmU1MDMzMzUxZGYzYmJkNWRkODk1NjUwYzg3NmJlMDYzYzE1NWM3ZmE0OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzQ1MDRhNGM0YmI3ZDk0ZTM3Zjg1NzAxNjA3NzYzZjA0YzQ5MmU0YTJjOTE1ZWY1YmJkZTRlOWY3ZDBiZmNkOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTE3MGQ2ODI4NWQyNDhiZGM2ZGQwN2IxYjhmZjdlYTZkMTVmNTNjZTYzNzE4ODU0ZGIwNWRjZjYyZDJlYjcxMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3fb0931993194152a0eb92b7294c488c",
+      "statement": "oracle2 is not spare — it serves LiteLLM (:4000) and SearXNG (:8080) and must not be repurposed; it only carries the off-box database backup copies.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L37-L37",
+          "version": "repo-lines-v1:sha256:ca83e2497c6ede79af7ec648d652450ade7e4b30f5afb3b640caf725d7ba338a:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2E4M2UyNDk3YzZlZGU3OWFmN2VjNjQ4ZDY1MjQ1MGFkZTdlNGIzMGY1YWZiM2I2NDBjYWY3MjVkN2JhMzM4YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2E4M2UyNDk3YzZlZGU3OWFmN2VjNjQ4ZDY1MjQ1MGFkZTdlNGIzMGY1YWZiM2I2NDBjYWY3MjVkN2JhMzM4YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmMzMTA4MWZhZThiOTg0YjJhM2RmOTY3MGRlNjBhYjk3ZWI4MGY0MTJmOGYyOThlNTdlOTgyMjkyMzY2Y2I5NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDlhN2Q4ZmZlNjE5MTk5Y2E5MDFlNzVlNzZlN2NmZTcyYjljMDM1Y2ViODJhZjQ5OTUwMDNkZDkxNDliMDFlMCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c2f48297311b4dd889f688e16c2ce5d9",
+      "statement": "The pre-cutover Turso data stays read-blocked until about November 2026; scripts/import-turso-snapshot.mjs is the ready idempotent merge path.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L40-L40",
+          "version": "repo-lines-v1:sha256:68fc7228bc1df543d134997d4843b7439e360b0ee9ddc6a5e77452612229f374:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjhmYzcyMjhiYzFkZjU0M2QxMzQ5OTdkNDg0M2I3NDM5ZTM2MGIwZWU5ZGRjNmE1ZTc3NDUyNjEyMjI5ZjM3NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjhmYzcyMjhiYzFkZjU0M2QxMzQ5OTdkNDg0M2I3NDM5ZTM2MGIwZWU5ZGRjNmE1ZTc3NDUyNjEyMjI5ZjM3NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmFjNTA1YWQ0YzY4OTFiMmVhZGJlYzk0MmIzNzIyODg2MmI4Yzk3YzBjNjNkNDFiY2JjMjNmZTE3YzI5NDhlZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        },
+        {
+          "resource": "repo://scripts/import-turso-snapshot.mjs#L1-L36",
+          "version": "repo-lines-v1:sha256:da91de37bd8ead59e5baea1c29a54b8aef25e23f63ef9826aaa162193adfea95:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3MmE0MjkzODJiMmUxNDcxOGUwZTM3YjA1NzBhOGExNzAyOTkxZmNkODQ5OGNkODQwNjBhOGJmNGYwNTAxN2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUwYjlhYjRiZmVlYjc4NDE1NmRjZWMyYmEzOWMyOTRmM2E1NjIzNDExMmM5ZjMyNjlmNjBlMTI5NjE0NGQwMTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f73d5320d6b24eb9b871a0cc963c66b9",
+      "statement": "Journal queries stay keyword- and count-only because logs can contain token-bearing URLs.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L38-L38",
+          "version": "repo-lines-v1:sha256:53ba7e28eae34c73fcdfefab02ff9fbd676885c853721e262ac35a1709e67bdf:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTNiYTdlMjhlYWUzNGM3M2ZjZGZlZmFiMDJmZjlmYmQ2NzY4ODVjODUzNzIxZTI2MmFjMzVhMTcwOWU2N2JkZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTNiYTdlMjhlYWUzNGM3M2ZjZGZlZmFiMDJmZjlmYmQ2NzY4ODVjODUzNzIxZTI2MmFjMzVhMTcwOWU2N2JkZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTM3ZTljN2Y1MzFhYmY1MjY4MDViOTBkY2ZhZDRmM2UzYjJlZjgwYTZjNjdmMzNkOTQ4Y2NlNWZjODQwMjQwMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjIsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjg2ODJlMTg4NzEzMWYyYzE3ZWEyYTQ4ZDNhNWY0MWJlMmI3YTY3OGI2ZjI3NTFjZjJkZTEwYWU2YTBiZGRiYSJ9"
+        }
+      ]
     }
   ],
   "verification": {
-    "by": "openwiki/0.7.1",
-    "at": "2026-10-09T23:13:13.880Z"
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-15T21:12:57.495Z"
   }
 }

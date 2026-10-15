@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:dcd05cc5e1e10ecde2ecb3b3e846dee505c660a9a858eaaec115160bc8f0d258",
+  "pageVersion": "sha256:b05baeb8e9405643dfd910fc16ddcf78ff00a0bc284fc96eac5d33e7cee8980e",
   "claims": [
     {
       "id": "claim_54716cb5ae834c05994488b22bfe15d6",
@@ -14,15 +14,15 @@
     },
     {
       "id": "claim_c1df972a75a447849fd12c3be2639925",
-      "statement": "makeSessionToken generates a client-chosen PHPSESSID (fixed prefix plus 3 random bytes), and renewSession re-logs-in with it, storing the cookie module-level and throwing InvalidCredentialsError on failure.",
+      "statement": "makeSessionToken generates a client-chosen PHPSESSID (fixed prefix plus 3 random bytes) that syncdb also uses, and renewSession re-logs-in with it, storing the cookie module-level and throwing InvalidCredentialsError on failure.",
       "evidence": [
         {
           "resource": "repo://src/services/student.utils/portalSession.ts#L18-L21",
           "version": "repo-lines-v1:sha256:ff23c1bf6250adf2b72413af39b1ef86b4b3945f26bfa7ee93a7d74874030c55:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGQ4OTI4ZDMzY2RiY2FjZTc3NDNiZmZlYjM1NmRiNTkzOGQ3Y2E1NTlkMThiYjZkODUyNDViY2YzZWQ0OTEyNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWExZDFhNjMzOTAyMjljNzk4MzQ3ZTgzYTA0MDU0NDFjOTQwMDAzNTI4NGFkMTY4YzFiZjZjZGYxZDcwYTM3MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzdjZDNiNmYzMThhMjk2OWJhZmFkOGRjNDE4YjM5ZTg5N2ZhYjBhMWM4NDQ3ZmZmNDk2NWUxOTY4NGI4YmY0MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjgwZjEyZjM2Y2NkNjdiNGEyNzA5NjZjMWQ3MWVlMzU4NWNiM2M3NzBmYzA2YmE5ODY4MTkwODA0NDM3ZDE1OCJ9"
         },
         {
-          "resource": "repo://src/services/student.utils/portalSession.ts#L51-L73",
-          "version": "repo-lines-v1:sha256:1e00041755465338631a252992daf0c77ff94f18315422778c897c11c808fcc8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5MzVmNjdhOTgxOWVmNmMwZWFhNTI4YTMwZjI1Nzk3NzA4NTc5MjE3NjgwNWJjNmE5ZTU4NGJjY2FjZTNmMGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk2YWE2ODZiYTc1OWY5Y2UyOGIxZTYxYjZiOGE1N2U5YzI5YWM1YWI1ZmUyZDczNTIzZDEyZGVmNjg2MThhNWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5NTZhZmNmNDNiZmQxNWIxZTRiNWZkZWRlMjVkOGM2YTQxYjhlYTUxMjJlYTg3NzVjZDkxMmJmNWNiZTZiMjIifQ"
+          "resource": "repo://src/services/student.utils/portalSession.ts#L51-L76",
+          "version": "repo-lines-v1:sha256:1d08538a943afbe8739668593b434efb2672481d3784538f6e4a2d589dc6eb9d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5MzVmNjdhOTgxOWVmNmMwZWFhNTI4YTMwZjI1Nzk3NzA4NTc5MjE3NjgwNWJjNmE5ZTU4NGJjY2FjZTNmMGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk2YWE2ODZiYTc1OWY5Y2UyOGIxZTYxYjZiOGE1N2U5YzI5YWM1YWI1ZmUyZDczNTIzZDEyZGVmNjg2MThhNWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5NTZhZmNmNDNiZmQxNWIxZTRiNWZkZWRlMjVkOGM2YTQxYjhlYTUxMjJlYTg3NzVjZDkxMmJmNWNiZTZiMjIifQ"
         }
       ]
     },
@@ -41,7 +41,7 @@
       "statement": "getAcadYearForDate computes the academic year the portal expects (flipping in July) using Asia/Kolkata time.",
       "evidence": [
         {
-          "resource": "repo://src/services/student.utils/portalSession.ts#L76-L86",
+          "resource": "repo://src/services/student.utils/portalSession.ts#L79-L89",
           "version": "repo-lines-v1:sha256:4efef53e40a5bf6dd1980a338bc6d2a525b7e1b3f08dffd19da4ede097d69247:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5YjBhOWI2NWViMTM3MWM4YTgwNGFjODAyNmNkZDk0NzY4MDNhMTRlNzc3ZTM3YWUxZjE1NGQ0ZjBhOTkyZjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdjMTE2ODczY2ZiNmY3ZGY1OWFmYzE3YTcyZDYxY2ZhYmUyOTk2NWZlYTVhN2Y2Y2RiMGE2NDg2N2U3NDE0NjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
@@ -115,7 +115,7 @@
           "version": "repo-lines-v1:sha256:4dda3408b0cc1640e00c6bb040ebda15217a87d86207e865e0e54173c948ad4c:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmEzNDJjMGM2YWU0ZTQyM2Y1YWJiZTVkZThhNmE4OTQ4YTljMTBiYzJlNWQxYTdhNGYxNDFhNWU2YzY2ZTFmMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDNmY2YyODgyMDBiZDg1MGJlZTNhOTEwZDZkNDMzZTAyNTU4OGVmNDA0OTM4MzAxY2ExYmQwZTI0Mzk1MGI2OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmI1ZjNhZDUxYTE5MGI0NmRmOTljN2Q2ZGNjZDkxNDI1NzcyYTE2MDM3MTQ5ZDk1ZjE4NTBhMDkyMmEzY2Y2MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTZlOWMzYjFmNWU1ZDA1MzE0ZTQ3MDhlZmYzNzg3NjRhZjE2ZWU4ZmQ4YjU1ZjY4NWQ0MWYwYmE3ZmEwNWUwNyJ9"
         },
         {
-          "resource": "repo://src/bot/syncdb.ts#L77-L96",
+          "resource": "repo://src/bot/syncdb.ts#L113-L132",
           "version": "repo-lines-v1:sha256:dec253169cba6d9bdd3df9cc7cecf43d549b0bd2597784a550cb17c0683aaad3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI0NDUzYjEzYTVhNTVjMjgyM2NmOGQxZjI1YWRkYzUzOTU4NWYxN2JhYjFiODc3YWI1MjE1NzAzYjhlNTRkODgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIwZjY3NjI2ZjM4MDAwNjg3NjYyMzZkYjZiMmY4NzQ0ODA0MWZhNTM1ZGZiNTMwNTFjNzNiMzk5N2JiZGM1NjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc3ZTVkZjhjYjQ5ZGY4YmMxMDdjOTNhZTcyZWM3ODNlMWYxMTk4YmU5ZGE1MTYxMjFjMzU2MDQyODNkYTZiMzMifQ"
         }
       ]
@@ -136,7 +136,7 @@
     }
   ],
   "verification": {
-    "by": "openwiki/0.7.1",
-    "at": "2026-10-09T23:13:13.880Z"
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-15T21:12:57.495Z"
   }
 }

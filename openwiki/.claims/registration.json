@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:beb620e5896de8021fa3cb736ec049fd802ce44985396f02c55812b8169177c3",
+  "pageVersion": "sha256:6366fd4da4c559cc3126d556e88fed3e0ca2f9216d469ea424eacf2ca268a0f6",
   "claims": [
     {
       "id": "claim_f107abc924534d0d8229091a0c7b6457",
@@ -21,8 +21,8 @@
       "statement": "Profile endpoints share resolveUserId: initData from query then body, verified with the 24h HMAC scheme, 4096-char cap, and a numeric userId shortcut only outside production.",
       "evidence": [
         {
-          "resource": "repo://src/api/resolveUser.ts#L17-L42",
-          "version": "repo-lines-v1:sha256:6f0e93d2a62c059436685fcea8c4a5ce6aa54b313086c91cbfd61becf6b656d7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmMGJhOTFkMTUzMjNhMDQ5OTBjZDU1ZDVmN2M2ZjNiMzE3NTlmNWNhMzlhMDUzYTc4NTUxNjBlMDQ2MTdkZjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkwODlmYzNhYmVjYzFkZGRmNmU4NDBjM2FiYjgwYWZiY2E0OWQxN2FkMWFkN2RhODRhNjg2ZDg2Yzg1OGE4MTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://src/api/resolveUser.ts#L19-L44",
+          "version": "repo-lines-v1:sha256:9f2241e25efcd58b99e566416668098e3035a9601d0babd5a80ba81dd19a8b92:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmMGJhOTFkMTUzMjNhMDQ5OTBjZDU1ZDVmN2M2ZjNiMzE3NTlmNWNhMzlhMDUzYTc4NTUxNjBlMDQ2MTdkZjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3ODY3OTM4NmMyNzk4OTYyNWRiY2E5MjVjZGQ5MTYyYTcwYzU5NTVhM2YxZTlmZWQxODU5N2UxZTg3YTc2YmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     },
@@ -51,7 +51,7 @@
       "statement": "The register write route is additionally limited to 20 requests per 15 minutes per IP via profileWriteLimit.",
       "evidence": [
         {
-          "resource": "repo://src/api/server.ts#L47-L55",
+          "resource": "repo://src/api/server.ts#L48-L56",
           "version": "repo-lines-v1:sha256:3470e9b241807c68c2c0a2a975136d7604b068e0c5ae162945f8e2a208e1411d:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzhkNTI1MzcyMzg0NTMxMzZlNGRjNjdjZDYxYzU4ZjJkNGY0ODIzNDcwNThiMjIzNDllZGI0MzE4MjRjZGJlMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDFiOWM1MTI1OTFmNDRkZWRlMzUyY2QxZmI0NDc5NGNmNTc2ZDYyOTAzMjQ3ODU2ODIxM2NmMDllYWMzNzBjMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTllOGU2ZWNhZjc4NzgyYjYyNDk0MTI2OWNmMzJiMzgzYzQ5ZWM4NTk1ZmVhYWU2NTg2NWVkODk3ZDQxODRlNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjA4NGVhYzkyMDVlNjc5YjAzZGFlNjQxNDc4YTA2MjMzMTc4NDczN2QxZGI4NWUzZmY1MTlhNmM4YzUzYzVmNSJ9"
         }
       ]
@@ -61,22 +61,22 @@
       "statement": "resolveRegisteredRoll prompts unregistered callers with a register web_app button, refreshes the tgusers mapping for a valid registration, and prompts a profile update when the registered roll left studentsnew.",
       "evidence": [
         {
-          "resource": "repo://src/bot/commands/registered.ts#L120-L145",
-          "version": "repo-lines-v1:sha256:08eda214e537106f3e63d296fb5616fb880fce4a6be3695a27883f050459edfa:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyODEzMmJhZTY5NDg0MGY5MTQ4MGFhNzg5YzgwMDVkM2JiYWQ1NTVlMmVkOTdmODZlOThjNjFiMDEwNjQ5OTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkZDg3OWRhOTU2MGNmMzU4ZGRjMGE0OThmZmE0YTljZWE4YjJkYmNmYTU5NTIxOTMzMzlkYTg4NDE3OTYzYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllNTI0OGI1YTFkYWQ5ZDIxNzcyMmExMDdhNWY1NDNjNzVjNDFkM2Y5MjRjZmQwYTAwYmI4N2Q2M2E2OGI4MzkifQ"
+          "resource": "repo://src/bot/commands/registered.ts#L104-L129",
+          "version": "repo-lines-v1:sha256:397c75c4217c8f22dbefa93ad3915af819f3120643e53a95bf93cc073775d11a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyODEzMmJhZTY5NDg0MGY5MTQ4MGFhNzg5YzgwMDVkM2JiYWQ1NTVlMmVkOTdmODZlOThjNjFiMDEwNjQ5OTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkZDg3OWRhOTU2MGNmMzU4ZGRjMGE0OThmZmE0YTljZWE4YjJkYmNmYTU5NTIxOTMzMzlkYTg4NDE3OTYzYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllNTI0OGI1YTFkYWQ5ZDIxNzcyMmExMDdhNWY1NDNjNzVjNDFkM2Y5MjRjZmQwYTAwYmI4N2Q2M2E2OGI4MzkifQ"
         }
       ]
     },
     {
       "id": "claim_815f9be6aca94da8b1e8445f1622da2a",
-      "statement": "/attendance, /midmarks, and /bunk are registered-only shortcuts reusing the same rate limit, membership, and daily check-in gates as the roll flow; /register opens the profile page via a web_app button.",
+      "statement": "/attendance, /midmarks, and /bunk are registered-only shortcuts reusing the same rate limit, membership, and group-use gates as the roll flow; /register opens the profile page via a web_app button.",
       "evidence": [
         {
           "resource": "repo://src/bot/commands/register.ts",
-          "version": "repo-file-v1:sha256:1af61440ba1ebe45054b8ae7b9931f39e8e4600416f3731bfc5238e5f04f4010"
+          "version": "repo-file-v1:sha256:45278a919d1d48e233a19ca066fa30d5b12337e4df04f2d5bbcef4be1fd7a44d"
         },
         {
-          "resource": "repo://src/bot/commands/registered.ts#L147-L204",
-          "version": "repo-lines-v1:sha256:c0fe3b9b9b2288c29d446b8c77a7abdbcec88a6061befcc586a3fd79e07adfac:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyODUxMDA2NzllNDEyMGZkZDdhODYzYjE5MjMxODk3OTZiMzMwYmJlNzY4YjBkZDUyYjJlYjljOGI2N2E3ZTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwNmMzMDQ5NDcyYTI4OWFiZTFkZjBlYTUwNzNkNmE1ZTRhOTBhNDk2NTZkMGNlZTljZjE2YWNmNmY1NGE0ZjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://src/bot/commands/registered.ts#L131-L175",
+          "version": "repo-lines-v1:sha256:4d7e58c51e4f5a2248f39a63ab69763fd08671e251bdebdbd179b8176b5c8af0:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyODUxMDA2NzllNDEyMGZkZDdhODYzYjE5MjMxODk3OTZiMzMwYmJlNzY4YjBkZDUyYjJlYjljOGI2N2E3ZTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlY2ViYjc5MmU4YWNlYzJlNzFmNTE4Y2M4MDFhMTA1OTIxYTdlZDI1MjBkYTBkYjc1OGE2NDhhYjA4MGQ2OGEifQ"
         }
       ]
     },
@@ -86,11 +86,11 @@
       "evidence": [
         {
           "resource": "repo://src/web/register.html",
-          "version": "repo-file-v1:sha256:66b890ad7f0ce31def2f1ef1ef12d4994092b30d13f6ad0bbea8627ad47a2d00"
+          "version": "repo-file-v1:sha256:bd226b91861bff59f97a0933d83ed6e3de75a096540ab1a82193a10a5c260397"
         },
         {
           "resource": "repo://src/web/src/ProfileApp.tsx",
-          "version": "repo-file-v1:sha256:11f1e6470ffaa347240b83e0040c82b3f21fa92a0bd924835f5e8632030dd219"
+          "version": "repo-file-v1:sha256:363e6534e530645781895291eb47e91cd95461b51704b4806145cb1a95aa6995"
         },
         {
           "resource": "repo://src/web/src/useProfile.ts",
@@ -98,25 +98,25 @@
         },
         {
           "resource": "repo://src/web/src/views/Profile.tsx",
-          "version": "repo-file-v1:sha256:9c1382b50049d15ff88fba82e752a99a32fd95ae966df98fb37a6baf65789334"
+          "version": "repo-file-v1:sha256:db042f747f8b3b8129ddd66294051524415241b7d57b0539e6c385e1467e38d7"
         },
         {
-          "resource": "repo://src/web/vite.config.ts#L6-L15",
-          "version": "repo-lines-v1:sha256:92c85822a29b3a9276ac15b827c9d812dcfacd0f4a9b59effe2f6bccffb8f2f6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0ODQwMTM0OTc5NWE1MGJjN2M5MTFlYWNhOWFlNzIwMmY3OGY3MmU5ZGY2NTRhNDk1OThjOGU2N2FiZmY3NzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNWNkMmZiNGYzZGY4ODQ1MTUyNTViMzk1MjNmMmY4YjU0NzJiZWVhOWY1NjZmZmNhMjA0ZGI4MDI1NjEwNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVmZDBlNGRhYWE1MTQ0Y2JiY2E5MmVhYzZkYzBlMjFjMTQxNDlhNjZmMWZkNGVhM2MyNzdmMDQ1NzE0YzZiODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMxY2ViZjNmNjAzZGExNzQyNGMwOGVkNDVlYzU3YjEyY2VjMTZmZmQ0NzBkZjJhMTUzNDQ4NmZmOTdmYmI1OGEifQ"
+          "resource": "repo://src/web/vite.config.ts#L9-L15",
+          "version": "repo-lines-v1:sha256:2d1a4a48d117ea9eeb152118a5638cf5ac2534f48be1b0eb912744d09365effa:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmJhN2FkM2VmYWQ5YzdhN2FmMjBiYmM0NzJmYzBhMzFlNDI0NjI5MDBhMTYwNDhmMTIyMzZjNWMyYzQ2YjYzNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWYwY2RiOTcyYTdiZmI3ZWQyNDZmOWZmNjcyMzg1ZTU1ZjQ5NjhmYzExMDQzZGM1YjY4NGQ1MWRmYTMxZGJjYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjVjYzE1ODcwMzIzMDUyZmJlZjQxOTIzYjVhY2RjZmRkZmM4MWM1ZTM2N2ZiZjQ2OTQ5MTg3ZTgyMzc3YWRjZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGIxYmM3ZjJmZDZjM2Q4M2YyNmMwM2Y3NDU0ZTg3YjgyOTE1YWQ5N2Q5YzVmMTM4OTY3OWJhZDcyOTgwZWRiMiJ9"
         }
       ]
     },
     {
       "id": "claim_b5084344d7534936b44a1d5eb945ad76",
-      "statement": "Both mini app URLs are centralized (bot side src/constants/webapp.ts, web side src/web/src/constants.ts) and used as web_app buttons for full-screen opens.",
+      "statement": "All three mini app URLs (leaderboard, profile, report) are centralized — bot side src/constants/webapp.ts, web side src/web/src/constants.ts — and used as web_app buttons for full-screen opens.",
       "evidence": [
         {
-          "resource": "repo://src/constants/webapp.ts#L1-L6",
-          "version": "repo-lines-v1:sha256:c7f7aae3f78138505e62bf61d53413f034410a06856843f878990942fca15c30:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWZlN2MxY2E0MDFlZmNjMjAzZjQ3ODU0YzBkZmQ2NTc0MmVjNzFjNWQxMDczNWQzMTNjMTY3MGJjYmE5OTIyZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjZiMzIzMTc5MzE3ZDk3YjQ5MjlmMTVkZGQ5NDllNWVmYWE2ODgxYmUxMzRlNWNkNmZhMjMwOTYwMGUxZTQzNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+          "resource": "repo://src/constants/webapp.ts#L1-L10",
+          "version": "repo-lines-v1:sha256:3a87dbeed390fa9ab3f6e2dd6a23e50eff265b2a9806c07fab5698d4c6c4ea48:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmZTdjMWNhNDAxZWZjYzIwM2Y0Nzg1NGMwZGZkNjU3NDJlYzcxYzVkMTA3MzVkMzEzYzE2NzBiY2JhOTkyMmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJlNThjMjZhODRjYmM5MTBmZmIzN2FhM2Y5NzQwMTRmYzBiMGM4M2ZhMDQzNmJmYTY5MmYwZWJjODg4NDA4ODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         },
         {
-          "resource": "repo://src/web/src/constants.ts#L30-L35",
-          "version": "repo-lines-v1:sha256:6e51a0d99693d4161a46ba0eb40036c704c91547d2271a8e12de65d05766240a:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjU1YmIxNWM3MDg2YzYzYjM2ZjI5ZWJmOTBkODM0MjhiY2EyZmZiM2VjMzFmMTE3MGVkY2ZiMTNjYmVkZjJmNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTgzYTUzZWVkMWRlODBkMTgyOTQ5NWVjMzllMWY4Y2EzYzY5NmMzYzkwOWU2NTIxYTBhOGU4OGRiMWI3NDdjYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjI0Y2VkNDZiNzA2YmJhNTA1MGQ3ZGM2NDllYmVhYmM4NGFlZDYzZTA4ZTg1ZTc3M2MzZDhlMGFjM2I5MWZlMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+          "resource": "repo://src/web/src/constants.ts#L28-L36",
+          "version": "repo-lines-v1:sha256:1c7651bbb3f4e68775e6253bd15f5b98f91800ebfc987c2eb0cb05219f340e2f:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTU0YTYxOWYyNzk2MWI5Yzk5NTEwOGU2NzhiYTRkN2YwNzg2M2YxMjdlOWNhYTRjNGQwOTE2NDA5OGRlZjNiYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjRlMTcwYTc5NzNlY2ZiNzk4ZDE1ODIxOWY5YWVkMzU3ZjlkYTZiOGY1ZDFmZTgxMWI3YjQxOWNhYjcyNGY2NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmQzZGYxYTkyOTk3ZmFjYzNmZmNiMDg1NjYwODcwMjA0MTBlNDQwNzE4YzdlMTE5YmMyN2M4ZWE0OTRiNTZjYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
         }
       ]
     },
@@ -133,10 +133,24 @@
           "version": "repo-lines-v1:sha256:2603b6849e2b9ae77bb124ea1a022499681e40eb826dabbd73af96d34f8cd622:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5ZjliZTMzYjI2NDk5NzAzNTRhNGFhZWEwOGQ0ZDQwNjdlMTdkYWM3NDJlMTE2MzkyNjBkYmViYTkxY2Y0ZjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2ZjVhMTQ1MzRiY2U1ZWRmNTEzZjkwMmUzNDhkODY2YjZmNDI5YTlmMWM4NGQzMWEyOGIyYjEzOWFhM2RlN2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2NmJlYzE3NDlhMWFlYWIwYjQwNjg2NzBiYzQ3ZjA3NjdjYzIwM2QxNjIzYjEwYmQyMjExMzk3ZDFiMzg4ZDQifQ"
         }
       ]
+    },
+    {
+      "id": "claim_554a8e8e6405443cb34d5c5e470281f2",
+      "statement": "The web build has three Vite entries — index.html, register.html, report.html — with the profile and report pages standalone from the leaderboard app.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/register.html",
+          "version": "repo-file-v1:sha256:bd226b91861bff59f97a0933d83ed6e3de75a096540ab1a82193a10a5c260397"
+        },
+        {
+          "resource": "repo://src/web/vite.config.ts#L9-L15",
+          "version": "repo-lines-v1:sha256:2d1a4a48d117ea9eeb152118a5638cf5ac2534f48be1b0eb912744d09365effa:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmJhN2FkM2VmYWQ5YzdhN2FmMjBiYmM0NzJmYzBhMzFlNDI0NjI5MDBhMTYwNDhmMTIyMzZjNWMyYzQ2YjYzNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWYwY2RiOTcyYTdiZmI3ZWQyNDZmOWZmNjcyMzg1ZTU1ZjQ5NjhmYzExMDQzZGM1YjY4NGQ1MWRmYTMxZGJjYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjVjYzE1ODcwMzIzMDUyZmJlZjQxOTIzYjVhY2RjZmRkZmM4MWM1ZTM2N2ZiZjQ2OTQ5MTg3ZTgyMzc3YWRjZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGIxYmM3ZjJmZDZjM2Q4M2YyNmMwM2Y3NDU0ZTg3YjgyOTE1YWQ5N2Q5YzVmMTM4OTY3OWJhZDcyOTgwZWRiMiJ9"
+        }
+      ]
     }
   ],
   "verification": {
-    "by": "openwiki/0.7.1",
-    "at": "2026-10-09T23:13:13.880Z"
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-15T21:12:57.495Z"
   }
 }

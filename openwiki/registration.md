@@ -3,9 +3,6 @@ type: workflow
 title: Registration and Profile
 description: Optional user registration — the registrations table, profile/register API endpoints with shared initData identity, registered-only /attendance /midmarks /bunk shortcuts, and the standalone Telegram Web App profile page.
 tags: [registration, profile, telegram-web-app, api, commands]
-verified:
-  - by: openwiki/0.7.1
-    at: 2026-10-09T23:13:13.880Z
 sources:
   - id: openwiki-source-44d9bd7e30623f9a7e846be3
     resource: repo://src/api/profile.ts
@@ -35,7 +32,10 @@ sources:
     resource: repo://src/web/src/views/Profile.tsx
   - id: openwiki-source-73d3563b23c926309c9b707d
     resource: repo://src/web/vite.config.ts
-generated: { by: "opencode", at: "2026-10-09T23:13:13.880Z" }
+generated: { by: "opencode", at: "2026-10-15T21:12:57.495Z" }
+verified:
+  - by: openwiki/0.7.2
+    at: 2026-10-15T21:12:57.495Z
 ---
 
 # Registration and Profile
@@ -69,7 +69,7 @@ The profile endpoints use the shared `resolveUserId` helper (`src/api/resolveUse
 
 ## API endpoints
 
-Both routes are defined in `src/api/profile.ts` and mounted in `src/api/server.ts:47-55` under `/api`.
+Both routes are defined in `src/api/profile.ts` and mounted in `src/api/server.ts:48-56` under `/api`.
 
 ### `GET /api/profile`
 
@@ -95,7 +95,7 @@ Create or edit. Body: `{initData?, userId?, rollNo, displayName?}`.
 5. `upsertRegistration` runs, then a `register` activity event is recorded (with the roll as detail) for the admin panel.
 6. Response: `{ok:true, registered:{roll_no, name}}`.
 
-The route additionally sits behind `profileWriteLimit` — 20 requests / 15 minutes / IP (`src/api/server.ts:49-54`) — beyond the global API rate limit.
+The route additionally sits behind `profileWriteLimit` — 20 requests / 15 minutes / IP (`src/api/server.ts:50-55`) — beyond the global API rate limit.
 
 ## Registered shortcut commands
 
@@ -107,7 +107,7 @@ The route additionally sits behind `profileWriteLimit` — 20 requests / 15 minu
 2. **Registration found** → verifies the roll still exists in `studentsnew`; on success it fire-and-forgets a `tgusers` mapping refresh (keeping "You are #N" consistent) and returns the roll.
 3. **Stale registration** (roll left the master table after a sync) → sends a "semester rollover?" prompt with the same register button and returns null.
 
-The commands also enforce the existing gates before resolving anything: bot rate limiting, channel membership, and the daily check-in gate (identical to the roll-number flow), plus the chit-chat group silence.
+The commands also enforce the existing gates before resolving anything: bot rate limiting, channel membership, and the group-use gate (identical to the roll-number flow), plus the chit-chat group silence.
 
 `/register` itself (`src/bot/commands/register.ts`) posts an explainer with an "Open registration" `web_app` button pointing at the profile page.
 
@@ -120,9 +120,9 @@ The profile form is a **separate mini app page** from the leaderboard:
 - `src/web/src/views/Profile.tsx` — the form itself: roll input (uppercased, validated with the same `ROLL_REGEX` client-side), optional display name (max 40), save button, success/error states, suggestion chips for unknown rolls, a stale-registration banner, and the live college-record name when available
 - `src/web/src/useProfile.ts` — data layer: loads `GET /api/profile`, exposes `save(rollNo, displayName)` returning `{error, suggestions?}`
 - `src/web/src/useTelegramIdentity.ts` — the shared identity hook (WebApp user id + initData), also used by the leaderboard
-- `src/web/vite.config.ts` — builds both entries (`index.html`, `register.html`)
+- `src/web/vite.config.ts` — builds the three entries (`index.html`, `register.html`, `report.html`)
 
-Both mini apps deploy to GitHub Pages from the same `dist/`; the URLs live in `src/constants/webapp.ts` (bot side) and `src/web/src/constants.ts` (web side), consumed as `web_app` buttons so Telegram opens them full-screen with a native back button.
+All three mini apps (leaderboard, profile, report) deploy to GitHub Pages from the same `dist/`; the URLs live in `src/constants/webapp.ts` (bot side) and `src/web/src/constants.ts` (web side), consumed as `web_app` buttons so Telegram opens them full-screen with a native back button.
 
 The leaderboard (`index.html`) links to the profile page with a floating "👤 My profile" button.
 

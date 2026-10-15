@@ -1,24 +1,24 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:b9b96108276fa5838f4758211b1ea4640992e26a857d526f2bf1e65be2e11490",
+  "pageVersion": "sha256:5f1debd1d259b5b18de6a750a622907e03417c3b77a2c814af15d6d7c567bfa8",
   "claims": [
     {
       "id": "claim_1939087266cd4b8f86382aafea6b2ace",
       "statement": "NbkristQik runs the Telegram bot and Express API in a single Node process from src/bot/index.ts, starting bot polling only after database init, handler imports, and API server startup.",
       "evidence": [
         {
-          "resource": "repo://src/bot/index.ts#L38-L85",
-          "version": "repo-lines-v1:sha256:c4bc2c8efc16d7d7dd02629e6850a36c7f61e3e6994b6811e943c69e0447fcee:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZmY3ZDEzMTA2NmM2MDE2NjU5Yjc0Y2UxMzc2NGI0OTAzMmIwNTI5OTIzOTNkZDhlMTUyMjFjZjhlNTAxNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3YjQ1MzEyOGRkNTU2MDFmMjg2MDg2NGM0OWM4OGY4ODE2NjM3MzliZDRkNzBiYzIwNmQ4YjZiYmQ4YWUzYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjNWI1MTVjZTBkOTFlZjNiYzg5YzgwNzZhYWNhYmE0YjRiYTEyYTk2NjRlM2E0ZTlhZDE2YTdkMmYzNzQ5MmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://src/bot/index.ts#L41-L79",
+          "version": "repo-lines-v1:sha256:c518ea46252fb79b97292658206aae040ad16ef27320c0b3c80f8f7569a081b5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZmY3ZDEzMTA2NmM2MDE2NjU5Yjc0Y2UxMzc2NGI0OTAzMmIwNTI5OTIzOTNkZDhlMTUyMjFjZjhlNTAxNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4ZDEwN2RhZjkzMzMzYTY5YzI4MTViNDBiZDgwZjg3OTU2NGJjZTFlMDU0MDNiOTY5M2NjY2QxNTAyODQ1NWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjNWI1MTVjZTBkOTFlZjNiYzg5YzgwNzZhYWNhYmE0YjRiYTEyYTk2NjRlM2E0ZTlhZDE2YTdkMmYzNzQ5MmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM3ZDMxZjM1YzRhNmIyZDVmMDQwNTIxODU1NTNjNmMwZDk0NWY0NjBkMjg1Yzc0NmViZjliM2JhOTQ3ZjYyNWUifQ"
         }
       ]
     },
     {
       "id": "claim_673b14de17b4473daa3c50719283c605",
-      "statement": "Persistence is Turso (libSQL/SQLite) through @libsql/client, and Redis provides caching.",
+      "statement": "Persistence is a single libSQL/SQLite database through @libsql/client — an embedded file when LOCAL_DB_URL is set, otherwise Turso Cloud — and Redis provides caching.",
       "evidence": [
         {
-          "resource": "repo://src/db/db.ts#L1-L8",
-          "version": "repo-lines-v1:sha256:fc21eb92824dd04e604abc9cf4f44b0f2ac01b3114cc63853568605b8a03024e:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTdjNzc1ZmFjNjdhNTIxNjAyZTFjOWFkOTEzODI5ZGYxNzAxMjlhOWRhNDNlNWVmN2E5OTQyMzI3N2M5NjA2OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjZmNWI0MGIxNTg0NTdkMTc4NjRmMjE3OTA3ODZkZDVhMmVjZGI2NGI2NmE2NTFmNzg4ZDRlMjVjZDMzMDNkMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+          "resource": "repo://src/db/db.ts#L13-L20",
+          "version": "repo-lines-v1:sha256:3e622b2c7c16c59459a21b741c7c86a9bcc74f646c11d10a60c8d6685f64aa12:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGUwNmMxYjc5ODAwNDE3Y2Y5NWE5MjBjZWUzODU3Mzc4NGI3YjM3NTk4YzY5NjVjYTQyNGM3M2RlZWQ3MjIxZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjJkMTFjYWY0M2U5N2VmMzY5ZTZiZWVkMWEyNjhiZDA1ODM4ZjI5YjlkZDI1NGJmNjliYTY0ODg0MTQ3MjM0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjE1MDQ3YTkzN2U2YTQ3ZmQxYTdmM2ZkZWEwNzY5MmQyNjZkZTBiZDY5MTNkYWY5YzZhZjMwODVjMTQ2YjlhMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
         },
         {
           "resource": "repo://src/services/redis/getRedisClient.ts#L7-L14",
@@ -69,18 +69,40 @@
       "statement": "Registered users get /attendance, /midmarks, and /bunk instant commands backed by the registrations table; unregistered users keep the roll-number menu flow.",
       "evidence": [
         {
-          "resource": "repo://src/bot/commands/registered.ts",
-          "version": "repo-file-v1:sha256:134eb68084e1d2728a4e6ce4a34d020aa8bb3f29c89b9ad483d0420c17a58a1c"
+          "resource": "repo://src/bot/commands/registered.ts#L104-L175",
+          "version": "repo-lines-v1:sha256:bc1c764a726274b912849eeef6c3bf8ae70f6b84729b239264d640ce225b75d0:eyJzZWxlY3RlZExpbmVDb3VudCI6NzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyODEzMmJhZTY5NDg0MGY5MTQ4MGFhNzg5YzgwMDVkM2JiYWQ1NTVlMmVkOTdmODZlOThjNjFiMDEwNjQ5OTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkZDg3OWRhOTU2MGNmMzU4ZGRjMGE0OThmZmE0YTljZWE4YjJkYmNmYTU5NTIxOTMzMzlkYTg4NDE3OTYzYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlY2ViYjc5MmU4YWNlYzJlNzFmNTE4Y2M4MDFhMTA1OTIxYTdlZDI1MjBkYTBkYjc1OGE2NDhhYjA4MGQ2OGEifQ"
         },
         {
-          "resource": "repo://src/db/init.ts#L69-L76",
-          "version": "repo-lines-v1:sha256:4c8624ea526b8526c5224d289e8bf909da2eadbe32cf10b78cf2457448d563e1:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODAxZmE2MTk1OGUyN2RiYWM4MGI0OTYwZmZjYzJlODU2Mjc2NjZmNDFlNDQ1N2NhNjExNjgyNTg0NjRiYjExOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODRlNDIwOGNkNmZmYjhjNGEzNTQ3YjJmNTRhZGExOTk3OGMzZjM2NWU3OGY5NTAyZWY1MTQ1Y2RkMmFhODU0MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmY1MDNiY2M3M2QzZjY2M2ZjZTdlZTc4NDIwNzk5NGI2NTNlYWU4NzQ0ZDc4MGRiNGQ5YmE3Zjk0ZjU0MzczZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGZjN2NhOWM5MTFjZWVmMWRhZjQ3ZGI4NjUzMTM0Y2NkY2VkNjY0ZjRkYzFhYzhlN2ViOTNkN2QxMDhkYjQzYiJ9"
+          "resource": "repo://src/bot/commands/registered.ts#L189-L191",
+          "version": "repo-lines-v1:sha256:52c368d236dece89d04a98f68b8a70b8435ed372859222ea66a0580674902b43:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODE1OTkyODcwZDg3MTMwMWVhNzY4NzdhNWMyYzNkYzQxZTYwMTBjMDEzMTVkNTZhOWE3ZjJmYzVmZjNjNTViMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDA2YzMwNDk0NzJhMjg5YWJlMWRmMGVhNTA3M2Q2YTVlNGE5MGE0OTY1NmQwY2VlOWNmMTZhY2Y2ZjU0YTRmMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzczYjBkYmUyMThjNzg1YjhhZjgwM2E4YmVkMGVlZWY1Nzc2ZTE1M2QzYWM5MWUzMWJjOWE5MmY1MmVhMjEwNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        },
+        {
+          "resource": "repo://src/db/init.ts#L69-L77",
+          "version": "repo-lines-v1:sha256:26ba61658862ca30bdd97a05f9023e05f1640eabd896192620f2af081a20c88b:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODAxZmE2MTk1OGUyN2RiYWM4MGI0OTYwZmZjYzJlODU2Mjc2NjZmNDFlNDQ1N2NhNjExNjgyNTg0NjRiYjExOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmRmMjExZmIzNTVhY2EzZWFiZTQwYWViMTI1NGMyNzRlZTNiMWUyOWYxMzNkMGU3NjYyMWMxZTJmZmJkOGY0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmY1MDNiY2M3M2QzZjY2M2ZjZTdlZTc4NDIwNzk5NGI2NTNlYWU4NzQ0ZDc4MGRiNGQ5YmE3Zjk0ZjU0MzczZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGNlMjZhYzY4YWRhYWI5YWJkMjZhNWFmNDNmNjg4NWM1YmRhMjcxZTIzZTYyNjE1ZWJkMzdhYzk5Zjk5NWEyOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b7cf0f3ae99748c884b15cd40a4395a0",
+      "statement": "Backend tests run once with `pnpm exec vitest run` (bare `pnpm test` starts the watcher); the web app is a separate package with its own test script.",
+      "evidence": [
+        {
+          "resource": "repo://package.json",
+          "version": "repo-file-v1:sha256:5fc40978db2e84f1cdf16b46a3f0dad285fbb9c36991cbb1b80b996b88fb0e13"
+        },
+        {
+          "resource": "repo://src/web/package.json",
+          "version": "repo-file-v1:sha256:46b3189bb11fb6e5d847c09e2518c0fbaa767ae96e2edb7c890c8e1b49628686"
+        },
+        {
+          "resource": "repo://vitest.config.ts",
+          "version": "repo-file-v1:sha256:d83bb9021648294f750fc9a9333e2f15afa3a1e551d8deb381160e4feaa22ddb"
         }
       ]
     }
   ],
   "verification": {
-    "by": "openwiki/0.7.1",
-    "at": "2026-10-09T23:13:13.880Z"
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-15T21:12:57.495Z"
   }
 }

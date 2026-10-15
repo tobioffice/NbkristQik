@@ -1,11 +1,8 @@
 ---
 type: architecture
 title: Caching and Leaderboard Stats
-description: Redis client lifecycle and cache keys with TTLs, background full-section attendance and midmarks caching into student_stats, and the Turso RANK() ranking design behind the leaderboard and per-student rank lookup.
+description: Redis client lifecycle and cache keys with TTLs, background full-section attendance and midmarks caching into student_stats, and the libSQL/Turso RANK() ranking design behind the leaderboard and per-student rank lookup.
 tags: [redis, caching, leaderboard, ranking, ttl]
-verified:
-  - by: openwiki/0.7.1
-    at: 2026-10-09T23:13:13.880Z
 sources:
   - id: openwiki-source-714e0c91fd122c36f3217aa4
     resource: repo://src/api/server.ts
@@ -25,7 +22,10 @@ sources:
     resource: repo://src/services/student.utils/checkMembership.ts
   - id: openwiki-source-4ccceffb43b70d8bf38d07a2
     resource: repo://src/services/tracker.ts
-generated: { by: "opencode", at: "2026-10-09T23:13:13.880Z" }
+generated: { by: "opencode", at: "2026-10-15T21:12:57.495Z" }
+verified:
+  - by: openwiki/0.7.2
+    at: 2026-10-15T21:12:57.495Z
 ---
 
 # Caching and Leaderboard Stats
@@ -34,7 +34,7 @@ Two layers keep the leaderboard fast and the portal polite: a Redis cache that a
 
 ## Redis client lifecycle
 
-`getClient()` (`src/services/redis/getRedisClient.ts`) caches the **connect promise**, not the client. Concurrent first callers share one client — no double connect — and a failed connect is not pinned forever: the rejection handler clears `clientPromise` so the next caller retries. The reconnect strategy is bounded to about four attempts before `connect()` settles with an error, so callers can fall back (the leaderboard serves from Turso) instead of hanging when Redis stays down.
+`getClient()` (`src/services/redis/getRedisClient.ts`) caches the **connect promise**, not the client. Concurrent first callers share one client — no double connect — and a failed connect is not pinned forever: the rejection handler clears `clientPromise` so the next caller retries. The reconnect strategy is bounded to about four attempts before `connect()` settles with an error, so callers can fall back (the leaderboard serves from the database) instead of hanging when Redis stays down.
 
 After a failed connect, a **30-second cooldown** (`RETRY_COOLDOWN_MS`, `lastFailureAt`) makes subsequent callers fail fast with "Redis connect in cooldown after failure" instead of re-paying the full reconnect timeout on every request. After the cooldown, the next caller retries the connect.
 
@@ -50,10 +50,12 @@ All key names are built by the shared `redisKeys` module in `src/services/redis/
 | `lb:{sort}:{page}:{limit}:{filters}` | `/api/leaderboard` | 60 s | Serialized leaderboard response |
 | `isMember:{userId}` | `checkMembership` positive result | 1 day | Channel membership |
 | `track:p:{userId}` | tracker NX gate | 60 s | Throttles per-user profile upserts |
-| `dailyUnlocked:{userId}` | check-in callback | until IST midnight | Daily gate |
-| `checkin:post:msgId`, `sync:semType`, `qik:users` | check-in/syncdb | none | Operational state |
+| `report:gate:{userId}` | report submission | 60 s | One report per user per minute |
+| `report:thread:{userId}` | report thread replies | 3 s | Conversation-paced reply throttle |
+| `groupUses:{userId}` | group-use funnel | none — lifetime | Academic answers served in group chats |
+| `sync:semType`, `qik:users` | sync / authorization | none | Operational state |
 
-`cacheFlushPatterns` in the same module defines the SCAN globs (`student:*`, `attendance:*`, `midmarks:*`, `lb:*`) that `/syncdb` deletes after a semester rollover.
+`cacheFlushPatterns` in the same module defines the SCAN globs (`student:*`, `attendance:*`, `midmarks:*`, `lb:*`) that `/syncdb` deletes after a semester rollover. The `groupUses` counter is deliberately not among them, so a sync never resets a user's 2 lifetime group answers.
 
 `getStudentCached` (`src/services/redis/utils.ts`) raises `StudentNotFoundError` with up to three nearby-roll suggestions when the roll is absent from `studentsnew`, and that error is deliberately propagated rather than masked as an outage.
 

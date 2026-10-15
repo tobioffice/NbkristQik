@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:eae5f98567eb7b26c9eb8bfdb5485840584a0555608a8e445b3b56972ba89c01",
+  "pageVersion": "sha256:4afa5fc94aa6063863107918540f338d0b7318c9e503cf415de1b2292b6de384",
   "claims": [
     {
       "id": "claim_e4c0ed10281d4b0abc909cd7b42d6b45",
       "statement": "The admin panel is disabled entirely unless both ADMIN_PANEL_PATH and ADMIN_PANEL_PASSWORD environment variables are set.",
       "evidence": [
         {
-          "resource": "repo://src/api/admin/index.ts#L22-L31",
+          "resource": "repo://src/api/admin/index.ts#L23-L32",
           "version": "repo-lines-v1:sha256:174d8919b2832cdf848f0a095798601f6145f0c7dbb865dc1d7f40b03c87005f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkN2YyMzk2ZGMxMGE3OTE3ZDliNzhjNDYxOTA1ZDZjNTU4MjYzZDQ1M2RhMjljN2ZhMGE0ODU4Zjg0ZGFjNzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNiMjJiNzRmNWY2OWIxZDgyZTg0YThlZTFlNWMzMGNkMjc2NDliZTRiYTJlYzczNjFkNWYwYmIyYTI0YzQ3ZDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE2ZDcwNDg4NTgzMzhiN2RiZWIyOTQzMTU0NjgwZTBlZTQyZWQ2NzBkYjdkMzMyZjNkZTIxZGQxNWI2MTFkZWQifQ"
         }
       ]
@@ -17,11 +17,11 @@
       "statement": "Admin routes are registered before the global sanitizer middleware so passwords containing angle brackets are not mangled.",
       "evidence": [
         {
-          "resource": "repo://src/api/admin/index.ts#L22-L31",
+          "resource": "repo://src/api/admin/index.ts#L23-L32",
           "version": "repo-lines-v1:sha256:174d8919b2832cdf848f0a095798601f6145f0c7dbb865dc1d7f40b03c87005f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkN2YyMzk2ZGMxMGE3OTE3ZDliNzhjNDYxOTA1ZDZjNTU4MjYzZDQ1M2RhMjljN2ZhMGE0ODU4Zjg0ZGFjNzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNiMjJiNzRmNWY2OWIxZDgyZTg0YThlZTFlNWMzMGNkMjc2NDliZTRiYTJlYzczNjFkNWYwYmIyYTI0YzQ3ZDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE2ZDcwNDg4NTgzMzhiN2RiZWIyOTQzMTU0NjgwZTBlZTQyZWQ2NzBkYjdkMzMyZjNkZTIxZGQxNWI2MTFkZWQifQ"
         },
         {
-          "resource": "repo://src/api/server.ts#L42-L45",
+          "resource": "repo://src/api/server.ts#L43-L46",
           "version": "repo-lines-v1:sha256:ce06d106642541f7e21e15f5dd407e1ec30fdd9aa4e73643a89ef90a46b4c1d0:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWZjNzY4MDQ0YTAyN2JmNWQ1YWZmY2QwNTg0MjA0NDQ2NjExZjA2YmVhNGY0YTMxN2Y3ZDAzN2M1ZTZhZDc4ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODI4Y2FhZWU4ZDMzZmIxZDVjYzFhZWNiYzcyZTllNTI5NTBhYmY3YjFmNjdiMTE5ZDMzZjY0OWQzNzA2Y2ZjNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjk5N2U4NjY1MWUyNWQ5MDc1ZjY5YmIzMzAzNDY3ZTcxZDYyNjUzYWYxOTU1MTgwNTFlNDFkYmRmYjA4ZGYwNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmYyYmFmZmI1NGE3YWYzYWExNGI4MmVhZjM0YzgyNjU3Y2Q2NGRlZDMzOTg1NjIwZWViYTlmYmYxYmQ0YWFmZCJ9"
         }
       ]
@@ -83,8 +83,8 @@
       "statement": "A small in-memory response cache (cached helper, 200-entry cap) fronts the read-heavy admin endpoints with per-endpoint TTLs.",
       "evidence": [
         {
-          "resource": "repo://src/api/admin/cache.ts#L1-L20",
-          "version": "repo-lines-v1:sha256:b1b52430b37af0dcae3e201f7b7968257b4a3944f2d9daeba9e49657efa2ffbd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzNDM4YTIxOTg0NzE0ODEyYWNmNTIxNzAxNmYyYmNlNDUyMDUxZTEzYjFjOGNkY2U4NWY2ZGUyNTg0N2EwMzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNmY2UyNmY2MjdmMTc0MzBiMTVjZDM4Mzk1NTUzM2QwZjlkMjIxMDg4YzU0ZDgzOTA5NWE0ZTM0OGIxOTg0ZGMifQ"
+          "resource": "repo://src/api/admin/cache.ts#L1-L27",
+          "version": "repo-lines-v1:sha256:0118b0663811b2c533a506388c4f37eb0396040532a5fd57fdda662eb0b5bf6a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzNDM4YTIxOTg0NzE0ODEyYWNmNTIxNzAxNmYyYmNlNDUyMDUxZTEzYjFjOGNkY2U4NWY2ZGUyNTg0N2EwMzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNmY2UyNmY2MjdmMTc0MzBiMTVjZDM4Mzk1NTUzM2QwZjlkMjIxMDg4YzU0ZDgzOTA5NWE0ZTM0OGIxOTg0ZGMifQ"
         }
       ]
     },
@@ -132,21 +132,25 @@
     },
     {
       "id": "claim_5a82a1f2cb094796bf220b346c6bf1de",
-      "statement": "The panel frontend is one self-contained HTML document, composed at build-time from CSS in src/api/admin/panel.css.ts and client JS in src/api/admin/panel.js.ts, with no external assets except the Outfit webfont; the extracted assets keep the served HTML byte-identical to the previous single-template version.",
+      "statement": "The panel frontend is one self-contained HTML document, composed at build-time from CSS in src/api/admin/panel.css.ts and client JS in src/api/admin/panel.js.ts, with no external assets except the Public Sans webfont; the extracted assets keep the served HTML byte-identical to the previous single-template version.",
       "evidence": [
         {
+          "resource": "repo://src/api/admin/panel.css.ts",
+          "version": "repo-file-v1:sha256:777415c92f3e8563057310e8f5cf9ddc612e4f30fa6c5f5f6bda19b6fb1a43dd"
+        },
+        {
           "resource": "repo://src/api/adminPanel.ts",
-          "version": "repo-file-v1:sha256:9df3e1da4638e4088be8c44d8c19833d2918764e924dee11e8e4197aac5046c0"
+          "version": "repo-file-v1:sha256:8a8a75287c10072a4678b6f97d3a1cf0ed36e8215166a8677e30e2af6b134f11"
         }
       ]
     },
     {
       "id": "claim_f6f195167e9c4cbb89041e34739d1da1",
-      "statement": "The live view polls /api/recent every 10 seconds while active and visible; client-side staleness TTLs mirror the server-side cache TTLs.",
+      "statement": "The live view polls /api/recent every 10 seconds while active and visible; the reports view refreshes on a 30-second tick when stale; client-side staleness TTLs mirror the server-side cache TTLs.",
       "evidence": [
         {
-          "resource": "repo://src/api/admin/panel.js.ts#L126-L130",
-          "version": "repo-lines-v1:sha256:b98007bb3a8222febc55d028d79c6d13fcc9f2b2ac2c5ace66ea39c2fc03fa47:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2Y5YzQ4NDMwODEwYzJhODM3ZTAyNzgxMjVjYTZkOWQ0NGM3NTYwNzRiMGMyMTRkMDdlYTYzOTBjMTg3M2M2NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzU1MTQ5YTVmM2M2MGEzNTE4YmI3N2E3NDhhN2Y1Y2VlNmM5ZjQ4MjhjZDFhNDhlYzY4ZmRmMzUyNTAzZmY1YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2M3YzQ4MDcyNjA1MGYwOTQxMDc4N2EyOTBiZjY4ZGNmYmZkY2RhNDk2NzZkZDAwMDkyOTI1NGU4NjllYTRiOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmM4MDBkMTZhMzBjOGNiYTE3MWY0YzUyMjdmODNhMmVjZWJmOWRmNTM4NzIyZWY2NDI2NzM1ZDIyYjY3MjY1OCJ9"
+          "resource": "repo://src/api/admin/panel.js.ts",
+          "version": "repo-file-v1:sha256:6c5d5759db88e2ab2db25194ad22b526c71a32af0b011c387ea8f8755448474e"
         }
       ]
     },
@@ -176,11 +180,11 @@
     },
     {
       "id": "claim_7cf21e1929cc40c594650f96834ada2d",
-      "statement": "The admin routes are split into focused modules: index.ts wires route registration, auth.ts holds session/cookie/rate-limit primitives, login.ts mounts login/logout, cache.ts holds the response cache, overview.ts, users.ts, and feed.ts mount the data endpoints.",
+      "statement": "The admin routes are split into focused modules: index.ts wires route registration, auth.ts holds session/cookie/rate-limit primitives, login.ts mounts login/logout, cache.ts holds the response cache, overview.ts, users.ts, feed.ts, and reports.ts mount the data endpoints.",
       "evidence": [
         {
-          "resource": "repo://src/api/admin/index.ts#L1-L46",
-          "version": "repo-lines-v1:sha256:6fe5b4b824a5126032d3143450f971aa11cffb4ee719a124e7c0818dd8d5f29d:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0ZjNiMzhiMGM3NTY0YzQ5NmZmNTNhMTcyYWMzNjA1OWQ0MzUxMDEyMjkzMTU5NTZjMjkxZDdhZjIxYTA0MGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY0ZTNiNjdlOTE4MzUxZWJiMmQ4ODllNzViMzkzZGIyNjAwM2ZlMGMxNjk2NDY4MTBiMzAxM2YzYTllZGEwOWMifQ"
+          "resource": "repo://src/api/admin/index.ts",
+          "version": "repo-file-v1:sha256:60b1b91fcf41d2e95c5fe95a1f28520fd019972883c039ba071564a2d1c725ed"
         }
       ]
     },
@@ -193,10 +197,30 @@
           "version": "repo-lines-v1:sha256:97bab37063a101e76c8cda4e74897353be34917d633ef49744dfb81d97078e69:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzQyMTI3MmQ0NzE4MDhiMzIzYzBkYmQ5YWEwMTZhMjA1ZWVhODg2YTU2M2QwMmJlNGY5Nzg2YWFhMWZhOWExYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWExZDFhNjMzOTAyMjljNzk4MzQ3ZTgzYTA0MDU0NDFjOTQwMDAzNTI4NGFkMTY4YzFiZjZjZGYxZDcwYTM3MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmY5MzExYzNkM2EzNzA4MzViODAyZjVmOWEzOTViNjI4OGZjOTE3ZDVhMmJjNDJlYzRhMzNiNTZlOGU2YjY0NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjZlZDFiMzQyZjE2NDBkY2VmN2U1ZjFkZDYyODk0NjYyZGQyYjI4ZDY2MmZhZTRlNmE3Y2M0NmY5ZjMyNGY5OSJ9"
         }
       ]
+    },
+    {
+      "id": "claim_c575c49241b04cf3bcd2c65ae2659ba9",
+      "statement": "The reports inbox (GET api/reports, 30 s cache) lists issues with a status filter; the thread view reads one conversation, and reply/close/reopen mutate it and invalidate the reports: cache keys.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/reports.ts",
+          "version": "repo-file-v1:sha256:1afe3ffc7cd77331c548baecc8cd8214159407fa886cff9008e6b0441c73a9fd"
+        }
+      ]
+    },
+    {
+      "id": "claim_06743552866f4a34863747fbec175156",
+      "statement": "Closing an issue marks it resolved, which locks the student's thread view read-only; reopening returns the issue to the inbox.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/admin/reports.ts",
+          "version": "repo-file-v1:sha256:1afe3ffc7cd77331c548baecc8cd8214159407fa886cff9008e6b0441c73a9fd"
+        }
+      ]
     }
   ],
   "verification": {
-    "by": "openwiki/0.7.1",
-    "at": "2026-10-09T23:13:13.880Z"
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-15T21:12:57.495Z"
   }
 }
