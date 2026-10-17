@@ -38,6 +38,9 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+      - name: Audit production dependencies (fail on high or critical)
+        run: pnpm audit --prod --audit-level=high
+
       - name: Run tests
         run: pnpm run test:coverage
 
@@ -75,6 +78,9 @@ jobs:
 
       - name: Run linter
         run: pnpm run lint
+
+      - name: Audit production dependencies (fail on high or critical)
+        run: pnpm audit --prod --audit-level=high
 
       - name: Run tests
         run: pnpm test
