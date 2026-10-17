@@ -83,7 +83,7 @@ describe("AcademicTG Module", () => {
 
       const message = await academicTG.getMidmarksMessage();
 
-      expect(message).toContain("📊 Mid Marks Report");
+      expect(message).toContain("Mid marks for");
       expect(message).toContain("21B81A05E9");
       expect(message).toContain("3_CSE_A");
       expect(message).toContain("<pre>");

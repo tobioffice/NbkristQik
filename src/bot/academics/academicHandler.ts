@@ -20,6 +20,7 @@ import {
 import {
   botSecurityHandler,
   isValidRollNumber,
+  normalizeRollNumber,
 } from "../../middleware/security.js";
 import { ADMIN_ID } from "../../config/environmentals.js";
 import { logger } from "../../config/logger.js";
@@ -84,40 +85,48 @@ const sendRollOptions = (
   chatId: number,
   rollNumber: string,
   replyToMessageId: number,
+  isPrivate: boolean,
+  notice?: string,
 ) =>
-  bot.sendMessage(chatId, "Pick an option:", {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "Attendance 🚀", callback_data: `att_${rollNumber}` }],
-        [{ text: "Mid Marks 📊", callback_data: `mid_${rollNumber}` }],
-        [{ text: "Bunk Plan 🎯", callback_data: `bunk_${rollNumber}` }],
-        [
-          {
-            text: "Leaderboard 🏆",
-            url: WEBAPP_URL,
-          },
+  bot.sendMessage(
+    chatId,
+    `${notice ? `${notice}\n\n` : ""}What do you want to check?`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "Attendance 🚀", callback_data: `att_${rollNumber}` }],
+          [{ text: "Mid Marks 📊", callback_data: `mid_${rollNumber}` }],
+          [{ text: "Bunk Plan 🎯", callback_data: `bunk_${rollNumber}` }],
+          [
+            // web_app buttons are private-only; groups get a plain link
+            isPrivate
+              ? { text: "Leaderboard 🏆", web_app: { url: WEBAPP_URL } }
+              : { text: "Leaderboard 🏆", url: WEBAPP_URL },
+          ],
         ],
-      ],
+      },
+      reply_to_message_id: replyToMessageId,
     },
-    reply_to_message_id: replyToMessageId,
-  });
+  );
 
 const handleRollNumberMessage = async (msg: Message): Promise<void> => {
   const chatId = msg.chat.id;
   const from = msg.from;
   if (!from || !msg.text) return;
+  // channels are broadcast: no lookups, no menus, nothing posted back
+  if (msg.chat.type === "channel") return;
   const userId = from.id;
-  const rollNumber = msg.text.trim().toUpperCase();
+  const rawRoll = msg.text.trim().toUpperCase();
+  // letter O never appears in real rolls, so a typed O is always a zero
+  const rollNumber = normalizeRollNumber(rawRoll);
+  const corrected = rollNumber !== rawRoll;
 
   persistRollMapping(userId, rollNumber);
 
   // Check rate limit first
   const rateLimitAllowed = await botSecurityHandler(userId, "roll_number");
   if (!rateLimitAllowed) {
-    await bot.sendMessage(
-      chatId,
-      "🚫 Slow down a little. Try again in a minute.",
-    );
+    await bot.sendMessage(chatId, "Too fast for me. Try again in a minute.");
     return;
   }
 
@@ -125,7 +134,7 @@ const handleRollNumberMessage = async (msg: Message): Promise<void> => {
   if (!isValidRollNumber(rollNumber)) {
     await bot.sendMessage(
       chatId,
-      "⚠️ That roll number doesn't look right. Check it and try again.",
+      "That roll number doesn't look right. Check it and send it again.",
     );
     return;
   }
@@ -134,7 +143,8 @@ const handleRollNumberMessage = async (msg: Message): Promise<void> => {
   if (!authorized) return;
 
   // group chats get 2 lifetime answers; past that, point the user to DM
-  if (!(await checkGroupUse(userId, chatId, msg.message_id))) return;
+  if (!(await checkGroupUse(userId, chatId, msg.message_id, msg.chat.type)))
+    return;
 
   trackActivity({
     userId,
@@ -145,7 +155,15 @@ const handleRollNumberMessage = async (msg: Message): Promise<void> => {
     detail: rollNumber,
   });
 
-  await sendRollOptions(chatId, rollNumber, msg.message_id);
+  await sendRollOptions(
+    chatId,
+    rollNumber,
+    msg.message_id,
+    msg.chat.type === "private",
+    corrected
+      ? `Heads up, I read that O as 0, showing <code>${rollNumber}</code>.`
+      : undefined,
+  );
 };
 
 // chit chat group: delete roll numbers, brief in-group notice that self-deletes
@@ -154,7 +172,7 @@ const handleChitChatRoll = (msg: Message) => {
   bot
     .sendMessage(
       msg.chat.id,
-      "🤖 Roll numbers don't work here. DM @NbkristQik_bot to check attendance",
+      "I can't check rolls in this group. Tap @NbkristQik_bot and send it there.",
       { disable_notification: true },
     )
     .then((notice: Message) => {
@@ -175,7 +193,7 @@ bot.onText(ROLL_REGEX, (msg) => {
     bot
       .sendMessage(
         msg.chat.id,
-        "⚠️ Something went wrong on my side. Please try again in a moment.",
+        "Something broke on my side. Try again in a bit.",
       )
       .catch(() => {});
   });
@@ -186,7 +204,7 @@ bot.onText(ROLL_REGEX, (msg) => {
 const handleChitChatCallback = async (callbackQueryId: string) => {
   await bot
     .answerCallbackQuery(callbackQueryId, {
-      text: "🤖 The bot doesn't reply here. DM @NbkristQik_bot instead",
+      text: "I don't reply in this group. Message @NbkristQik_bot instead",
       show_alert: true,
     })
     .catch(() => {});
@@ -199,7 +217,7 @@ bot.on("callback_query", async (callbackQuery) => {
     logger.error("[academicHandler] callback failed:", e);
     bot
       .answerCallbackQuery(callbackQuery.id, {
-        text: "⚠️ Something went wrong, please try again",
+        text: "Something broke on my side. Try again in a bit.",
         show_alert: true,
       })
       .catch(() => {});
@@ -213,6 +231,12 @@ const handleCallbackQuery = async (
 
   if (!msg) return;
 
+  // channel taps: dismiss the spinner, serve nothing (broadcast, not a chat)
+  if (msg.chat.type === "channel") {
+    await bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
+    return;
+  }
+
   if (msg.chat.id === CHIT_CHAT_ID) {
     await handleChitChatCallback(callbackQuery.id);
     return;
@@ -224,7 +248,7 @@ const handleCallbackQuery = async (
   const rateLimitAllowed = await botSecurityHandler(userId, "callback");
   if (!rateLimitAllowed) {
     await bot.answerCallbackQuery(callbackQuery.id, {
-      text: "🚫 Slow down a little. One minute.",
+      text: "Too fast for me. Try again in a minute.",
       show_alert: true,
     });
     return;
@@ -233,7 +257,7 @@ const handleCallbackQuery = async (
   const authorized = await isAuthorizedUser(userId, msg.chat.id);
   if (!authorized) {
     await bot.answerCallbackQuery(callbackQuery.id, {
-      text: "❌ You need to be authorized first",
+      text: "Join the channel first, then try again.",
       show_alert: true,
     });
     return;
@@ -241,7 +265,9 @@ const handleCallbackQuery = async (
 
   // same group gate as the message flow; the redirect goes to the group,
   // so just dismiss the spinner here
-  if (!(await checkGroupUse(userId, msg.chat.id, msg.message_id))) {
+  if (
+    !(await checkGroupUse(userId, msg.chat.id, msg.message_id, msg.chat.type))
+  ) {
     await bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
     return;
   }
@@ -284,7 +310,7 @@ const handleCallbackAction = async (data: string, msg: Message) => {
     if (!isValidRollNumber(rollNumber)) {
       await bot.sendMessage(
         msg.chat.id,
-        "⚠️ That roll number doesn't look right!",
+        "That roll number doesn't look right. Check it and send it again.",
       );
       return;
     }
@@ -294,7 +320,7 @@ const handleCallbackAction = async (data: string, msg: Message) => {
     if (!isValidRollNumber(rollNumber)) {
       await bot.sendMessage(
         msg.chat.id,
-        "⚠️ That roll number doesn't look right!",
+        "That roll number doesn't look right. Check it and send it again.",
       );
       return;
     }
@@ -304,7 +330,7 @@ const handleCallbackAction = async (data: string, msg: Message) => {
     if (!isValidRollNumber(rollNumber)) {
       await bot.sendMessage(
         msg.chat.id,
-        "⚠️ That roll number doesn't look right!",
+        "That roll number doesn't look right. Check it and send it again.",
       );
       return;
     }

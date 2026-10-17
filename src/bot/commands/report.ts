@@ -28,8 +28,7 @@ bot.onText(/\/report$/, (msg) => {
   bot
     .sendMessage(
       msg.chat.id,
-      `🐞 <b>Report an issue</b>\n\n` +
-        `Open the form and describe what went wrong. You'll get an issue id like <code>QIK-0012</code>, and I'll reply here in chat.`,
+      `Something broken? Open the form and tell me what happened. You'll get a tracking id like <code>QIK-0012</code> and I'll reply here.`,
       {
         parse_mode: "HTML",
         reply_markup: {
@@ -61,7 +60,7 @@ bot.onText(/\/report ([\s\S]+)/, async (msg, match) => {
   if (text.length < 10 || text.length > 1000) {
     bot.sendMessage(
       chatId,
-      "Give me a bit more detail so I can help: between 10 and 1000 characters.",
+      "Give me a little more to go on, between 10 and 1000 characters.",
     );
     return;
   }
@@ -81,12 +80,12 @@ bot.onText(/\/report ([\s\S]+)/, async (msg, match) => {
     });
     // the service already confirmed in DM; in groups confirm inline too
     if (chatId !== from.id) {
-      bot.sendMessage(chatId, `✅ Report ${issueId} received.`);
+      bot.sendMessage(chatId, `Got it, I've filed ${issueId}.`);
     }
   } catch (e) {
     logger.error("[report] chat submission failed:", e);
     bot
-      .sendMessage(chatId, "I couldn't file that report. Please try again.")
+      .sendMessage(chatId, "I couldn't file that. Try again in a bit.")
       .catch(() => {});
   }
 });

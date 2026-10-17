@@ -272,7 +272,7 @@ async function scrapeCombos(ctx: SyncContext): Promise<void> {
       // live progress edit at most every 5s
       if (Date.now() - lastEdit > 5000) {
         lastEdit = Date.now();
-        p.lines[2] = `🔍 Scanned ${done}/${combos.length} — ${valid} classes found, ${students.size} students`;
+        p.lines[2] = `🔍 Scanned ${done}/${combos.length}, ${valid} classes found, ${students.size} students`;
         await reportProgress(ctx);
       }
     }
@@ -287,12 +287,12 @@ async function scrapeCombos(ctx: SyncContext): Promise<void> {
 
   if (authLost) {
     throw new Error(
-      "College portal session expired mid-sync — run /syncdb again",
+      "College portal session expired mid-sync. Run /syncdb again",
     );
   }
 
   p.lines.push(
-    `🔍 Scanned ${done}/${combos.length} — ${valid} classes, ${failed} skipped, ${students.size} students`,
+    `🔍 Scanned ${done}/${combos.length}, ${valid} classes, ${failed} skipped, ${students.size} students`,
   );
   await reportProgress(ctx);
 }
@@ -360,7 +360,7 @@ async function upsertStudents(ctx: SyncContext): Promise<void> {
 
   p.lines.push(
     p.upsertFailed > 0
-      ? `💾 Upserted ${p.updated}/${rows.length} students — ${p.upsertFailed} FAILED (rerun /syncdb)`
+      ? `💾 Upserted ${p.updated}/${rows.length} students, ${p.upsertFailed} FAILED (rerun /syncdb)`
       : `💾 Upserted ${rows.length} students (sections + year updated)`,
   );
   await reportProgress(ctx);
@@ -469,8 +469,8 @@ export const registerSyncDbCommand = () => {
     if (!arg) {
       await bot.sendMessage(
         chatId,
-        `Current semester setting: <b>${current === "2" ? "2nd semester (12/22/32/42)" : current === "1" ? "1st semester (11/21/31/41)" : "not set — syncdb scans all 8 sessions"}</b>\n\n` +
-          `Set it with:\n<code>/setsem 1</code> — odd semesters (11/21/31/41)\n<code>/setsem 2</code> — even semesters (12/22/32/42)\n\n` +
+        `Semester setting: <b>${current === "2" ? "2nd semester (12/22/32/42)" : current === "1" ? "1st semester (11/21/31/41)" : "not set, syncdb scans all 8 sessions"}</b>\n\n` +
+          `Set it with:\n<code>/setsem 1</code> for odd semesters (11/21/31/41)\n<code>/setsem 2</code> for even semesters (12/22/32/42)\n\n` +
           `The college site can't tell us which semester is running, so set this once at semester start, then <code>/syncdb</code> just works.`,
         { parse_mode: "HTML" },
       );

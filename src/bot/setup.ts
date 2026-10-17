@@ -9,9 +9,9 @@ export function setupBot(bot: TelegramBot): void {
       { command: "attendance", description: "Check your attendance" },
       { command: "midmarks", description: "Check your mid-term marks" },
       { command: "bunk", description: "See your bunk plan" },
-      { command: "register", description: "Set your roll for instant lookups" },
-      { command: "report", description: "Report an issue" },
-      { command: "help", description: "Get help" },
+      { command: "register", description: "Save your roll number" },
+      { command: "report", description: "Tell me something's broken" },
+      { command: "help", description: "How this works" },
       { command: "leaderboard", description: "View the leaderboard" },
     ])
     .catch((e) => logger.warn("[bot] setMyCommands failed:", e?.message ?? e));

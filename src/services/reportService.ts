@@ -107,10 +107,9 @@ export const createAndAnnounce = async (
 
     if (ADMIN_ID) {
       const notice =
-        `📢 <b>${issueId} · New Report</b>\n\n` +
-        `👤 ${reporterName} · <code>${sub.userId}</code>\n` +
-        `📝 ${escapeHtml(sub.message)}\n\n` +
-        `↩️ Reply with: <code>/reply ${issueId} your answer</code>`;
+        `New report <code>${issueId}</code> from ${reporterName} · <code>${sub.userId}</code>\n` +
+        `${escapeHtml(sub.message)}\n\n` +
+        `Reply with <code>/reply ${issueId} your answer</code>`;
       instance
         .sendMessage(ADMIN_ID, notice, { parse_mode: "HTML" })
         .catch((e: Error) =>
@@ -121,9 +120,9 @@ export const createAndAnnounce = async (
     instance
       .sendMessage(
         sub.userId,
-        `✅ <b>Report ${issueId} received</b>\n\n` +
+        `Got it, I've filed <code>${issueId}</code>.\n\n` +
           `<i>${escapeHtml(sub.message.slice(0, 200))}${sub.message.length > 200 ? "…" : ""}</i>\n\n` +
-          `I'll look into it and reply here in the chat. You can also add to the thread from My reports.`,
+          `I'll reply here once I've looked into it. You can add more from My reports.`,
         {
           parse_mode: "HTML",
           reply_markup: {
@@ -152,8 +151,7 @@ const notifyReporterOfMessage = async (
   instance
     .sendMessage(
       report.user_id,
-      `💬 <b>${issueId} · message from the admin</b>\n\n` +
-        `${escapeHtml(body)}`,
+      `My reply on <code>${issueId}</code>:\n\n` + `${escapeHtml(body)}`,
       {
         parse_mode: "HTML",
         reply_markup: {
@@ -188,10 +186,9 @@ const notifyAdminOfMessage = async (
   instance
     .sendMessage(
       ADMIN_ID,
-      `💬 <b>${issueId} · reporter replied</b>\n\n` +
-        `👤 ${reporterName} · <code>${report.user_id}</code>\n` +
-        `📝 ${escapeHtml(body)}\n\n` +
-        `↩️ Answer with: <code>/reply ${issueId} your answer</code>`,
+      `Reply on <code>${issueId}</code> from ${reporterName} · <code>${report.user_id}</code>:\n` +
+        `${escapeHtml(body)}\n\n` +
+        `Answer with <code>/reply ${issueId} your answer</code>`,
       { parse_mode: "HTML" },
     )
     .catch((e: Error) =>
@@ -275,8 +272,8 @@ export const adminCloseReport = async (
     instance
       .sendMessage(
         report.user_id,
-        `✅ <b>${issueId} resolved</b>\n\n` +
-          `Glad it worked out. If it ever comes back, just report it again.`,
+        `I've closed <code>${issueId}</code>. Glad that's sorted.\n\n` +
+          `If it comes back, report it again.`,
         {
           parse_mode: "HTML",
           reply_markup: {

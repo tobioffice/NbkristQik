@@ -36,13 +36,13 @@ bot.onText(/\/reply (\S+)(?:\s+([\s\S]+))?/, async (msg, match) => {
     }
     bot.sendMessage(
       chatId,
-      `✅ Reply sent and recorded on <code>${issueId}</code>. The reporter has been DM'd.`,
+      `Sent. It's saved on <code>${issueId}</code> and the reporter has it in DM.`,
       { parse_mode: "HTML" },
     );
   } catch (e) {
     logger.error("[answers] /reply failed:", e);
     bot
-      .sendMessage(chatId, "Reply failed. Try again in a moment.")
+      .sendMessage(chatId, "That didn't send. Try again in a bit.")
       .catch(() => {});
   }
 });
@@ -62,13 +62,13 @@ bot.onText(/\/close (\S+)/, async (msg, match) => {
     }
     bot.sendMessage(
       chatId,
-      `✅ <code>${issueId}</code> marked resolved. The reporter has been notified.`,
+      `Closed <code>${issueId}</code>. The reporter knows.`,
       { parse_mode: "HTML" },
     );
   } catch (e) {
     logger.error("[answers] /close failed:", e);
     bot
-      .sendMessage(chatId, "Close failed. Try again in a moment.")
+      .sendMessage(chatId, "That didn't close. Try again in a bit.")
       .catch(() => {});
   }
 });

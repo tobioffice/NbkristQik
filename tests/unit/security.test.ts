@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   isValidRollNumber,
+  normalizeRollNumber,
   createRateLimit,
   createBotSecurityHandler,
   botSecurityHandler,
@@ -26,6 +27,23 @@ describe("Security Middleware", () => {
     it("should handle edge cases", () => {
       expect(isValidRollNumber("  21B8AA05E9  ")).toBe(true); // trimmed
       expect(isValidRollNumber("21B8AA05E9!")).toBe(false); // special chars
+    });
+  });
+
+  describe("normalizeRollNumber", () => {
+    it("turns a typed letter O into 0", () => {
+      expect(normalizeRollNumber("25KB1AO5AR")).toBe("25KB1A05AR");
+      expect(normalizeRollNumber("25kb1ao5ar")).toBe("25KB1A05AR");
+      expect(normalizeRollNumber("2O0B1AO5AR")).toBe("200B1A05AR");
+    });
+
+    it("leaves clean rolls untouched", () => {
+      expect(normalizeRollNumber("23KB1A0599")).toBe("23KB1A0599");
+      expect(normalizeRollNumber("  23KB1A0599  ")).toBe("23KB1A0599");
+    });
+
+    it("makes O-typos pass validation", () => {
+      expect(isValidRollNumber(normalizeRollNumber("25KB1AO5AR"))).toBe(true);
     });
   });
 

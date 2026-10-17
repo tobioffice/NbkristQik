@@ -61,7 +61,7 @@ const sendJoinChannelMsg = async (chatId: number): Promise<void> => {
   const channelName = CHANNEL_ID.slice(1) || "NbkristQik_bot";
   await bot.sendMessage(
     chatId,
-    "👥 Join our channel first, then I can help you here.",
+    "I need you in the channel first, then I can help you here.",
     {
       reply_markup: {
         inline_keyboard: [
@@ -94,8 +94,7 @@ const REGISTER_BUTTON = {
 const promptRegister = (chatId: number): void => {
   bot.sendMessage(
     chatId,
-    `👤 <b>Save your roll number first</b>\n\n` +
-      `Register it once and this command answers instantly, every time.`,
+    `Save your roll number first, then this command answers instantly.`,
     REGISTER_BUTTON,
   );
 };
@@ -124,20 +123,20 @@ export const resolveRegisteredRoll = async (
       // registered roll left studentsnew (semester sync) — ask for an update
       bot.sendMessage(
         chatId,
-        `📅 <b>Your saved roll <code>${registration.roll_no}</code> is no longer in the college records.</b>\n\n` +
-          `If the semester changed, update your profile with the new roll and this command works again.`,
+        `Your saved roll <code>${registration.roll_no}</code> isn't in the college records anymore.\n\n` +
+          `If the semester changed, save your new roll and this command works again.`,
         REGISTER_BUTTON,
       );
       return null;
     }
 
-    // Redis/DB hiccup, not a stale registration — do not tell the user their
+    // Redis/DB hiccup, not a stale registration — don't tell the user their
     // roll was deleted.
     logger.warn("[registered] roll refresh failed:", e);
     bot
       .sendMessage(
         chatId,
-        "⚠️ Couldn't check your roll right now. Please try again in a minute.",
+        "Couldn't check your roll right now. Try again in a minute.",
       )
       .catch(() => {});
     return null;
@@ -151,6 +150,8 @@ const handleRegisteredLookup = async (
   const chatId = msg.chat.id;
   const from = msg.from;
   if (!from) return;
+  // channels are broadcast: instant commands serve nothing there
+  if (msg.chat.type === "channel") return;
 
   if (chatId === CHIT_CHAT_ID) {
     bot.deleteMessage(chatId, msg.message_id).catch(() => {});
@@ -159,17 +160,15 @@ const handleRegisteredLookup = async (
 
   const rateLimitAllowed = await botSecurityHandler(from.id, "command");
   if (!rateLimitAllowed) {
-    await bot.sendMessage(
-      chatId,
-      "🚫 Slow down a little. Try again in a minute.",
-    );
+    await bot.sendMessage(chatId, "Too fast for me. Try again in a minute.");
     return;
   }
 
   if (!(await isAuthorizedUser(from.id, chatId))) return;
 
   // group chats get 2 lifetime answers; past that, point the user to DM
-  if (!(await checkGroupUse(from.id, chatId, msg.message_id))) return;
+  if (!(await checkGroupUse(from.id, chatId, msg.message_id, msg.chat.type)))
+    return;
 
   trackMessage(
     msg,
@@ -196,7 +195,7 @@ const registered = (action: "att" | "mid" | "bunk") => (msg: Message) => {
     bot
       .sendMessage(
         msg.chat.id,
-        "⚠️ Something went wrong on my side. Please try again in a moment.",
+        "Something broke on my side. Try again in a bit.",
       )
       .catch(() => {});
   });

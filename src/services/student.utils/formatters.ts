@@ -21,7 +21,7 @@ export const formatAttendanceMessage = (data: Attendance): string => {
 
   msg += buildProgressBar(percentage);
   msg += buildAttendanceTable(subjects);
-  msg += `\n<i>💡 Tip: Stay above 75% for safe attendance</i>`;
+  msg += `\n<i>Stay above 75% and you're safe.</i>`;
 
   return msg;
 };
@@ -56,13 +56,12 @@ export const formatMidmarksMessage = (data: Midmarks): string => {
 
   // Header section
   let msg =
-    `<b>📊 Mid Marks Report</b>\n\n` +
-    `🧑‍🎓 <b>ID:</b> <code>${rollno}</code>\n` +
-    `🏫 <b>Branch:</b> <code>${year_branch_section}</code>\n`;
+    `Mid marks for <code>${rollno}</code>\n` +
+    `<code>${year_branch_section}</code>\n`;
 
   msg += `\n`;
   msg += buildMidmarksTable(subjects);
-  msg += `\n<i>💡 Tip: Give extra attention to the subjects with low averages</i>`;
+  msg += `\n<i>Give the low ones some extra time.</i>`;
 
   return msg;
 };
@@ -113,9 +112,8 @@ export const formatBunkPlanMessage = (data: Attendance): string => {
   );
 
   let msg =
-    `🎯 <b>Bunk Plan for</b> <code>${rollno}</code>\n` +
-    `🏫 <b>Branch:</b> <code>${year_branch_section}</code>\n` +
-    `📈 <b>Current:</b> <b>${percentage.toFixed(2)}%</b> ` +
+    `Bunk plan for <code>${rollno}</code>\n` +
+    `<code>${year_branch_section}</code> · <b>${percentage.toFixed(2)}%</b> ` +
     `(${totalClasses.attended}/${totalClasses.conducted})\n\n`;
 
   msg += buildBunkHeadline(overallBunk, overallNeed);
@@ -126,14 +124,14 @@ export const formatBunkPlanMessage = (data: Attendance): string => {
   );
   if (risky.length > 0) {
     msg +=
-      `⚠️ <b>Below 75% in ${risky.length} subject${risky.length !== 1 ? "s" : ""}:</b> ` +
+      `Below 75% in ${risky.length} subject${risky.length !== 1 ? "s" : ""}:\n` +
       risky
         .map((s) => `<code>${truncateText(s.subject, 12)}</code>`)
         .join(", ") +
       `\n\n`;
   }
 
-  msg += `<i>💡 BUNK = classes you can skip · NEED = classes to attend in a row to get back to 75%</i>`;
+  msg += `<i>Bunk means skips you can afford, need means classes to attend in a row.</i>`;
 
   return msg;
 };
@@ -143,12 +141,12 @@ const buildBunkHeadline = (
   overallNeed: number,
 ): string => {
   if (overallBunk > 0) {
-    return `🟢 <b>You can bunk ${overallBunk} more class${overallBunk !== 1 ? "es" : ""}</b> and stay at 75%+\n\n`;
+    return `You can bunk ${overallBunk} more and stay above 75%.\n\n`;
   }
   if (overallNeed > 0) {
-    return `🔴 <b>Attend next ${overallNeed} class${overallNeed !== 1 ? "es" : ""}</b> to get back to 75%+\n\n`;
+    return `Go to the next ${overallNeed} in a row to get back to 75%.\n\n`;
   }
-  return `🟢 You're exactly at the limit. Attend everything.\n\n`;
+  return `You're right at 75%. Go to everything.\n\n`;
 };
 
 const buildBunkTable = (

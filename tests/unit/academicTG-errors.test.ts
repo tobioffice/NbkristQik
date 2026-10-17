@@ -129,7 +129,7 @@ describe("AcademicTG - Error Handling", () => {
 
       const result = await academicTG.getMidmarksMessage();
 
-      expect(result).toContain("📊 Mid Marks Report");
+      expect(result).toContain("Mid marks for");
       expect(result).toContain("21B81A05E9");
       expect(result).toContain("3_CSE_A");
     });

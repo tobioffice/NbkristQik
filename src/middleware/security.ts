@@ -176,6 +176,13 @@ export const isValidRollNumber = (rollNumber: string): boolean => {
   return ROLL_REGEX.test(rollNumber.toUpperCase().trim());
 };
 
+/**
+ * O/0 confusion fix: no real roll contains the letter O (verified against
+ * the full college master table), so a typed O is always meant to be 0.
+ */
+export const normalizeRollNumber = (rollNumber: string): string =>
+  rollNumber.toUpperCase().trim().replace(/O/g, "0");
+
 // Bot-specific security middleware
 const pruneStaleEntries = (
   counts: Map<number, { count: number; resetTime: number }>,

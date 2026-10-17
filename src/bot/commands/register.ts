@@ -6,9 +6,8 @@ bot.onText(/\/register/, (msg) => {
   trackMessage(msg, "command:register");
   bot.sendMessage(
     msg.chat.id,
-    `👤 <b>Register your roll number</b> (optional)\n\n` +
-      `Set it once and <code>/attendance</code>, <code>/midmarks</code>, <code>/bunk</code> answer instantly, no roll to type.\n\n` +
-      `<i>You can edit it anytime.</i>`,
+    `Save your roll number once (you can change it anytime).\n\n` +
+      `Then <code>/attendance</code>, <code>/midmarks</code> and <code>/bunk</code> answer instantly, no typing.`,
     {
       parse_mode: "HTML",
       reply_markup: {

@@ -59,7 +59,7 @@ describe("Academic Integration Tests", () => {
       const message = await academicTG.getMidmarksMessage();
 
       expect(message).toContain("21B81A05E9");
-      expect(message).toContain("📊 Mid Marks Report");
+      expect(message).toContain("Mid marks for");
       expect(message).toBeTruthy();
     });
   });
