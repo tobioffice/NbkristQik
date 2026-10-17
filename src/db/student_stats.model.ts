@@ -287,6 +287,11 @@ export const initUptimeTable = async () => {
       CREATE INDEX IF NOT EXISTS idx_uptime_component_time
       ON uptime_log (component, created_at);
    `);
+  // the database probe used to be recorded as "turso" (cloud era); fold
+  // those rows into "database" so the status page keeps one row + history
+  await turso.execute(
+    `UPDATE uptime_log SET component = 'database' WHERE component = 'turso'`,
+  );
 };
 
 /**

@@ -1,6 +1,6 @@
 /**
- * Uptime heartbeat — probes the API plus its real dependencies (Turso,
- * Redis, college portal) every 5 minutes and records the results to Turso.
+ * Uptime heartbeat — probes the API plus its real dependencies (database,
+ * Redis, college portal) every 5 minutes and records the results there.
  * Powers the /status page (90-day bars like OpenAI's status page) and the
  * admin panel health view. Self-healing: the interval keeps running even
  * when a probe fails, and component status transitions notify the admin.
@@ -58,8 +58,8 @@ const probeApi = (): Promise<ProbeResult> =>
     await axios.get(API_PROBE_URL, { timeout: PROBE_TIMEOUT_MS });
   });
 
-const probeTurso = (): Promise<ProbeResult> =>
-  timed("turso", async () => {
+const probeDatabase = (): Promise<ProbeResult> =>
+  timed("database", async () => {
     const { turso } = await import("../db/db.js");
     await turso.execute("SELECT 1");
   });
@@ -82,7 +82,7 @@ const probePortal = (): Promise<ProbeResult> =>
 
 const componentProbes: Record<string, () => Promise<ProbeResult>> = {
   api: probeApi,
-  turso: probeTurso,
+  database: probeDatabase,
   redis: probeRedis,
   portal: probePortal,
 };
@@ -203,6 +203,6 @@ export const startUptimeMonitor = async () => {
   setInterval(prune, 24 * 60 * 60 * 1000);
 
   logger.info(
-    "[uptime] monitor started (api/turso/redis/portal, 5min interval, 90d retention)",
+    "[uptime] monitor started (api/database/redis/portal, 5min interval, 90d retention)",
   );
 };
