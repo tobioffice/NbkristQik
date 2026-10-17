@@ -20,7 +20,7 @@ A Telegram bot for students to check attendance and mid-term marks.
 ## Technology Stack
 
 - **Backend**: Node.js, Express, TypeScript
-- **Database**: Turso (SQLite), Redis
+- **Database**: Embedded SQLite via libSQL (`LOCAL_DB_URL`), Redis
 - **Frontend**: React, Vite, TailwindCSS
 - **Integration**: Telegram Bot API
 - **Scraping**: Cheerio, Axios
@@ -127,7 +127,7 @@ where — private chat, group or channel — and how often) plus service health.
   Changing the password invalidates all sessions instantly; login is rate-limited.
 - **Views**: Overview (30-day activity pulse, surface split, top actions),
   Students (searchable activity table + per-student drill-down), Live (10s feed),
-  Health (90-day uptime for API, Turso, Redis, and the college portal; the admin
+  Health (90-day uptime for API, database, Redis, and the college portal; the admin
   is alerted in Telegram when a component goes down or recovers).
 
 ## Documentation

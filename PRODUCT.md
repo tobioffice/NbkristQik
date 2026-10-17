@@ -27,7 +27,7 @@ The product lives entirely inside Telegram â€” no install, no separate account â
 - Registration is optional and editable at any time; registered users unlock `/attendance`, `/midmarks`, `/bunk` instant commands.
 - Reports get an issue id; the admin replies from the admin panel (or `/reply`), and the reply reaches the student on the report page and in Telegram.
 - All wall-clock times shown anywhere are IST (Asia/Kolkata), 12-hour AM/PM, regardless of the UTC storage.
-- Admin panel views: login, Overview (30-day activity pulse, surface split, top actions), Students (searchable table + drill-down), Live (10 s feed), Health (90-day uptime for API, Turso, Redis, college portal), Reports.
+- Admin panel views: login, Overview (30-day activity pulse, surface split, top actions), Students (searchable table + drill-down), Live (10 s feed), Health (90-day uptime for API, database, Redis, college portal), Reports.
 - Deployment: the Mini Apps are built with Vite and served from GitHub Pages; the status page and admin panel are served by the Express backend; the bot runs as a systemd service.
 
 ## Capabilities and Constraints
