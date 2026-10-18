@@ -20,7 +20,7 @@ export const resolveUserId = (
   req: Request,
 ): { userId: string; error?: string; user?: TgInitUser } | null => {
   const initData =
-    (req.query.initData as string | undefined) ??
+    (typeof req.query.initData === "string" ? req.query.initData : undefined) ??
     (typeof req.body?.initData === "string" ? req.body.initData : undefined);
 
   // Authenticated Telegram initData is tiny; reject oversized input early.
@@ -36,7 +36,7 @@ export const resolveUserId = (
   // Dev convenience: a browser outside Telegram may pass userId directly.
   if (ENV !== "production") {
     const raw =
-      (req.query.userId as string | undefined) ??
+      (typeof req.query.userId === "string" ? req.query.userId : undefined) ??
       (typeof req.body?.userId === "string" ? req.body.userId : undefined);
     if (raw && /^\d{1,20}$/.test(raw)) return { userId: raw };
   }
