@@ -5,6 +5,8 @@ import {
   initLeaderboardIndexes,
   initUptimeTable,
   getUptimeDailyBuckets,
+  getUptimeSummary,
+  recordHeartbeat,
 } from "../../src/db/student_stats.model";
 
 beforeAll(async () => {
@@ -86,5 +88,22 @@ describe("getUptimeDailyBuckets", () => {
 
     expect(byDay["2026-09-24"]).toBe(1);
     expect(byDay["2026-09-25"]).toBe(1);
+  });
+});
+
+describe("getUptimeSummary", () => {
+  it("reports the newest heartbeat's status, not just the newest ping", async () => {
+    await initUptimeTable();
+    await turso.execute("DELETE FROM uptime_log WHERE component = 'portal'");
+
+    await recordHeartbeat("portal", "up", 12);
+    await recordHeartbeat("portal", "down", null);
+    await recordHeartbeat("portal", "down", null);
+
+    const summary = await getUptimeSummary();
+    const portal = summary.find((s) => s.component === "portal");
+
+    expect(portal?.lastStatus).toBe("down");
+    expect(portal?.lastPing).toBeTruthy();
   });
 });

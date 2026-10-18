@@ -298,6 +298,10 @@ export const getUptimeSummary = async () => {
              COUNT(*) as pings,
              SUM(CASE WHEN status = 'up' THEN 1 ELSE 0 END) as ups,
              MAX(created_at) as last_ping,
+             (SELECT u2.status FROM uptime_log u2
+               WHERE u2.component = uptime_log.component
+               ORDER BY u2.created_at DESC, u2.id DESC
+               LIMIT 1) as last_status,
              AVG(CASE WHEN status = 'up' THEN latency_ms END) as avg_latency
       FROM uptime_log
       WHERE created_at >= datetime('now', '-90 days')
@@ -311,6 +315,7 @@ export const getUptimeSummary = async () => {
     ups: Number(r.ups),
     uptimePct: (Number(r.ups) / Number(r.pings)) * 100,
     lastPing: String(r.last_ping),
+    lastStatus: String(r.last_status),
     avgLatencyMs:
       r.avg_latency != null ? Math.round(Number(r.avg_latency)) : null,
   }));

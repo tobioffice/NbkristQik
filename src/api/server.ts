@@ -283,8 +283,10 @@ const computeStatusComponents = async () => {
       const lastPingAgeSec = Math.floor(
         (Date.now() - new Date(s.lastPing + "Z").getTime()) / 1000,
       );
-      // up = last ping < 15 min ago
-      const current: "up" | "down" = lastPingAgeSec < 15 * 60 ? "up" : "down";
+      // up = the newest heartbeat said up, and it is recent. A down probe
+      // also writes a heartbeat, so age alone would report an outage as "up".
+      const current: "up" | "down" =
+        s.lastStatus === "up" && lastPingAgeSec < 15 * 60 ? "up" : "down";
       return {
         component: s.component,
         uptimePct: s.uptimePct,
