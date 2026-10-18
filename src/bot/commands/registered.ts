@@ -9,7 +9,10 @@ import { checkMembership } from "../../services/student.utils/checkMembership.js
 import { getClient } from "../../services/redis/getRedisClient.js";
 import { redisKeys } from "../../services/redis/keys.js";
 import { getRegistration } from "../../db/registration.model.js";
-import { getStudentCached } from "../../services/redis/utils.js";
+import {
+  getStudentCached,
+  StudentNotFoundError,
+} from "../../services/redis/utils.js";
 import { upsertTgUser } from "../../db/student.model.js";
 import { PROTECTED_CHAT_ID, CHIT_CHAT_ID } from "../../constants/index.js";
 import { botSecurityHandler } from "../../middleware/security.js";
@@ -116,14 +119,27 @@ export const resolveRegisteredRoll = async (
     const student = await getStudentCached(registration.roll_no);
     void upsertTgUser(String(userId), student).catch(() => {});
     return registration.roll_no;
-  } catch {
-    // registered roll left studentsnew (semester sync) — ask for an update
-    bot.sendMessage(
-      chatId,
-      `📅 <b>Your saved roll <code>${registration.roll_no}</code> is no longer in the college records.</b>\n\n` +
-        `If the semester changed, update your profile with the new roll and this command works again.`,
-      REGISTER_BUTTON,
-    );
+  } catch (e) {
+    if (e instanceof StudentNotFoundError) {
+      // registered roll left studentsnew (semester sync) — ask for an update
+      bot.sendMessage(
+        chatId,
+        `📅 <b>Your saved roll <code>${registration.roll_no}</code> is no longer in the college records.</b>\n\n` +
+          `If the semester changed, update your profile with the new roll and this command works again.`,
+        REGISTER_BUTTON,
+      );
+      return null;
+    }
+
+    // Redis/DB hiccup, not a stale registration — do not tell the user their
+    // roll was deleted.
+    logger.warn("[registered] roll refresh failed:", e);
+    bot
+      .sendMessage(
+        chatId,
+        "⚠️ Couldn't check your roll right now. Please try again in a minute.",
+      )
+      .catch(() => {});
     return null;
   }
 };

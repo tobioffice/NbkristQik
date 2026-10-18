@@ -17,22 +17,40 @@ export class StudentNotFoundError extends Error {
 export const getStudentCached = async (
   rollnumber: string,
 ): Promise<Student> => {
-  const redisClient = await getClient();
   const key = redisKeys.student(rollnumber);
 
-  const cachedStudent = await redisClient.get(key);
-  let student = cachedStudent ? (JSON.parse(cachedStudent) as Student) : null;
+  // Redis is a cache, not a dependency: if it is down or corrupt, read the
+  // database instead of failing the whole lookup.
+  let redisClient: Awaited<ReturnType<typeof getClient>> | null = null;
+  try {
+    redisClient = await getClient();
+    const cachedStudent = await redisClient.get(key);
+    if (cachedStudent) return JSON.parse(cachedStudent) as Student;
+  } catch (error) {
+    logger.warn(
+      "[redis] student cache unavailable, falling back to the database:",
+      error instanceof Error ? error.message : error,
+    );
+    redisClient = null;
+  }
 
+  const student = await getStudent(rollnumber);
   if (!student) {
-    student = await getStudent(rollnumber);
-    if (student) {
+    // not in college records — suggest similar rolls
+    const suggestions = await findSimilarRolls(rollnumber).catch(() => []);
+    throw new StudentNotFoundError(rollnumber.toUpperCase(), suggestions);
+  }
+
+  if (redisClient) {
+    try {
       await redisClient.set(key, JSON.stringify(student));
       await redisClient.expire(key, 60 * 60 * 24 * 7);
       logger.debug("cached student: ", rollnumber);
-    } else {
-      // not in college records — suggest similar rolls
-      const suggestions = await findSimilarRolls(rollnumber).catch(() => []);
-      throw new StudentNotFoundError(rollnumber.toUpperCase(), suggestions);
+    } catch (error) {
+      logger.debug(
+        "[redis] student cache write failed:",
+        error instanceof Error ? error.message : error,
+      );
     }
   }
 
