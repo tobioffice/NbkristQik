@@ -22,6 +22,7 @@ vi.mock("../../src/db/student_stats.model.js", () => ({
       ups: 10,
       uptimePct: 100,
       lastPing: new Date().toISOString().slice(0, 19).replace("T", " "),
+      lastStatus: "up",
       avgLatencyMs: 12,
     },
   ]),
