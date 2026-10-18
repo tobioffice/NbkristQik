@@ -15,14 +15,23 @@ import { logger } from "../../config/logger.js";
  * Deliver the same content as plain text instead of leaving the placeholder
  * on screen.
  */
-const toPlainText = (html: string): string =>
-  html
-    .replace(/<[^>]*>/g, "")
+const toPlainText = (html: string): string => {
+  // Walk the string once instead of regex-stripping tags: portal text can
+  // contain `<`, and a pattern-based strip is easy to get wrong.
+  let out = "";
+  let inTag = false;
+  for (const ch of html) {
+    if (ch === "<") inTag = true;
+    else if (ch === ">" && inTag) inTag = false;
+    else if (!inTag) out += ch;
+  }
+  return out
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&amp;/g, "&");
+};
 
 /**
  * Shared flow for roll-number actions: acknowledge with a placeholder
