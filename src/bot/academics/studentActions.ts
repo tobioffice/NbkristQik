@@ -11,6 +11,20 @@ import type { Message } from "node-telegram-bot-api";
 import { logger } from "../../config/logger.js";
 
 /**
+ * Telegram rejected the HTML entities (portal data can contain `<` or `&`).
+ * Deliver the same content as plain text instead of leaving the placeholder
+ * on screen.
+ */
+const toPlainText = (html: string): string =>
+  html
+    .replace(/<[^>]*>/g, "")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&");
+
+/**
  * Shared flow for roll-number actions: acknowledge with a placeholder
  * message, fetch the real content, then edit the placeholder in place.
  */
@@ -33,15 +47,24 @@ const fetchAndEdit = async (
 
     const finalMessage = await fetchContent();
 
-    await bot
-      .editMessageText(finalMessage, {
+    try {
+      await bot.editMessageText(finalMessage, {
         chat_id: chatId,
         message_id: message.message_id,
         parse_mode: "HTML",
-      })
-      .catch((e: Error) =>
-        logger.warn("[studentActions] edit failed:", e?.message),
+      });
+    } catch (e: unknown) {
+      logger.warn(
+        "[studentActions] edit failed, falling back to plain text:",
+        (e as Error)?.message,
       );
+      await bot
+        .sendMessage(chatId, toPlainText(finalMessage), {
+          disable_notification: true,
+          reply_to_message_id: msg.message_id,
+        })
+        .catch(() => {});
+    }
   } catch (error: unknown) {
     const err = error as Error;
     logger.error("Error in student action:", error);

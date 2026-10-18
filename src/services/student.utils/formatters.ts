@@ -14,8 +14,8 @@ export const formatAttendanceMessage = (data: Attendance): string => {
 
   // Header section
   let msg =
-    `🧑‍🎓 <b>ROLL:</b> <code>${rollno}</code>\n` +
-    `🏫 <b>Branch:</b> <code>${year_branch_section}</code>\n` +
+    `🧑‍🎓 <b>ROLL:</b> <code>${escapeHtml(rollno)}</code>\n` +
+    `🏫 <b>Branch:</b> <code>${escapeHtml(year_branch_section)}</code>\n` +
     `📚 <b>Attended:</b> <code>${totalClasses.attended}/${totalClasses.conducted}</code>\n\n` +
     `📈 <b>Percentage:</b> <b>${percentage.toFixed(2)}%</b>\n`;
 
@@ -36,10 +36,10 @@ const buildAttendanceTable = (subjects: AttendanceBySubject[]): string => {
     const subPercentage = (sub.attended / sub.conducted) * 100;
     const status = getStatusEmoji(subPercentage);
     const lastUpdated = formatLastUpdated(sub.lastUpdated);
-    const subjectName = truncateText(sub.subject, 8);
+    const subjectName = escapeHtml(truncateText(sub.subject, 8).padEnd(9));
 
     msg +=
-      `${subjectName.padEnd(9)} │ ${status} │` +
+      `${subjectName} │ ${status} │` +
       `${String(sub.attended).padStart(2)}/${String(sub.conducted).padStart(2)} │` +
       `${lastUpdated.padEnd(5)}\n`;
   }
@@ -57,8 +57,8 @@ export const formatMidmarksMessage = (data: Midmarks): string => {
   // Header section
   let msg =
     `<b>📊 Mid Marks Report</b>\n\n` +
-    `🧑‍🎓 <b>ID:</b> <code>${rollno}</code>\n` +
-    `🏫 <b>Branch:</b> <code>${year_branch_section}</code>\n`;
+    `🧑‍🎓 <b>ID:</b> <code>${escapeHtml(rollno)}</code>\n` +
+    `🏫 <b>Branch:</b> <code>${escapeHtml(year_branch_section)}</code>\n`;
 
   msg += `\n`;
   msg += buildMidmarksTable(subjects);
@@ -74,14 +74,14 @@ const buildMidmarksTable = (subjects: MidmarksBySubject[]): string => {
     `─────────────────────────────────\n`;
 
   for (const sub of subjects) {
-    const subjectName = truncateText(sub.subject, 11);
-    const type = truncateText(sub.type, 4);
+    const subjectName = escapeHtml(truncateText(sub.subject, 11).padEnd(11));
+    const type = escapeHtml(truncateText(sub.type, 4).padEnd(4));
 
     const m1 = sub.M1 ? String(sub.M1).padStart(2) : "  ";
     const m2 = sub.M2 ? String(sub.M2).padStart(2) : "  ";
     const avg = sub.average ? String(sub.average).padStart(3) : "   ";
 
-    msg += `${subjectName.padEnd(11)} │ ${type.padEnd(4)} │ ${m1} ${m2} ${avg}\n`;
+    msg += `${subjectName} │ ${type} │ ${m1} ${m2} ${avg}\n`;
   }
 
   msg += `</pre>\n`;
@@ -113,8 +113,8 @@ export const formatBunkPlanMessage = (data: Attendance): string => {
   );
 
   let msg =
-    `🎯 <b>Bunk Plan for</b> <code>${rollno}</code>\n` +
-    `🏫 <b>Branch:</b> <code>${year_branch_section}</code>\n` +
+    `🎯 <b>Bunk Plan for</b> <code>${escapeHtml(rollno)}</code>\n` +
+    `🏫 <b>Branch:</b> <code>${escapeHtml(year_branch_section)}</code>\n` +
     `📈 <b>Current:</b> <b>${percentage.toFixed(2)}%</b> ` +
     `(${totalClasses.attended}/${totalClasses.conducted})\n\n`;
 
@@ -128,7 +128,7 @@ export const formatBunkPlanMessage = (data: Attendance): string => {
     msg +=
       `⚠️ <b>Below 75% in ${risky.length} subject${risky.length !== 1 ? "s" : ""}:</b> ` +
       risky
-        .map((s) => `<code>${truncateText(s.subject, 12)}</code>`)
+        .map((s) => `<code>${escapeHtml(truncateText(s.subject, 12))}</code>`)
         .join(", ") +
       `\n\n`;
   }
@@ -223,6 +223,14 @@ const formatLastUpdated = (dateStr: string): string => {
 
   return trimmed || "N/A";
 };
+
+/**
+ * Escapes text that is interpolated into a Telegram HTML message. Portal data
+ * (subject names, roll numbers) is untrusted: an unescaped `<` makes Telegram
+ * reject the whole message with "can't parse entities".
+ */
+export const escapeHtml = (text: string): string =>
+  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text;
