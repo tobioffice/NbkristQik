@@ -92,6 +92,11 @@ describe("report lifecycle", () => {
     expect(row?.status).toBe("answered");
     expect(row?.admin_reply).toBe("Fixed on the college side, check again.");
     expect(row?.replied_at).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+
+    // the reply must also exist in the thread, which is the source of truth
+    const messages = await listReportMessages(id);
+    expect(messages.map((m) => m.author)).toEqual(["user", "admin"]);
+    expect(messages[1].body).toBe("Fixed on the college side, check again.");
   });
 
   it("closes an issue without erasing the reply", async () => {
