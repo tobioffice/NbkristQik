@@ -464,19 +464,21 @@ export const listReports = async (
   });
 };
 
-/** Record the admin's reply; flips status to answered. */
+/**
+ * Record the admin's reply; flips status to answered.
+ *
+ * Kept for callers that only have the report id: the actual write goes
+ * through `recordAdminReply` so the reply also lands in the thread (the
+ * source of truth) and not just in the legacy columns.
+ */
 export const replyReport = async (
   id: number,
   reply: string,
 ): Promise<boolean> => {
-  const result = await turso.execute({
-    sql: `UPDATE reports
-          SET admin_reply = ?, status = 'answered',
-              replied_at = datetime('now')
-          WHERE id = ?`,
-    args: [reply, id],
-  });
-  return result.rowsAffected > 0;
+  const report = await getReport(id);
+  if (!report) return false;
+  await recordAdminReply(id, reply);
+  return true;
 };
 
 /** Flip status (close/reopen). Returns whether a row changed. */
