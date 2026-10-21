@@ -1,8 +1,0 @@
-/node_modules
-/dist
-/__tests__/
-testing
-.env
-.vscode/
-.zed/
-.env*
