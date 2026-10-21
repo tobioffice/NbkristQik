@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NbkristQik: the library, set page by page</title>
-  <meta name="description" content="Eleven CSE subjects, retypeset from the R23 syllabus and streamed page by page inside Telegram. 51 documents, 1,248 pages, no PDFs.">
+  <title>NbkristQik: the college bot for NBKRIST</title>
+  <meta name="description" content="Attendance, mid marks and the bunk math in seconds. A live leaderboard, a report line that replies, and a library set page by page. On Telegram. No install, no new account.">
   <meta name="theme-color" content="#3f6457">
   <link rel="icon" type="image/svg+xml" href="./assets/mark.svg">
   <link rel="canonical" href="https://tobioffice.github.io/NbkristQik/site/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="NbkristQik: the library, set page by page">
-  <meta property="og:description" content="Eleven CSE subjects, retypeset from the R23 syllabus and streamed page by page inside Telegram. 51 documents, 1,248 pages, no PDFs.">
+  <meta property="og:title" content="NbkristQik: the college bot for NBKRIST">
+  <meta property="og:description" content="Attendance, mid marks and the bunk math in seconds. A live leaderboard, a report line that replies, and a library set page by page. On Telegram. No install, no new account.">
   <meta property="og:url" content="https://tobioffice.github.io/NbkristQik/site/">
   <meta property="og:image" content="https://tobioffice.github.io/NbkristQik/site/assets/og-site.png">
   <meta property="og:image:width" content="1200">
@@ -29,9 +29,10 @@
         <span class="brand__sub">The college bot</span>
       </a>
       <nav class="nav" aria-label="Primary">
-        <a class="nav__link" href="#shelf">The shelf</a>
-        <a class="nav__link" href="#reader">The page</a>
-        <a class="nav__link" href="#documents">The documents</a>
+        <a class="nav__link" href="#answers">Between classes</a>
+        <a class="nav__link" href="#board">Leaderboard</a>
+        <a class="nav__link" href="#library">The library</a>
+        <a class="nav__link" href="#commands">Commands</a>
         <a class="nav__link nav__link--notes" href="./blog/">Notes</a>
         <a class="btn btn--cream" href="https://t.me/NbkristQik_bot">Open the bot</a>
       </nav>
@@ -41,7 +42,7 @@
   <div class="dateline">
     <div class="wrap dateline__row">
       <span>Vol. 01 &middot; October 2026 &middot; Warangal</span>
-      <span>The library issue</span>
+      <span>For NBKRIST students</span>
     </div>
   </div>
 
@@ -50,163 +51,170 @@
       <div class="wrap">
         <div class="hero__grid">
           <div class="hero__copy">
-            <p class="kicker">Introducing the library</p>
-            <h1 id="hero-title">The textbook, rebuilt for the phone.</h1>
-            <p class="hero__lead">Eleven subjects, set again from the R23 syllabus. Every diagram redrawn. Every page streamed inside Telegram, one at a time.</p>
+            <p class="kicker">A Telegram bot for NBKRIST students</p>
+            <h1 id="hero-title">Your college, in the chat you already have open.</h1>
+            <p class="hero__lead">Send a roll number, get attendance and mid marks in seconds. Registered? The daily commands answer in one tap. There is a live leaderboard, a report line that actually replies, and now a library of subjects set page by page.</p>
             <div class="hero__actions">
               <a class="btn" href="https://t.me/NbkristQik_bot">Open in Telegram</a>
-              <a class="textlink" href="./blog/library-launch.html">Read the launch note <span class="textlink__arrow" aria-hidden="true">&rarr;</span></a>
+              <a class="textlink" href="#answers">See what it does <span class="textlink__arrow" aria-hidden="true">&rarr;</span></a>
             </div>
-            <p class="hero__note">In rollout. The shelf is loaded; the doors open semester by semester.</p>
+            <p class="hero__note">No install, no new account. Your roll number is the only thing it asks for.</p>
           </div>
 
-          <figure class="plate">
-            <div class="plate__head"><span>Plate 01</span><span>CN &middot; R23 &middot; Unit I</span></div>
-            <img src="./assets/pages/cn-cover.jpg" alt="The cover of Computer Networks Unit I: the NbkristQik mark, a metadata table for the subject and unit, and the unit title Computer Networks and the Internet." width="1240" height="1754">
-            <figcaption class="plate__foot"><b>The cover of CN Unit I.</b> Set from the R23 syllabus. Twenty pages, no scan.</figcaption>
+          <figure class="plate chat">
+            <div class="plate__head"><span>Transcript</span><span>a working chat, shortened</span></div>
+            <div class="chat__body">
+              <div class="chat__row">
+                <span class="chat__who">You</span>
+                <div class="chat__msg"><code>23CS1042</code></div>
+              </div>
+              <div class="chat__row">
+                <span class="chat__who chat__who--qik">Qik</span>
+                <div class="chat__msg">
+                  <table class="chat__table chat__table--kv">
+                    <tbody>
+                      <tr><th scope="row">Roll</th><td>23CS1042</td></tr>
+                      <tr><th scope="row">Branch</th><td>CSE &middot; 3-1</td></tr>
+                      <tr><th scope="row">Attended</th><td>139/182</td></tr>
+                      <tr><th scope="row">Percentage</th><td>76.37%</td></tr>
+                    </tbody>
+                  </table>
+                  <div class="chat__bar" aria-hidden="true"><i style="width:76.37%"></i></div>
+                </div>
+              </div>
+            </div>
+            <figcaption class="plate__foot"><b>The first ten seconds.</b> Send the roll, get the answer. The demo roll stands in for yours.</figcaption>
           </figure>
         </div>
 
-        <div class="ledger" role="group" aria-label="The library in numbers">
-          <div class="ledger__item"><span class="ledger__num">11</span><span class="ledger__label">Subjects set</span></div>
-          <div class="ledger__item"><span class="ledger__num">51</span><span class="ledger__label">Documents</span></div>
-          <div class="ledger__item"><span class="ledger__num">1,248</span><span class="ledger__label">Pages</span></div>
-          <div class="ledger__item"><span class="ledger__num">0</span><span class="ledger__label">PDFs served</span></div>
+        <div class="ledger" role="group" aria-label="The bot in numbers">
+          <div class="ledger__item"><span class="ledger__num">9</span><span class="ledger__label">Commands in the menu</span></div>
+          <div class="ledger__item"><span class="ledger__num">4</span><span class="ledger__label">Mini apps in the webview</span></div>
+          <div class="ledger__item"><span class="ledger__num">1</span><span class="ledger__label">Roll number, asked once</span></div>
+          <div class="ledger__item"><span class="ledger__num">0</span><span class="ledger__label">Passwords, anywhere</span></div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="shelf" aria-labelledby="shelf-title">
+    <section class="section" id="answers" aria-labelledby="answers-title">
       <div class="wrap">
         <div class="section__grid">
-          <p class="section__label"><b>01</b><span>The shelf</span></p>
+          <p class="section__label"><b>01</b><span>Between classes</span></p>
           <div class="section__body">
-            <h2 id="shelf-title">Only what I have set.</h2>
-            <p class="section__lead">The shelf follows your roll number: branch, regulation, semester. If I have not cut a subject, it is not on the list. No empty folders, no dead links, no coming-soon rows.</p>
-            <p class="section__lead">Eleven CSE subjects across four semesters. Each one opens into its units; each unit is a stack of pages.</p>
+            <h2 id="answers-title">Register once, ask in one tap.</h2>
+            <p class="section__lead">The college portal answers the daily questions in about a minute, when it feels like answering. The bot answers in seconds, in the chat you already have open. Save your roll once, and <code>/attendance</code>, <code>/midmarks</code> and <code>/bunk</code> stop asking for anything at all.</p>
 
-            <table class="register" aria-label="The shelf by semester">
-              <thead>
-                <tr>
-                  <th scope="col">Subject</th>
-                  <th scope="col">Code</th>
-                  <th scope="col" class="register__num">Units</th>
-                  <th scope="col" class="register__num">Pages</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="register__group"><td colspan="4">2-1 &middot; Second year, first semester</td></tr>
-                <tr>
-                  <td class="register__subject">Advanced Data Structures &amp; Algorithm Analysis</td>
-                  <td class="register__code">23CS21T1</td>
-                  <td class="register__unit register__num">5</td>
-                  <td class="register__num">132</td>
-                </tr>
-                <tr>
-                  <td class="register__subject">Object-oriented Programming Through Java</td>
-                  <td class="register__code">23CS21T2</td>
-                  <td class="register__unit register__num">5</td>
-                  <td class="register__num">99</td>
-                </tr>
-                <tr>
-                  <td class="register__subject">Digital Logic &amp; Computer Organization</td>
-                  <td class="register__code">23IT21T1</td>
-                  <td class="register__unit register__num">5</td>
-                  <td class="register__num">132</td>
-                </tr>
+            <div class="exchanges">
+              <figure class="exchange">
+                <div class="exchange__head"><span>/midmarks</span><span>registered</span></div>
+                <div class="exchange__body">
+                  <div class="chat__row">
+                    <span class="chat__who">You</span>
+                    <div class="chat__msg"><code>/midmarks</code></div>
+                  </div>
+                  <div class="chat__row">
+                    <span class="chat__who chat__who--qik">Qik</span>
+                    <div class="chat__msg">
+                      <table class="chat__table">
+                        <thead>
+                          <tr><th scope="col">Subject</th><th scope="col">Type</th><th scope="col" class="num">M1</th><th scope="col" class="num">M2</th><th scope="col" class="num">Avg</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td>CN</td><td>Theory</td><td class="num">18</td><td class="num">21</td><td class="num">19.5</td></tr>
+                          <tr><td>ATCD</td><td>Theory</td><td class="num">14</td><td class="num">17</td><td class="num">15.5</td></tr>
+                        </tbody>
+                      </table>
+                      <p class="chat__aside">Give the low ones some extra time.</p>
+                    </div>
+                  </div>
+                </div>
+                <figcaption>What you scored, subject by subject.</figcaption>
+              </figure>
 
-                <tr class="register__group"><td colspan="4">2-2 &middot; Second year, second semester</td></tr>
-                <tr>
-                  <td class="register__subject">Database Management Systems</td>
-                  <td class="register__code">23AD22T1</td>
-                  <td class="register__unit register__num">5</td>
-                  <td class="register__num">134</td>
-                </tr>
-                <tr>
-                  <td class="register__subject">Operating Systems</td>
-                  <td class="register__code">23CS22T1</td>
-                  <td class="register__unit register__num">5</td>
-                  <td class="register__num">113</td>
-                </tr>
-                <tr>
-                  <td class="register__subject">Software Engineering <span class="mark">*</span></td>
-                  <td class="register__code">23CS22T2</td>
-                  <td class="register__unit register__num">1</td>
-                  <td class="register__num">27</td>
-                </tr>
+              <figure class="exchange">
+                <div class="exchange__head"><span>/bunk</span><span>registered</span></div>
+                <div class="exchange__body">
+                  <div class="chat__row">
+                    <span class="chat__who">You</span>
+                    <div class="chat__msg"><code>/bunk</code></div>
+                  </div>
+                  <div class="chat__row">
+                    <span class="chat__who chat__who--qik">Qik</span>
+                    <div class="chat__msg">
+                      <p class="chat__line">You can bunk <b>3</b> more and stay above 75%.</p>
+                      <table class="chat__table">
+                        <thead>
+                          <tr><th scope="col">Subj</th><th scope="col" class="num">Now</th><th scope="col" class="num">Bunk</th><th scope="col" class="num">Need</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td>CN</td><td class="num">86</td><td class="num">4</td><td class="num">0</td></tr>
+                          <tr><td>ATCD</td><td class="num">71</td><td class="num">0</td><td class="num">2</td></tr>
+                        </tbody>
+                      </table>
+                      <p class="chat__aside">Bunk is skips you can afford. Need is classes in a row.</p>
+                    </div>
+                  </div>
+                </div>
+                <figcaption>The plan, worked out against the 75% line.</figcaption>
+              </figure>
 
-                <tr class="register__group"><td colspan="4">3-1 &middot; Third year, first semester</td></tr>
-                <tr>
-                  <td class="register__subject">Artificial Intelligence</td>
-                  <td class="register__code">23CS31T1</td>
-                  <td class="register__unit register__num">5</td>
-                  <td class="register__num">141</td>
-                </tr>
-                <tr>
-                  <td class="register__subject">Computer Networks &amp; Internet Protocols</td>
-                  <td class="register__code">23CS31T2</td>
-                  <td class="register__unit register__num">5</td>
-                  <td class="register__num">116</td>
-                </tr>
-                <tr>
-                  <td class="register__subject">Automata Theory And Compiler Design</td>
-                  <td class="register__code">23CS31T3</td>
-                  <td class="register__unit register__num">5</td>
-                  <td class="register__num">130</td>
-                </tr>
+              <figure class="exchange form-fig">
+                <div class="exchange__head"><span>/register</span><span>one time</span></div>
+                <div class="form-fig__body">
+                  <p class="field-label">Roll number</p>
+                  <p class="field-demo">23CS1042</p>
+                  <p class="field-btn">Save</p>
+                  <p class="form-fig__note">No password, no email, no onboarding. Edit it whenever you like.</p>
+                </div>
+                <figcaption>Then the daily commands stop asking.</figcaption>
+              </figure>
+            </div>
 
-                <tr class="register__group"><td colspan="4">3-2 &middot; Third year, second semester</td></tr>
-                <tr>
-                  <td class="register__subject">Machine Learning</td>
-                  <td class="register__code">23CS32T1</td>
-                  <td class="register__unit register__num">5</td>
-                  <td class="register__num">97</td>
-                </tr>
-                <tr>
-                  <td class="register__subject">Cryptography &amp; Network Security</td>
-                  <td class="register__code">23CS32T3</td>
-                  <td class="register__unit register__num">5</td>
-                  <td class="register__num">127</td>
-                </tr>
-              </tbody>
-            </table>
-            <p class="note"><span class="mark">*</span> Software Engineering is Unit I only for now. The remaining units are still being cut.</p>
+            <p class="note">Not registered yet? Send any roll number in the chat and the same answers come back. Registration only removes the typing.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="reader" aria-labelledby="reader-title">
+    <section class="section" id="board" aria-labelledby="board-title">
       <div class="wrap">
         <div class="section__grid">
-          <p class="section__label"><b>02</b><span>The reader</span></p>
+          <p class="section__label"><b>02</b><span>The leaderboard</span></p>
           <div class="section__body">
-            <div class="reader-grid">
+            <div class="split">
               <div>
-                <h2 id="reader-title">A page, not a PDF.</h2>
-                <p class="section__lead">The reader opens full screen inside Telegram and hands you one page at a time. Scroll, and the next page arrives. Scroll past, and the old one is dropped.</p>
-                <p class="section__lead">There is no download button because there is no file to download.</p>
+                <h2 id="board-title">A leaderboard that reads like the register.</h2>
+                <p class="section__lead">Rank the class by attendance or by mid marks. Filter by year, branch and section, search by roll, and scroll as far as the class goes. It opens full screen in the webview and moves like the rest of the bot.</p>
+                <p class="section__lead">Your own row is bracketed in the margin and stamped. The line at 75% is drawn once, across the list.</p>
 
-                <dl class="reader-points">
-                  <div class="reader-point">
-                    <dt>Delivery</dt>
-                    <dd>Pages are rendered on the server and sent as images. Your phone never assembles the document.</dd>
+                <dl class="points">
+                  <div class="point">
+                    <dt>Ranked by</dt>
+                    <dd>Attendance percentage or mid marks. Switch with one tap.</dd>
                   </div>
-                  <div class="reader-point">
-                    <dt>The mark</dt>
-                    <dd>A faint per-reader watermark is baked into the pixels. It is hard to see at reading size and survives a screenshot.</dd>
+                  <div class="point">
+                    <dt>Filtered by</dt>
+                    <dd>Year, branch, section. Search finds a roll as you type.</dd>
                   </div>
-                  <div class="reader-point">
-                    <dt>The limit</dt>
-                    <dd>No text layer, no share sheet, no file. What arrives is a picture of the page.</dd>
+                  <div class="point">
+                    <dt>Marked at</dt>
+                    <dd>The red 75% line. Below it, the figures print in red.</dd>
                   </div>
                 </dl>
               </div>
 
-              <figure class="device">
-                <div class="device__head"><span>The reader</span><span>390 &times; 844</span></div>
-                <img src="./assets/app-reader-osi.png" alt="The library reader inside Telegram, showing page 14 of Computer Networks Unit I: the OSI versus TCP/IP diagram, a comparison table, and a faint diagonal watermark." width="390" height="844">
-                <figcaption><b>CN &middot; Unit I &middot; page 14.</b> The OSI diagram, the comparison table, and the mark, as they arrive on a phone.</figcaption>
+              <figure class="plate board">
+                <div class="plate__head"><span>The grammar</span><span>every attendance list</span></div>
+                <div class="board__body" aria-hidden="true">
+                  <div class="board__row"><span class="board__rank board__rank--first">1</span><span class="board__cell"></span><span class="board__cell board__cell--name"></span><span class="board__cell board__cell--score"></span></div>
+                  <div class="board__row"><span class="board__rank board__rank--second">2</span><span class="board__cell"></span><span class="board__cell board__cell--name"></span><span class="board__cell board__cell--score"></span></div>
+                  <div class="board__row"><span class="board__rank board__rank--second">3</span><span class="board__cell"></span><span class="board__cell board__cell--name"></span><span class="board__cell board__cell--score"></span></div>
+                  <div class="board__row board__row--pre"><span class="board__rank">4</span><span class="board__cell"></span><span class="board__cell board__cell--name"></span><span class="board__cell board__cell--score"></span></div>
+                  <div class="board__cut"><span>75% &mdash; minimum requirement</span><span>below this line</span></div>
+                  <div class="board__row"><span class="board__rank">5</span><span class="board__cell"></span><span class="board__cell board__cell--name"></span><span class="board__cell board__cell--score"></span></div>
+                  <div class="board__row board__row--you"><span class="board__rank">6</span><span class="board__cell">23CS1042</span><span class="board__cell board__cell--name"></span><span class="board__cell board__cell--score"></span><span class="board__stamp">You</span></div>
+                </div>
+                <figcaption class="plate__foot"><b>The grammar of the list.</b> Rings for the podium, the viewer's row bracketed and stamped, the line at 75% drawn once. The cells wait for the class.</figcaption>
               </figure>
             </div>
           </div>
@@ -214,14 +222,75 @@
       </div>
     </section>
 
-    <section class="section" id="documents" aria-labelledby="documents-title">
+    <section class="section" id="reports" aria-labelledby="reports-title">
       <div class="wrap">
         <div class="section__grid">
-          <p class="section__label"><b>03</b><span>The documents</span></p>
+          <p class="section__label"><b>03</b><span>The report line</span></p>
           <div class="section__body">
-            <h2 id="documents-title">I didn&rsquo;t scan the textbook. I set it again.</h2>
-            <p class="section__lead">Every document starts from the official R23 syllabus, not a photocopy. The text is typeset in HTML, the tables are rebuilt, the diagrams are drawn as SVG, and each unit is rendered to A4 with running heads, page numbers, and a coverage table at the front.</p>
-            <p class="section__lead"><strong>51 documents. 1,248 pages. 362 diagrams.</strong> The page you see is the page I made.</p>
+            <div class="split split--narrow">
+              <div>
+                <h2 id="reports-title">When something breaks, there is a thread.</h2>
+                <p class="section__lead"><code>/report</code> opens a form. Every report gets an id, like QIK-0007, so nothing is a message lost in a chat. Add to the thread while it is open; my reply lands there and in your DM at the same time.</p>
+                <p class="section__lead">Resolved closes the thread read-only. If it comes back, file it again as a new report.</p>
+              </div>
+
+              <figure class="plate issue">
+                <div class="plate__head"><span>QIK-0007</span><span>a thread, end to end</span></div>
+                <div class="issue__body">
+                  <div class="chat__row">
+                    <span class="chat__who">You</span>
+                    <div class="chat__msg">Leaderboard search misses my section.</div>
+                  </div>
+                  <div class="chat__row">
+                    <span class="chat__who chat__who--qik">Admin</span>
+                    <div class="chat__msg">Fixed. Your section filter includes 3-2 CSE now. Look again.</div>
+                  </div>
+                  <div class="issue__foot">
+                    <span class="stamp">Answered</span>
+                    <span>The reply lands in this thread and in your DM.</span>
+                  </div>
+                </div>
+                <figcaption class="plate__foot"><b>An id, a thread, an answer.</b> The format is the promise: nothing goes missing.</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="library" aria-labelledby="library-title">
+      <div class="wrap">
+        <div class="section__grid">
+          <p class="section__label"><b>04</b><span>The library</span><em class="section__stamp">New &middot; in rollout</em></p>
+          <div class="section__body">
+            <div class="split">
+              <div>
+                <h2 id="library-title">The textbook, rebuilt for the phone.</h2>
+                <p class="section__lead">The newest room in the bot. Every subject set again from the official R23 syllabus: the text typeset, the tables rebuilt, 362 diagrams drawn as SVG. Then it is streamed to your phone one page at a time.</p>
+                <p class="section__lead">There is no PDF to download, because there is no PDF.</p>
+
+                <dl class="points">
+                  <div class="point">
+                    <dt>Delivery</dt>
+                    <dd>Pages are rendered on the server and sent as images, one at a time. Your phone never assembles a document.</dd>
+                  </div>
+                  <div class="point">
+                    <dt>The mark</dt>
+                    <dd>A faint per-reader watermark is baked into the pixels. Hard to see at reading size; it survives a screenshot.</dd>
+                  </div>
+                  <div class="point">
+                    <dt>The doors</dt>
+                    <dd>The shelf follows your roll: branch, regulation, semester. In rollout &mdash; the shelves are loaded; the doors open semester by semester.</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <figure class="plate">
+                <div class="plate__head"><span>Plate 01</span><span>CN &middot; R23 &middot; Unit I</span></div>
+                <img src="./assets/pages/cn-cover.jpg" alt="The cover of Computer Networks Unit I: the NbkristQik mark, a metadata table for the subject and unit, and the unit title Computer Networks and the Internet." width="1240" height="1754">
+                <figcaption class="plate__foot"><b>The cover of CN Unit I.</b> Set from the R23 syllabus. Twenty pages, no scan.</figcaption>
+              </figure>
+            </div>
 
             <div class="pages-lead"><span>Three pages from the shelf</span><span>Rendered from the masters</span></div>
             <div class="pages">
@@ -239,79 +308,83 @@
               </figure>
             </div>
 
-            <div class="specimens-head">
-              <h3>Diagrams, not screenshots.</h3>
-              <span>Six of 362 &middot; all vector</span>
-            </div>
-            <div class="specimens">
-              <figure class="specimen-cell">
-                <img src="./assets/diagrams/osi.svg" alt="The seven OSI layers beside the four-layer TCP/IP stack, with the mappings between them." width="900" height="430">
-                <figcaption><b>OSI / TCP-IP</b><span>CN &middot; 23CS31T2</span></figcaption>
-              </figure>
-              <figure class="specimen-cell">
-                <img src="./assets/diagrams/er.svg" alt="A sample entity-relationship diagram with entities, relationships, and cardinality labels." width="760" height="216">
-                <figcaption><b>Sample ER</b><span>DBMS &middot; 23AD22T1</span></figcaption>
-              </figure>
-              <figure class="specimen-cell">
-                <img src="./assets/diagrams/avl.svg" alt="The four AVL imbalance cases, LL, RR, LR, and RL, each with its repair rotation." width="880" height="470">
-                <figcaption><b>AVL: four cases</b><span>ADSAA &middot; 23CS21T1</span></figcaption>
-              </figure>
-              <figure class="specimen-cell">
-                <img src="./assets/diagrams/agent.svg" alt="The agent-environment loop: an environment, sensors, an agent, and actuators." width="700" height="300">
-                <figcaption><b>The agent loop</b><span>AI &middot; 23CS31T1</span></figcaption>
-              </figure>
-              <figure class="specimen-cell">
-                <img src="./assets/diagrams/gantt.svg" alt="A CPU scheduling Gantt chart with four processes and their wait times." width="880" height="340">
-                <figcaption><b>CPU scheduling</b><span>OS &middot; 23CS22T1</span></figcaption>
-              </figure>
-              <figure class="specimen-cell">
-                <img src="./assets/diagrams/overfit.svg" alt="A validation curve: training error falls while validation error turns upward at the overfit point." width="900" height="480">
-                <figcaption><b>Validation error</b><span>ML &middot; 23CS32T1</span></figcaption>
-              </figure>
-            </div>
-
             <div class="doc-cta">
-              <p>A long note on the process: the syllabus, the page, the diagrams, and why a PDF was the wrong unit.</p>
-              <a class="textlink" href="./blog/the-page-is-the-product.html">Read the making-of <span class="textlink__arrow" aria-hidden="true">&rarr;</span></a>
+              <p>Two longer notes: how the library opened, and how 51 documents were set from the syllabus up.</p>
+              <p class="doc-cta__links">
+                <a class="textlink" href="./blog/library-launch.html">The launch note <span class="textlink__arrow" aria-hidden="true">&rarr;</span></a>
+                <a class="textlink" href="./blog/the-page-is-the-product.html">The making-of <span class="textlink__arrow" aria-hidden="true">&rarr;</span></a>
+              </p>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="bot" aria-labelledby="bot-title">
+    <section class="section" id="commands" aria-labelledby="commands-title">
       <div class="wrap">
         <div class="section__grid">
-          <p class="section__label"><b>04</b><span>The bot</span></p>
+          <p class="section__label"><b>05</b><span>The commands</span></p>
           <div class="section__body">
-            <div class="bot-grid">
-              <div>
-                <h2 id="bot-title">Attendance, marks, and now the shelf.</h2>
-                <p class="section__lead">NbkristQik already answers the questions you ask between classes. The library is the same bot, one more room: no install, no second account, no password.</p>
+            <h2 id="commands-title">Everything the menu says.</h2>
+            <p class="section__lead">The whole register. Most of it works the moment you open the bot; the rest asks for one thing only.</p>
 
-                <dl class="bot-list">
-                  <div>
-                    <dt>Attendance</dt>
-                    <dd>How much you have, and how much you can still miss.</dd>
-                  </div>
-                  <div>
-                    <dt>Mid marks</dt>
-                    <dd>What you scored, subject by subject.</dd>
-                  </div>
-                  <div>
-                    <dt>The library</dt>
-                    <dd>The shelf for your semester, when your doors open.</dd>
-                  </div>
-                </dl>
-              </div>
-
-              <aside class="bot-card" aria-label="Open NbkristQik">
-                <p class="bot-card__label">Start here</p>
-                <p class="bot-card__handle">@NbkristQik_bot</p>
-                <p>Open it in Telegram. Register once, then ask for attendance, marks, or the door to the shelf.</p>
-                <a class="btn" href="https://t.me/NbkristQik_bot">Open in Telegram</a>
-              </aside>
-            </div>
+            <table class="register" aria-label="Every command and what it does">
+              <thead>
+                <tr>
+                  <th scope="col">Command</th>
+                  <th scope="col">Who</th>
+                  <th scope="col" class="register__wide">What comes back</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="cmd">a roll number</span></td>
+                  <td class="register__who">anyone</td>
+                  <td>Attendance and mid marks for that roll, no registration needed.</td>
+                </tr>
+                <tr>
+                  <td><span class="cmd">/attendance</span></td>
+                  <td class="register__who">registered</td>
+                  <td>Your percentage, the classes attended, and the bar.</td>
+                </tr>
+                <tr>
+                  <td><span class="cmd">/midmarks</span></td>
+                  <td class="register__who">registered</td>
+                  <td>Your marks, subject by subject, both mids and the average.</td>
+                </tr>
+                <tr>
+                  <td><span class="cmd">/bunk</span></td>
+                  <td class="register__who">registered</td>
+                  <td>The skips you can afford, and the classes you must attend.</td>
+                </tr>
+                <tr>
+                  <td><span class="cmd">/register</span></td>
+                  <td class="register__who">anyone</td>
+                  <td>Saves your roll once. Edit it whenever you like.</td>
+                </tr>
+                <tr>
+                  <td><span class="cmd">/leaderboard</span></td>
+                  <td class="register__who">anyone</td>
+                  <td>The live leaderboard, ranked by attendance or mid marks.</td>
+                </tr>
+                <tr>
+                  <td><span class="cmd">/report</span></td>
+                  <td class="register__who">anyone</td>
+                  <td>An issue id and a thread that actually replies.</td>
+                </tr>
+                <tr>
+                  <td><span class="cmd">/library</span></td>
+                  <td class="register__who">registered</td>
+                  <td>The shelf for your semester, when your doors open. In rollout.</td>
+                </tr>
+                <tr>
+                  <td><span class="cmd">/help</span></td>
+                  <td class="register__who">anyone</td>
+                  <td>How all of this works.</td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="note">There are no accounts and no passwords anywhere. Telegram knows who you are; the roll number says what you study.</p>
           </div>
         </div>
       </div>
@@ -320,7 +393,7 @@
     <section class="section" id="notes" aria-labelledby="notes-title">
       <div class="wrap">
         <div class="section__grid">
-          <p class="section__label"><b>05</b><span>Notes</span></p>
+          <p class="section__label"><b>06</b><span>Notes</span></p>
           <div class="section__body">
             <div class="notes-head">
               <h2 id="notes-title">From the register.</h2>
@@ -360,15 +433,15 @@
             <img src="./assets/mark.svg" alt="" width="34" height="34">
             <b>NbkristQik</b>
           </div>
-          <p class="footer__blurb">A reading room for NBKRIST students, inside Telegram. Built in Warangal. An independent project, not an official service of the college.</p>
+          <p class="footer__blurb">A Telegram bot for NBKRIST students: attendance, marks, the bunk math, a live leaderboard, a report line that replies, and a reading room set page by page. Built in Warangal by one admin. Independent; not an official service of the college.</p>
         </div>
         <div>
           <h2>Read</h2>
           <ul>
-            <li><a href="#shelf">The shelf</a></li>
-            <li><a href="#reader">The page</a></li>
-            <li><a href="#documents">The documents</a></li>
-            <li><a href="#bot">The bot</a></li>
+            <li><a href="#answers">Between classes</a></li>
+            <li><a href="#board">The leaderboard</a></li>
+            <li><a href="#library">The library</a></li>
+            <li><a href="#commands">The commands</a></li>
           </ul>
         </div>
         <div>
