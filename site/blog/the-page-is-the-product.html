@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The page is the product | NbkristQik</title>
+  <meta name="description" content="How the NbkristQik library was made: 51 documents, 1,248 pages, 362 diagrams, and why a PDF was the wrong unit for a phone.">
+  <meta name="theme-color" content="#3f6457">
+  <link rel="icon" type="image/svg+xml" href="../assets/mark.svg">
+  <link rel="canonical" href="https://tobioffice.github.io/NbkristQik/site/blog/the-page-is-the-product.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="The page is the product | NbkristQik">
+  <meta property="og:description" content="Everyone else ships a PDF and calls it a library. I rebuilt the textbook from the syllabus up: 51 documents, 1,248 pages, every diagram drawn again.">
+  <meta property="og:url" content="https://tobioffice.github.io/NbkristQik/site/blog/the-page-is-the-product.html">
+  <meta property="og:image" content="https://tobioffice.github.io/NbkristQik/site/assets/og-making.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://tobioffice.github.io/NbkristQik/site/assets/og-making.png">
+  <link rel="stylesheet" href="../site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="band">
+    <div class="wrap band__row">
+      <a class="brand" href="../index.html" aria-label="NbkristQik, home">
+        <span class="brand__name">NbkristQik</span>
+        <span class="brand__sub">The college bot</span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a class="nav__link" href="../index.html#shelf">The shelf</a>
+        <a class="nav__link" href="../index.html#reader">The page</a>
+        <a class="nav__link" href="../index.html#documents">The documents</a>
+        <a class="nav__link nav__link--notes" href="./" aria-current="page">Notes</a>
+        <a class="btn btn--cream" href="https://t.me/NbkristQik_bot">Open the bot</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="dateline">
+    <div class="wrap dateline__row">
+      <span>Vol. 01 &middot; October 2026 &middot; Warangal</span>
+      <span>The making of</span>
+    </div>
+  </div>
+
+  <main id="main">
+    <article>
+      <header class="article-head">
+        <p class="article-head__kicker">The making of</p>
+        <h1>The page is the product.</h1>
+        <p class="article-head__standfirst">Everyone else ships a PDF and calls it a library. I rebuilt the textbook from the syllabus up: 51 documents, 1,248 pages, every diagram drawn again.</p>
+        <div class="article-head__byline">
+          <span>The admin</span>
+          <span><time datetime="2026-10-19">19 October 2026</time></span>
+          <span>9 min read</span>
+        </div>
+      </header>
+
+      <div class="article">
+        <div class="article__body">
+          <p class="lede">There is a moment in every semester when someone asks for the notes and gets a 40 MB PDF in a WhatsApp group. The file is called <em>unit1_final_final.pdf</em>. It opens at 80 percent zoom. The first page is a photograph of a page, taken at an angle, with a thumb in the corner.</p>
+          <p>Everyone has a version of this file. It is how study material moves.</p>
+          <p>I wanted to see what a library looks like if you start from the other end.</p>
+
+          <div class="fig-pair">
+            <figure class="fig">
+              <div class="fig__head"><span>Plate 01</span><span>Cover</span></div>
+              <img src="../assets/pages/cn-cover.jpg" alt="The cover of Computer Networks Unit I: the NbkristQik mark, a metadata table, and the unit title." width="1240" height="1754">
+              <figcaption class="fig__caption"><b>CN Unit I, page 1.</b> The subject, regulation, unit, and coverage table are part of the page.</figcaption>
+            </figure>
+            <figure class="fig">
+              <div class="fig__head"><span>Plate 02</span><span>Page 24</span></div>
+              <img src="../assets/pages/dbms-er.jpg" alt="A typeset page from Database Management Systems Unit I showing a complete banking entity-relationship diagram." width="1240" height="1754">
+              <figcaption class="fig__caption"><b>DBMS Unit I, page 24.</b> The banking ER diagram, drawn in one piece and set on the page it belongs to.</figcaption>
+            </figure>
+          </div>
+
+          <h2>The file was the wrong unit</h2>
+          <p>A PDF is a file. It has a name, a size, a download button, and a share sheet. On a phone it becomes a viewer with chrome, zoom, a thumbnail panel, and a menu. You manage the file before you read the page.</p>
+          <p>For a library, that is backwards. The thing you need is the page: one screen, one diagram, the next line. The file is overhead.</p>
+          <p>Scans make it worse. A scan is a photograph of a page that was designed for print. The margins are wrong for a phone, the text is a texture, and the diagram is whatever the scanner could catch. Zooming does not add information.</p>
+
+          <div class="pull">
+            <p>A PDF is a file you keep. A page is a thing you read.</p>
+          </div>
+
+          <h2>Start from the syllabus</h2>
+          <p>Every document begins with the official R23 syllabus PDF. I read the unit, list the topics, and build the page around exactly those topics. The syllabus headings become the section order. The coverage table at the front of each unit is the contract: topic, section, page.</p>
+          <p>Then I set the text. Not paste it. Set it: measure, leading, a running head, a page number, a caption style, a table style. The pages are built as HTML and rendered to A4. The PDF is the master. The reader never sees the master.</p>
+          <p>The page is not a screenshot of a book. It is a page with a job.</p>
+
+          <h2>What one page carries</h2>
+          <p>Every unit opens with a cover: subject, code, regulation, unit, title, and a metadata table. After that, each page carries a running head, the section number, the page number, and a footer with the subject and unit. Tables are set with rules, not zebra stripes. Figures get a caption that says what to look at, not just what it is.</p>
+          <p>The constraint is 390 pixels. That is the width of the phone the reader is built for. If a table cannot survive that width, it is rebuilt as two tables or a list. If a diagram cannot be read at that width, it is redrawn. Nothing is shrunk until it fits.</p>
+
+          <figure class="fig">
+            <div class="fig__head"><span>Page anatomy</span><span>CN &middot; Unit I &middot; p. 14</span></div>
+            <img src="../assets/pages/cn-osi.jpg" alt="A typeset page from Computer Networks Unit I showing the OSI and TCP/IP diagram, a comparison table, and a figure caption." width="1240" height="1754">
+            <figcaption class="fig__caption"><b>The OSI page.</b> The diagram, the comparison table, and the caption are one composition, not three blocks stacked by a word processor.</figcaption>
+          </figure>
+
+          <h2>Diagrams, not screenshots</h2>
+          <p>The first drafts used screenshots of diagrams from reference books. They looked fine on a laptop and terrible on a phone: grey boxes, clipped labels, a resolution from another decade.</p>
+          <p>So I drew them. 362 diagrams as SVG: OSI stacks, ER models, AVL rotations, agent loops, Gantt charts, validation curves. Vector means the labels stay sharp, the strokes stay even, and a diagram can be redrawn for the page it sits on instead of cropped to fit.</p>
+          <p>Some are simple. Some take a full page. All of them are built from the same small set of marks: a box, a line, a label, a dashed line for a boundary. The constraint makes them look like one book instead of a collection of borrowed figures.</p>
+
+          <div class="fig-trio">
+            <figure>
+              <img src="../assets/diagrams/osi.svg" alt="The seven OSI layers beside the four-layer TCP/IP stack, with the mappings between them." width="900" height="430">
+              <figcaption>OSI and TCP/IP &middot; CN</figcaption>
+            </figure>
+            <figure>
+              <img src="../assets/diagrams/er.svg" alt="A sample entity-relationship diagram with entities, relationships, and cardinality labels." width="760" height="216">
+              <figcaption>Sample ER &middot; DBMS</figcaption>
+            </figure>
+            <figure>
+              <img src="../assets/diagrams/avl.svg" alt="The four AVL imbalance cases, LL, RR, LR, and RL, each with its repair rotation." width="880" height="470">
+              <figcaption>AVL cases &middot; ADSAA</figcaption>
+            </figure>
+          </div>
+
+          <h2>One page at a time</h2>
+          <p>The reader is a strip of pages, not a document viewer. It requests a page when you get near it, draws it to a canvas, and drops pages that are far away. There is no text layer to select, no file to save, no share sheet. What reaches the phone is an image of the page.</p>
+          <p>Each image carries a per-reader mark, baked into the pixels before it leaves the server. At reading size it is a faint texture. In a screenshot it is still there. The mark does not stop a determined leak; it makes the ordinary leak attributable.</p>
+          <p>On a bad connection, the page is the unit that arrives. Not the file. That is the whole argument.</p>
+
+          <figure class="fig fig--phone">
+            <div class="fig__head"><span>The reader</span><span>390 &times; 844</span></div>
+            <img src="../assets/app-reader-osi.png" alt="The library reader inside Telegram, showing page 14 of Computer Networks Unit I with the OSI diagram and a faint diagonal watermark." width="390" height="844">
+            <figcaption class="fig__caption"><b>CN Unit I, page 14, in the reader.</b> The watermark is the reader&rsquo;s own; the page is 390 pixels wide.</figcaption>
+          </figure>
+
+          <h2>The shelf</h2>
+          <p>Eleven subjects are set: four semesters of CSE, from ADSAA in 2-1 to Cryptography in 3-2. The counts are real: 51 documents, 1,248 pages. Software Engineering is Unit I only; the rest is still being cut.</p>
+
+          <table aria-label="The shelf by semester">
+            <thead>
+              <tr>
+                <th scope="col">Semester</th>
+                <th scope="col">Subjects</th>
+                <th scope="col" class="num">Documents</th>
+                <th scope="col" class="num">Pages</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>2-1</td><td>ADSAA, OOPJ, DLCO</td><td class="num">15</td><td class="num">363</td></tr>
+              <tr><td>2-2</td><td>DBMS, OS, SE</td><td class="num">11</td><td class="num">274</td></tr>
+              <tr><td>3-1</td><td>AI, CN, ATCD</td><td class="num">15</td><td class="num">387</td></tr>
+              <tr><td>3-2</td><td>ML, CNS</td><td class="num">10</td><td class="num">224</td></tr>
+              <tr class="total"><td>Total</td><td>11 subjects</td><td class="num">51</td><td class="num">1,248</td></tr>
+            </tbody>
+          </table>
+          <p class="table-caption">Counts from the rasters on the server. A document is one unit; a page is one raster. Software Engineering contributes 1 document and 27 pages.</p>
+
+          <h2>What changes</h2>
+          <p>None of this is new technology. PDFs have been on phones for fifteen years; OCR is older. What changes is the unit of design. A scan is a picture of a page designed for print. A PDF is a file you manage. This is a page designed for the phone and delivered as a page.</p>
+          <p>That sounds small until you are in a corridor with two bars, twenty minutes before a class, trying to find the one diagram the teacher mentioned. A 40 MB download fails at 80 percent. A page arrives.</p>
+          <p>The other change is that the shelf can be honest. It lists what exists. It does not promise a unit because the syllabus says it should be there. The library is small on purpose; it will grow when the pages are ready.</p>
+
+          <h2>What&rsquo;s next</h2>
+          <p>The rest of Software Engineering. Assignments, so the shelf can hold the work as well as the notes. More departments when the college&rsquo;s catalogue can support them. The library opens semester by semester; the shelf is loaded ahead of the doors.</p>
+          <p>If you are a NBKRIST student, the bot is the door. Open it, register once, and wait for your semester. The pages are worth it.</p>
+          <p><a class="btn" href="https://t.me/NbkristQik_bot">Open in Telegram</a></p>
+
+          <div class="footnotes">
+            <h2>Notes</h2>
+            <ol>
+              <li>The R23 catalogue is a committed snapshot of the college&rsquo;s published syllabus pages. The library reads it from disk, not from the college site at request time.</li>
+              <li>Page counts are the number of rasters served for each document. They agree with the master PDFs: 1,248 pages in total.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="article-foot">
+          <p>Next: <a href="./library-launch.html">The library is opening</a>, the short version of what is on the shelf and how the doors open.</p>
+          <a class="textlink" href="./">All notes <span class="textlink__arrow" aria-hidden="true">&rarr;</span></a>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <div class="footer__top">
+        <div>
+          <div class="footer__mark">
+            <img src="../assets/mark.svg" alt="" width="34" height="34">
+            <b>NbkristQik</b>
+          </div>
+          <p class="footer__blurb">A reading room for NBKRIST students, inside Telegram. Built in Warangal. An independent project, not an official service of the college.</p>
+        </div>
+        <div>
+          <h2>Read</h2>
+          <ul>
+            <li><a href="../index.html#shelf">The shelf</a></li>
+            <li><a href="../index.html#reader">The page</a></li>
+            <li><a href="../index.html#documents">The documents</a></li>
+            <li><a href="../index.html#bot">The bot</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Notes</h2>
+          <ul>
+            <li><a href="./">All notes</a></li>
+            <li><a href="./library-launch.html">The library is opening</a></li>
+            <li><a href="./the-page-is-the-product.html">The page is the product</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <span>Vol. 01 &middot; October 2026 &middot; Warangal</span>
+        <span>Set in Zilla Slab and Public Sans</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
