@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:8f19968da57a54a2c591d20c621a86ce2eaf15e328b1ab4ce9c263367d1faa97",
+  "claims": [
+    {
+      "id": "claim_b127091b747d4b87a020245406204915",
+      "statement": "data/syllabus-catalog.json is a committed snapshot of the college syllabus pages, refreshed offline by the syncSyllabusCatalog tool so the request path never touches the college site.",
+      "evidence": [
+        {
+          "resource": "repo://data/syllabus-catalog.json",
+          "version": "repo-file-v1:sha256:d543e5de1edfa7c180cf724e9f4fa3781f09ab0b083df05c8058364671fa2925"
+        },
+        {
+          "resource": "repo://src/tools/syncSyllabusCatalog.ts",
+          "version": "repo-file-v1:sha256:6e7fbeefbb7fbfc38db51726730161ad06b925a3139554f963bc85cb54213197"
+        }
+      ]
+    },
+    {
+      "id": "claim_c44fef4ff487411bb1313ba0eae453b2",
+      "statement": "catalog.ts reads the snapshot once per process and derives the student's regulation from their entry year (R23 from 2023, R20 from 2020, R19 for 2019, R17 from 2017, otherwise R13) and the site department from the portal branch id.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/library/catalog.ts",
+          "version": "repo-file-v1:sha256:607db4e5a090ba44e0de4b567dd897ce5e1fcf4a20a283ade351a2bc3cb86c47"
+        }
+      ]
+    },
+    {
+      "id": "claim_768650bd38ac4e82a2a6a6683c95db4f",
+      "statement": "vectorisePdf renders one SVG per page with pdftocairo into a scratch directory and moves the pages into place only after the whole run succeeds; a missing poppler is reported as an install instruction.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/library/vector.ts",
+          "version": "repo-file-v1:sha256:6a61fbe415040d7be9e950401463467d8b9ac928149edfa54533c0992102201c"
+        }
+      ]
+    },
+    {
+      "id": "claim_e3db54f602114fdb8dbad49fe78d1f7d",
+      "statement": "ingestLibrary checks the subject code against the catalogue, copies the PDF to data/docs as the store of record, renders pages into data/pages/<id>, and registers the document through upsertLibraryDocument.",
+      "evidence": [
+        {
+          "resource": "repo://src/tools/ingestLibrary.ts",
+          "version": "repo-file-v1:sha256:a8e368606191a0cf23cb6436cc7915b2e931e1d91fee58d1f0990bd953ed5ee7"
+        }
+      ]
+    },
+    {
+      "id": "claim_aa50a83a2b264c298227b185ac6fac3e",
+      "statement": "LIBRARY_DATA_DIR relocates the library data tree and paths.ts builds every docs and pages path; the source PDF is never served to a reader.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/library/paths.ts",
+          "version": "repo-file-v1:sha256:4e1e8626d498d2b4d7e01a9df3a4225e0f6024f5682b4e58297d989f4dcc3540"
+        },
+        {
+          "resource": "repo://src/tools/ingestLibrary.ts",
+          "version": "repo-file-v1:sha256:a8e368606191a0cf23cb6436cc7915b2e931e1d91fee58d1f0990bd953ed5ee7"
+        }
+      ]
+    },
+    {
+      "id": "claim_38d5c333e59d4e83873b6d0e597a5c00",
+      "statement": "resolveWatermark prints the students and documents behind a token from library_reads, or the token belonging to a given Telegram user id.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/library.model.ts",
+          "version": "repo-file-v1:sha256:089b2841dbf0624e3a4f5e7b4879903344e78782505907c5837cef7d94ad961e"
+        },
+        {
+          "resource": "repo://src/tools/resolveWatermark.ts",
+          "version": "repo-file-v1:sha256:c3ceacd1c3f42b68539485f16f96998e4364d22136d722666c29c1a57948caf1"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-24T11:00:48.405Z"
+  }
+}

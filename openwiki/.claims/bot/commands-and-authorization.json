@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:87c6e9923804a73ad74c1522d6f5026fd83ac69794aa268c38d9557029f750d3",
+  "pageVersion": "sha256:13764f9aa530aa242728b7529657eff8a2b9142969f105c19dd18e754748dfcf",
   "claims": [
     {
       "id": "claim_6b4f2174dc7445fb88ceca1b3f9775c7",
-      "statement": "setupBot advertises /start, /attendance, /midmarks, /bunk, /register, /report, /help, and /leaderboard to Telegram (names without leading slashes) and logs the failure if setMyCommands rejects; admin commands are registered by their modules but not advertised.",
+      "statement": "setupBot advertises /start, /attendance, /midmarks, /bunk, /register, /report, /help and /leaderboard (plus /library once the library is open) without leading slashes and logs a rejected setMyCommands; admin commands are registered by their modules but not advertised.",
       "evidence": [
         {
-          "resource": "repo://src/bot/setup.ts#L3-L18",
-          "version": "repo-lines-v1:sha256:47839e0c1673536ed0b929a3b3d2233db519d5f5ee184ee792f2233d0f836ff5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY0ZjkzM2UyZjM1MDZmM2ExODYyY2ZhY2NjY2E5YWZjZWE0ODNmYmU0NzViNzdjNGYwZDBkMGYzMTVlNmQ5MmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://src/bot/setup.ts",
+          "version": "repo-file-v1:sha256:3f1a598a8453bb00cd6e57cb027975ccab56f4c4598f651c70ac1c21f9fd93a5"
         }
       ]
     },
@@ -17,30 +17,26 @@
       "statement": "Bare /report opens the web issue form plus a My reports button (web_app buttons in private chats, URL buttons in groups); /report <message> validates 10-1000 characters, enforces a one-per-minute per-user gate, files the report through the report service which DMs the issue id, and confirms inline in groups.",
       "evidence": [
         {
-          "resource": "repo://src/bot/commands/report.ts#L20-L46",
-          "version": "repo-lines-v1:sha256:d5a6c69e8f30f82b59469f9f4de9b75c50343585cba6fcc9e131e74961a9d6ed:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkZGE4MmYxMzAzMWZjMTMzNDFmMzMwZWQwMTUxZDUxZWYxNDdjOWQxY2U4MjE4OTZmMjEzNzJlOGYwY2I3ZGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5M2IxNDMxZjkzMjU1ZTVkZjUyMTUxN2E2OWE0MDA3MDU2NmU0MzBjYzcwNmIzMmJhMTU5YzFmZDM3OTc3YTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM5ZGI3MzAyMTRiZDMxYjZlMDkyMTM5Yzk1MmU1NjNkNWQyNTI1MjNkMGQ5OGNiYzQwNzEzNzkwY2QzNzg0OGEifQ"
-        },
-        {
-          "resource": "repo://src/bot/commands/report.ts#L48-L92",
-          "version": "repo-lines-v1:sha256:d51046597876983bb074f7abf3ada8c9c01c25e5c84a6fc73af7c4816d453ef2:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3MGViMjYxY2UzM2E5OTg1YTcwYzNmM2Y4MTY5M2ZhN2ZlZjc5MzAyOTcyYTViZTZkZjMwNzU1ZTZmN2RmMzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5MjUxNWI0NGYyMjFmMWI2NmVlODhiNzFlMjBlMTQwMjk3ZWJhZDY5Zjg2NGVkY2Q1NmZhODZlMmNiZDRiMmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://src/bot/commands/report.ts",
+          "version": "repo-file-v1:sha256:caed5ca865a374a379b3c64753b569613c284a0a5dc6a466b8455c9e7706b102"
         }
       ]
     },
     {
       "id": "claim_dade604cc7fc41e48dd47af0b82dfc56",
-      "statement": "/start welcomes the user with a first-name greeting and asks for a roll number, /help gives usage instructions including the registered shortcuts and /report, and /leaderboard sends a button to the Web App leaderboard; the group funnel's ?start=fromgroup link lands on the plain welcome.",
+      "statement": "/start escapes and greets the sender by first name and asks for a roll number, except when the payload is library, which opens the library entry instead; /help gives usage instructions including the registered shortcuts and /report; /leaderboard sends a button into the app's register section.",
       "evidence": [
         {
-          "resource": "repo://src/bot/commands/help.ts",
-          "version": "repo-file-v1:sha256:73f740d6ed5c9bca67792c2e3b648709ede717597cc03854757b2e17afadeeba"
-        },
-        {
-          "resource": "repo://src/bot/commands/leaderboard.ts",
-          "version": "repo-file-v1:sha256:dba8899e2cc7525236cbe6cc1942dc3dbc25eedc9c27187483ff955d6f30f9d2"
-        },
-        {
           "resource": "repo://src/bot/commands/start.ts",
-          "version": "repo-file-v1:sha256:ee4a4c713f94c75c88e78503e3ef8460f23e7eb021076c00243b2b41eee3ed91"
+          "version": "repo-file-v1:sha256:64a98a94aaeb9709db3fa7f8505930889e38d24e13b50430b23d2a48901025d0"
+        },
+        {
+          "resource": "repo://src/bot/commands/startPayload.ts",
+          "version": "repo-file-v1:sha256:995ca7d89db831d1b562fc8f70c2bcd8ea6c75ec150fcbc289341338b692d5cf"
+        },
+        {
+          "resource": "repo://src/constants/webapp.ts",
+          "version": "repo-file-v1:sha256:4bb97e4a2d3d2f3069b1560ed614fb7669664b45c008a82bdc6838706b6f5b28"
         }
       ]
     },
@@ -60,11 +56,11 @@
     },
     {
       "id": "claim_95e14f61648743179e6799f98dc317fd",
-      "statement": "isAuthorizedUser checks in order: admin bypass, Redis-cached membership (degrading on Redis failure), live channel membership (treating check errors as allow), a join-channel prompt for non-members outside PROTECTED_CHAT_ID, then adds the user to the broadcast set; the group-use gate is applied separately by each entry point.",
+      "statement": "isAuthorizedUser in src/bot/authorization.ts checks in order: admin bypass, Redis-cached membership (degrading on Redis failure), live channel membership (treating check errors as allow), a join-channel prompt for non-members outside PROTECTED_CHAT_ID, the daily check-in gate, and then adds the user to the broadcast set.",
       "evidence": [
         {
-          "resource": "repo://src/bot/academics/academicHandler.ts#L41-L73",
-          "version": "repo-lines-v1:sha256:88314d6f31df8542fb2603a9d6218a369ac8bb30ebb4e587a641f1fc4eba6ba5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjYTI1MjBhMDEyZjBkNDBkOTM5MmUyOWVlY2UzODVhMjdkYTlhNDlhZGI1NTAwOWE5YmI0OWZmYTBiMjBkNWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk2NDNiMWUyNTZmYmEwZTExYmMxZjZhOGJjODdmNjU5ZjA2ZmEwYzQxNjA1MmRmNzkwYzE3ODE3ODNlMzE3NjUifQ"
+          "resource": "repo://src/bot/authorization.ts",
+          "version": "repo-file-v1:sha256:5b9b2563718fc40bf4794016f5d079b1c71abda609d54c15949af0d0927a5c31"
         }
       ]
     },
@@ -80,11 +76,11 @@
     },
     {
       "id": "claim_8564f1c544574a0ea4e9737233508984",
-      "statement": "Authorized user IDs are added to the qik:users Redis set best-effort, with failures logged and never blocking the reply.",
+      "statement": "Authorized user IDs are added to the qik:users Redis set best-effort through rememberStudent, with failures logged and never blocking the reply.",
       "evidence": [
         {
-          "resource": "repo://src/bot/academics/academicHandler.ts#L65-L71",
-          "version": "repo-lines-v1:sha256:d8943c30514bb9422684c4ecaf67583a3dd1b7945d48fede922430c7eb19e179:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDYzMjcxNDBlN2UyYmUyOTc1MzE5ZDYzNjAzMjVkNjEwN2E3ZTIzNmE5N2UwNTQxOTk0N2JhYTM4OTRlOTZlNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzYwNzE1ZjY1ZWE5MzcxMDExNzUwYzg4ODQ0MzYyOWJhZWIzNmM3NjllNDA0ZDQ5YzQyM2ZkNWJmM2M1Nzc2NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWViYjliOTZjNWNmN2EyZDJhYTEyYTc1MThlM2QxZjg5MTJiZDU1MjNhNjczYzVjZDA4OWQ0YjVlYTU5MjdlMCJ9"
+          "resource": "repo://src/bot/authorization.ts",
+          "version": "repo-file-v1:sha256:5b9b2563718fc40bf4794016f5d079b1c71abda609d54c15949af0d0927a5c31"
         }
       ]
     },
@@ -103,80 +99,124 @@
       "statement": "Chit-chat roll messages are deleted and replaced with a 15-second self-deleting notice, and chit-chat callbacks get a show-alert answer.",
       "evidence": [
         {
-          "resource": "repo://src/bot/academics/academicHandler.ts#L152-L193",
-          "version": "repo-lines-v1:sha256:bcbd213d96fbc916504de2957e80e1373e4eebb4e33cf970fa535370bf5e28f7:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3NWI0OWY0YzM3ZDgzOTcyNzkxN2E4NWM5OWQ3Zjk2ZDFmZWJjMWNmYWVlNWM2OGI4Nzc5YjAzYWE0MWY4MWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQxOGU2NDZhYjQzYWM3NWRjOTliYmI3MjBhMWNiMWI2ZDhmYzZkZDFkM2ZhOWFiZjA4OGY1ZDFiMDdlZTYyYzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyMzRjNDBmMDE4ZDZjNDBjNmFlZTM0ODVlYzUzY2E4N2IyNDdlN2U4MjkwMjg0MTJiODE5YjIxOGY5OWRiN2YifQ"
+          "resource": "repo://src/bot/academics/academicHandler.ts",
+          "version": "repo-file-v1:sha256:8a1ae2acf82d6a2e39aa06e1cfcb5aecffd19f1eebdfcc7d0db9ac6c381bbd5e"
         }
       ]
     },
     {
       "id": "claim_9cbfbd555a2a47bda8c51872b7162a59",
-      "statement": "/attendance, /midmarks, and /bunk are registered-only shortcuts: they resolve the caller's registered roll via resolveRegisteredRoll, prompt with a register web_app button when absent, and refresh the tgusers mapping on success.",
+      "statement": "/attendance, /midmarks, and /bunk are registered-only shortcuts: one handler resolves the caller's registered roll via resolveRegisteredRoll, prompts with a register web_app button when absent, and refreshes the tgusers mapping on success.",
       "evidence": [
         {
-          "resource": "repo://src/bot/commands/registered.ts#L104-L129",
-          "version": "repo-lines-v1:sha256:397c75c4217c8f22dbefa93ad3915af819f3120643e53a95bf93cc073775d11a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyODEzMmJhZTY5NDg0MGY5MTQ4MGFhNzg5YzgwMDVkM2JiYWQ1NTVlMmVkOTdmODZlOThjNjFiMDEwNjQ5OTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkZDg3OWRhOTU2MGNmMzU4ZGRjMGE0OThmZmE0YTljZWE4YjJkYmNmYTU5NTIxOTMzMzlkYTg4NDE3OTYzYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllNTI0OGI1YTFkYWQ5ZDIxNzcyMmExMDdhNWY1NDNjNzVjNDFkM2Y5MjRjZmQwYTAwYmI4N2Q2M2E2OGI4MzkifQ"
-        },
-        {
-          "resource": "repo://src/bot/commands/registered.ts#L131-L175",
-          "version": "repo-lines-v1:sha256:4d7e58c51e4f5a2248f39a63ab69763fd08671e251bdebdbd179b8176b5c8af0:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyODUxMDA2NzllNDEyMGZkZDdhODYzYjE5MjMxODk3OTZiMzMwYmJlNzY4YjBkZDUyYjJlYjljOGI2N2E3ZTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlY2ViYjc5MmU4YWNlYzJlNzFmNTE4Y2M4MDFhMTA1OTIxYTdlZDI1MjBkYTBkYjc1OGE2NDhhYjA4MGQ2OGEifQ"
+          "resource": "repo://src/bot/commands/registered.ts",
+          "version": "repo-file-v1:sha256:0419fa698be5702dcae74e753a9766b98fe2c0f305da13acf737fcaa6709b5b1"
         }
       ]
     },
     {
       "id": "claim_e8c0ad23764e476a8d0dda9880cae4c0",
-      "statement": "Registered shortcut commands reuse the same rate limit, channel membership, and group-use gates as the roll-number flow, and stay silent in the chit-chat group.",
+      "statement": "Registered shortcut commands reuse the same command rate limit and the shared isAuthorizedUser gate as the roll-number flow, and stay silent in the chit-chat group.",
       "evidence": [
         {
-          "resource": "repo://src/bot/commands/registered.ts#L139-L156",
-          "version": "repo-lines-v1:sha256:c32e5b1a57536471efc0b844afa478fdc96d51ca217bda3bd3da4096bdcc73b8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNhMjQ2YTc4OGI5ODU1Y2Q5NTYzNzA0NjgwZTg4ODdjZGNlMmM5MzIyN2UxNGQ0MjZmOTU1ZmRjOTJlMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1OWQxMGZiNWFjY2YwYTA5MmMzOWU4ZGM3MzQ2NzBhNjlkOTcxNGZiOGUwYmU0MzEzOTMxMmM2ZmVjMjc5ZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyNjI5OTg0MjExMGVlOTdlN2FiNzNlMzgwYzVjZjAzOGY1YmIwZDFmOGI4Y2U4YmJiODVhYmRkNGU5M2Q3MGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRiYWYxMjk3YWUyNTA2NjZhNzM3MThlNTE5NmM4OWUxMGRlMGMxMGRiNTIxZmQwMzgzZTEyNjg0NWIxOTNmZjIifQ"
+          "resource": "repo://src/bot/authorization.ts",
+          "version": "repo-file-v1:sha256:5b9b2563718fc40bf4794016f5d079b1c71abda609d54c15949af0d0927a5c31"
+        },
+        {
+          "resource": "repo://src/bot/commands/registered.ts",
+          "version": "repo-file-v1:sha256:0419fa698be5702dcae74e753a9766b98fe2c0f305da13acf737fcaa6709b5b1"
         }
       ]
     },
     {
-      "id": "claim_5b9fae94489b4efcb5cd5562ad696ec6",
-      "statement": "checkGroupUse gives each user 2 academic answers for life in group chats via an atomic INCR on groupUses:{userId}; private chats and the admin bypass, Redis failures fail open, and the counter is deliberately not in cacheFlushPatterns so /syncdb never resets it.",
+      "id": "claim_fc06bebabb314851b94772a001262e1e",
+      "statement": "/library sends one interactive line with a web_app button in private and a plain URL in a group, both opening the app's #/library route, and non-admins get a single sentence in private and nothing in a group while the library is closed.",
       "evidence": [
         {
-          "resource": "repo://src/bot/groupLimit.ts",
-          "version": "repo-file-v1:sha256:dcd3d95a7ecc29efb2d9e3726cebe03a1e639608b85ed9e0408bf56d0ca95452"
+          "resource": "repo://src/bot/commands/library.ts",
+          "version": "repo-file-v1:sha256:87a4849a594c2741dc657b38af265a1a81badf4e6fecaeb97fcd9694487f76e0"
         },
         {
-          "resource": "repo://src/services/redis/keys.ts#L27-L35",
-          "version": "repo-lines-v1:sha256:afe6d17ed01e909fd47fd62a64c8c6d5ec7880a3b752bde317cfe233ce5887c3:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjE3YjE1YzJhZDMwMDE2Nzk1ZjE1YjM5ZWNmY2FiYzIwYzFmY2I1OTQ3NjUzZDk0ZjA5MDRmMzc3ODE5ZTYyZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmNkYzc2ZDEyZTUzMDRkMzA3OWVkYjVmODkwMDA3ZWEwNWYyMjZlNGQ5M2I2OTU2ODQ2MGNhZmFmODAwNzQ0YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODVmMTc1NDRkMmU0YjViODM5MmQxNDQ0OWZiODFhMGEwMWI5NDlhNGZmNmQwNDFjZmI3OTUyMDA5MThhMDQ3ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+          "resource": "repo://src/constants/webapp.ts",
+          "version": "repo-file-v1:sha256:4bb97e4a2d3d2f3069b1560ed614fb7669664b45c008a82bdc6838706b6f5b28"
         }
       ]
     },
     {
-      "id": "claim_fb329a70ac53473089ce2ee0c5758dbc",
-      "statement": "When the group limit is reached the bot replies with the discussion note and a one-tap deep-link button to the bot's DM (start=fromgroup), quoting the triggering message when one was given, and the request stops.",
+      "id": "claim_63df8c871d414b8a9855caa46aa42e9f",
+      "statement": "/start only acts on the library payload (case-insensitive), routing it to the same sendLibraryEntry the /library command uses.",
       "evidence": [
         {
-          "resource": "repo://src/bot/groupLimit.ts#L43-L57",
-          "version": "repo-lines-v1:sha256:a5fa99114c68c7611d95711fb8d52a21b3bc9fada1a441ab93450dfe7cd32460:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2Mjg1YTUzZTdiZWJlNWNhNGNkYzEyNGNlYjJiZTc0OTVlN2JkZWZjYWFjMWEzYzBkNmE5MmU0ZWFiMDc2MmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRiOWQ2OThkODllMjJiNzg4NDk5MjcxM2RkOGVhOGE1OGQzNjdjNWUzNDJlNTdjM2Q2YmUzYTE5MDg5NWZmNGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM4MmE4M2IwZjQ1ODk3YWNjODQ0ODRlMzVlYmRlYTZhYzI2NmVjMzNjYzE3NTU0MzQ5MWRiYjE4MTJjZWUyNzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAifQ"
+          "resource": "repo://src/bot/commands/start.ts",
+          "version": "repo-file-v1:sha256:64a98a94aaeb9709db3fa7f8505930889e38d24e13b50430b23d2a48901025d0"
+        },
+        {
+          "resource": "repo://src/bot/commands/startPayload.ts",
+          "version": "repo-file-v1:sha256:995ca7d89db831d1b562fc8f70c2bcd8ea6c75ec150fcbc289341338b692d5cf"
         }
       ]
     },
     {
-      "id": "claim_c8f59793772d41308e91064c02c9b58b",
-      "statement": "The group-use gate runs after authorization at all three academic entry points: roll-number messages, inline-menu callbacks (blocked taps just dismiss the spinner), and registered shortcuts; a roll message consumes one of the 2 uses.",
+      "id": "claim_98dc8a3f3d25445f9fbe9118714fde44",
+      "statement": "stripOwnMention rewrites /cmd@OWNBOT to /cmd for every incoming message before handlers run and leaves commands addressed to other bots untouched.",
       "evidence": [
         {
-          "resource": "repo://src/bot/academics/academicHandler.ts#L136-L137",
-          "version": "repo-lines-v1:sha256:beccbfb622013ef263144c68af07d9498bfaf6c8316268501ef784c975b561f5:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2EyNGJmZWRiMTJmYmVkOWE0YjVkMDQwNTMxMWQ3NmU5NTU5ODk1Y2VkMjhlMzIwNzQ3Nzg1MDU2NTJkMDUwZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGIzMTdiZmM0ZjYwYzZmOGIwODgwODRiMDQ2NjBmMTVjZTVjOTM4M2MxNTgxMGJiNGM3NjRlODJjOTM1NjA5MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmRlODRmYTAzNTQ0MDQ0ZjBiM2EyNjE2YmIyY2NiZGQzNzFmOGRiZDQ3YTYwNDRiNTg4ZWNhMWJiZGY2MWI0NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjhjMDNhN2JjMjlkYTQ4YjA0NTU1Y2FhMGI4NGY0NDYwM2M2MWY2NWQwMDY2ZWQwNzkxOTVhZWE1YTQzYzQ4OCJ9"
+          "resource": "repo://src/bot/mentionNormalizer.ts",
+          "version": "repo-file-v1:sha256:c8779ebfd4daf60f944dd11983aec9be0d505af15c2a3193834383aaa962977f"
+        }
+      ]
+    },
+    {
+      "id": "claim_7ce6d470c8a4424882fe0afffb7e6226",
+      "statement": "Bot_usernames and deep links are centralized: BOT_USERNAME, CHANNEL_USERNAME, botLink(payload) and channelLink(messageId) live in src/constants/telegram.ts, and repeated reply sentences live in src/bot/replies.ts.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/replies.ts",
+          "version": "repo-file-v1:sha256:3faba7f63d17a9340c8a6f23f7df369d82fb7376b1b4d2036db95052198abdfb"
         },
         {
-          "resource": "repo://src/bot/academics/academicHandler.ts#L242-L247",
-          "version": "repo-lines-v1:sha256:3ea11b5946b74a7b6d4f7a22664e279b411a00594d45b7180cd7461aef9f5821:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmI5Nzc1NmZmZTY2NGY5MzU3ZmFkZmNlZDI3Yjg2NmI3MmRlNzNiNDU5YjY1OWFjMDU4ZTgwZTY0MzFlM2ZhZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzZlNTFlMGQwMDhmMTZjN2EyYjcwMDJlOGJjNDY1NDg3YWUyZjVhMzNiMDhmNzNmNTM1ZDAwYmYyOGI4N2ZlMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmRmMjljYzJjN2U3MTQwODFiMWEzNzgxODA3OTBkYTc2YTViOTE3ZjQwNmY4YTc3MGMwYmNmMDc4ODU4ZjhlNyJ9"
+          "resource": "repo://src/constants/telegram.ts",
+          "version": "repo-file-v1:sha256:dd3a8d3f755aa9c118459b10d363b937361f1947047f1a491ff4a7bada7437c4"
+        }
+      ]
+    },
+    {
+      "id": "claim_49a7a605dedc450586f77b6902b76746",
+      "statement": "No group-use limit module exists: the 2-answers-per-group funnel and its groupUses Redis counter were removed, so group chats are gated only by membership, the check-in and rate limits.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/authorization.ts",
+          "version": "repo-file-v1:sha256:5b9b2563718fc40bf4794016f5d079b1c71abda609d54c15949af0d0927a5c31"
+        }
+      ]
+    },
+    {
+      "id": "claim_d87bb9c0f4c642acb39f57d2fccef875",
+      "statement": "The chat menu button is always the app, labelled Open app; it opens the index once the library is open and the shelf section while the library is still the admin's, and only the command list follows LIBRARY_ACCESS.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/setup.ts",
+          "version": "repo-file-v1:sha256:3f1a598a8453bb00cd6e57cb027975ccab56f4c4598f651c70ac1c21f9fd93a5"
+        }
+      ]
+    },
+    {
+      "id": "claim_187f71dc4e6e4f66b82f593166e03be9",
+      "statement": "Every outbound bot button is built in src/constants/webapp.ts as the app URL plus a hash route (rank, profile, library, issues, issues/reports, issues/<id>), and those routes must match parseRoute in the shell.",
+      "evidence": [
+        {
+          "resource": "repo://src/constants/webapp.ts",
+          "version": "repo-file-v1:sha256:4bb97e4a2d3d2f3069b1560ed614fb7669664b45c008a82bdc6838706b6f5b28"
         },
         {
-          "resource": "repo://src/bot/commands/registered.ts#L155-L156",
-          "version": "repo-lines-v1:sha256:affa885a2793f2c52b78fd66f1b640252c913873860dd687cc9b228b16f51a98:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2EyNGJmZWRiMTJmYmVkOWE0YjVkMDQwNTMxMWQ3NmU5NTU5ODk1Y2VkMjhlMzIwNzQ3Nzg1MDU2NTJkMDUwZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjU5ZDEwZmI1YWNjZjBhMDkyYzM5ZThkYzczNDY3MGE2OWQ5NzE0ZmI4ZTBiZTQzMTM5MzEyYzZmZWMyNzlkMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGRmYmI4N2QzZjdmMTg3ZDAwMDQ4ODk4YjJkM2IxOTVjODgxMGZkNzFlNDk2MjU4YmQzNTYxMmE3ZTg1MTlkNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGJhZjEyOTdhZTI1MDY2NmE3MzcxOGU1MTk2Yzg5ZTEwZGUwYzEwZGI1MjFmZDAzODNlMTI2ODQ1YjE5M2ZmMiJ9"
+          "resource": "repo://src/web/src/AppShell.tsx",
+          "version": "repo-file-v1:sha256:6a2a4785e98b9fa18d54bc8b446caf3d36b944f4e0d6d8cab3cc333bc34a7664"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.2",
-    "at": "2026-10-15T21:12:57.495Z"
+    "at": "2026-10-24T11:41:29.189Z"
   }
 }

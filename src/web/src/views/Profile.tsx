@@ -6,6 +6,13 @@ import { useProfile } from "../useProfile";
 interface ProfileViewProps {
   tgUser: string | null;
   initData?: string;
+  /**
+   * Drop the view's own heading. On inside the app, where the printed page
+   * head already names the form; off on the standalone profile page.
+   */
+  compact?: boolean;
+  /** Where "report an issue" goes; the standalone page links out instead. */
+  onReportIssue?: () => void;
 }
 
 const LockIcon = () => (
@@ -46,7 +53,12 @@ const WarnIcon = () => (
   </svg>
 );
 
-export default function ProfileView({ tgUser, initData }: ProfileViewProps) {
+export default function ProfileView({
+  tgUser,
+  initData,
+  compact = false,
+  onReportIssue,
+}: ProfileViewProps) {
   const { status, save } = useProfile(tgUser, initData);
   const [roll, setRoll] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -141,13 +153,17 @@ export default function ProfileView({ tgUser, initData }: ProfileViewProps) {
           </div>
         )}
 
-        <h2 className="form-title">
-          {registered ? "Edit your roll" : "Save your roll number"}
-        </h2>
-        <p className="form-note">
-          Optional. Set it once and /attendance, /midmarks and /bunk answer
-          instantly, no roll to type.
-        </p>
+        {compact ? null : (
+          <>
+            <h2 className="form-title">
+              {registered ? "Edit your roll" : "Save your roll number"}
+            </h2>
+            <p className="form-note">
+              Optional. Set it once and /attendance, /midmarks and /bunk answer
+              instantly, no roll to type.
+            </p>
+          </>
+        )}
 
         <label className="field">
           <span>Roll number</span>
@@ -219,9 +235,15 @@ export default function ProfileView({ tgUser, initData }: ProfileViewProps) {
         </button>
       </div>
 
-      <a href={REPORT_URL} className="foot-link">
-        Found a problem with the bot? Report an issue
-      </a>
+      {onReportIssue ? (
+        <button className="foot-link" onClick={onReportIssue}>
+          Found a problem with the bot? Report an issue
+        </button>
+      ) : (
+        <a href={REPORT_URL} className="foot-link">
+          Found a problem with the bot? Report an issue
+        </a>
+      )}
     </>
   );
 }

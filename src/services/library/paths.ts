@@ -14,7 +14,6 @@ import path from "path";
 const dataDir = (): string =>
   process.env.LIBRARY_DATA_DIR?.trim() || path.resolve(process.cwd(), "data");
 
-export const libraryDataDir = dataDir;
 export const libraryDocsDir = (): string => path.join(dataDir(), "docs");
 export const libraryPagesDir = (): string => path.join(dataDir(), "pages");
 

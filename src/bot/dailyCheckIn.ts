@@ -13,6 +13,7 @@ import { getClient } from "../services/redis/getRedisClient.js";
 import { redisKeys } from "../services/redis/keys.js";
 import { logger } from "../config/logger.js";
 import { trackActivity, ChatSurface } from "../services/tracker.js";
+import { BOT_USERNAME, botLink, channelLink } from "../constants/telegram.js";
 
 const MSG_ID_KEY = redisKeys.checkinPostMsgId;
 
@@ -50,17 +51,12 @@ export const isDailyUnlocked = async (userId: number): Promise<boolean> => {
 
 /** Deep link to the pinned check-in post, or channel root as fallback. */
 export const getCheckInLink = async (): Promise<string> => {
-  const channel = (CHANNEL_ID || "").replace("@", "");
-  if (!channel) return "https://t.me/NbkristQik_bot";
   try {
     const redis = await getClient();
-    const msgId = await redis.get(MSG_ID_KEY);
-    return msgId
-      ? `https://t.me/${channel}/${msgId}`
-      : `https://t.me/${channel}`;
+    return channelLink((await redis.get(MSG_ID_KEY)) ?? undefined);
   } catch (e) {
     logger.error("[dailyCheckIn] getCheckInLink error:", e);
-    return `https://t.me/${channel}`;
+    return channelLink();
   }
 };
 
@@ -118,13 +114,12 @@ bot.onText(/^\/postcheckin$/, async (msg) => {
     await deletePreviousPost(redis);
     const { messageId, pinned } = await createCheckInPost(redis);
 
-    const channel = (CHANNEL_ID || "").replace("@", "");
-    const link = `https://t.me/${channel}/${messageId}`;
+    const link = channelLink(messageId);
     await bot.sendMessage(
       msg.chat.id,
       pinned
         ? `✅ Check-in post created and pinned: ${link}\n<i>Gate is now ACTIVE for all users (until midnight IST).</i>`
-        : `✅ Check-in post created: ${link}\n⚠️ I couldn't pin it. Give @NbkristQik_bot "Pin messages" rights in the channel, then run /postcheckin again.\n<i>Gate is now ACTIVE for all users (until midnight IST).</i>`,
+        : `✅ Check-in post created: ${link}\n⚠️ I couldn't pin it. Give @${BOT_USERNAME} "Pin messages" rights in the channel, then run /postcheckin again.\n<i>Gate is now ACTIVE for all users (until midnight IST).</i>`,
       { parse_mode: "HTML" },
     );
   } catch (e) {
@@ -134,7 +129,7 @@ bot.onText(/^\/postcheckin$/, async (msg) => {
       .sendMessage(
         msg.chat.id,
         `❌ Couldn't post the check-in: ${reason}\n\n` +
-          `Make sure @NbkristQik_bot is a channel admin with "Post messages" turned on.`,
+          `Make sure @${BOT_USERNAME} is a channel admin with "Post messages" turned on.`,
       )
       .catch(() => {});
   }
@@ -163,7 +158,7 @@ bot.on("callback_query", async (query) => {
 
     await bot.answerCallbackQuery(query.id, {
       text: "✅ You're all set!",
-      url: "https://t.me/NbkristQik_bot?start=unlocked",
+      url: botLink("unlocked"),
     });
   } catch (e) {
     logger.error("[dailyCheckIn] callback error:", e);

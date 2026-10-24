@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:6366fd4da4c559cc3126d556e88fed3e0ca2f9216d469ea424eacf2ca268a0f6",
+  "pageVersion": "sha256:c0bda655e4a7e642ea447889b1c0cfdac4f824f41ee3b99cb492a5eb24583561",
   "claims": [
     {
       "id": "claim_f107abc924534d0d8229091a0c7b6457",
       "statement": "Registration pins a userId to an uppercased roll_no plus optional display_name in the registrations table, with registered_at preserved and updated_at refreshed on upsert; the table is deliberately separate from tgusers so lookup-driven writes cannot overwrite a registration.",
       "evidence": [
         {
-          "resource": "repo://src/db/init.ts#L69-L76",
+          "resource": "repo://src/db/init.ts#L70-L77",
           "version": "repo-lines-v1:sha256:4c8624ea526b8526c5224d289e8bf909da2eadbe32cf10b78cf2457448d563e1:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODAxZmE2MTk1OGUyN2RiYWM4MGI0OTYwZmZjYzJlODU2Mjc2NjZmNDFlNDQ1N2NhNjExNjgyNTg0NjRiYjExOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODRlNDIwOGNkNmZmYjhjNGEzNTQ3YjJmNTRhZGExOTk3OGMzZjM2NWU3OGY5NTAyZWY1MTQ1Y2RkMmFhODU0MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmY1MDNiY2M3M2QzZjY2M2ZjZTdlZTc4NDIwNzk5NGI2NTNlYWU4NzQ0ZDc4MGRiNGQ5YmE3Zjk0ZjU0MzczZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGZjN2NhOWM5MTFjZWVmMWRhZjQ3ZGI4NjUzMTM0Y2NkY2VkNjY0ZjRkYzFhYzhlN2ViOTNkN2QxMDhkYjQzYiJ9"
         },
         {
@@ -51,7 +51,7 @@
       "statement": "The register write route is additionally limited to 20 requests per 15 minutes per IP via profileWriteLimit.",
       "evidence": [
         {
-          "resource": "repo://src/api/server.ts#L48-L56",
+          "resource": "repo://src/api/server.ts#L75-L83",
           "version": "repo-lines-v1:sha256:3470e9b241807c68c2c0a2a975136d7604b068e0c5ae162945f8e2a208e1411d:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzhkNTI1MzcyMzg0NTMxMzZlNGRjNjdjZDYxYzU4ZjJkNGY0ODIzNDcwNThiMjIzNDllZGI0MzE4MjRjZGJlMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDFiOWM1MTI1OTFmNDRkZWRlMzUyY2QxZmI0NDc5NGNmNTc2ZDYyOTAzMjQ3ODU2ODIxM2NmMDllYWMzNzBjMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTllOGU2ZWNhZjc4NzgyYjYyNDk0MTI2OWNmMzJiMzgzYzQ5ZWM4NTk1ZmVhYWU2NTg2NWVkODk3ZDQxODRlNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjA4NGVhYzkyMDVlNjc5YjAzZGFlNjQxNDc4YTA2MjMzMTc4NDczN2QxZGI4NWUzZmY1MTlhNmM4YzUzYzVmNSJ9"
         }
       ]
@@ -61,62 +61,50 @@
       "statement": "resolveRegisteredRoll prompts unregistered callers with a register web_app button, refreshes the tgusers mapping for a valid registration, and prompts a profile update when the registered roll left studentsnew.",
       "evidence": [
         {
-          "resource": "repo://src/bot/commands/registered.ts#L104-L129",
-          "version": "repo-lines-v1:sha256:397c75c4217c8f22dbefa93ad3915af819f3120643e53a95bf93cc073775d11a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyODEzMmJhZTY5NDg0MGY5MTQ4MGFhNzg5YzgwMDVkM2JiYWQ1NTVlMmVkOTdmODZlOThjNjFiMDEwNjQ5OTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkZDg3OWRhOTU2MGNmMzU4ZGRjMGE0OThmZmE0YTljZWE4YjJkYmNmYTU5NTIxOTMzMzlkYTg4NDE3OTYzYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllNTI0OGI1YTFkYWQ5ZDIxNzcyMmExMDdhNWY1NDNjNzVjNDFkM2Y5MjRjZmQwYTAwYmI4N2Q2M2E2OGI4MzkifQ"
+          "resource": "repo://src/bot/commands/registered.ts",
+          "version": "repo-file-v1:sha256:0419fa698be5702dcae74e753a9766b98fe2c0f305da13acf737fcaa6709b5b1"
         }
       ]
     },
     {
       "id": "claim_815f9be6aca94da8b1e8445f1622da2a",
-      "statement": "/attendance, /midmarks, and /bunk are registered-only shortcuts reusing the same rate limit, membership, and group-use gates as the roll flow; /register opens the profile page via a web_app button.",
+      "statement": "/attendance, /midmarks, and /bunk are registered-only shortcuts reusing the same command rate limit and the shared isAuthorizedUser gate as the roll flow, and stay silent in the chit-chat group; /register opens the profile page via a web_app button.",
       "evidence": [
         {
-          "resource": "repo://src/bot/commands/register.ts",
-          "version": "repo-file-v1:sha256:45278a919d1d48e233a19ca066fa30d5b12337e4df04f2d5bbcef4be1fd7a44d"
+          "resource": "repo://src/bot/authorization.ts",
+          "version": "repo-file-v1:sha256:5b9b2563718fc40bf4794016f5d079b1c71abda609d54c15949af0d0927a5c31"
         },
         {
-          "resource": "repo://src/bot/commands/registered.ts#L131-L175",
-          "version": "repo-lines-v1:sha256:4d7e58c51e4f5a2248f39a63ab69763fd08671e251bdebdbd179b8176b5c8af0:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyODUxMDA2NzllNDEyMGZkZDdhODYzYjE5MjMxODk3OTZiMzMwYmJlNzY4YjBkZDUyYjJlYjljOGI2N2E3ZTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlY2ViYjc5MmU4YWNlYzJlNzFmNTE4Y2M4MDFhMTA1OTIxYTdlZDI1MjBkYTBkYjc1OGE2NDhhYjA4MGQ2OGEifQ"
+          "resource": "repo://src/bot/commands/register.ts",
+          "version": "repo-file-v1:sha256:a3f0454f1008765ac9af417ff32510c13c47d1a3ecdcb46bb87c3fa6071a45b3"
+        },
+        {
+          "resource": "repo://src/bot/commands/registered.ts",
+          "version": "repo-file-v1:sha256:0419fa698be5702dcae74e753a9766b98fe2c0f305da13acf737fcaa6709b5b1"
         }
       ]
     },
     {
       "id": "claim_da24d8a143af493ea7759cb32486dba7",
-      "statement": "The profile form is a standalone Vite entry (register.html → register-main.tsx → ProfileApp) with its own useProfile data layer and form view, separate from the leaderboard page.",
+      "statement": "The profile form doubles as the app's Profile tab: ProfileView renders compact under the shell's page head and its report-an-issue line switches to the Issues tab.",
       "evidence": [
         {
-          "resource": "repo://src/web/register.html",
-          "version": "repo-file-v1:sha256:bd226b91861bff59f97a0933d83ed6e3de75a096540ab1a82193a10a5c260397"
-        },
-        {
-          "resource": "repo://src/web/src/ProfileApp.tsx",
-          "version": "repo-file-v1:sha256:363e6534e530645781895291eb47e91cd95461b51704b4806145cb1a95aa6995"
-        },
-        {
-          "resource": "repo://src/web/src/useProfile.ts",
-          "version": "repo-file-v1:sha256:763e9bbe8ce47daa5a4028e811df4721eab7fb9528ed19d492933e3084cb50aa"
+          "resource": "repo://src/web/src/AppShell.tsx",
+          "version": "repo-file-v1:sha256:6a2a4785e98b9fa18d54bc8b446caf3d36b944f4e0d6d8cab3cc333bc34a7664"
         },
         {
           "resource": "repo://src/web/src/views/Profile.tsx",
-          "version": "repo-file-v1:sha256:db042f747f8b3b8129ddd66294051524415241b7d57b0539e6c385e1467e38d7"
-        },
-        {
-          "resource": "repo://src/web/vite.config.ts#L9-L15",
-          "version": "repo-lines-v1:sha256:2d1a4a48d117ea9eeb152118a5638cf5ac2534f48be1b0eb912744d09365effa:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmJhN2FkM2VmYWQ5YzdhN2FmMjBiYmM0NzJmYzBhMzFlNDI0NjI5MDBhMTYwNDhmMTIyMzZjNWMyYzQ2YjYzNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWYwY2RiOTcyYTdiZmI3ZWQyNDZmOWZmNjcyMzg1ZTU1ZjQ5NjhmYzExMDQzZGM1YjY4NGQ1MWRmYTMxZGJjYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjVjYzE1ODcwMzIzMDUyZmJlZjQxOTIzYjVhY2RjZmRkZmM4MWM1ZTM2N2ZiZjQ2OTQ5MTg3ZTgyMzc3YWRjZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGIxYmM3ZjJmZDZjM2Q4M2YyNmMwM2Y3NDU0ZTg3YjgyOTE1YWQ5N2Q5YzVmMTM4OTY3OWJhZDcyOTgwZWRiMiJ9"
+          "version": "repo-file-v1:sha256:72f1f9770ebe63b88cdaa49e9edcfdbf26d3e7cd3f66b125f6558147d127682b"
         }
       ]
     },
     {
       "id": "claim_b5084344d7534936b44a1d5eb945ad76",
-      "statement": "All three mini app URLs (leaderboard, profile, report) are centralized — bot side src/constants/webapp.ts, web side src/web/src/constants.ts — and used as web_app buttons for full-screen opens.",
+      "statement": "Bot links live in src/constants/webapp.ts as the app base plus hash routes (#/rank, #/profile, #/library, #/issues, #/issues/reports, #/issues/<id>), used as web_app buttons; the older GitHub Pages pages stay deployed but are no longer linked.",
       "evidence": [
         {
-          "resource": "repo://src/constants/webapp.ts#L1-L10",
-          "version": "repo-lines-v1:sha256:3a87dbeed390fa9ab3f6e2dd6a23e50eff265b2a9806c07fab5698d4c6c4ea48:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmZTdjMWNhNDAxZWZjYzIwM2Y0Nzg1NGMwZGZkNjU3NDJlYzcxYzVkMTA3MzVkMzEzYzE2NzBiY2JhOTkyMmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJlNThjMjZhODRjYmM5MTBmZmIzN2FhM2Y5NzQwMTRmYzBiMGM4M2ZhMDQzNmJmYTY5MmYwZWJjODg4NDA4ODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
-        },
-        {
-          "resource": "repo://src/web/src/constants.ts#L28-L36",
-          "version": "repo-lines-v1:sha256:1c7651bbb3f4e68775e6253bd15f5b98f91800ebfc987c2eb0cb05219f340e2f:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTU0YTYxOWYyNzk2MWI5Yzk5NTEwOGU2NzhiYTRkN2YwNzg2M2YxMjdlOWNhYTRjNGQwOTE2NDA5OGRlZjNiYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjRlMTcwYTc5NzNlY2ZiNzk4ZDE1ODIxOWY5YWVkMzU3ZjlkYTZiOGY1ZDFmZTgxMWI3YjQxOWNhYjcyNGY2NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmQzZGYxYTkyOTk3ZmFjYzNmZmNiMDg1NjYwODcwMjA0MTBlNDQwNzE4YzdlMTE5YmMyN2M4ZWE0OTRiNTZjYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+          "resource": "repo://src/constants/webapp.ts",
+          "version": "repo-file-v1:sha256:4bb97e4a2d3d2f3069b1560ed614fb7669664b45c008a82bdc6838706b6f5b28"
         }
       ]
     },
@@ -147,10 +135,24 @@
           "version": "repo-lines-v1:sha256:2d1a4a48d117ea9eeb152118a5638cf5ac2534f48be1b0eb912744d09365effa:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmJhN2FkM2VmYWQ5YzdhN2FmMjBiYmM0NzJmYzBhMzFlNDI0NjI5MDBhMTYwNDhmMTIyMzZjNWMyYzQ2YjYzNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWYwY2RiOTcyYTdiZmI3ZWQyNDZmOWZmNjcyMzg1ZTU1ZjQ5NjhmYzExMDQzZGM1YjY4NGQ1MWRmYTMxZGJjYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjVjYzE1ODcwMzIzMDUyZmJlZjQxOTIzYjVhY2RjZmRkZmM4MWM1ZTM2N2ZiZjQ2OTQ5MTg3ZTgyMzc3YWRjZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGIxYmM3ZjJmZDZjM2Q4M2YyNmMwM2Y3NDU0ZTg3YjgyOTE1YWQ5N2Q5YzVmMTM4OTY3OWJhZDcyOTgwZWRiMiJ9"
         }
       ]
+    },
+    {
+      "id": "claim_cd21d1c825b4448fac5d196bf753c728",
+      "statement": "The library's roll form posts to the same /api/register endpoint as the profile page, so a student registered from the shelf is registered everywhere.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/server.ts",
+          "version": "repo-file-v1:sha256:7dffe4a84c71ef4e1b21eb4d43b914175e02c4246f65f1f233c4a8a10c2f0d13"
+        },
+        {
+          "resource": "repo://src/web/src/libraryApi.ts",
+          "version": "repo-file-v1:sha256:8b36898527eed140bf69e1656e292dad5ea57f418e9264e5cbe699fdf88f71a2"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.2",
-    "at": "2026-10-15T21:12:57.495Z"
+    "at": "2026-10-24T11:41:29.189Z"
   }
 }

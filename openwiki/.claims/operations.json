@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:b665e668497d90f9fa77434f3bdf13928efe7e49d70fa1751c0d2d9fefc605e8",
+  "pageVersion": "sha256:3b5859f03e1198c2ed90365cbbb4b89db8af2b34198f40c5835f1c6b69281aa9",
   "claims": [
     {
       "id": "claim_bd912aa28bb94114a6e1f34d596d187f",
@@ -14,29 +14,29 @@
     },
     {
       "id": "claim_fe749cefa39b4d31a3083553ce6f0f0f",
-      "statement": "Environment variables cover ENV, Telegram tokens, Turso credentials, LOCAL_DB_URL (embedded database override), Redis URL, portal credentials, ADMIN_ID, channels, admin panel path/password, and CORS_ORIGINS; PORTAL_BASE_URL and PORT are optional with defaults.",
+      "statement": "Environment variables cover ENV, Telegram tokens, Turso credentials, LOCAL_DB_URL, REDIS_URL, portal credentials, ADMIN_ID, channels, admin panel path/password, CORS_ORIGINS and LIBRARY_ACCESS, LIBRARY_WATERMARK_SECRET, LIBRARY_DATA_DIR, LIBRARY_CATALOG_PATH and LIBRARY_WEB_DIR; PORTAL_BASE_URL and PORT are optional with defaults.",
       "evidence": [
         {
-          "resource": "repo://.env.example#L9-L15",
-          "version": "repo-lines-v1:sha256:8609ff95ba1f46d3e40df1306ccfdbf27b6824badc34e872c4809005fbf6ea7d:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmMwNzcyZTA5MDRlOTA2NWFiYjJjMjczZGI4ODE1MzE0ZGQwZWVjNGZmYzgzOTUxNjE5ZjRkMWM4OWYwZWQ1MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzI3ZTQzNWRlM2U5MzczMjFkYmFjMmRhMjhjNWM4MTYwZDQ4MDc5ZDFjMzM4MzExN2QwZmIxNWE4ZmNmMTQ3NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzYxN2ExOGEwMmVkZmZlYTc0M2NlMDc4NWVmYTVlNDgyMDE3YmI1NTI1YTY4ZTQwMWY3Zjk4MDRiNTVmZjU0MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTZkYmIyMmQwYTkzNTIxZDI1YzRmNGY4NDViZDU2YzYxMmQ0OTAzYTQ4OTFmMDgwNWNjMjFlZTFmNmY5MDlmZSJ9"
+          "resource": "repo://.env.example",
+          "version": "repo-file-v1:sha256:b52fca72010d89a4e196cd864d056a11b8cff5568b1a87c83f65731dfde88373"
         },
         {
-          "resource": "repo://src/config/environmentals.ts#L5-L30",
-          "version": "repo-lines-v1:sha256:ebe469cc89c03e6069dbb2c4951a165ac2b3c507f1d21bbcb4467b06bd785212:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4ODk2NDZhNDE2Yjk3MDE1ODQwZWFjMWZiMmFjM2I2ODVmOWY5YjFmY2QzNWVmOTEyNDcwOGZjZTgxMGU5YTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4MGNmNTQxZDUzYTc4N2EzMjA5YWZmNmQzNDI2N2U1OTY5ZWMyZDdlNzc0NjVjMTBlNDJmMWNjNDAxODQ0YmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdjNmU2YjA3Y2ZiMTVkM2E0MDljNjc2ZjBlZGI3NGE0NmU2Mjk0YWQ3OTAzYjU3YzhlY2YyMDAxYmVmZTY4ZDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA3OTA2MGExOWJlODcyNGI1MzcyMGQ3ZjdjNDVjODM0MDc2YWUxMzg3NWM0MzZkODhkYzk2NDE1OGQ3ZWY1YjcifQ"
+          "resource": "repo://src/config/environmentals.ts",
+          "version": "repo-file-v1:sha256:b43b78c9537ced9d2084228dd6cce535e31e01df6ec1d66fe09e5871577c4200"
         },
         {
-          "resource": "repo://src/db/db.ts#L13-L20",
-          "version": "repo-lines-v1:sha256:3e622b2c7c16c59459a21b741c7c86a9bcc74f646c11d10a60c8d6685f64aa12:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGUwNmMxYjc5ODAwNDE3Y2Y5NWE5MjBjZWUzODU3Mzc4NGI3YjM3NTk4YzY5NjVjYTQyNGM3M2RlZWQ3MjIxZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjJkMTFjYWY0M2U5N2VmMzY5ZTZiZWVkMWEyNjhiZDA1ODM4ZjI5YjlkZDI1NGJmNjliYTY0ODg0MTQ3MjM0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjE1MDQ3YTkzN2U2YTQ3ZmQxYTdmM2ZkZWEwNzY5MmQyNjZkZTBiZDY5MTNkYWY5YzZhZjMwODVjMTQ2YjlhMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+          "resource": "repo://src/db/db.ts",
+          "version": "repo-file-v1:sha256:560aa9fb83345aabe99e3577ab8d003f33c55f4187ad3aa2418e8f087698fc32"
         }
       ]
     },
     {
       "id": "claim_afa8e9ff42284f97964bfa6a98b9068b",
-      "statement": "Deployment builds locally, rsyncs dist and manifests to the server, installs production dependencies with a frozen lockfile, and restarts and verifies the nbkristqik systemd service.",
+      "statement": "Deployment runs typecheck, lint and both test suites before building, builds the library bundle, rsyncs dist, the library bundle and the catalogue snapshot to the server, installs production dependencies with a frozen lockfile, and restarts and verifies the nbkristqik systemd service.",
       "evidence": [
         {
-          "resource": "repo://scripts/deploy.sh#L11-L33",
-          "version": "repo-lines-v1:sha256:7e118c1da1b03cf185a55a5e3e1dbce91c4ce41881a543b96d15c3a8224ad3c6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4ZmM2MzM2NjdkMDMwMDczMWJkZDg0NDcyZGM0MjRlMWY5YzY0MTc1ZWEyYmFkYjY2NjQ3MmQ5MWFlYjRlZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxNDBlMTZlODFhYjkwNjYwNDg4OWY2MmMyZmVlY2JmYmIxNzUyZTUwN2IzZmY4ZTBkYzc3MzkxZDBlNGE5YmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxNWQ3ZDkwMjk5ZjBlZDc0MzQxZmY3ZmZkOGU4YmNlODUzNjg2NTM4YmVjODc4NzBkNjY5M2U0ZGJjNjFjNTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://scripts/deploy.sh",
+          "version": "repo-file-v1:sha256:f74355843947b7b83663e47b52458aa095a0e32ef097ac1e30943463572c6b53"
         }
       ]
     },
@@ -55,8 +55,8 @@
       "statement": "CI runs lint, typecheck, and test:coverage on Node 20 with pnpm 10 for pushes and PRs to main and develop, uploading coverage to Codecov without failing on upload errors.",
       "evidence": [
         {
-          "resource": "repo://.github/workflows/test.yml#L1-L50",
-          "version": "repo-lines-v1:sha256:0fb7c793baa7227d612f655cb50f952c29e5773a8015a14e4236b010598d74ba:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiZmNhNTkzNzZhODE4MTVkNzg5NDRkZGVjNzhkYzEyNGQ4ODNiOTZjNWQ5YmU0ODJlNDZiYjU3ZTRkZmJjMjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2ZWM3N2I1ODFjYmQ2ZjNkMWQ1MmNmZThjMTUxNjdiMDBhNWQyMTVkYzg1ODYyNzI1MmE4YTBiNDNiMDNjNzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://.github/workflows/test.yml",
+          "version": "repo-file-v1:sha256:6e6c40c1f8372113d783bca1d6e6d9fa1b7ac0affc9905f547ec74e24ade66cd"
         }
       ]
     },
@@ -75,7 +75,7 @@
       "statement": "Vitest forces TURSO_DATABASE_URL to file::memory: and tests/setup.ts blanks LOCAL_DB_URL, so neither stray production credentials nor the embedded-database override can point tests at production; coverage thresholds are enforced.",
       "evidence": [
         {
-          "resource": "repo://tests/setup.ts#L13-L15",
+          "resource": "repo://tests/setup.ts#L15-L17",
           "version": "repo-lines-v1:sha256:4a1d76e9b5b93b855e883e44f2b1cf90dcd193f445b3233577433db33aba07e0:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTE2YmU5ODQ2MWFlYzViOTE5YWY3NzgxNTQxNmE1OTZkNDk3NzgwZDYzN2YzMjhlZGE1NWI2ZGM2Njk5YjIwNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjQxNDg0MDhkZWU0Yjg1NTMwOTA3MGJmZDJmYzFjZTdlNzcxZjRkMTk1YjY4OWE4N2VmMTE1YTdjYjhhMWFiMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDI2Y2UzYTU2NTY1YTQ3MjllNjBiNGZmMGM1ZmY0NGZkM2JiNTQ5YzdkMjA0ODBiZGM1ZWM0MjRkZTNiMjE0YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzdmM2I2MDFkMGMxY2YzMTY1YWI5YTg3NTdhNDg1ZDMwZmRhYTFkZWI3ZjRkNTIyNjE3ZTYyYzJhZTIzYzc2NyJ9"
         },
         {
@@ -89,8 +89,8 @@
       "statement": "Test setup seeds fake Telegram, portal, Redis, Turso, channel, and port values, blanks LOCAL_DB_URL so the embedded override cannot leak in, disables the admin panel with empty (not deleted) vars, and clears mocks before each test.",
       "evidence": [
         {
-          "resource": "repo://tests/setup.ts#L1-L31",
-          "version": "repo-lines-v1:sha256:0244bce871b972776f494a8c9e31ea908a8f24cf928df136dc08f2cd76f3dd36:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4OWJmNTBmYTk1ZjI2ZjM4NDMwYmJmMDZjMmIxYWVhOWFiN2JiNGQwMDFlYmQ1Zjg4YjJmNDhjMDc4OGVlOWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://tests/setup.ts",
+          "version": "repo-file-v1:sha256:f86fd8d75f5fc1d85186082ae886893f8b1ffff5c6c9010b7e637eb54075a46a"
         }
       ]
     },
@@ -106,11 +106,19 @@
     },
     {
       "id": "claim_217a86d570164129b1b21f6d6e0ad212",
-      "statement": "The web app builds with vite and deploys as static pages to GitHub Pages via the gh-pages script; the build has two entries (index.html leaderboard, register.html profile).",
+      "statement": "The web package builds static pages (index.html leaderboard, register.html profile, report.html reports) for GitHub Pages, and a second config builds app.html — the one app serving every surface — into dist-library/index.html for our own host.",
       "evidence": [
         {
-          "resource": "repo://src/web/package.json#L6-L14",
-          "version": "repo-lines-v1:sha256:7d5cb4e05f325730eec52c59182e1e2c16f2049067f5e96ee9a7f9760b56da16:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzQ4MzNkNTk0OWMwM2E0MGNhOTUyNDkxNjEwYTY2NTk2NDRiM2FhNDY2MzYyZjc5OTAyMGRiZjE5ODE1NDdkYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2E2M2JmMDk0ZjUzYTg5MTIzMjc5MjRlMjllMTE5MzIzYjJjOTU5YWNjMDEzMmZhZmEyNzE1MmI1YmQ5Zjg2NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzYyYmRiNTZkNmIxZDZhOGJjN2ZhOWEyNGU2YTdmZjcxODM2NWE2OTU1ZjhiZTRiNGJhMTVkYzYwMTQ3OTg3MiJ9"
+          "resource": "repo://src/web/package.json",
+          "version": "repo-file-v1:sha256:dde4896d9809a9e637aca5273a0a842503b70d78ad88708fea545ea8164bc10f"
+        },
+        {
+          "resource": "repo://src/web/vite.config.ts",
+          "version": "repo-file-v1:sha256:2f39e20c913b18f570ce1fb60cf1a868371ab57cc90a4efcfbe824f3f6e295a6"
+        },
+        {
+          "resource": "repo://src/web/vite.library.config.ts",
+          "version": "repo-file-v1:sha256:7bcc773bea871f16b072eb94027e1331e6cc8fb7035d5de884cd325c72b9b4d3"
         }
       ]
     },
@@ -119,8 +127,8 @@
       "statement": "CI runs a test job (lint, typecheck, coverage with thresholds) and a web job (lint, tests, build in src/web) on Node 20 with pnpm 10.",
       "evidence": [
         {
-          "resource": "repo://.github/workflows/test.yml#L1-L83",
-          "version": "repo-lines-v1:sha256:02d8253339d173d245590fd2a04346de81464cc74a1653d0a365b3e7f77c6c89:eyJzZWxlY3RlZExpbmVDb3VudCI6ODMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiZmNhNTkzNzZhODE4MTVkNzg5NDRkZGVjNzhkYzEyNGQ4ODNiOTZjNWQ5YmU0ODJlNDZiYjU3ZTRkZmJjMjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4MjM1NTg1OWM5YWU4ZDhhYjA3Y2Y4OTc1Y2I5M2RhY2U2NTM5YTY3NDY5ODA1OGVlZWZjMGNiNDdiZTllZjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://.github/workflows/test.yml",
+          "version": "repo-file-v1:sha256:6e6c40c1f8372113d783bca1d6e6d9fa1b7ac0affc9905f547ec74e24ade66cd"
         }
       ]
     },
@@ -140,11 +148,15 @@
     },
     {
       "id": "claim_38dcd07954d74dffb7504140526e1b1c",
-      "statement": "Bot buttons use direct GitHub Pages URLs for the leaderboard (index.html) and profile (register.html) mini apps.",
+      "statement": "Bot buttons are built in src/constants/webapp.ts as the app URL plus a hash route (rank, profile, library, issues, issues/reports, issues/<id>), and those routes must match parseRoute in src/web/src/AppShell.tsx.",
       "evidence": [
         {
-          "resource": "repo://src/constants/webapp.ts#L1-L6",
-          "version": "repo-lines-v1:sha256:c7f7aae3f78138505e62bf61d53413f034410a06856843f878990942fca15c30:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWZlN2MxY2E0MDFlZmNjMjAzZjQ3ODU0YzBkZmQ2NTc0MmVjNzFjNWQxMDczNWQzMTNjMTY3MGJjYmE5OTIyZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjZiMzIzMTc5MzE3ZDk3YjQ5MjlmMTVkZGQ5NDllNWVmYWE2ODgxYmUxMzRlNWNkNmZhMjMwOTYwMGUxZTQzNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+          "resource": "repo://src/constants/webapp.ts",
+          "version": "repo-file-v1:sha256:4bb97e4a2d3d2f3069b1560ed614fb7669664b45c008a82bdc6838706b6f5b28"
+        },
+        {
+          "resource": "repo://src/web/src/AppShell.tsx",
+          "version": "repo-file-v1:sha256:6a2a4785e98b9fa18d54bc8b446caf3d36b944f4e0d6d8cab3cc333bc34a7664"
         }
       ]
     },
@@ -167,8 +179,8 @@
       "statement": "deploy.sh rsyncs dist/ with --delete from the local build, and because tsc does not prune orphaned outputs, dist must be cleared after source deletions or a stale handler keeps shipping.",
       "evidence": [
         {
-          "resource": "repo://scripts/deploy.sh#L17-L23",
-          "version": "repo-lines-v1:sha256:61b720ba47ae3037a534a1809cb11c0da28c1d351a29fc543f593ce50907ac18:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjU2M2RjZjc3MzYyMDIwNTMzZGE5MzlmMjA1N2RlYTk3MzVhZjAyY2FiZDBkMjUxZTRmNjA3OTM2ZjlhOTFjNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2MxMGVhNGVkNGFkZDM5NzQxOWM2MDhjOGE5MDY2NThmMjNhOTA1ZDhhZjUxYTNmNzg1YTkyZDEyMTM3MjIxNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDhjMzhjNTk4NDU3NGVmMDM1MjYxZTcwNjI3YzJkYjJiMTg4NDFiOTEwOWFiYzEyMTUzMjJlM2FiYTMzMjIzNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjM5OTljOTU3ZjY1ZTk3ZDU5NTc4MjE0ZWU4NThiMmQyZjJmYTRmMTU1MzQ1MDE1MmU2ZmQwMGM4Yzg5NTZkNyJ9"
+          "resource": "repo://scripts/deploy.sh",
+          "version": "repo-file-v1:sha256:f74355843947b7b83663e47b52458aa095a0e32ef097ac1e30943463572c6b53"
         }
       ]
     },
@@ -219,10 +231,66 @@
           "version": "repo-lines-v1:sha256:53ba7e28eae34c73fcdfefab02ff9fbd676885c853721e262ac35a1709e67bdf:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTNiYTdlMjhlYWUzNGM3M2ZjZGZlZmFiMDJmZjlmYmQ2NzY4ODVjODUzNzIxZTI2MmFjMzVhMTcwOWU2N2JkZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTNiYTdlMjhlYWUzNGM3M2ZjZGZlZmFiMDJmZjlmYmQ2NzY4ODVjODUzNzIxZTI2MmFjMzVhMTcwOWU2N2JkZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTM3ZTljN2Y1MzFhYmY1MjY4MDViOTBkY2ZhZDRmM2UzYjJlZjgwYTZjNjdmMzNkOTQ4Y2NlNWZjODQwMjQwMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjIsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjg2ODJlMTg4NzEzMWYyYzE3ZWEyYTQ4ZDNhNWY0MWJlMmI3YTY3OGI2ZjI3NTFjZjJkZTEwYWU2YTBiZGRiYSJ9"
         }
       ]
+    },
+    {
+      "id": "claim_b669414ff7d94921940f6468ad10ed75",
+      "statement": "The library data tree (data/docs source PDFs and data/pages rendered SVG) is not part of the deploy payload; only the catalogue snapshot is rsynced, and documents are filled with the ingest tool on the server.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/deploy.sh",
+          "version": "repo-file-v1:sha256:f74355843947b7b83663e47b52458aa095a0e32ef097ac1e30943463572c6b53"
+        },
+        {
+          "resource": "repo://src/services/library/paths.ts",
+          "version": "repo-file-v1:sha256:4e1e8626d498d2b4d7e01a9df3a4225e0f6024f5682b4e58297d989f4dcc3540"
+        }
+      ]
+    },
+    {
+      "id": "claim_b1a4a4bd8cab4b01958c502edeae7681",
+      "statement": "The backend suite includes libraryAccess, librarySession, watermark, syllabusParser, dailyCheckIn, mentionNormalizer, startPayload, postopen, formatters and messageContract tests, and the integration suite includes libraryRoutes; the web package tests pagePosition and zoom.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/tests/zoom.test.ts",
+          "version": "repo-file-v1:sha256:9c3c7ec15f2e00cff0ed36ad7fa1652235f34395e5485199d12c6fab5de176c5"
+        },
+        {
+          "resource": "repo://tests/integration/libraryRoutes.test.ts",
+          "version": "repo-file-v1:sha256:b8bc12c40c486b07cdc15657ac22d3d0c7f49daf925727e605f0a5a4c9c2b634"
+        },
+        {
+          "resource": "repo://tests/unit/libraryAccess.test.ts",
+          "version": "repo-file-v1:sha256:7b5ffdf68649e0d94debce1fa91ffd1b89c5317f7155b3cf3051493612e219b0"
+        }
+      ]
+    },
+    {
+      "id": "claim_9f1a06cb03024459973b6f3f3f4c7df0",
+      "statement": "deploy.sh copies dist-library to public/library, and the app is served from our own host so the library session cookie stays first-party.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/deploy.sh",
+          "version": "repo-file-v1:sha256:f74355843947b7b83663e47b52458aa095a0e32ef097ac1e30943463572c6b53"
+        },
+        {
+          "resource": "repo://src/api/server.ts",
+          "version": "repo-file-v1:sha256:7dffe4a84c71ef4e1b21eb4d43b914175e02c4246f65f1f233c4a8a10c2f0d13"
+        }
+      ]
+    },
+    {
+      "id": "claim_f1e4a850d432460f98cd2a24d57710cb",
+      "statement": "In dev builds only, the identity hook accepts ?devUser=<telegram id> so the app can be opened in a plain browser; the branch is folded away in production.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/useTelegramIdentity.ts",
+          "version": "repo-file-v1:sha256:43b38f940f867f08a6fc850406ab915dc655109336dea21413f3611de4048a90"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.2",
-    "at": "2026-10-15T21:12:57.495Z"
+    "at": "2026-10-24T11:41:29.189Z"
   }
 }

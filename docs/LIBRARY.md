@@ -115,13 +115,17 @@ students. Same origin, same-site cookie, no ITP.
 **Gate 5 — the library is the admin's until it is filled.** While the shelf
 holds only a unit or two, `LIBRARY_ACCESS` is `admin` (the default). Then:
 
-- `/library` stays out of the public command list and the chat menu button is
-  reset to the command list, so students never see a door into an empty room.
-- The admin's chat gets both: the command in its scoped list and a `Library`
-  menu button.
+- `/library` stays out of the public command list.
+- The chat menu button opens the app either way — the register, the roll and
+  the issue desk are useful whatever the shelf holds — and while the gate is
+  shut it opens the shelf section itself, which is the page the admin is
+  working on.
+- The admin's chat gets the command in its scoped list as well.
 - `POST /api/library/session` refuses any other Telegram account with
   `403 The library is not open yet.`, and `requireSession` re-checks the
-  session, so a cookie minted before the switch is useless after it.
+  session, so a cookie minted before the switch is useless after it. The app
+  turns that refusal into a calm "the library opens soon" page rather than an
+  error.
 - `/library` typed by a student answers in private with one line, and says
   nothing in a group.
 
@@ -400,13 +404,16 @@ panel.
 
 ## 8. The viewer (front end)
 
-New Vite entry in `src/web`: `library.html` → `src/web/src/library-main.tsx`,
+The app is one Vite entry in `src/web`: `app.html` → `src/web/src/app-main.tsx`,
 built with `base: "/library/"` and served by Express from `$DIR/public/library`.
-The leaderboard, register and report pages stay exactly as they are.
+It holds every surface, not only the shelf — see §8a — and the older
+single-purpose pages stay deployed, unused by the bot.
 
 Structure:
 
-- `views/LibraryApp.tsx` — the gate, then the shelf: the student's subjects
+- `AppShell.tsx` — the sheet: the cloth band, the hash router, the index page
+  and the index-tab rail; the sections publish their figures into the band.
+- `views/LibraryView.tsx` — the gate, then the shelf: the student's subjects
   as register rows, a subject's units, and the reader when one is open.
 - `views/DocumentReader.tsx` — the reader. A vertical scroll of pages; each
   page is an SVG image in a fixed box, with the unit head band above it.
@@ -416,6 +423,28 @@ Structure:
   arithmetic, both unit tested.
 - `zoom.ts` — the zoom model: the ladder, the clamp, and the arithmetic that
   holds a point under the finger through a zoom, all unit tested.
+
+### 8a. The app shell
+
+The bot's one button opens the app, and the app is the whole product on one
+sheet:
+
+- **The index page** is the register's front matter: who is reading (the
+  viewer's roll, bracketed in red, with their attendance rank) and the four
+  sections as ruled index entries, each with its number in the margin.
+- **The tab rail** at the foot of the sheet carries five index tabs — Index,
+  Ranks, Library, Profile, Issues. The open tab is filled with ink and paper
+  text, a stamp impression rather than a pill.
+- **One cloth band.** A section never draws its own head; it publishes one
+  figure into the band's stamp (ready units on the shelf, students on the
+  register) through `useBandStamp`.
+- **Hash routes** make every section reloadable and deep-linkable:
+  `#/rank`, `#/library`, `#/profile`, `#/issues`, `#/issues/reports`,
+  `#/issues/QIK-0007`. The bot's buttons use these instead of separate pages.
+- **The reader takes the sheet.** While a page is open the band and the tabs
+  step away and the reader carries its own head.
+- **The Telegram back arrow** is a stack (`backButton.ts`): the reader closes
+  first, then the section returns to the index.
 
 ### The reader, in detail
 

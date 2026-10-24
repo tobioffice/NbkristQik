@@ -1,7 +1,7 @@
 ---
 type: reference
 title: Database Schema and Models
-description: Complete libSQL/SQLite schema reference for NbkristQik — twelve tables created by src/db/init.ts over an embedded database (LOCAL_DB_URL) or Turso Cloud, their indexes, composite key conventions, the report-thread tables, backups, and the model modules that query each.
+description: Complete libSQL/SQLite schema reference for NbkristQik — fourteen tables created by src/db/init.ts (including the library registry and its read audit) over an embedded database (LOCAL_DB_URL) or Turso Cloud, their indexes, key conventions, backups, and the model modules that query each.
 tags: [database, turso, schema, sqlite, persistence]
 sources:
   - id: openwiki-source-c6b335367a1f46dd2f428811
@@ -14,6 +14,8 @@ sources:
     resource: repo://src/db/fallback/response.model.ts
   - id: openwiki-source-51ebf01a6987b9612a7dd707
     resource: repo://src/db/init.ts
+  - id: openwiki-source-d8f4ef95037cfc439dd1d89d
+    resource: repo://src/db/library.model.ts
   - id: openwiki-source-e2d605fc24401a4f2602626d
     resource: repo://src/db/registration.model.ts
   - id: openwiki-source-e1e7c83fe5cbc0aa6334cb23
@@ -22,12 +24,14 @@ sources:
     resource: repo://src/db/student_stats.model.ts
   - id: openwiki-source-bb916d406342a6553647f81f
     resource: repo://src/db/student.model.ts
+  - id: openwiki-source-7cc706396dfd4d4455e7befa
+    resource: repo://src/services/library/reads.ts
   - id: openwiki-source-0be99d3f1664956f03d52278
     resource: repo://src/services/uptime.ts
-generated: { by: "opencode", at: "2026-10-15T21:12:57.495Z" }
+generated: { by: "opencode", at: "2026-10-24T11:00:48.405Z" }
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-15T21:12:57.495Z
+    at: 2026-10-24T11:00:48.405Z
 ---
 
 # Database Schema and Models
@@ -179,6 +183,40 @@ Heartbeat history for the status page.
 | `latency_ms` | INTEGER | Null on failure |
 | `created_at` | TEXT NOT NULL | Default `datetime('now')`, pruned after 95 days |
 
+### `library_documents`
+
+The library registry: one row per document we hold (a subject unit, or a whole subject). The PDFs and rendered pages live on disk; this table is only the index into them. Written by `upsertLibraryDocument` and read by `getLibraryDocument`, `listLiveDocumentsForSemester` and `listLiveLibraryDocuments` in `src/db/library.model.ts`.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | TEXT PRIMARY KEY | The document id the reader asks for |
+| `code` | TEXT NOT NULL | College subject code; joins to the syllabus catalogue |
+| `title`, `dept`, `regulation`, `year_sem` | TEXT NOT NULL | What the document is and whose semester it belongs to |
+| `unit` | TEXT | `NULL` for a whole-subject document |
+| `kind` | TEXT NOT NULL | `material` or `assignment` |
+| `source_path` | TEXT NOT NULL | The source PDF on the server |
+| `page_count`, `bytes` | INTEGER NOT NULL | Rendered page count and source size |
+| `status` | TEXT NOT NULL | `live` or `coming_soon`; only `live` rows are served |
+| `version` | INTEGER NOT NULL | Bumped when a document is re-ingested |
+| `created_at`, `updated_at` | TEXT NOT NULL | `datetime('now')` defaults |
+
+A `UNIQUE (code, unit, kind)` constraint keeps a unit from being registered twice.
+
+### `library_reads`
+
+The audit trail: one row per page served. This is what a takedown is argued from — the watermark token on a leaked page is looked up here (`findReadsByToken`).
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | INTEGER PRIMARY KEY AUTOINCREMENT | |
+| `user_id` | TEXT NOT NULL | The Telegram user id |
+| `doc_id` | TEXT NOT NULL | The document served |
+| `page` | INTEGER NOT NULL | The page number |
+| `token` | TEXT | The opaque watermark token printed on that page |
+| `at` | TEXT NOT NULL | `datetime('now')` default |
+
+Reads are written fire-and-forget by `notePageRead` (`src/services/library/reads.ts`), so a failed insert never stops a page being served.
+
 ## Indexes
 
 | Index | Table / columns | Supports |
@@ -191,6 +229,10 @@ Heartbeat history for the status page.
 | `idx_reports_status` | `reports (status, id)` | Inbox filtered by status |
 | `idx_studentsnew_filters` | `studentsnew (year, branch, section)` | Leaderboard filtering |
 | `idx_uptime_component_time` | `uptime_log (component, created_at)` | Uptime summaries and daily buckets |
+| `idx_library_documents_code` | `library_documents (code)` | Joining the shelf to the catalogue |
+| `idx_library_reads_user` | `library_reads (user_id, at)` | One reader's history |
+| `idx_library_reads_doc` | `library_reads (doc_id, at)` | One document's readers |
+| `idx_library_reads_token` | `library_reads (token)` | Resolving a leaked page's token |
 
 ## Query safety
 
@@ -210,6 +252,7 @@ With the embedded database the file itself matters, so two scripts guard it:
 
 ## Related pages
 
+- [Library Subsystem](../library/overview.md)
 - [Registration and Profile](../registration.md)
 - [Caching and Leaderboard Stats](caching-and-stats.md)
 - [Semester Sync](../bot/checkin-and-syncdb.md)

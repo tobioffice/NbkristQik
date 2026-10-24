@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { readFile } from "fs/promises";
 import { LIBRARY_WATERMARK_SECRET } from "../../config/environmentals.js";
+import { escapeHtml } from "../text.js";
 
 /**
  * The watermark.
@@ -36,13 +37,6 @@ export interface WatermarkIdentity {
   /** What the page is, for a shared screenshot: "DBMS · Unit I · p7" */
   label?: string;
 }
-
-const escape = (value: string): string =>
-  value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 
 /**
  * The token for one reader.
@@ -86,13 +80,13 @@ const buildOverlay = (
         `transform="rotate(${angle})" ` +
         `font-family="Public Sans, Helvetica, Arial, sans-serif" ` +
         `font-size="${fontSize}" font-weight="700" ` +
-        `fill="rgba(${INK}, ${REPEAT_OPACITY})">${escape(identity.token)}</text>`,
+        `fill="rgba(${INK}, ${REPEAT_OPACITY})">${escapeHtml(identity.token)}</text>`,
     );
   }
 
   const footer = identity.label
-    ? `${escape(identity.token)} · ${escape(identity.label)}`
-    : escape(identity.token);
+    ? `${escapeHtml(identity.token)} · ${escapeHtml(identity.label)}`
+    : escapeHtml(identity.token);
 
   return `<text x="${Math.round(width * 0.03)}" y="${height - Math.round(height * 0.02)}"
         font-family="Public Sans, Helvetica, Arial, sans-serif"

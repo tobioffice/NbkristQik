@@ -2,10 +2,7 @@ import { bot } from "../bot.js";
 import { trackMessage } from "../../services/tracker.js";
 import { sendLibraryEntry } from "./library.js";
 import { startPayload } from "./startPayload.js";
-
-/** Escape user-controlled text for Telegram HTML parse mode. */
-const esc = (s: string): string =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+import { escapeHtml } from "../../services/text.js";
 
 bot.onText(/^\/start/, (msg) => {
   trackMessage(msg, "command:start");
@@ -18,7 +15,7 @@ bot.onText(/^\/start/, (msg) => {
   }
 
   const first = msg.from?.first_name?.trim();
-  const greeting = first ? `Hi ${esc(first)}, welcome in` : `Welcome in`;
+  const greeting = first ? `Hi ${escapeHtml(first)}, welcome in` : `Welcome in`;
 
   const message =
     `${greeting}. I keep the NBKRIST attendance register here.\n` +

@@ -1,24 +1,24 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:16998cb56002c0e723b8af15de32c2f7a5d31a875ae4f804af2e4506f2ea9258",
+  "pageVersion": "sha256:3f0af87c845ced2cecd513d88f5d6f9f405294ab1f17b0bb8116e69de5f3089b",
   "claims": [
     {
       "id": "claim_3ffca15c55e748a9a083859ad301453a",
       "statement": "NbkristQik runs the Telegram bot and Express API in one Node process, and bot polling starts only after database init, handler module imports, and API server startup.",
       "evidence": [
         {
-          "resource": "repo://src/bot/index.ts#L41-L84",
-          "version": "repo-lines-v1:sha256:4e5b1a7a08c7d7b811af465cc32b994361426b30d5a53025262d17c451343f39:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZmY3ZDEzMTA2NmM2MDE2NjU5Yjc0Y2UxMzc2NGI0OTAzMmIwNTI5OTIzOTNkZDhlMTUyMjFjZjhlNTAxNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmZTAzM2NjZjRkODM0MjJhYmEzYzZmYTJhZWMxYzk3NzJhZDNhMWJhYmNmZDY4YzhkYmUwMzY2MWE0OTE0NzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjNWI1MTVjZTBkOTFlZjNiYzg5YzgwNzZhYWNhYmE0YjRiYTEyYTk2NjRlM2E0ZTlhZDE2YTdkMmYzNzQ5MmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEifQ"
+          "resource": "repo://src/bot/index.ts#L41-L87",
+          "version": "repo-lines-v1:sha256:132416ddcb2b7f090835e20db3dbecfd1d6d8ee96e4d5bb8eabc447f6ea74225:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZmY3ZDEzMTA2NmM2MDE2NjU5Yjc0Y2UxMzc2NGI0OTAzMmIwNTI5OTIzOTNkZDhlMTUyMjFjZjhlNTAxNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmZTAzM2NjZjRkODM0MjJhYmEzYzZmYTJhZWMxYzk3NzJhZDNhMWJhYmNmZDY4YzhkYmUwMzY2MWE0OTE0NzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjNWI1MTVjZTBkOTFlZjNiYzg5YzgwNzZhYWNhYmE0YjRiYTEyYTk2NjRlM2E0ZTlhZDE2YTdkMmYzNzQ5MmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEifQ"
         }
       ]
     },
     {
       "id": "claim_44d2ca88205a40efae053917fa79c813",
-      "statement": "Startup order is initDatabase, setupBot, dynamic imports of handler modules (including register, registered, and syncdb), explicit registerSyncDbCommand/startUptimeMonitor/startServer calls, then bot.startPolling last.",
+      "statement": "Startup order is initDatabase, setupBot, one Promise.all of handler module imports (including library, postopen and dailyCheckIn), explicit registerSyncDbCommand/startUptimeMonitor/startServer calls, then bot.startPolling last.",
       "evidence": [
         {
-          "resource": "repo://src/bot/index.ts#L49-L79",
-          "version": "repo-lines-v1:sha256:495296d2a1af63f445e7b83f8c77846dd2d8da45c5160820e8a865e5fca39f6f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYxODRlODhhM2E0NGYxNWQ0NTRkZWYzNDc0OWU0MjM3NjgxYzM3YTRmOGVmNTIzNGYyNjQ0ZGUyNjM5Njc5ODIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4ZDEwN2RhZjkzMzMzYTY5YzI4MTViNDBiZDgwZjg3OTU2NGJjZTFlMDU0MDNiOTY5M2NjY2QxNTAyODQ1NWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNmYTdmNDA4MWRlMzU1YzM5MmIwYzFkOTZjMTdiYzQ0MTg3ZDllOTlmZTMzMWFiN2FlYWI3NmNhZTc1Njg5ZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM3ZDMxZjM1YzRhNmIyZDVmMDQwNTIxODU1NTNjNmMwZDk0NWY0NjBkMjg1Yzc0NmViZjliM2JhOTQ3ZjYyNWUifQ"
+          "resource": "repo://src/bot/index.ts",
+          "version": "repo-file-v1:sha256:9b232aa2fd4d20eb2fd98c1d55d40440f62943776e0597c2652adc4385b59bb9"
         }
       ]
     },
@@ -27,12 +27,12 @@
       "statement": "Handler registration is an import side effect: the bot is constructed with polling disabled and each module calls bot.onText or bot.on at module scope.",
       "evidence": [
         {
-          "resource": "repo://src/bot/bot.ts#L16-L17",
-          "version": "repo-lines-v1:sha256:495f58f06ace5d54e248aac9d8d3659919a527b2a1c767361f00e3a3ccaef89b:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGY5NDdjZmRmNjE3YjNkNDdjZDgyN2UxNWIzZmU4MDZhYjJiNWQ5ZjRkZTY4ZjY5MWU4OGE1M2ZkNjg0NjNjOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGI5NzFkZTU4OWI3MThkYWIyMDI3MGRhZThlNTk4ZWI5YjEwMmExMWI0NjExNWU2OTc4MjRkMmI5YjcwZjgxZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI1ODBlOTY0ZjgzYTQ3M2Y0M2Q0NDM4NDYyOTQ5ZDY4YjU2MDBmZGE3ODdmMTYzNzQ1ZDAwZGU4OWNiZjM2YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWFkNDU5NzU4ZTVjYTBhMjQ4ZmY5YzhiNmI5OTZlNmM3YTIyOTU0MWU5YjA5MWM1ZWJlNzA4ODcwZGIwMThlOSJ9"
+          "resource": "repo://src/bot/bot.ts",
+          "version": "repo-file-v1:sha256:6af0ce4e6786dd935dc7bbec84384ccf6e13a451c55eed2cb01e922430462b94"
         },
         {
-          "resource": "repo://src/bot/index.ts#L55-L68",
-          "version": "repo-lines-v1:sha256:0a95d41212cde708e9f3e2a6b26becb39de77fe045c07f93c10db17432468b52:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2NDljNjI3MWIwYTczNTFhZjI3NzM3ODVmNzYwMDZlMzNlZjQwZjMwOWZmY2EzZGM5YzVhZTQyNDI3ZGIyZDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwOTNlMTI5MDZhNjFmZDVjMDg5ZmVlOGZjYWZkOTUyZTU3YTU5MDlhMjQ5ZGQxMjUwOTQ5OGQyNzFhNzFjOTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhkNGZlYTJjZGVlMmRhNzdlYjllNjlkNWRlYjIwZWZkMjhlOWVjYWMyNzI1ZWIyZTVkYzRiYmFjNjI0MjVmZTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVmZTUwZThmMjU3YzBkZTIzZWI3MmEyZThhYjA4NjgyMTBlNDAxNmYyZjllMDEzNTUyODk0MTVmNDU2ZjQ3MDYifQ"
+          "resource": "repo://src/bot/index.ts",
+          "version": "repo-file-v1:sha256:9b232aa2fd4d20eb2fd98c1d55d40440f62943776e0597c2652adc4385b59bb9"
         }
       ]
     },
@@ -41,7 +41,7 @@
       "statement": "The bot exits the process when no Telegram token is configured, except under NODE_ENV=test where a dummy token is used so tests can import modules.",
       "evidence": [
         {
-          "resource": "repo://src/bot/bot.ts#L7-L14",
+          "resource": "repo://src/bot/bot.ts#L8-L15",
           "version": "repo-lines-v1:sha256:7c40451e6aec5c909763b3796b6fffa5d39ab22b6ae42ea931d5f6e654672fb8:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjRkMWYyMTg5NDZkODZiNmJiYThhY2IxMmUwNmQ0ZTAxMjBlYmUxYWY1NDlhY2ZkN2MyOGQ4ZjdjMjEzYmFhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjZjNmRkYWM0NDA1NzJjNWQ0ZjU4MmIxZTdiNDdiNzExYWE3MjAwMmRmYjgxM2EyNmEyOGQ5OWJlYzQ5OTU5YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2Q2NDA4ZGI5ODNjZmIwOTQ3ZTIzOTNkZjE1ZDJkYTIxNmRmMjU1NDkwZmY5MmIyNDY2NzlkMjM0YjAwODhmYyJ9"
         }
       ]
@@ -81,7 +81,7 @@
       "statement": "initDatabase is the single schema entry point that creates all tables (including registrations) and indexes before any handler or the API starts.",
       "evidence": [
         {
-          "resource": "repo://src/db/init.ts#L12-L16",
+          "resource": "repo://src/db/init.ts#L13-L17",
           "version": "repo-lines-v1:sha256:d8a99d6540244681eb1cd19d66ad314558b2448c68fb0db4110fbe4720033b18:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmUxYTY0YTRiYTNiYWVmYzVlNzYyZWNjZjRkZDBkNTk0OTgyZmU1ZjY5YmJlMTFhMDI3MjFlNTBmNWYxNTExNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDgwNTBjMjU3ODExZjMxMjFjNWE0NmQ0MWRkY2JiYzU5NDc5ODcxM2JiNTVjM2JhYTUxZmZhNDM1YzczYmQ1NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGQ2MmVmNmEwNjY2ZDdjMDhmNzk3MWFhZmE3YzI1YmQ3MWMyYWMwOTgzYzM2NTE3MTdmMjg4MjA2YWU2ZGM2ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTZjM2U2ZTc0YzRhMWZkNzAxNjQ1NGNmNmY3YzYzZDYyNDIwM2NmOWJiMDJlNzI2MjZlNmZiMTM4ZWQ2Yzg3YyJ9"
         }
       ]
@@ -92,7 +92,7 @@
       "evidence": [
         {
           "resource": "repo://src/services/uptime.ts#L189-L208",
-          "version": "repo-lines-v1:sha256:ca69647345f67da5a802d1a5f029f72ed183d9d2d5a109fc9abbdfd032765e7e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzZTU2ODY3ZDMzZWUzOGY5ZTVlNmMwMzhiM2E3MGQ0OTQ4NmQ4NDcwYTc0NjQxNjI5NzUyN2Y0Y2IwZmQ5MWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "version": "repo-lines-v1:sha256:8b800ce50c0baadc6671243e5c026872c690bf66851f2e390e0946e6194c7e94:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzZTU2ODY3ZDMzZWUzOGY5ZTVlNmMwMzhiM2E3MGQ0OTQ4NmQ4NDcwYTc0NjQxNjI5NzUyN2Y0Y2IwZmQ5MWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     },
@@ -139,10 +139,38 @@
           "version": "repo-file-v1:sha256:560aa9fb83345aabe99e3577ab8d003f33c55f4187ad3aa2418e8f087698fc32"
         }
       ]
+    },
+    {
+      "id": "claim_9121c0fc93a24ccdb757434cb4c6ca08",
+      "statement": "The API serves the library mini app at /library and its API at /api/library alongside the leaderboard, profile, reports, health and status routes.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/server.ts",
+          "version": "repo-file-v1:sha256:7dffe4a84c71ef4e1b21eb4d43b914175e02c4246f65f1f233c4a8a10c2f0d13"
+        }
+      ]
+    },
+    {
+      "id": "claim_8fb57e3828ae41b1b1a4fc83a86e4dcb",
+      "statement": "Bot entry points share one authorization gate in src/bot/authorization.ts and shared reply sentences in src/bot/replies.ts; escapeHtml in src/services/text.ts is the only HTML/XML escaper.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/authorization.ts",
+          "version": "repo-file-v1:sha256:5b9b2563718fc40bf4794016f5d079b1c71abda609d54c15949af0d0927a5c31"
+        },
+        {
+          "resource": "repo://src/bot/replies.ts",
+          "version": "repo-file-v1:sha256:3faba7f63d17a9340c8a6f23f7df369d82fb7376b1b4d2036db95052198abdfb"
+        },
+        {
+          "resource": "repo://src/services/text.ts",
+          "version": "repo-file-v1:sha256:fe9e6a39a5e42bde13bcbbc67761b13205257f2cf772f9f752c850ffc53e6ce5"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.2",
-    "at": "2026-10-15T21:12:57.495Z"
+    "at": "2026-10-24T11:00:48.405Z"
   }
 }

@@ -1,24 +1,24 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:d3eba97c9bfdae34b53989821d479d0d01c9c3ebfaf764dcf749cd2f3afc042c",
+  "pageVersion": "sha256:d55952054b3ec85ef6690ef74968f1322bcf6ae786401768b32573b71d855632",
   "claims": [
     {
       "id": "claim_995d939b0856440392aae1ce3347c7a3",
       "statement": "NbkristQik starts the Telegram bot and Express API in a single Node process from src/bot/index.ts, beginning bot polling only after database init, handler imports, and server startup.",
       "evidence": [
         {
-          "resource": "repo://src/bot/index.ts#L41-L79",
-          "version": "repo-lines-v1:sha256:c518ea46252fb79b97292658206aae040ad16ef27320c0b3c80f8f7569a081b5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZmY3ZDEzMTA2NmM2MDE2NjU5Yjc0Y2UxMzc2NGI0OTAzMmIwNTI5OTIzOTNkZDhlMTUyMjFjZjhlNTAxNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4ZDEwN2RhZjkzMzMzYTY5YzI4MTViNDBiZDgwZjg3OTU2NGJjZTFlMDU0MDNiOTY5M2NjY2QxNTAyODQ1NWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjNWI1MTVjZTBkOTFlZjNiYzg5YzgwNzZhYWNhYmE0YjRiYTEyYTk2NjRlM2E0ZTlhZDE2YTdkMmYzNzQ5MmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM3ZDMxZjM1YzRhNmIyZDVmMDQwNTIxODU1NTNjNmMwZDk0NWY0NjBkMjg1Yzc0NmViZjliM2JhOTQ3ZjYyNWUifQ"
+          "resource": "repo://src/bot/index.ts",
+          "version": "repo-file-v1:sha256:9b232aa2fd4d20eb2fd98c1d55d40440f62943776e0597c2652adc4385b59bb9"
         }
       ]
     },
     {
       "id": "claim_850744c0f2324243a0d34dabfb500100",
-      "statement": "The stack uses TypeScript with node-telegram-bot-api, Express 5 with rate limiting and validation middleware, @libsql/client for Turso, redis v5, axios, and cheerio, tested with Vitest, with engines.node >= 20.",
+      "statement": "The stack uses TypeScript with node-telegram-bot-api, Express 5 with rate limiting and validation middleware, @libsql/client for libSQL/Turso, redis v5, axios and cheerio, tested with Vitest, with engines.node >= 20.",
       "evidence": [
         {
-          "resource": "repo://package.json#L23-L59",
-          "version": "repo-lines-v1:sha256:3840f3cd09b46edc54cad57c370eb699d8f472ba7cbb0a9a9f32fde381fd1917:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRiYjJlMTEyOWUwOTkzNTBmYzdlNGY0YWY0NWMzMTMyNWFmNTYzZTJiZDFlNmE1MTFiZDQ1ODVjNjZiYjE2MDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxMGIzNmFhNzRhNTliY2Y0YTg4MTg1ODM3ZjY1OGFmYWYzNjQ2ZWZmMmJiMTZjMzkyOGQwZTkzMzVlOTQ1ZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJiZTcxYjU0OWUzZGZjMDA2YWRiNDAxMjkyZjcwNTVhODFmNjRjMzQ2ZjViNzE1ZTRlMjEyZTA4OWQwZjMwMTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://package.json",
+          "version": "repo-file-v1:sha256:78b12de1fbf82b338331ada71c25b83802853f3ba2ccfd0c07e5cd047383a072"
         }
       ]
     },
@@ -27,7 +27,7 @@
       "statement": "The web frontend is React 19 built with Vite and styled with Tailwind CSS.",
       "evidence": [
         {
-          "resource": "repo://src/web/package.json#L15-L37",
+          "resource": "repo://src/web/package.json#L16-L38",
           "version": "repo-lines-v1:sha256:22d0d0a1d8e1dc857f042405701ca88b3a5f6c7cd7fc8b1ab56e8d0338a1bdf4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhM2I0NjlkOWUwOTc1NzIyNDY2NjczNGM5ZWY3YjI1NGQ4ODUzNGY1ZDViYjcwOTg5NjA4MDVjNTUzZGMzMDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImExZjJjZjhhYmU4YWYxNDgzY2Y0OGM5ZmI5NmFjYjJhOTMxNjA2OTY2MjEzZWI4ZWFlZmQwNjg2YzU4NmU1ZGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
         }
       ]
@@ -37,8 +37,8 @@
       "statement": "The bot replies to a roll number with attendance, mid-marks, or a bunk plan, and the bunk plan computes skippable and recovery classes against a 75% attendance target.",
       "evidence": [
         {
-          "resource": "repo://src/services/student.utils/formatters.ts#L98-L152",
-          "version": "repo-lines-v1:sha256:d2d5df70636fb11453ffeeeb3e593c5358073325ef8c43a8f9458ee611201272:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyOWVmMjk1MDMzZDczMWVlMGE2NDJlYTIzNzVkODk1OGI3NDA2ZDk5ZGMyMWM4ZDZkZGFiYmE4NzcxNzYwZGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc5NjNmNTc5ZWQzN2Q0ZWExOGUyNjhhMWFkYjA1NWEzODQ5ODMwYzk2NWM4OGU1OTlkMDk5YzQ5MzEwNjg4YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRjMmQ0Y2M5YTRhMWRlMDg5Yjc5NDMwZDI4M2NkZDg5NDI0ZjViMmE2MzczY2Y5N2ZjOGVjM2E4MjMzYTQ4YTUifQ"
+          "resource": "repo://src/services/student.utils/formatters.ts",
+          "version": "repo-file-v1:sha256:aa7752de8243c6663f9adf13143dfc098ce7c111a280e1a5a0f149e2d5a0cdf0"
         }
       ]
     },
@@ -57,12 +57,8 @@
       "statement": "Optional registration pins a default roll and unlocks the registered-only /attendance, /midmarks, and /bunk shortcut commands.",
       "evidence": [
         {
-          "resource": "repo://src/bot/commands/registered.ts#L104-L129",
-          "version": "repo-lines-v1:sha256:397c75c4217c8f22dbefa93ad3915af819f3120643e53a95bf93cc073775d11a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyODEzMmJhZTY5NDg0MGY5MTQ4MGFhNzg5YzgwMDVkM2JiYWQ1NTVlMmVkOTdmODZlOThjNjFiMDEwNjQ5OTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkZDg3OWRhOTU2MGNmMzU4ZGRjMGE0OThmZmE0YTljZWE4YjJkYmNmYTU5NTIxOTMzMzlkYTg4NDE3OTYzYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllNTI0OGI1YTFkYWQ5ZDIxNzcyMmExMDdhNWY1NDNjNzVjNDFkM2Y5MjRjZmQwYTAwYmI4N2Q2M2E2OGI4MzkifQ"
-        },
-        {
-          "resource": "repo://src/bot/commands/registered.ts#L189-L191",
-          "version": "repo-lines-v1:sha256:52c368d236dece89d04a98f68b8a70b8435ed372859222ea66a0580674902b43:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODE1OTkyODcwZDg3MTMwMWVhNzY4NzdhNWMyYzNkYzQxZTYwMTBjMDEzMTVkNTZhOWE3ZjJmYzVmZjNjNTViMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDA2YzMwNDk0NzJhMjg5YWJlMWRmMGVhNTA3M2Q2YTVlNGE5MGE0OTY1NmQwY2VlOWNmMTZhY2Y2ZjU0YTRmMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzczYjBkYmUyMThjNzg1YjhhZjgwM2E4YmVkMGVlZWY1Nzc2ZTE1M2QzYWM5MWUzMWJjOWE5MmY1MmVhMjEwNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+          "resource": "repo://src/bot/commands/registered.ts",
+          "version": "repo-file-v1:sha256:0419fa698be5702dcae74e753a9766b98fe2c0f305da13acf737fcaa6709b5b1"
         },
         {
           "resource": "repo://src/db/registration.model.ts",
@@ -95,22 +91,12 @@
       ]
     },
     {
-      "id": "claim_22d0cd5b061c424c86223e95df1ccfef",
-      "statement": "Group chats get 2 academic answers per student for life via the group-use funnel, then a one-tap redirect to the bot's DM; private chats and the admin stay unlimited.",
-      "evidence": [
-        {
-          "resource": "repo://src/bot/groupLimit.ts",
-          "version": "repo-file-v1:sha256:dcd3d95a7ecc29efb2d9e3726cebe03a1e639608b85ed9e0408bf56d0ca95452"
-        }
-      ]
-    },
-    {
       "id": "claim_3faad0a44aa640c08292dfcf24de8953",
       "statement": "Students can file an issue via /report or the web form; each gets a QIK-#### id and a two-way thread, and the admin answers from the panel.",
       "evidence": [
         {
           "resource": "repo://src/bot/commands/report.ts",
-          "version": "repo-file-v1:sha256:ef5ee63c4782018e62ef8ce00367e3986b9d813bcc83467ac4a0b9e029479901"
+          "version": "repo-file-v1:sha256:caed5ca865a374a379b3c64753b569613c284a0a5dc6a466b8455c9e7706b102"
         },
         {
           "resource": "repo://src/db/report.model.ts",
@@ -127,10 +113,70 @@
           "version": "repo-lines-v1:sha256:3e622b2c7c16c59459a21b741c7c86a9bcc74f646c11d10a60c8d6685f64aa12:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGUwNmMxYjc5ODAwNDE3Y2Y5NWE5MjBjZWUzODU3Mzc4NGI3YjM3NTk4YzY5NjVjYTQyNGM3M2RlZWQ3MjIxZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjJkMTFjYWY0M2U5N2VmMzY5ZTZiZWVkMWEyNjhiZDA1ODM4ZjI5YjlkZDI1NGJmNjliYTY0ODg0MTQ3MjM0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjE1MDQ3YTkzN2U2YTQ3ZmQxYTdmM2ZkZWEwNzY5MmQyNjZkZTBiZDY5MTNkYWY5YzZhZjMwODVjMTQ2YjlhMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
         }
       ]
+    },
+    {
+      "id": "claim_8e35b3d6fb1142ec9cdcbde6aab8face",
+      "statement": "The library is the shelf section of the one app (opened by /library, the ?start=library deep link and the menu button): the syllabus units of the reader's own semester as paged SVG documents watermarked per reader, closed to non-admins until LIBRARY_ACCESS=all.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/commands/library.ts",
+          "version": "repo-file-v1:sha256:87a4849a594c2741dc657b38af265a1a81badf4e6fecaeb97fcd9694487f76e0"
+        },
+        {
+          "resource": "repo://src/services/library/access.ts",
+          "version": "repo-file-v1:sha256:8f91b78cab84a72bc70f57e41e807178b49b0e0ea9d28fe30e7b1b61fa558b04"
+        }
+      ]
+    },
+    {
+      "id": "claim_abe41569e445446291f3b66c63b310bb",
+      "statement": "Every bot answer passes one authorization gate (admin bypass, channel membership, daily check-in) in src/bot/authorization.ts, with shared reply copy in src/bot/replies.ts.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/authorization.ts",
+          "version": "repo-file-v1:sha256:5b9b2563718fc40bf4794016f5d079b1c71abda609d54c15949af0d0927a5c31"
+        },
+        {
+          "resource": "repo://src/bot/replies.ts",
+          "version": "repo-file-v1:sha256:3faba7f63d17a9340c8a6f23f7df369d82fb7376b1b4d2036db95052198abdfb"
+        }
+      ]
+    },
+    {
+      "id": "claim_074514137723450aa3624cd30dc28625",
+      "statement": "The web package builds the app from app.html into a bundle served at /library/, and separately keeps the standalone leaderboard, profile and report pages for compatibility.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/app.html",
+          "version": "repo-file-v1:sha256:997f09cd3565eacb441f392ed8d7274d1fed2bf93e536321c9dce8d766f9ef4b"
+        },
+        {
+          "resource": "repo://src/web/vite.config.ts",
+          "version": "repo-file-v1:sha256:2f39e20c913b18f570ce1fb60cf1a868371ab57cc90a4efcfbe824f3f6e295a6"
+        },
+        {
+          "resource": "repo://src/web/vite.library.config.ts",
+          "version": "repo-file-v1:sha256:7bcc773bea871f16b072eb94027e1331e6cc8fb7035d5de884cd325c72b9b4d3"
+        }
+      ]
+    },
+    {
+      "id": "claim_e2ebf9109ca248ddad949c7cad7a09c7",
+      "statement": "The app's index page lists the four sections as ruled entries and the tab rail turns between them, reached from the chat's menu button.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/setup.ts",
+          "version": "repo-file-v1:sha256:3f1a598a8453bb00cd6e57cb027975ccab56f4c4598f651c70ac1c21f9fd93a5"
+        },
+        {
+          "resource": "repo://src/web/src/AppShell.tsx",
+          "version": "repo-file-v1:sha256:6a2a4785e98b9fa18d54bc8b446caf3d36b944f4e0d6d8cab3cc333bc34a7664"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.2",
-    "at": "2026-10-15T21:12:57.495Z"
+    "at": "2026-10-24T11:41:29.189Z"
   }
 }

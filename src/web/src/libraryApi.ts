@@ -1,3 +1,5 @@
+import { readJson } from "./http";
+
 // The library talks to the API on its own origin: the mini app is served by
 // the same host as /api, so the session cookie is first-party and rides
 // along without any CORS dance.
@@ -51,24 +53,11 @@ export interface RegisterResponse {
   registered?: { roll_no: string; name: string | null };
 }
 
-const readBody = async <T,>(res: Response): Promise<T> => {
-  const body = (await res.json().catch(() => ({}))) as T & {
-    error?: string;
-    suggestions?: string[];
-  };
-  if (!res.ok) {
-    const err = new Error(body.error ?? `request failed: ${res.status}`);
-    (err as Error & { suggestions?: string[] }).suggestions = body.suggestions;
-    throw err;
-  }
-  return body;
-};
-
 /** Swaps Telegram's signed initData for the session cookie. */
 export const openLibrarySession = async (
   initData: string,
 ): Promise<SessionResponse> =>
-  readBody<SessionResponse>(
+  readJson<SessionResponse>(
     await fetch("/api/library/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -83,7 +72,7 @@ export const openLibrarySession = async (
 export const fetchLibrarySubjects = async (
   view: "all" | "roll" = "all",
 ): Promise<SubjectsResponse> =>
-  readBody<SubjectsResponse>(
+  readJson<SubjectsResponse>(
     await fetch(`/api/library/subjects?view=${view}`),
   );
 
@@ -92,7 +81,7 @@ export const registerLibraryRoll = async (
   initData: string,
   rollNo: string,
 ): Promise<RegisterResponse> =>
-  readBody<RegisterResponse>(
+  readJson<RegisterResponse>(
     await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

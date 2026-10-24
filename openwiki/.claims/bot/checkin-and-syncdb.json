@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:c7dcfa18dcc12f33320a1e7eeac8374b374654c0c33943b5a188af6c9887eca2",
+  "pageVersion": "sha256:3ffcfc7ae596b93ca38db2f9eaea947ffb80163c34243d54717751fd19cf4bfe",
   "claims": [
     {
       "id": "claim_8491a5fb815a4b25822aecbbee355e3f",
       "statement": "/setsem persists the semester type in Redis under sync:semType and /syncdb accepts inline semester and/or academic-year arguments with the stored value as default.",
       "evidence": [
         {
-          "resource": "repo://src/bot/syncdb.ts#L461-L487",
-          "version": "repo-lines-v1:sha256:673e33070b00b23310054b05fb88c9e5845c97704e8457d91a8a6290affb28e1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NTRjOGNlZjA2MDI4YzlhYjcwMDdhYjc5OWZhY2ZkZjNiZGU2YTVjYTE3YzVhM2QyYTkyNmY1NzFjMDZhYTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhM2U0NmY5NDI3NmI2ZjZmNGVkMWYwMmFmNzhiZWY2YTJlZTFjNDM5ZGQ1NTg0Yjk3Mzk0ODMxMzIxNGQyYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZhNGRiMDM1YmJmYzU4NzEwZWQwY2QyM2UzZDMyMzQ4NWI5ZjBkMzE3ZjdiMmQ1ZWUyZTMxNmMxYzE0NDA0ZjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiZDFhMThkYmNmYWU5MzAzYmRjOWJmYmYwMjExZjczY2ZjZjQzYTFjMjQxNzE0MjY5ZTJjZDZlMWVjZDk2MTgifQ"
+          "resource": "repo://src/bot/syncdb.ts",
+          "version": "repo-file-v1:sha256:68c95e324ea234f4b1eae89ef1ddd83ec197cb0b4ad298472e6e1eff12943838"
         },
         {
-          "resource": "repo://src/bot/syncdb.ts#L490-L507",
-          "version": "repo-lines-v1:sha256:8696b611fccce664e6bda2df3a0ecaa39dbddfcace47de150cde55c7093182fa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1MmNkNGZmMzlkZTY2M2RmNzNkMTFhNjE0NzI4Y2FjZDRmMzRkYTc5YjVhMzgwZjU1NzNkNGFhOTRhOGU3MjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNlNDA4ZjlmMmZkNDdhZTVhY2FmMjBiMjRlOWY0ZWUyZDMyZWFhMGJlZjMyMTdlMDdkNjRhNjlmNTVjZDRlZjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc5YmY4Y2IyNmQ0YTlmNmVhNDM1MDg0YTM1ZTg1ZTAwY2M3NzcwOTM2YzBiZDY4ODBkZTVlMzE1MjExMGUxODAifQ"
+          "resource": "repo://src/services/redis/keys.ts",
+          "version": "repo-file-v1:sha256:e08c0c81a321911206045caa90b2296fef9b48cc71947f46cd2d525d937d1bf9"
         }
       ]
     },
@@ -31,12 +31,8 @@
       "statement": "Combo scraping uses a pool of 3 workers with 120 ms sleeps, treats a response lacking <td>1.</td> as no class, and extracts rolls from td.tdRollNo elements.",
       "evidence": [
         {
-          "resource": "repo://src/bot/syncdb.ts#L171-L298",
-          "version": "repo-lines-v1:sha256:5db53e470ecf7c0cd528d4af2f1d50ff631a81dc5abf2813d08d01a8c9330261:eyJzZWxlY3RlZExpbmVDb3VudCI6MTI4LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0MThmYzNiMGNiNTY3MmU4MTA4ZjY5NzA1ZDYwMzIzOTljNzAzNWNjZTQzMjFjODA4YmZkZDBhMzljZDY3NjVhIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIyMTQ0MzFjNmQxMjQ4MjYwODViYTQ5MjBkMTgxYTdhYmQ2MmQ2NmRhOTI5Yzk1ZTlkNWM4YzYwNTQwMTZhYTMxIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJjYjNhMGUzYzljOTM1NTUwMzJhMDg3YzY3ZTVkNGIwY2U2NmE2YmQ0OTQ3YTQ2MDA3NTg4MTBlMTQ0ZDdhMTViIn0"
-        },
-        {
-          "resource": "repo://src/bot/syncdb.ts#L43-L43",
-          "version": "repo-lines-v1:sha256:2e67704b27dbc929ec9586e2df739dfb6bc1e1df8a03af8dc711e5eadc74d0a2:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmU2NzcwNGIyN2RiYzkyOWVjOTU4NmUyZGY3MzlkZmI2YmMxZTFkZjhhMDNhZjhkYzcxMWU1ZWFkYzc0ZDBhMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmU2NzcwNGIyN2RiYzkyOWVjOTU4NmUyZGY3MzlkZmI2YmMxZTFkZjhhMDNhZjhkYzcxMWU1ZWFkYzc0ZDBhMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTczYTg4ZDkxMzYzYTk0ODM2MmJlNWJlNDVlZGVmNWU1NTYyYzg0ZDM3MDEwNzAyNjE3NDI3ZmRjZGIxYmVjNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjY2YTcwYjFiOGNkN2ZkYTgyMTA5MmQyNTc5ZDY3N2U3ZTIwNDkxZTQ0YTdhMzAwNDVhYWY4ZmUxZjVjZTAwNSJ9"
+          "resource": "repo://src/bot/syncdb.ts",
+          "version": "repo-file-v1:sha256:68c95e324ea234f4b1eae89ef1ddd83ec197cb0b4ad298472e6e1eff12943838"
         }
       ]
     },
@@ -55,8 +51,8 @@
       "statement": "Upserts run in batches of 50 into studentsnew, updating section, branch, and year on conflict while preserving an existing name if the new one is null.",
       "evidence": [
         {
-          "resource": "repo://src/bot/syncdb.ts#L332-L367",
-          "version": "repo-lines-v1:sha256:9807337232fd21bf9c55a834c2828cb675f23e766009b902479cf751955b170e:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwNGY1ZTU5NDA5OWM0Y2ZkNTE2Njc3MGI4ZTY3YzI0ZjI0MWViNDZmOGYzZTAzNmM4MDJkMGRlYmNhYjY4OGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRkYWI3YmE4ZTA2NzcwZTU1ZjQ4NjQxNzlmYzAyZTM5ZTEzZGZlNTVlNjgyZTc1OWQ4YTdjYTUzZjYwNGFmNGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ3MTIwZTY4NmRhNzE0NmNjYjFjM2RhZWZhN2I5MGI3OGI4YWZkZjk1ZTkwZjBhYWI3ZWI1MDBlODA1NjNhYTcifQ"
+          "resource": "repo://src/bot/syncdb.ts",
+          "version": "repo-file-v1:sha256:68c95e324ea234f4b1eae89ef1ddd83ec197cb0b4ad298472e6e1eff12943838"
         }
       ]
     },
@@ -69,7 +65,7 @@
           "version": "repo-lines-v1:sha256:9a3a3e6af561619d30e873ca6cdc8bd0a7912a88f9d62524f3246064baf9354f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3NDQ0YzU3MTI0NjhhZDk2YTcxNzg0YjcxNjQwMGZiYzQ4ZTIxZmY4NzMyNzMzNWFmMjg2ODJjOGNjOWMxMzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNiNjllOGQ1ZTc3M2U1YTEyMjM4NjU5NGQzZTJmOTMxMTc2Mjc0NzhiNTE1M2QyZmI0ZjEyMzMxODNlZDdhODIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ1ZTk0MWRhZmQ3YTlmNWNmYmY2MWQ3ODhiZjRhNWQ3ZTFmM2VhM2JkZmY0NmNiZjQ0ZTE3ZmU3Y2EyOTRlYjEifQ"
         },
         {
-          "resource": "repo://src/services/redis/keys.ts#L30-L35",
+          "resource": "repo://src/services/redis/keys.ts#L36-L41",
           "version": "repo-lines-v1:sha256:06e876f4f0f48d3af0f61bad3ad830dbfbdde1d9d72e6813195580c1aef2dd2f:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmNjZjkxYjQ0NmExYzFmNDA5N2ViZDEwYWEwZmY1NjJjYTkwNTU2ZWFkYmI2YzJjNGJlYTU2ZDRkY2Q0MDI3ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmNkYzc2ZDEyZTUzMDRkMzA3OWVkYjVmODkwMDA3ZWEwNWYyMjZlNGQ5M2I2OTU2ODQ2MGNhZmFmODAwNzQ0YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2Q0NTQ2ODk3ZTdhNGE5Yjg5ZjgxMzg0OGIxN2Q2N2I4NzQ0NmJiNDhmYmFjY2NhNzMwNmJiYmI1YmM3YWQyZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
         }
       ]
@@ -79,16 +75,8 @@
       "statement": "If the portal login page appears mid-sync, workers detect it via the name='username' marker, set authLost, abort, and the sync fails with an instruction to rerun rather than treating combos as empty.",
       "evidence": [
         {
-          "resource": "repo://src/bot/syncdb.ts#L169-L169",
-          "version": "repo-lines-v1:sha256:c7f18a94c63870b6d81ce958fa7a25ac12c6038fac055ff2c817cecee7e1e157:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzdmMThhOTRjNjM4NzBiNmQ4MWNlOTU4ZmE3YTI1YWMxMmM2MDM4ZmFjMDU1ZmYyYzgxN2NlY2VlN2UxZTE1NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzdmMThhOTRjNjM4NzBiNmQ4MWNlOTU4ZmE3YTI1YWMxMmM2MDM4ZmFjMDU1ZmYyYzgxN2NlY2VlN2UxZTE1NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzdiZTUxZjI5NWZkNzliOWZmODVkOWNkY2YwZGE1Mjc3ZGFmZTQ0NzlhZGYxYzY4MWY2MTRkZjRmZTU4ZmY3NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGJjZDAzOTY0ZTE5MDQwYTBlMTQ2YTYxYzIyNjU2MzVkZjlkNGYzZTEzNGM4OTY0N2YxNWRmZDAxOTM2YjJiMiJ9"
-        },
-        {
-          "resource": "repo://src/bot/syncdb.ts#L222-L227",
-          "version": "repo-lines-v1:sha256:9599985aa1d74e835267c08e28790c633e10b79aab1736ceab2ea9324a9858e4:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDIzZThmYTYwNjJmM2UwMWJlY2M2MjA5NzE4YzVkMmM0YTU5MzdhZTUxZmUwMWUwNmE0NzQyOGI5YzMyMWQzOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTZiMDQ0OTE0Njk3MjJlODM2M2E5NGU0MDQ0NTM4ZTAxM2EyYTIxN2UzNmIxZTU2OGJhNjBhY2I3YjRjOGYyZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjJhYjk2YmE1MTBmY2NhYjAyNzcyYWZkNDlhYmUyMzE0MDQ0MzY4ZTI1ZGY4OGJmZjZiMzc0NTBiMjNhYjYxNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTIxYjg2YWUxOTI2NzQ5YWEwNzU4MDhjYWI3ZjQxZmQ5MGI3MzNlYmRmY2UyMTFkYjQwYTAzMGFhZWM5NmE0MiJ9"
-        },
-        {
-          "resource": "repo://src/bot/syncdb.ts#L288-L292",
-          "version": "repo-lines-v1:sha256:1120fede958ab5151a5ce5f04852e93fb57069cd94f2b32cc5b50814620cea31:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjU1YzY2NDE4OTU2ZmU0OGZkMjc0YjY1NTBhMTczNjNmMjM1NTE4OWMxMWM4NDYyODBjOWFhODg5ZDczOWQxOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODY1OGEwNWJiZjQ5Mzc1NThmNDVmYTQxMzhiYzEwNzQ5YTIxZTY1OWE2YjExMGEzZmFiODg1ZGQwNTBmNTJkMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDlmMDUwNDdjODU2NjU3ZjgzZDllYzMzYWE1NWIxZjgyNzZlMWI0YjRkNWFmZjg1MTJmNTk1MWE0YWU2MWVjMCJ9"
+          "resource": "repo://src/bot/syncdb.ts",
+          "version": "repo-file-v1:sha256:68c95e324ea234f4b1eae89ef1ddd83ec197cb0b4ad298472e6e1eff12943838"
         }
       ]
     },
@@ -112,7 +100,7 @@
       "evidence": [
         {
           "resource": "repo://src/bot/syncdb.ts",
-          "version": "repo-file-v1:sha256:ad5f223a5584e6f82d3a9d9f5d7e635201bea6c9ec942d0a4747d3f174b52ab4"
+          "version": "repo-file-v1:sha256:68c95e324ea234f4b1eae89ef1ddd83ec197cb0b4ad298472e6e1eff12943838"
         },
         {
           "resource": "repo://src/bot/syncdbCli.ts",
@@ -129,10 +117,58 @@
           "version": "repo-lines-v1:sha256:5a5c9997d9b30f8010ff95d56bd38685a3bc05984f7c3682d15c67531246d1b5:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlODc5Yzg2YmJhNzczZDYzNjQ2ZDU2NGVhN2YzNGU3NDUwZWEyYTMyYzU4ZjU5YThkY2ZmMjgyODFjMGEyNjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYwZmUyYTE3MTgyMDYyOTljZGI2NjRlOTZlYTI1MjU3ZGNjMDI3ZTM2MzllYTUyN2M2ZGQwMGI2MzcyZjY5YjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmYTMwY2I4OWQxMzc3NjY1Njc1ZTE2MzBmZmFiOWEzZGQ2ZDVjYWZmMzM5OWEyMjZiOGI2ZDg2OWUwNmNhNWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNhNzY3YjNkNjQzMjZlYTUwN2Y2MWYzNDExOTY5ZjJiNzM5ZmVlYzYzYzM3ZDM2ZjYwODk2ZWFhOTExNTFhNWMifQ"
         }
       ]
+    },
+    {
+      "id": "claim_3a3482949e504b9fa6459e42aeca80d1",
+      "statement": "The daily check-in gate is dormant until /postcheckin stores a channel post id under checkin:post:msgId; isDailyUnlocked then requires dailyUnlocked:{userId} and treats Redis errors as unlocked.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/dailyCheckIn.ts",
+          "version": "repo-file-v1:sha256:2f537b70d42d5f1461cb7bbc75562905e8734fc713ccaf17d67ff7d74b4ab3bc"
+        },
+        {
+          "resource": "repo://src/services/redis/keys.ts",
+          "version": "repo-file-v1:sha256:e08c0c81a321911206045caa90b2296fef9b48cc71947f46cd2d525d937d1bf9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7950aa09126942fd8ba294afdd6ecd9c",
+      "statement": "A dailycheck tap sets dailyUnlocked:{userId} with a TTL to the next IST midnight, adds the student to the broadcast audience, records a daily_checkin activity and answers with a deep link back into the bot.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/dailyCheckIn.ts",
+          "version": "repo-file-v1:sha256:2f537b70d42d5f1461cb7bbc75562905e8734fc713ccaf17d67ff7d74b4ab3bc"
+        }
+      ]
+    },
+    {
+      "id": "claim_ad8cfc7a182543458bec37b26d4e959c",
+      "statement": "/postcheckin deletes the previous post, posts the new check-in, stores its message id before pinning so the gate works without pin rights, and reports a failed pin to the admin.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/dailyCheckIn.ts",
+          "version": "repo-file-v1:sha256:2f537b70d42d5f1461cb7bbc75562905e8734fc713ccaf17d67ff7d74b4ab3bc"
+        }
+      ]
+    },
+    {
+      "id": "claim_005f265418bf4064abf227a08c99f947",
+      "statement": "The academic callback handler returns early on dailycheck taps so only dailyCheckIn.ts answers them.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/academics/academicHandler.ts",
+          "version": "repo-file-v1:sha256:8a1ae2acf82d6a2e39aa06e1cfcb5aecffd19f1eebdfcc7d0db9ac6c381bbd5e"
+        },
+        {
+          "resource": "repo://src/bot/dailyCheckIn.ts",
+          "version": "repo-file-v1:sha256:2f537b70d42d5f1461cb7bbc75562905e8734fc713ccaf17d67ff7d74b4ab3bc"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.2",
-    "at": "2026-10-15T21:12:57.495Z"
+    "at": "2026-10-24T11:00:48.405Z"
   }
 }

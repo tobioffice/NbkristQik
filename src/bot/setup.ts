@@ -1,7 +1,7 @@
 import TelegramBot from "node-telegram-bot-api";
 import { ADMIN_ID } from "../config/environmentals.js";
 import { logger } from "../config/logger.js";
-import { LIBRARY_WEBAPP_URL } from "../constants/webapp.js";
+import { APP_WEBAPP_URL, LIBRARY_WEBAPP_URL } from "../constants/webapp.js";
 import { libraryOpenToAll } from "../services/library/access.js";
 
 // Telegram expects command names WITHOUT the leading slash.
@@ -21,12 +21,16 @@ const LIBRARY_COMMAND = {
   description: "Read your subject material",
 };
 
-/** The one-tap way into the library, for a private chat. */
-const LIBRARY_MENU_BUTTON = {
+/**
+ * The one-tap way in: the app opens on its index page, where every surface
+ * lives. While the library is still the admin's, the button opens the shelf
+ * itself, because that is the only page the admin is working on.
+ */
+const menuButtonFor = (openToAll: boolean) => ({
   type: "web_app" as const,
-  text: "Library",
-  web_app: { url: LIBRARY_WEBAPP_URL },
-};
+  text: "Open app",
+  web_app: { url: openToAll ? APP_WEBAPP_URL : LIBRARY_WEBAPP_URL },
+});
 
 /**
  * The Bot API wants `menu_button` as a JSON object. node-telegram-bot-api
@@ -41,11 +45,12 @@ const warn = (what: string, e: unknown): void =>
   logger.warn(`[bot] ${what} failed:`, (e as Error)?.message ?? e);
 
 /**
- * Sets the command lists and the menu buttons.
+ * Sets the command lists and the menu button.
  *
- * The calls are awaited in order because the menu button has a default and
- * a per-chat override: the default reset must land first, or it can erase
- * the admin's own button.
+ * The app is always the menu button: it holds the register, the roll and the
+ * issue desk whatever the library's state, so a student never loses the way
+ * in while the shelf is being filled. The command list is the only thing that
+ * changes with `LIBRARY_ACCESS`.
  */
 export async function setupBot(bot: TelegramBot): Promise<void> {
   const openToAll = libraryOpenToAll();
@@ -55,14 +60,11 @@ export async function setupBot(bot: TelegramBot): Promise<void> {
 
   await bot.setMyCommands(userCommands).catch((e) => warn("setMyCommands", e));
 
-  // The menu button opens the library once every student may read, and is
-  // reset to the command list while the library is still the admin's. The
-  // reset matters: a button set by an earlier deploy would otherwise stay.
+  // Set once, before the per-chat lists: a default set later can erase the
+  // admin's own button.
   await bot
     .setChatMenuButton({
-      menu_button: encodeMenuButton(
-        openToAll ? LIBRARY_MENU_BUTTON : { type: "default" },
-      ),
+      menu_button: encodeMenuButton(menuButtonFor(openToAll)),
     })
     .catch((e) => warn("setChatMenuButton", e));
 
@@ -73,7 +75,7 @@ export async function setupBot(bot: TelegramBot): Promise<void> {
   await bot
     .setMyCommands(
       [
-        ...userCommands.filter((c) => c.command !== "library"),
+        ...userCommands.filter((command) => command.command !== "library"),
         LIBRARY_COMMAND,
         {
           command: "postcheckin",
@@ -83,15 +85,4 @@ export async function setupBot(bot: TelegramBot): Promise<void> {
       { scope: { type: "chat", chat_id: ADMIN_ID } },
     )
     .catch((e) => warn("admin setMyCommands", e));
-
-  // and a Library button in the admin's own chat, even while closed: set it
-  // last, so nothing resets it afterwards
-  if (!openToAll) {
-    await bot
-      .setChatMenuButton({
-        chat_id: ADMIN_ID,
-        menu_button: encodeMenuButton(LIBRARY_MENU_BUTTON),
-      })
-      .catch((e) => warn("admin setChatMenuButton", e));
-  }
 }

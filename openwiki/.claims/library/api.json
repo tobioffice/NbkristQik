@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:97585fd5f1ee221d8b07fea3ef0afd25f3cd44f2e139aea7718fdc0ebc64815a",
+  "claims": [
+    {
+      "id": "claim_af343694b03b4bb6a540d9530f914135",
+      "statement": "POST /api/library/session swaps a verified initData blob for an opaque cookie: 32 random base64url bytes stored in Redis as lib:sess:{token} with a 12-hour TTL, set as the nbq_lib HttpOnly SameSite=Strict cookie (Secure in production).",
+      "evidence": [
+        {
+          "resource": "repo://src/api/library.ts",
+          "version": "repo-file-v1:sha256:294d1b7fa87ccdba1488fe519c79081ecaa5b3726dbd20cd7d0ff0bb01cff314"
+        },
+        {
+          "resource": "repo://src/services/library/session.ts",
+          "version": "repo-file-v1:sha256:57ab4f1a4ff783d924a7ba642f9639484fd2dc55a27dadf46f26fe10ac04becb"
+        }
+      ]
+    },
+    {
+      "id": "claim_801d23e7c1024507a9ea49f469e229e5",
+      "statement": "DELETE /api/library/session revokes the session server side by deleting the Redis key and clears the cookie.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/library.ts",
+          "version": "repo-file-v1:sha256:294d1b7fa87ccdba1488fe519c79081ecaa5b3726dbd20cd7d0ff0bb01cff314"
+        },
+        {
+          "resource": "repo://src/services/library/session.ts",
+          "version": "repo-file-v1:sha256:57ab4f1a4ff783d924a7ba642f9639484fd2dc55a27dadf46f26fe10ac04becb"
+        }
+      ]
+    },
+    {
+      "id": "claim_ec58d69719b14f9f8ebcc7ee1a6ef8ed",
+      "statement": "Every routed request passes requireSession (cookie plus canOpenLibrary re-check), then requireStudent (403 with registered:false when unregistered), then requireReadableDocument (404 when missing or not live, 403 when the semester does not match).",
+      "evidence": [
+        {
+          "resource": "repo://src/api/library.ts",
+          "version": "repo-file-v1:sha256:294d1b7fa87ccdba1488fe519c79081ecaa5b3726dbd20cd7d0ff0bb01cff314"
+        }
+      ]
+    },
+    {
+      "id": "claim_7dc8f4b9a98a4ebfb43bf568ad377ed0",
+      "statement": "mayReadDocument lives in src/services/library/entitlement.ts and allows the admin preview, otherwise requires a matching dept, regulation and year_sem; a null department always fails.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/library/entitlement.ts",
+          "version": "repo-file-v1:sha256:0fe0bbd75dfe9d73c3e3e43e804a451d6509a89fdf8da403589d5c4872d06926"
+        }
+      ]
+    },
+    {
+      "id": "claim_0bfd4ac2ffdb4889940a73daa7a19f20",
+      "statement": "GET /subjects answers the admin preview of every live document unless ?view=roll is given, and groups documents into subjects by college code, sorted by code.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/library.ts",
+          "version": "repo-file-v1:sha256:294d1b7fa87ccdba1488fe519c79081ecaa5b3726dbd20cd7d0ff0bb01cff314"
+        },
+        {
+          "resource": "repo://src/services/library/entitlement.ts",
+          "version": "repo-file-v1:sha256:0fe0bbd75dfe9d73c3e3e43e804a451d6509a89fdf8da403589d5c4872d06926"
+        }
+      ]
+    },
+    {
+      "id": "claim_497c54b9e32c48d6ab7c585b1c9dfd70",
+      "statement": "A page is served only when the page number is an integer within page_count and the rendered file exists, answered as image/svg+xml with no-store, inline disposition, nosniff and same-origin resource policy headers.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/library.ts",
+          "version": "repo-file-v1:sha256:294d1b7fa87ccdba1488fe519c79081ecaa5b3726dbd20cd7d0ff0bb01cff314"
+        }
+      ]
+    },
+    {
+      "id": "claim_e81a5766d8c14096bc2edb2944a23e4c",
+      "statement": "The watermark token is HMAC-SHA256 over 'nbk-library:{userId}' with the library secret, cut to eight hex characters and printed as NBK-XXXX-XXXX; the secret falls back to the bot token.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/library/watermark.ts",
+          "version": "repo-file-v1:sha256:c7fcc379f37272dd3798ddf0e082d3b5696f389634e4ae17ff0aa4b94c294244"
+        }
+      ]
+    },
+    {
+      "id": "claim_2f34ec92aeee4a138f454f0493610aa3",
+      "statement": "stampPage inserts a vector overlay before the closing svg tag with the token repeated diagonally at low opacity plus a footer line carrying the token and page label, and throws instead of serving a page that is not an SVG.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/library/watermark.ts",
+          "version": "repo-file-v1:sha256:c7fcc379f37272dd3798ddf0e082d3b5696f389634e4ae17ff0aa4b94c294244"
+        }
+      ]
+    },
+    {
+      "id": "claim_3acbe491e91b406d8bb86cf8c5e7cef7",
+      "statement": "A served page records a library_reads row fire-and-forget and increments lib:reads:{userId} with a 300-second TTL, logging a warning past 300 pages; Redis failures never block the page.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/library/reads.ts",
+          "version": "repo-file-v1:sha256:527cd6d7cc5b1c68c636cc048ad77bad7be44e7171c9e991a93d0749c48f45bc"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-24T11:00:48.405Z"
+  }
+}

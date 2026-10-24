@@ -1,13 +1,19 @@
 ---
 type: architecture
 title: Runtime Architecture
-description: Single-process runtime topology and lifecycle for NbkristQik — ordered startup of schema init, self-registering bot handlers, and the Express API, plus component data flow and graceful shutdown.
+description: Single-process runtime topology and lifecycle for NbkristQik — ordered startup of schema init, self-registering bot handlers, the Express API and the library mounts, plus component data flow and graceful shutdown.
 tags: [architecture, lifecycle, runtime, telegram, express]
 sources:
+  - id: openwiki-source-714e0c91fd122c36f3217aa4
+    resource: repo://src/api/server.ts
+  - id: openwiki-source-9628533565ba429ce21df54f
+    resource: repo://src/bot/authorization.ts
   - id: openwiki-source-4c68ade5fe3d6523fb58350d
     resource: repo://src/bot/bot.ts
   - id: openwiki-source-70ae228271bbdb1aff4dc249
     resource: repo://src/bot/index.ts
+  - id: openwiki-source-1d45088626f10df0fdd2b150
+    resource: repo://src/bot/replies.ts
   - id: openwiki-source-f11b9279af821abdb3463e06
     resource: repo://src/config/environmentals.ts
   - id: openwiki-source-1904030dfb49db04cb06af5b
@@ -16,12 +22,14 @@ sources:
     resource: repo://src/db/init.ts
   - id: openwiki-source-290cb8a0cd25881741257ea3
     resource: repo://src/services/redis/getRedisClient.ts
+  - id: openwiki-source-0f3a831b85927e39ccb48b87
+    resource: repo://src/services/text.ts
   - id: openwiki-source-0be99d3f1664956f03d52278
     resource: repo://src/services/uptime.ts
-generated: { by: "opencode", at: "2026-10-15T21:12:57.495Z" }
+generated: { by: "opencode", at: "2026-10-24T11:00:48.405Z" }
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-15T21:12:57.495Z
+    at: 2026-10-24T11:00:48.405Z
 ---
 
 # Runtime Architecture
@@ -41,6 +49,7 @@ graph TB
         BOT[Telegram bot<br/>node-telegram-bot-api]
         HANDLERS[Command / callback handlers<br/>self-register on import]
         API[Express API<br/>src/api/server.ts]
+        LIB[Library mini app<br/>/library + /api/library]
         UPTIME[Uptime probes every 5 min<br/>api / turso / redis / portal]
         TRACK[Activity tracker]
     end
@@ -53,6 +62,7 @@ graph TB
 
     TG -->|getUpdates polling| BOT
     WEB -->|HTTPS /api| API
+    LIB -->|cookie session| API
     OPS -->|session cookie| API
     BOT --> HANDLERS
     HANDLERS --> TRACK
@@ -75,9 +85,9 @@ graph TB
 1. **Warn on missing admin** — if `ADMIN_ID` is unset, admin commands and report forwarding are disabled (`src/bot/index.ts:43-47`).
 2. **`initDatabase()`** (`src/bot/index.ts:50`) — the single schema entry point (`src/db/init.ts:12`) creates every table and index (fallbackResponses, tgusers, studentsnew, botusers, activity_log, admin_sessions, registrations, student_stats, uptime_log) before anything reads or writes.
 3. **`setupBot(bot)`** — registers the command list shown in Telegram's menu (`src/bot/setup.ts`).
-4. **Dynamic `import()` of all handler modules** — `help`, `start`, `report`, `answers`, `leaderboard`, `register`, `registered`, `academicHandler`, `syncdb`, `uptime`, and the API server (`src/bot/index.ts:56-68`). Registration happens as an import side effect; see below.
-5. **Explicit setup calls** — `registerSyncDbCommand()`, `startUptimeMonitor()`, `startServer()` (`src/bot/index.ts:70-75`).
-6. **`bot.startPolling()` last** — the bot is exposed to Telegram only when DB, handlers, and API are all ready (`src/bot/index.ts:77-79`).
+4. **Dynamic `import()` of all handler modules** — `help`, `start`, `report`, `answers`, `leaderboard`, `register`, `registered`, `library`, `postopen`, `academicHandler`, `dailyCheckIn`, `syncdb`, `uptime`, and the API server, all in one `Promise.all` (`src/bot/index.ts`). Registration happens as an import side effect; see below.
+5. **Explicit setup calls** — `registerSyncDbCommand()`, `startUptimeMonitor()`, `startServer()` (`src/bot/index.ts`).
+6. **`bot.startPolling()` last** — the bot is exposed to Telegram only when DB, handlers, and API are all ready.
 
 This ordering is the reason `fetchFresh` in the scraper can assume `studentsnew` exists and why a fresh database boots cleanly.
 
@@ -91,9 +101,9 @@ Configuration is read once in `src/config/environmentals.ts`: the bot token swit
 
 ## API and uptime
 
-`startServer()` binds Express on `PORT` (`src/api/server.ts:321`). The app trusts one proxy hop for nginx and serves the leaderboard, `/api/me`, the profile/registration endpoints, issue reports and threads, `/health`, `/api/status`, and the admin panel under its secret path. See [REST API and Security](api/server.md) and [Admin Panel](api/admin-panel.md).
+`startServer()` binds Express on `PORT` (`src/api/server.ts`). The app trusts one proxy hop for nginx and serves the leaderboard, `/api/me`, the profile/registration endpoints, issue reports and threads, the library mini app at `/library` and its API at `/api/library`, `/health`, `/api/status`, and the admin panel under its secret path. See [REST API and Security](api/server.md), [Admin Panel](api/admin-panel.md) and [Library API and Session](library/api.md).
 
-`startUptimeMonitor()` (`src/services/uptime.ts:189`) is idempotent (`inited` guard), takes an initial probe after 15 seconds so the API can bind first, then probes four components every 5 minutes — `api` (local `/health`), `turso` (a `SELECT 1` through the shared database client, so this checks the embedded SQLite file when one is configured), `redis` (PING), and `portal` (HTTP GET of the portal base URL) — recording per-component heartbeats to the database. Up/down transitions DM the admin. A daily job prunes uptime rows, activity log rows (95-day retention), and expired admin sessions.
+`startUptimeMonitor()` (`src/services/uptime.ts`) is idempotent (`inited` guard), takes an initial probe after 15 seconds so the API can bind first, then probes four components every 5 minutes — `api` (local `/health`), `turso` (a `SELECT 1` through the shared database client, so this checks the embedded SQLite file when one is configured), `redis` (PING), and `portal` (HTTP GET of the portal base URL) — recording per-component heartbeats to the database. Up/down transitions DM the admin. A daily job prunes uptime rows, activity log rows (95-day retention), and expired admin sessions.
 
 ## Redis failure cooldown
 
@@ -115,6 +125,8 @@ An `unhandledRejection` handler logs rejections rather than crashing the process
 - **Best-effort side effects** — activity tracking, roll mapping persistence (`persistRollMapping`), and section cache writes are all fire-and-forget; failures are logged at debug/warn level and never block a user reply.
 - **Degrade instead of fail** — Redis failures fall through to the database or the portal; the connect cooldown keeps request latency bounded while Redis is down.
 - **Typed error propagation** — the scraping layer distinguishes "portal down" (fallback/ServerDownError) from "student not in records" (StudentNotFoundError), so a missing roll is never masked as an outage.
+- **One gate, one copy module** — every bot entry point asks `isAuthorizedUser` in `src/bot/authorization.ts` (admin, channel membership, daily check-in) and the repeated sentences live in `src/bot/replies.ts`.
+- **One escape helper** — `escapeHtml` in `src/services/text.ts` is the only HTML/XML escaper, used by the reply formatters, the report threads, `/start` and the library watermark.
 
 ## Related pages
 

@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:133a43db56d5e6f71d5bbc78c0be121c24d5df9892d211746696528080bc62b6",
+  "pageVersion": "sha256:fd5be860860f60c48e482ae1d26467508ac2eb3fd4a54bd865cf5dee5b371c73",
   "claims": [
     {
       "id": "claim_9545f3aea22545fe9096b0899b2256cc",
       "statement": "API_BASE resolves in order: VITE_API_URL, then same-origin in dev (vite proxies /api to localhost:3000), then https://checker.tobioffice.dev in production.",
       "evidence": [
         {
-          "resource": "repo://src/web/src/api.ts#L1-L50",
+          "resource": "repo://src/web/src/api.ts#L3-L52",
           "version": "repo-lines-v1:sha256:2bf20d38a0157a6a5666086b110609b0f14f5d6a09c2674e5a3c7738d095f064:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwNzVkZGRjMzdhMGVhNzczZTAxMDNmMzcyYjc3Yjg3MDZhY2U3MTlmMDFlM2YyMzQ1ODdmMDQzODc3OTQ2NTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk4ZDJlMzkxY2Y0OTdjNTYzOTlmZWMxMmE1MjY3ZmZjYzM3YzI5M2ViMWVjZWJjNDQyYzJmMjBkMTFhYTM0ZWMifQ"
         }
       ]
@@ -61,7 +61,7 @@
           "version": "repo-lines-v1:sha256:9dcf24b197b259a2775cdae1dabf8c8a9bd823d2d4fb14de54c8a6994af9917f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0Njg4NDYwMGZhN2M3ZWJkMDIyMTZlMWE5ZjQwOGNjZjVkNGI5NmIzNmVhOTFlNzNmZGZjYzJiY2Y2M2JkN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyZjNjZmQxMWRhNjE1MDE5N2FjZWVkMDg0MDZhYzY0YjA1MDM0MGRlN2JjMDQxMjRhNGNiN2VmYTY3MTM0MGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ4YzM5MDVkYTUyODRhY2YzOWNmZjcwYWJlNzI1ODc3YjIzMmUxZWM2ZTlhODZhNDdjMmYwYTczZDRlNTFmZjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgwODY3YTYzODc0ZDM0YTJhMDAyNGMzYWRjYzdjNzExMmM2NjUyMzNiNzZhODQ1YTYxNmNmYjNmZmQzNDQ1OTUifQ"
         },
         {
-          "resource": "repo://src/web/src/Leaderboard.tsx#L21-L65",
+          "resource": "repo://src/web/src/Leaderboard.tsx#L30-L74",
           "version": "repo-lines-v1:sha256:03eec236301b5226511f25f35fec665ad2535b49b41717916c2bffd10aacfdd2:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2NTRlZjg3ODY2NmMxNjRkZDY1NGQxYWFmM2U1YmE5MmQwMzEwYzExNzZmYzg4OTdhZTM5MDc0ZDYyOWVhMjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlNTlmYzI5MzcyZDNmODM2Y2NjZjljNzdkMDk1NWQ1NjU3YTRmNTBkMzU3MTc3MDI1OTVkZjc5NjI1NzI2ZDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3MTAxZDczOTk5Y2FmOTIxYTVlZTgzNjJiNGJhNTkxYTQ1ZDZlZjlhYzU3NGU2ZGI4OWE2ZjhlNDIyYzdhYWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkOThkYjBmMjYyZTc4ZDVlYzQyNzhiMTg4MGU3Nzg0OWJiZGZiNGE1Yzk3YmRjOGY0MWNlYzE4OTI1MzJlYWQifQ"
         }
       ]
@@ -98,21 +98,29 @@
     },
     {
       "id": "claim_db1d5a0afdb54e4499a2b6ec6853eec0",
-      "statement": "The web app builds with tsc plus vite and deploys the dist directory (both pages) to GitHub Pages via the gh-pages script.",
+      "statement": "The web package builds tsc plus vite: `build` produces the leaderboard, profile and report pages for GitHub Pages, and `build:library` builds app.html into dist-library/index.html for our own host.",
       "evidence": [
         {
-          "resource": "repo://src/web/package.json#L6-L14",
-          "version": "repo-lines-v1:sha256:7d5cb4e05f325730eec52c59182e1e2c16f2049067f5e96ee9a7f9760b56da16:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzQ4MzNkNTk0OWMwM2E0MGNhOTUyNDkxNjEwYTY2NTk2NDRiM2FhNDY2MzYyZjc5OTAyMGRiZjE5ODE1NDdkYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2E2M2JmMDk0ZjUzYTg5MTIzMjc5MjRlMjllMTE5MzIzYjJjOTU5YWNjMDEzMmZhZmEyNzE1MmI1YmQ5Zjg2NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzYyYmRiNTZkNmIxZDZhOGJjN2ZhOWEyNGU2YTdmZjcxODM2NWE2OTU1ZjhiZTRiNGJhMTVkYzYwMTQ3OTg3MiJ9"
+          "resource": "repo://src/web/package.json",
+          "version": "repo-file-v1:sha256:dde4896d9809a9e637aca5273a0a842503b70d78ad88708fea545ea8164bc10f"
+        },
+        {
+          "resource": "repo://src/web/vite.library.config.ts",
+          "version": "repo-file-v1:sha256:7bcc773bea871f16b072eb94027e1331e6cc8fb7035d5de884cd325c72b9b4d3"
         }
       ]
     },
     {
       "id": "claim_2a401152cd304f4c815c5d0183f6cd3b",
-      "statement": "useTelegramIdentity reads the WebApp SDK once via a lazy initializer and exposes tgUser and initData, shared by the leaderboard and profile pages.",
+      "statement": "useTelegramIdentity reads the WebApp SDK once through the shared telegramWebApp() accessor and exposes tgUser and initData; in dev builds only it also accepts ?devUser=<telegram id>.",
       "evidence": [
         {
-          "resource": "repo://src/web/src/useTelegramIdentity.ts#L17-L32",
-          "version": "repo-lines-v1:sha256:e298149d4f8655f1e43757a08761845675bec0db2e9b94a8f479cbdd9f6d4374:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4YjNlNjM0ZjkyYWQ5NzE1YzcyZTUwYjIyOGVlOTM3Yzc4MzczMjk2Y2MwMGFjNzljNGQ2Y2UwNWVhNjQyN2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyZmQ1NjdlMjk3MzRkOTU3YWFmM2U0OGRiN2FkNmYyMzE2MTMzMjJhMGQ5NWRjMTAyNDIyYWMxMWY0YTZmMTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNmN2Y1MDc0OTM4M2Q3NGFiNzk4NTVjOGIyMTQzY2VmZDIwY2I3YzgwMTQ1YzYyMzc2MjdmOGVkY2E5Y2Y4ZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRmMzk4MmZkNjEwMTczNTk5MjQxZmNhOTNjN2M4NjY2ODNmNThmNTQxZWNlZDFjMjA5ODEwMjE0NTQ3NzE2NGMifQ"
+          "resource": "repo://src/web/src/telegram.ts",
+          "version": "repo-file-v1:sha256:3a5bc28e927043c9921efec700e39faef1bec391c10ed4b24e9d0064f33a9710"
+        },
+        {
+          "resource": "repo://src/web/src/useTelegramIdentity.ts",
+          "version": "repo-file-v1:sha256:43b38f940f867f08a6fc850406ab915dc655109336dea21413f3611de4048a90"
         }
       ]
     },
@@ -121,7 +129,7 @@
       "statement": "The isMe call site is guarded with myRoll != null so an unidentified viewer does not match ghost rows via null === null.",
       "evidence": [
         {
-          "resource": "repo://src/web/src/Leaderboard.tsx#L160-L163",
+          "resource": "repo://src/web/src/Leaderboard.tsx#L168-L171",
           "version": "repo-lines-v1:sha256:91361cfdc4d54c6c1469723323887c76cc70d127f90d6c5443fbbd5792e96343:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWM0YjE4NDllYjE3MzY0Yjc2MWY3ZDE4YjBjM2E2Y2E4MDVhNzliZTJiOTI1NGZlNjlkMTExMTEwZjA0OTg2NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2M1ZTY3ODA3NzdjNWQxOTVhMTczMDM1YmI4YjY3MGFlZjI1OTI3OTlhMGQ3ZjRiODFhMmNjZTlkY2IxZTllMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWI0OTkyYmI3NGE2MjJkZjI0NGNmOWE5ODllNDkyMTQwZTYzOWJmYmJlYTVhNWQ2NjQ1OGVhYTkzOGU1ZDIwZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjM4ZmE2N2JmZWI0Y2U1Y2YwYzA0N2RjNGMxMDUyOTM4ZWE2ZjI5NjgxYWQyNmU2ZDdiYzA3ZDZkMGY2N2ZkYiJ9"
         }
       ]
@@ -141,44 +149,108 @@
       ]
     },
     {
-      "id": "claim_a05f00a99e39458fb2e684370650ccb6",
-      "statement": "report.html is a third Vite entry mounting ReportApp via report-main.tsx; ReportApp hosts the issue form and the reporter's thread view.",
-      "evidence": [
-        {
-          "resource": "repo://src/web/report.html#L40-L40",
-          "version": "repo-lines-v1:sha256:b24ed6359e4304850cb5fefec999e85fc59d72acdc8e15915c7864ca61aa9b3b:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjI0ZWQ2MzU5ZTQzMDQ4NTBjYjVmZWZlYzk5OWU4NWZjNTlkNzJhY2RjOGUxNTkxNWM3ODY0Y2E2MWFhOWIzYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjI0ZWQ2MzU5ZTQzMDQ4NTBjYjVmZWZlYzk5OWU4NWZjNTlkNzJhY2RjOGUxNTkxNWM3ODY0Y2E2MWFhOWIzYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWZiN2Q0MTYyZmUwYmE0MGQ2NzFlYzY3NTg1MmJlY2NiZDE4Mzg1ZTlkNTYyNTc5N2UyNTlhMWViODA3MWNkOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjNlMTFjZTE3YTgyMzE5ZjUxOTE4NjZmZWNiNmUxODc3NzUyN2JhZmE2ZTE3YWM3ODE3NjJlYTdhNTE1NjUxNCJ9"
-        },
-        {
-          "resource": "repo://src/web/src/ReportApp.tsx",
-          "version": "repo-file-v1:sha256:011153da12270272ba287bc8402f8724bb03674a97d86ec12340bec2faef6ec7"
-        },
-        {
-          "resource": "repo://src/web/src/report-main.tsx",
-          "version": "repo-file-v1:sha256:3b942d8f6e022b75ecf889cbfd57854927538e202004df7f8ccf4a9409d01a90"
-        }
-      ]
-    },
-    {
       "id": "claim_aa14628958a749b9bf2b44ae74482d14",
-      "statement": "All three mini app pages share the Band head band and the register design language; the leaderboard's own-rank strip and the 75% rule line are page-specific additions.",
+      "statement": "Every surface shares the cloth band and the register design language; in the app the shell owns the band and sections publish a stamp into it, while the leaderboard's own-rank strip and the 75% line remain register-specific.",
       "evidence": [
         {
           "resource": "repo://DESIGN.md",
-          "version": "repo-file-v1:sha256:a3a7810f30122c870ea978804d9e3355ffd1f0cd127686480f5fe501863d3815"
+          "version": "repo-file-v1:sha256:ef18993d218822a74b5fb71ab37b6eb009294fccd2433ed4b64d4dffa887d2db"
         },
         {
           "resource": "repo://src/web/src/components/Band.tsx",
-          "version": "repo-file-v1:sha256:c08701d1fd24e40c1d774f1bc5073958497111c9be60f7321e4d05a509091209"
+          "version": "repo-file-v1:sha256:a52cf0a76934aa08db3737881a1a327041a7e8febdfe65cbb61a0879d895f7fb"
         },
         {
           "resource": "repo://src/web/src/components/TheLine.tsx",
           "version": "repo-file-v1:sha256:912450ece80dd9dd90ea4001f310b50c2f15e8d29e07d02cc0b469c268c52451"
         }
       ]
+    },
+    {
+      "id": "claim_bff5c5d358ac4f21a0fd01581ab551fb",
+      "statement": "src/web/src/http.ts holds the one request helper: readJson returns the parsed body and throws a RequestError with the server's message, the status and any suggestions; api.ts and libraryApi.ts both use it.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/api.ts",
+          "version": "repo-file-v1:sha256:c6fcfe9b20d11b384c828545be0719a4e97bfb8071ee7284ac3849423e0d8ee8"
+        },
+        {
+          "resource": "repo://src/web/src/http.ts",
+          "version": "repo-file-v1:sha256:0beac95785ca5c49caccec4f9e2f82b7bcab32b5d81a1de285148f62a6ba6b1c"
+        },
+        {
+          "resource": "repo://src/web/src/libraryApi.ts",
+          "version": "repo-file-v1:sha256:8b36898527eed140bf69e1656e292dad5ea57f418e9264e5cbe699fdf88f71a2"
+        }
+      ]
+    },
+    {
+      "id": "claim_8d66d7c8d29844b7ac5efa58b1ec89d7",
+      "statement": "The app is one entry (app.html → app-main.tsx → AppShell.tsx) served at /library/, with the index page, four sections and a five-item tab rail.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/app.html",
+          "version": "repo-file-v1:sha256:997f09cd3565eacb441f392ed8d7274d1fed2bf93e536321c9dce8d766f9ef4b"
+        },
+        {
+          "resource": "repo://src/web/src/AppShell.tsx",
+          "version": "repo-file-v1:sha256:6a2a4785e98b9fa18d54bc8b446caf3d36b944f4e0d6d8cab3cc333bc34a7664"
+        }
+      ]
+    },
+    {
+      "id": "claim_1101450487a04ab9981972939d3a331d",
+      "statement": "Routes live in the hash (#/, #/rank, #/library, #/profile, #/issues, #/issues/reports, #/issues/<id>); parseRoute reads them on mount and on hashchange and falls back to the index.",
+      "evidence": [
+        {
+          "resource": "repo://src/constants/webapp.ts",
+          "version": "repo-file-v1:sha256:4bb97e4a2d3d2f3069b1560ed614fb7669664b45c008a82bdc6838706b6f5b28"
+        },
+        {
+          "resource": "repo://src/web/src/AppShell.tsx",
+          "version": "repo-file-v1:sha256:6a2a4785e98b9fa18d54bc8b446caf3d36b944f4e0d6d8cab3cc333bc34a7664"
+        }
+      ]
+    },
+    {
+      "id": "claim_ee5b8d28080e47889e56d11899987e7f",
+      "statement": "backButton.ts keeps a stack of handlers so the Telegram arrow closes the innermost screen first and hides when nothing is stacked.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/backButton.ts",
+          "version": "repo-file-v1:sha256:873b8f4e1c4b4535609c88ed1a1339e3d2da1cd69c1f97afc2db08d786cc86b9"
+        },
+        {
+          "resource": "repo://src/web/src/telegram.ts",
+          "version": "repo-file-v1:sha256:3a5bc28e927043c9921efec700e39faef1bec391c10ed4b24e9d0064f33a9710"
+        }
+      ]
+    },
+    {
+      "id": "claim_af17625330f54ce5a6e558fc90adff9f",
+      "statement": "Sections reuse the standalone views: Leaderboard takes showBand={false} in the app, Profile takes compact and onReportIssue, and Issues is a pure view over an IssuesRoute that ReportApp wraps for report.html.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/Leaderboard.tsx",
+          "version": "repo-file-v1:sha256:61f02cec06fcee2ba4964a22102b4f0240b04bc7da6942d211b6a28c3a49814c"
+        },
+        {
+          "resource": "repo://src/web/src/ReportApp.tsx",
+          "version": "repo-file-v1:sha256:f07867ee223110d9aa544a29bbefb0615534f96fa323cdac3a38cacf160c8604"
+        },
+        {
+          "resource": "repo://src/web/src/views/Issues.tsx",
+          "version": "repo-file-v1:sha256:91c8674af94151122db7fe6843facc4d060597ff2a9697a341a72bd9f223594d"
+        },
+        {
+          "resource": "repo://src/web/src/views/Profile.tsx",
+          "version": "repo-file-v1:sha256:72f1f9770ebe63b88cdaa49e9edcfdbf26d3e7cd3f66b125f6558147d127682b"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.2",
-    "at": "2026-10-15T21:12:57.495Z"
+    "at": "2026-10-24T11:41:29.189Z"
   }
 }

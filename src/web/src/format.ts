@@ -17,3 +17,7 @@ export const rankBadgeClass = (rank: number): string =>
         ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
         : "bg-slate-800 text-slate-500 border-slate-700"
   }`;
+
+/** "1 unit" / "3 units": the one piece of grammar the shelf needs. */
+export const plural = (count: number, word: string): string =>
+  `${count} ${word}${count === 1 ? "" : "s"}`;

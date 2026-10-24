@@ -1,13 +1,17 @@
 ---
 type: architecture
 title: Caching and Leaderboard Stats
-description: Redis client lifecycle and cache keys with TTLs, background full-section attendance and midmarks caching into student_stats, and the libSQL/Turso RANK() ranking design behind the leaderboard and per-student rank lookup.
+description: Redis client lifecycle and cache keys with TTLs — student caches, membership, report and check-in gates, library sessions and the page-burst counter — plus background section caching into student_stats and the RANK() design behind the leaderboard.
 tags: [redis, caching, leaderboard, ranking, ttl]
 sources:
   - id: openwiki-source-714e0c91fd122c36f3217aa4
     resource: repo://src/api/server.ts
   - id: openwiki-source-40646dc6b42fe5872ce25e48
     resource: repo://src/db/student_stats.model.ts
+  - id: openwiki-source-7cc706396dfd4d4455e7befa
+    resource: repo://src/services/library/reads.ts
+  - id: openwiki-source-579c3fdcf46f5d0a58634dba
+    resource: repo://src/services/library/session.ts
   - id: openwiki-source-290cb8a0cd25881741257ea3
     resource: repo://src/services/redis/getRedisClient.ts
   - id: openwiki-source-0e4ab75775c805a55cb3bf55
@@ -22,10 +26,10 @@ sources:
     resource: repo://src/services/student.utils/checkMembership.ts
   - id: openwiki-source-4ccceffb43b70d8bf38d07a2
     resource: repo://src/services/tracker.ts
-generated: { by: "opencode", at: "2026-10-15T21:12:57.495Z" }
+generated: { by: "opencode", at: "2026-10-24T11:00:48.405Z" }
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-15T21:12:57.495Z
+    at: 2026-10-24T11:00:48.405Z
 ---
 
 # Caching and Leaderboard Stats
@@ -52,10 +56,15 @@ All key names are built by the shared `redisKeys` module in `src/services/redis/
 | `track:p:{userId}` | tracker NX gate | 60 s | Throttles per-user profile upserts |
 | `report:gate:{userId}` | report submission | 60 s | One report per user per minute |
 | `report:thread:{userId}` | report thread replies | 3 s | Conversation-paced reply throttle |
-| `groupUses:{userId}` | group-use funnel | none — lifetime | Academic answers served in group chats |
+| `checkin:post:msgId` | `/postcheckin` | none | The pinned channel check-in post |
+| `dailyUnlocked:{userId}` | `dailycheck` tap | to next IST midnight | Today's check-in unlock |
+| `lib:sess:{token}` | `POST /api/library/session` | 12 hours | Library session (bearer cookie) |
+| `lib:reads:{userId}` | `GET /api/library/page/...` | 300 s | Pages pulled in the burst window |
 | `sync:semType`, `qik:users` | sync / authorization | none | Operational state |
 
-`cacheFlushPatterns` in the same module defines the SCAN globs (`student:*`, `attendance:*`, `midmarks:*`, `lb:*`) that `/syncdb` deletes after a semester rollover. The `groupUses` counter is deliberately not among them, so a sync never resets a user's 2 lifetime group answers.
+`cacheFlushPatterns` in the same module defines the SCAN globs (`student:*`, `attendance:*`, `midmarks:*`, `lb:*`) that `/syncdb` deletes after a semester rollover. Library sessions, the library read counter and the daily check-in keys are deliberately not among them, so a sync never signs a reader out or asks them to check in again.
+
+The library's two keys are written by `src/services/library/session.ts` (mint, read, drop) and `src/services/library/reads.ts` (a 300-second `INCR` window that logs a warning past 300 pages per reader, and never blocks a page). A Redis failure in either is logged and the read still succeeds.
 
 `getStudentCached` (`src/services/redis/utils.ts`) raises `StudentNotFoundError` with up to three nearby-roll suggestions when the roll is absent from `studentsnew`, and that error is deliberately propagated rather than masked as an outage.
 
@@ -96,3 +105,4 @@ The ranking notes in `src/db/student_stats.model.ts:131-162` document three bugs
 - [REST API and Security](../api/server.md)
 - [Database Schema and Models](database.md)
 - [College Portal Scraping](../portal/scraping.md)
+- [Library API and Session](../library/api.md)

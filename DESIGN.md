@@ -196,6 +196,18 @@ The top three as register heads: paper-raised entries, rank rings (red 2px for f
 ### Band
 Cloth-green head with the wordmark (Zilla Slab 24px), an 11px tracked context line, and an optional stamp block (border 1.5px at 50% paper, value in Zilla Slab, label at 11px).
 
+### App shell (index page and tab rail)
+
+Every surface now lives on one sheet. The shell owns three things:
+
+- **The band**, once per surface. A section cannot draw its own head; it publishes one figure into the band's stamp (`useBandStamp`), so the binding stays single.
+- **The page head**: an 11px tracked eyebrow, a Zilla Slab 22px title, an optional 42-46ch note, and a 1.5px ink rule under all of it. Sections start here, never with a card.
+- **The index page** (the app's cover): eyebrow, the register's title in Zilla Slab at `clamp(30-38px)`, one note, the viewer's own entry bracketed in red, then the section entries as ruled index rows — section number in Zilla Slab in a 34px margin, the entry title at 17px, a 12px explanation under it, a drawn chevron at the right. No icons in boxes, no card grid.
+
+**Index tabs.** The foot of the sheet is a ruled rail of five tabs (Index, Ranks, Library, Profile, Issues). Each carries a 19px single-stroke icon over an 11px tracked label; the open tab fills ink with paper-bright text — a stamp impression, not a pill. The rail is full-bleed on phones and centred with the 560px sheet on desktop.
+
+**The reader is the exception.** When a page is open, the reader takes the sheet and the band and tabs step away; a reading surface carries only its own head.
+
 ### Admin Ledger
 Tables, feed rows, weights, and health ticks reuse the same rules: paper grounds, hairline rows, ink data, amber check-in series, cloth-green uptime ticks, and red pen for down states and fresh cues. The drawer is a paper-bright sheet with a 1.5px ink edge.
 
@@ -204,7 +216,8 @@ Tables, feed rows, weights, and health ticks reuse the same rules: paper grounds
 ### Do:
 - **Do** keep rows ruled: 1px hairline rules between rows, a 1.5px ink rule under column heads.
 - **Do** keep figures tabular and columns right-aligned; ranks, rolls, percentages, counts, uptimes, and clock times.
-- **Do** keep the viewer visible: bracketed entry strip when ranks are known, bracketed row + YOU stamp in the list.
+- **Do** keep the viewer visible: bracketed entry strip when ranks are known, bracketed row + YOU stamp in the list, bracketed strip on the app's index page.
+- **Do** keep one band per surface: a section publishes a figure into the shell's stamp instead of drawing its own head.
 - **Do** keep times IST 12-hour AM/PM everywhere, including tooltips.
 - **Do** keep form controls at 16px on phones and focus rings 2px red at 2px offset.
 

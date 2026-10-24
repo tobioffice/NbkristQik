@@ -20,10 +20,10 @@ sources:
     resource: repo://src/services/student.utils/parsers.ts
   - id: openwiki-source-b930379b15b9226a3c0602bc
     resource: repo://src/services/student.utils/portalSession.ts
-generated: { by: "opencode", at: "2026-10-15T21:12:57.495Z" }
+generated: { by: "opencode", at: "2026-10-24T11:00:48.405Z" }
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-15T21:12:57.495Z
+    at: 2026-10-24T11:00:48.405Z
 ---
 
 # College Portal Scraping
@@ -94,9 +94,9 @@ The portal authenticates via a PHP session cookie. Rather than parsing `Set-Cook
 | `NoDataFoundError` | `NO_DATA` | Roll missing from a report it was expected in |
 | `InvalidCredentialsError` | `INVALID_CREDENTIALS` | Login or session renewal failed |
 
-`StudentNotFoundError` (`src/services/redis/utils.ts:7-14`) additionally carries nearby-roll suggestions.
+`StudentNotFoundError` (`src/services/redis/utils.ts`) additionally carries nearby-roll suggestions.
 
-`AcademicTG` maps these to rich HTML messages built in `errorMessages.ts`: server-down guidance with a timestamp, no-data checklist, student-not-found with clickable suggestions, blocked-report notice, generic error with a message and timestamp, and a last-resort unknown-error message. The copy was polished for plain-English readability (no em/en dashes; every message stays a static template, so nothing here is model-generated at runtime). The formatting layer is detailed in [Academic Data Flow](../bot/academic-flow.md).
+`AcademicTG` maps these to static HTML messages built in `errorMessages.ts`: server-down guidance with a timestamp, no-data checklist, student-not-found with clickable suggestions, blocked-report notice, generic error with a message and timestamp, and a last-resort unknown-error message. The copy was polished for plain-English readability (no em/en dashes; every message stays a static template, so nothing here is model-generated at runtime). The formatting layer is detailed in [Academic Data Flow](../bot/academic-flow.md).
 
 ## Related pages
 

@@ -16,8 +16,17 @@ import {
   LoadingSpinner,
   SkeletonRows,
 } from "./components/FeedbackStates";
+import { useBandStamp } from "./bandStamp";
 
-export default function Leaderboard() {
+interface LeaderboardProps {
+  /**
+   * Draw the cloth band here. False when the app shell already owns the band
+   * (its tabbed surface): the count then goes up as the band's stamp.
+   */
+  showBand?: boolean;
+}
+
+export default function Leaderboard({ showBand = true }: LeaderboardProps) {
   const [sortBy, setSortBy] = useState<SortBy>("attendance");
   const [filterYear, setFilterYear] = useState("all");
   const [filterBranch, setFilterBranch] = useState("all");
@@ -89,19 +98,18 @@ export default function Leaderboard() {
     listStats[0].attendance_percentage < 75 &&
     stats.some((s) => s.attendance_percentage >= 75);
 
+  const stamp =
+    !initialLoading && total > 0 && !error
+      ? {
+          value: total.toLocaleString(),
+          label: total === 1 ? "student" : "students",
+        }
+      : null;
+  useBandStamp(showBand ? null : stamp);
+
   return (
     <>
-      <Band
-        sub="Attendance register"
-        stamp={
-          !initialLoading && total > 0 && !error
-            ? {
-                value: total.toLocaleString(),
-                label: total === 1 ? "student" : "students",
-              }
-            : null
-        }
-      />
+      {showBand && <Band sub="Attendance register" stamp={stamp} />}
 
       <div className="reg-body">
         {/* the viewer's own entry, bracketed in the margin */}

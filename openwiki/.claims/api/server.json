@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:5f4dd10ebf1182ddbc70557e664e5d4628df72995938881e5ee0b6e8951f8235",
+  "pageVersion": "sha256:6c2f8856a08b5ba8bd338d6b5e28230e6ffbe4e195be48b9a0927c6468b89522",
   "claims": [
     {
       "id": "claim_a66c4cb88946496ab2cb9876515f7724",
       "statement": "The Express app sets trust proxy to 1 because it runs behind a single nginx hop, so req.ip and express-rate-limit see the real client IP.",
       "evidence": [
         {
-          "resource": "repo://src/api/server.ts#L30-L30",
+          "resource": "repo://src/api/server.ts#L33-L33",
           "version": "repo-lines-v1:sha256:24ef9e8f5452cdcc1769ed4da1aced36cd5f6db237f22ffaa3cdbd171397626e:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjRlZjllOGY1NDUyY2RjYzE3NjllZDRkYTFhY2VkMzZjZDVmNmRiMjM3ZjIyZmZhYTNjZGJkMTcxMzk3NjI2ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjRlZjllOGY1NDUyY2RjYzE3NjllZDRkYTFhY2VkMzZjZDVmNmRiMjM3ZjIyZmZhYTNjZGJkMTcxMzk3NjI2ZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDNjZTZhOGExN2EwZWU3ZmY3NGQ3Mzg1MWIxNDc1MTQ0MDdmMWZkMTUxY2Y1MjBhMzY1Y2Q5ZGU3MjJiMmZmZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzFmMzEyODkzMWFjZjI5MWMxMTcyZmFjM2NhNjM2Yzg1YTJjMzMxYTllNjQ0ODMzZTJjMTUzZWU0NTlmYzRkYyJ9"
         }
       ]
@@ -17,11 +17,11 @@
       "statement": "CORS allows the comma-separated origins in CORS_ORIGINS, defaulting to https://tobioffice.github.io.",
       "evidence": [
         {
-          "resource": "repo://src/api/server.ts#L32-L36",
+          "resource": "repo://src/api/server.ts#L35-L39",
           "version": "repo-lines-v1:sha256:21139bd1229a9e83a235f74d3f50493ae13b1d367faec984ec8e399ca13cf76c:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzIxOTVmYjY2M2NmMmVkODJiZjE4OTYzOGQxNTdlNDhiMzEzZWQwNjY1YzY1ODFkNTkyYzA0MTI2YTgzYThlZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDk5NjdlYzFlZDM4MzZmOGViMTdhZmYxNzJiNWJmZWY3ZGU2MDQ4NWE0MzljNmNhMTFjNTkxZTE3NTU3MzlhZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2EyMzIwYjk3MTMzZGQ2NGQxNmU0Yzg0N2M4NzkyYzg5ZDUyNTQ3YmQyNDYzZGU1NTc0ZDg2NmNjN2ZlMTAyMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGZmM2U5MWZmM2Y2NTFjYWNmYWNhOTZlNTZlYTA4NzczZTI0ZmY1YjY1Y2IxYTI2NDRhMTFjMGViZWJlZjU3MCJ9"
         },
         {
-          "resource": "repo://src/config/environmentals.ts#L26-L30",
+          "resource": "repo://src/config/environmentals.ts#L35-L39",
           "version": "repo-lines-v1:sha256:545737aea5552d467f7fa2f5e627fb09e81e4999d192757706a05fb7b3a11317:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTMzOTQ0ZTkyNTFkYjViMjc0ZGFjMDliNjBjNTk0NTQzMzk1NDViNzY3ZjJhYzYxYThhYTZjYTdjNzMxNmU3ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTgwY2Y1NDFkNTNhNzg3YTMyMDlhZmY2ZDM0MjY3ZTU5NjllYzJkN2U3NzQ2NWMxMGU0MmYxY2M0MDE4NDRiZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTkxYmRmMGUyYmZmM2RhMTVhMTNiMzc0YzM2Mjg4ZDlmMWIxY2YwODA4YjE0NGRmZmJhODcwZDc4MWNlZjYyYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDc5MDYwYTE5YmU4NzI0YjUzNzIwZDdmN2M0NWM4MzQwNzZhZTEzODc1YzQzNmQ4OGRjOTY0MTU4ZDdlZjViNyJ9"
         }
       ]
@@ -31,7 +31,7 @@
       "statement": "All routes except admin share a middleware stack of securityLogger, sanitizeInput, and a 600-requests-per-15-minute API rate limit.",
       "evidence": [
         {
-          "resource": "repo://src/middleware/security.ts#L238-L242",
+          "resource": "repo://src/middleware/security.ts#L245-L249",
           "version": "repo-lines-v1:sha256:d693a93da6296382f781eb216225c5450ef25236d1d433cc3da0859a7bf59f2f:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWI2MTc4ODEyY2JiYzcxYzE4ZjQ2ZWY4ZjIyMGQwNDk3YjdhNjhjMTk0MmY2Y2RkNjA3YWY2NDgxZGNhMGE2NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjAyZDJjMGQ2ZGM1ZTc0ZDkyZmExNGI5MWRiZWEyNjQwOTBiZWIzNWZkYjkxODhkOWIzNDExODFkY2U5ZjRjZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTcyNWRiOWJmZDIyMDgzMWQ0YmIyZTc0OWU5YzgwZDQxZGZjYzVhZGQ1YzNmZjQxNjQ0ZWVjZTZjZjhhZDk0YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjc2NDlkMWExMjJkZGMwYThlYmNmZWM0OWYyZmY5ZWYyMjM5MjFiOGZlNmJlNjI4YWY5MWUxY2QzMGFhOTAyNSJ9"
         }
       ]
@@ -51,7 +51,7 @@
       "statement": "Leaderboard queries are validated by allowlist rules for page (1-1000), limit (1-100), sort, year, branch, section, and search (2-20 chars); failures return HTTP 400 with a details array.",
       "evidence": [
         {
-          "resource": "repo://src/middleware/security.ts#L244-L250",
+          "resource": "repo://src/middleware/security.ts#L251-L257",
           "version": "repo-lines-v1:sha256:f52a4a326b274ff8c87c573c6d7b07ab44574f52ef48b9967e38e380fe272b2f:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDI2NGJhMzU0MTcxMGI4ZjE3ZTY1MmY0OTM3NzRiNWVhNGZlNjFkYWE1YWUwZjE3YWZlOTdjOWIwZTEwYjFiZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjAyZDJjMGQ2ZGM1ZTc0ZDkyZmExNGI5MWRiZWEyNjQwOTBiZWIzNWZkYjkxODhkOWIzNDExODFkY2U5ZjRjZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDVlODExYTVjM2E2N2RhYWEwODIwZWIxMGFlYTU5ZTM2MzBiNzBhOGNlOTA1YjdmYTM4ODA5YjkwODMyMGIzYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
         },
         {
@@ -65,7 +65,7 @@
       "statement": "Leaderboard responses are cached in Redis for 60 seconds per unique sort/page/limit/filter query key, and cache failures are logged and ignored so Turso still serves.",
       "evidence": [
         {
-          "resource": "repo://src/api/server.ts#L109-L132",
+          "resource": "repo://src/api/server.ts#L147-L170",
           "version": "repo-lines-v1:sha256:3261ebe3a96fe91988c9963a3fbbfd9e14101882523ac6053cff4672dd4b6a3b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMyZDA2ZGViOWJkZDVlZGNkNzhkNjM0NjZhYzIxOGZlNDAzNmQ0Y2QzY2E2NmZiMzQ5NzEyN2M1NDkyNjUzZjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5MWM1MjJkYjhmMGM2N2UwZDI1Zjg5ZWViMDEyMTVlZDFhZjIzOTVhZjcwNmIzYmI1OWJiNDNmNjkyNTZiNzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJkYmU3MzIxZDJiYzg2Y2ViMTVjYzdlNWFhMTUzZmRlODdhMjNkMGJkMDQ5MDQ2OWNlNGY0YTc5ODFjZjczNzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIifQ"
         }
       ]
@@ -85,7 +85,7 @@
       "statement": "/api/me records a leaderboard_webapp activity event for verified callers, then returns found:false or the roll number with parallel global attendance and midmarks ranks.",
       "evidence": [
         {
-          "resource": "repo://src/api/server.ts#L202-L228",
+          "resource": "repo://src/api/server.ts#L240-L266",
           "version": "repo-lines-v1:sha256:98aa24df2ccbcd4ec3867a2ddb4895bd423e70261588605d11184c8c5f36e5e2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNkMjgyNmExZWM1MWU5OWFlYzk4ODEyNjdlZWYzYTE0NWIzMGM4NDgxN2E4MjIwMTNlN2VkNzZmZGNlNzYyODYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxN2FmMTEwMWM5N2I3YzJmNTI1NDA3ODJlNjM0Y2M0NDQwZjBlOTcwMzQxZTUyZjk3NTIzMTFkNzhiN2Q3ZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ4YWZhZmRiZjkwZDg0YjVlOTU1OWVlOTgxZjUyMTVjZWEyNzcwZTZjZjYxMmI4NjgwYjFhNTg5YjZjNzgzZTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJlMmY3NzAxNGU0YTI3YmY2ZDI5NDk5YjQ3OGFjY2I3OGMyN2FjODQwYzdiYmNiYTJmYTNmNmM4NGY3NGYzMzYifQ"
         }
       ]
@@ -105,11 +105,11 @@
       "statement": "GET /health is an unrate-limited liveness probe, and GET /api/status assembles uptime data with a 15-minute liveness cutoff and caches the JSON in memory for 5 minutes.",
       "evidence": [
         {
-          "resource": "repo://src/api/server.ts#L237-L244",
+          "resource": "repo://src/api/server.ts#L275-L282",
           "version": "repo-lines-v1:sha256:608402a4b9b7f29cbed3f1b231794401dafe4c636e480e4a3d80bdeac75a33e6:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWRmZTVkOTI3MDYyMTg4YmU2OGQ1NTRmOWQ4ZjBkYjFhMzIzMGFjZmViOTBiMGE2ZWIwMjk0MWFlMDJiMjhiZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjZmNWI0MGIxNTg0NTdkMTc4NjRmMjE3OTA3ODZkZDVhMmVjZGI2NGI2NmE2NTFmNzg4ZDRlMjVjZDMzMDNkMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjc0N2YzZTU4ZGNiZjI4NmMwYzQ5MjU1ZjdmNGZlZmRmMmY1ZDNmNTUyZTZlZTA0ZWViZjYzOWVlMDQyNWZkNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjk0NTAxNzA3YmJiYjliZWMxZjAzMzYyYzllYjcwMzE5ODAzOGQxZDA5NWJhYzdjMDg5NTFkMmVmOTBhYjYyZCJ9"
         },
         {
-          "resource": "repo://src/api/server.ts#L273-L319",
+          "resource": "repo://src/api/server.ts#L311-L357",
           "version": "repo-lines-v1:sha256:f2c05a9c8d2ea521e2229be3bf3e9ccb32cc625d258b12b3cc3c84c5580f373c:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5ZDAzYmQwODliY2MxZjJjZTAwM2NhZTFlODRhZDczNWQzYjNjMmU3YjUyM2YzMzJmMTc1ZmNiMGE4ZDE5ODMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI3NzlkMTE4ZDZlM2NiZjQ1MDUzOTc0OGRlZTdhNDMwN2FjYmU2NDQ2Y2JhMjk3ZjI3NjBmYTVkMGJiYTFiYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIxZGRjMjgyNWNlYWE5OTMyMzU3YTRmNDlmZGZhOWU2ODJmY2M4YWZhNWIxYTU5ZTYzZTBmZjdmMzFhZDYzNDUifQ"
         }
       ]
@@ -143,7 +143,7 @@
           "version": "repo-lines-v1:sha256:9f2241e25efcd58b99e566416668098e3035a9601d0babd5a80ba81dd19a8b92:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmMGJhOTFkMTUzMjNhMDQ5OTBjZDU1ZDVmN2M2ZjNiMzE3NTlmNWNhMzlhMDUzYTc4NTUxNjBlMDQ2MTdkZjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3ODY3OTM4NmMyNzk4OTYyNWRiY2E5MjVjZGQ5MTYyYTcwYzU5NTVhM2YxZTlmZWQxODU5N2UxZTg3YTc2YmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         },
         {
-          "resource": "repo://src/api/server.ts#L184-L233",
+          "resource": "repo://src/api/server.ts#L222-L271",
           "version": "repo-lines-v1:sha256:52aa9b5aa35d9921c792be9631de65da9ad5c21b4d7424074cf1076836fd94d1:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllNWU0MzQ1YWY2YzgyMjY1YWY4ZGQwYzljNzMwOGYxY2RmMzk3ODlmM2MwNmRjODEzOTU2MWZkNTMwNTc5ZDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNWNkMmZiNGYzZGY4ODQ1MTUyNTViMzk1MjNmMmY4YjU0NzJiZWVhOWY1NjZmZmNhMjA0ZGI4MDI1NjEwNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3NTI0NzViOTA4ZjIzZjIzMDJiOGI2YjQ2ZTczYmI4ZGJlNTFmZTk1YTZlZmI1NDk5Y2IyMWYzNjUyYTdkYzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY3NDdmM2U1OGRjYmYyODZjMGM0OTI1NWY3ZjRmZWZkZjJmNWQzZjU1MmU2ZWUwNGVlYmY2MzllZTA0MjVmZDUifQ"
         }
       ]
@@ -157,7 +157,7 @@
           "version": "repo-file-v1:sha256:21f9ad69c901941296bcebced1324be6e5e97c7b717eca482d0f931ea094054b"
         },
         {
-          "resource": "repo://src/api/server.ts#L48-L56",
+          "resource": "repo://src/api/server.ts#L75-L83",
           "version": "repo-lines-v1:sha256:3470e9b241807c68c2c0a2a975136d7604b068e0c5ae162945f8e2a208e1411d:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzhkNTI1MzcyMzg0NTMxMzZlNGRjNjdjZDYxYzU4ZjJkNGY0ODIzNDcwNThiMjIzNDllZGI0MzE4MjRjZGJlMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDFiOWM1MTI1OTFmNDRkZWRlMzUyY2QxZmI0NDc5NGNmNTc2ZDYyOTAzMjQ3ODU2ODIxM2NmMDllYWMzNzBjMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTllOGU2ZWNhZjc4NzgyYjYyNDk0MTI2OWNmMzJiMzgzYzQ5ZWM4NTk1ZmVhYWU2NTg2NWVkODk3ZDQxODRlNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjA4NGVhYzkyMDVlNjc5YjAzZGFlNjQxNDc4YTA2MjMzMTc4NDczN2QxZGI4NWUzZmY1MTlhNmM4YzUzYzVmNSJ9"
         }
       ]
@@ -167,7 +167,7 @@
       "statement": "The app sets trust proxy to 1 for the single nginx hop in production.",
       "evidence": [
         {
-          "resource": "repo://src/api/server.ts#L30-L30",
+          "resource": "repo://src/api/server.ts#L33-L33",
           "version": "repo-lines-v1:sha256:24ef9e8f5452cdcc1769ed4da1aced36cd5f6db237f22ffaa3cdbd171397626e:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjRlZjllOGY1NDUyY2RjYzE3NjllZDRkYTFhY2VkMzZjZDVmNmRiMjM3ZjIyZmZhYTNjZGJkMTcxMzk3NjI2ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjRlZjllOGY1NDUyY2RjYzE3NjllZDRkYTFhY2VkMzZjZDVmNmRiMjM3ZjIyZmZhYTNjZGJkMTcxMzk3NjI2ZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDNjZTZhOGExN2EwZWU3ZmY3NGQ3Mzg1MWIxNDc1MTQ0MDdmMWZkMTUxY2Y1MjBhMzY1Y2Q5ZGU3MjJiMmZmZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzFmMzEyODkzMWFjZjI5MWMxMTcyZmFjM2NhNjM2Yzg1YTJjMzMxYTllNjQ0ODMzZTJjMTUzZWU0NTlmYzRkYyJ9"
         }
       ]
@@ -177,7 +177,7 @@
       "statement": "All public routes run through securityLogger, sanitizeInput, and a 600-per-15-minute rate limit; leaderboard routes add query validation middleware.",
       "evidence": [
         {
-          "resource": "repo://src/middleware/security.ts#L238-L250",
+          "resource": "repo://src/middleware/security.ts#L245-L257",
           "version": "repo-lines-v1:sha256:7d1a3e0de7ef610ffe18924003be9c07ab9aba3541382eb7d3ebd4ac80c2b760:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiNjE3ODgxMmNiYmM3MWMxOGY0NmVmOGYyMjBkMDQ5N2I3YTY4YzE5NDJmNmNkZDYwN2FmNjQ4MWRjYTBhNjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwMmQyYzBkNmRjNWU3NGQ5MmZhMTRiOTFkYmVhMjY0MDkwYmViMzVmZGI5MTg4ZDliMzQxMTgxZGNlOWY0Y2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU3MjVkYjliZmQyMjA4MzFkNGJiMmU3NDllOWM4MGQ0MWRmY2M1YWRkNWMzZmY0MTY0NGVlY2U2Y2Y4YWQ5NGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
@@ -192,7 +192,7 @@
         },
         {
           "resource": "repo://src/api/server.ts",
-          "version": "repo-file-v1:sha256:1fcc0c451486e6c263b960ccc6db272dc3ecc9c01eb870305c614b8604aa4540"
+          "version": "repo-file-v1:sha256:7dffe4a84c71ef4e1b21eb4d43b914175e02c4246f65f1f233c4a8a10c2f0d13"
         }
       ]
     },
@@ -206,13 +206,33 @@
         },
         {
           "resource": "repo://src/api/server.ts",
-          "version": "repo-file-v1:sha256:1fcc0c451486e6c263b960ccc6db272dc3ecc9c01eb870305c614b8604aa4540"
+          "version": "repo-file-v1:sha256:7dffe4a84c71ef4e1b21eb4d43b914175e02c4246f65f1f233c4a8a10c2f0d13"
+        }
+      ]
+    },
+    {
+      "id": "claim_f3ff397a31d348b0b7cab684c84366a2",
+      "statement": "The library mini app's static bundle is served from /library by express.static before the global security middleware, and the mount is skipped with a logged warning when the bundle directory is missing.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/server.ts",
+          "version": "repo-file-v1:sha256:7dffe4a84c71ef4e1b21eb4d43b914175e02c4246f65f1f233c4a8a10c2f0d13"
+        }
+      ]
+    },
+    {
+      "id": "claim_b15da5a6b95d4023bf2f7459e69a9c4e",
+      "statement": "POST /api/library/session is rate-limited to 20 requests per hour per IP as librarySessionLimit; all other library routes ride the global API limit.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/server.ts",
+          "version": "repo-file-v1:sha256:7dffe4a84c71ef4e1b21eb4d43b914175e02c4246f65f1f233c4a8a10c2f0d13"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.2",
-    "at": "2026-10-15T21:12:57.495Z"
+    "at": "2026-10-24T11:00:48.405Z"
   }
 }

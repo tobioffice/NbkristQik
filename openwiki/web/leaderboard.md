@@ -1,21 +1,27 @@
 ---
-type: frontend
-title: Web Leaderboard
-description: The React + Vite + Tailwind Telegram Mini Apps in src/web — the leaderboard register with infinite scroll and Telegram identity, plus the standalone profile and report pages, sharing one identity hook and API base.
-tags: [frontend, react, vite, tailwind, telegram-web-app]
+type: reference
+title: Web App
+description: The one app in src/web — the index page, the tab rail and hash routes, the shared cloth band and its stamp, the Telegram accessor, the back-button stack, and the standalone pages kept for compatibility.
+tags: [web, react, app-shell, routing, telegram, design]
 sources:
   - id: openwiki-source-ca9eabc24825e6ff0edc2967
     resource: repo://DESIGN.md
+  - id: openwiki-source-87c47a793c4a631e2439348f
+    resource: repo://src/constants/webapp.ts
+  - id: openwiki-source-d44d4e21369fc6c9f6881c2c
+    resource: repo://src/web/app.html
   - id: openwiki-source-e9ea5e902b3d8efac528eb9f
     resource: repo://src/web/package.json
   - id: openwiki-source-aaa8426155484904025fc71f
     resource: repo://src/web/register.html
-  - id: openwiki-source-3304a6e6fe2640bcda3332b9
-    resource: repo://src/web/report.html
   - id: openwiki-source-682d93863f1b38058baba098
     resource: repo://src/web/src/api.ts
   - id: openwiki-source-65389bbfdc75168642d5f2ba
     resource: repo://src/web/src/App.tsx
+  - id: openwiki-source-a7cc3bce3c9730332b62de43
+    resource: repo://src/web/src/AppShell.tsx
+  - id: openwiki-source-7eaff86001c42e80b5bd13cd
+    resource: repo://src/web/src/backButton.ts
   - id: openwiki-source-d426ef2e050352d2dd0d4e09
     resource: repo://src/web/src/components/Band.tsx
   - id: openwiki-source-b5c981b81097f116a5f0a03c
@@ -26,99 +32,105 @@ sources:
     resource: repo://src/web/src/constants.ts
   - id: openwiki-source-9871b4132baee0eb322fc134
     resource: repo://src/web/src/format.ts
+  - id: openwiki-source-8f388db48606a2a9e7334d65
+    resource: repo://src/web/src/http.ts
   - id: openwiki-source-091363086d146719f4c5f3fc
     resource: repo://src/web/src/Leaderboard.tsx
+  - id: openwiki-source-1658283cd619b2587565b508
+    resource: repo://src/web/src/libraryApi.ts
   - id: openwiki-source-0bbeaa20c8800f737c91820c
     resource: repo://src/web/src/register-main.tsx
-  - id: openwiki-source-0e9611183fa0a84356f7bdd2
-    resource: repo://src/web/src/report-main.tsx
   - id: openwiki-source-b968bb7a54de8ad3566b2b15
     resource: repo://src/web/src/ReportApp.tsx
+  - id: openwiki-source-73209936fc6edb7dfe8fc83e
+    resource: repo://src/web/src/telegram.ts
   - id: openwiki-source-16af679f49cabaa02bc32312
     resource: repo://src/web/src/useLeaderboard.ts
   - id: openwiki-source-db479441b27a5f3da1be68f7
     resource: repo://src/web/src/useTelegramIdentity.ts
   - id: openwiki-source-4b4ffafa2b80a042014fafbc
     resource: repo://src/web/src/useTelegramUser.ts
+  - id: openwiki-source-cb5080bf9bcf17079fed94ab
+    resource: repo://src/web/src/views/Issues.tsx
+  - id: openwiki-source-efd9c0c6d9d834c3b9e533d4
+    resource: repo://src/web/src/views/Profile.tsx
   - id: openwiki-source-73d3563b23c926309c9b707d
     resource: repo://src/web/vite.config.ts
-generated: { by: "opencode", at: "2026-10-15T21:12:57.495Z" }
+  - id: openwiki-source-59f07d98abf990760d48298c
+    resource: repo://src/web/vite.library.config.ts
+generated: { by: "opencode", at: "2026-10-24T11:41:29.189Z" }
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-15T21:12:57.495Z
+    at: 2026-10-24T11:41:29.189Z
 ---
 
-# Web Leaderboard
+# Web App
 
-`src/web/` is a self-contained React 19 + Vite + Tailwind package serving **three Telegram Mini App pages** from one build:
+`src/web/` holds one app and, beside it, the older single-purpose pages. The app is `app.html` → `src/app-main.tsx` → `AppShell.tsx`, built by `vite.library.config.ts` into `dist-library/index.html` and served from `/library/` by the Express host.
 
-- `index.html` → the leaderboard (`App.tsx` wrapping `Leaderboard.tsx`), registered in BotFather as the `nbkristqik_leaderboard` mini app.
-- `register.html` → the standalone registration/profile form (`ProfileApp.tsx`), documented in [Registration and Profile](../registration.md).
-- `report.html` → the issue reporter and thread view (`ReportApp.tsx`).
+## One sheet, four sections
 
-All three share the "Class Register, Open on the Desk" design language (`DESIGN.md`) and the same `Band` head band. The package has its own `package.json`, lockfile, tests, and Vitest config, and is built and deployed separately from the backend.
+The app is the register metaphor made literal: a cloth band at the head, a printed index page, and index tabs at the foot of the sheet.
 
-## API base and dev proxy
+- **The band** says where you are — `Student register`, `Attendance register`, `Library`, `Student profile`, `Issue reports` — plus one stamp for the figure that belongs there. It is drawn by the shell (`components/Band.tsx`), never by a section.
+- **The index page** (`#/`) is the front matter: a Zilla Slab title, one note, the viewer's own entry bracketed in red (roll and attendance rank from `/api/me`), and the four sections as ruled index rows with their numbers in the margin.
+- **The tab rail** carries five stamps — Index, Ranks, Library, Profile, Issues. Each is a 19px single-stroke icon over an 11px tracked label; the open tab fills ink with paper text. It is fixed to the foot of the sheet on phones and centred with the 560px sheet on desktop.
+- **Sections** start with a printed page head (eyebrow, title, note, 1.5px rule) and then their own content; the leaderboard keeps its register rows, its merit entries and its 75% line, the shelf its subject rows, the issue desk its threads.
 
-`API_BASE` (`src/web/src/api.ts`) resolves as:
+The design rules for all of this are in `DESIGN.md` (§ App shell).
 
-1. `VITE_API_URL` if set — always wins.
-2. In dev (`import.meta.env.DEV`) an empty string, making requests same-origin; `vite.config.ts:17-23` proxies `/api` to `http://localhost:3000` so a locally running backend needs no CORS or env juggling.
-3. In production `https://checker.tobioffice.dev`.
+## Routes
 
-`buildLeaderboardUrl` always sends `page`, `limit=20` (`PAGE_SIZE`), `sort`, and the three filters as query parameters; `search` is only appended when non-empty. `buildMeUrl` sends `userId` plus the Telegram `initData` when available. Endpoint behavior is documented in [REST API and Security](../api/server.md).
+The hash is the router, so every screen survives a reload and can be linked from the chat:
 
-## Data layer
+| Route | Screen |
+|---|---|
+| `#/` | the index page |
+| `#/rank` | the attendance register (leaderboard) |
+| `#/library` | the shelf, then a subject's units, then the reader |
+| `#/profile` | the roll form |
+| `#/issues` | report an issue |
+| `#/issues/reports` | the reporter's own list |
+| `#/issues/QIK-0007` | one conversation |
 
-### `useLeaderboard`
+`parseRoute` reads the hash on mount and on `hashchange`; anything unrecognised falls back to the index. `go()` writes the hash, sets the route and clears any immersive state, and `src/constants/webapp.ts` builds the same strings for the bot's buttons — a link that does not match `parseRoute` is silently treated as the index.
 
-`src/web/src/useLeaderboard.ts` owns fetching, pagination, and request lifecycle:
+## The band stamp
 
-- State covers rows, total, page, `loading`, `initialLoading`, `error`, and `hasMore`.
-- **Query changes** (sort, stable-identity filters object, debounced search) reset page/rows and refetch page 1 in an effect.
-- **Pagination** — a second effect fetches whenever `page > 1`; `lastElementRef` attaches an `IntersectionObserver` so the sentinel row entering the viewport increments the page. The ref callback re-creates the observer whenever `loading` or `hasMore` changes.
-- **Abort and staleness** — every fetch aborts the previous request via `AbortController` and bumps a `reqId` counter; responses and errors check the id before touching state, so a superseded page can never append stale rows or clear the loading flag. A 15-second timeout aborts hung requests.
-- The response parser accepts both `data.data` (array) and `data.data.{rows,total}` shapes and marks `hasMore` false on an empty page or when fewer than `PAGE_SIZE` rows return.
-- `retry()` resets to page 1 and refetches.
+A section cannot draw a head, so it publishes one figure instead: `useBandStamp({value, label})` from `src/web/src/bandStamp.ts`. The shell renders the stamp in the band and clears it when the section unmounts. The shelf publishes its ready-subject count, the register publishes the total students, the issue list publishes its open count.
 
-### `useTelegramIdentity` and `useTelegramUser`
+## Telegram, in one place
 
-`src/web/src/useTelegramIdentity.ts` is the shared identity source for all three pages: it reads the Telegram WebApp SDK once via a lazy `useState` initializer (the SDK is injected before the bundle runs), exposing `tgUser` (the raw id) and `initData`; both are null outside the Telegram webview.
+`src/web/src/telegram.ts` holds the only read of the injected SDK (`telegramWebApp()`), typed with the two pieces this app uses: `initData`/`initDataUnsafe` for identity, and `BackButton` for navigation.
 
-`src/web/src/useTelegramUser.ts` builds on it for the leaderboard's own-rank bracket:
+`useTelegramIdentity` reads it once in a lazy initializer and exposes `tgUser` and `initData` to every section. In dev builds only, it also accepts `?devUser=<telegram id>` so the app can be opened in a plain browser; the branch is folded away in production builds.
 
-1. No Telegram user → returns immediately — outside the webview there is no "you" to find.
-2. Fetches `/api/me` with `userId` and `initData`; when the payload reports `found`, it sets `myRoll` and both ranks (attendance and midmarks, each nullable).
+`backButton.ts` keeps a stack of handlers. The section registers "back to the index" and the reader pushes "close the reader" on top, so the Telegram arrow closes the innermost screen first and hides itself when nothing is stacked.
 
-The server only trusts the `userId` because it is carried inside cryptographically verified `initData` (see the API page).
+## What each section reuses
 
-## UI composition
+- **Register** — `Leaderboard.tsx` takes `showBand={false}` inside the app: it drops the band and publishes the student count as the band's stamp instead. On its standalone page the band is drawn as before.
+- **Shelf** — `views/LibraryView.tsx`, detailed in [Library Reader Mini App](../library/reader.md).
+- **Roll** — `views/Profile.tsx` with `compact`, so the shell's page head is not repeated, and `onReportIssue`, which switches to the Issues tab.
+- **Issues** — `views/Issues.tsx` is a pure view over an `IssuesRoute`; `ReportApp.tsx` wraps it for `report.html` with query-string routes, and the shell maps `IssuesRoute` onto the hash.
 
-`App.tsx` is the page frame: it wraps the register sheet and adds the docked **"My profile"** tab that opens the profile page on GitHub Pages (`PROFILE_URL` from `constants.ts`, `src/web/src/App.tsx:10-29`). `Leaderboard.tsx` owns `sortBy`, the three filters, and a debounced search input (400 ms); a `useMemo` keeps the filters object identity stable so the fetch effect only fires on real filter changes (`src/web/src/Leaderboard.tsx:21-37`).
+## The standalone pages
 
-Layout, top to bottom (`src/web/src/Leaderboard.tsx:92-183`):
+`index.html` (leaderboard, `App.tsx`), `register.html` (profile, `ProfileApp.tsx`) and `report.html` (issues, `ReportApp.tsx`) are still built by the default `vite.config.ts` and deployed to GitHub Pages. The bot no longer links to them; they exist so old links and bookmarks keep working. The app is the front door because the library's session cookie must be first-party.
 
-- `Band` — the shared cloth head band: wordmark, the "Attendance register" context line, and a stamp block with the total student count.
-- **Own-rank strip** — the viewer's bracketed roll and rank for the active sort, shown only when `myRoll` and a rank exist and no filter or search is active (the rank is global).
-- `SortTabs` — Attendance / Mid Marks toggle.
-- **Controls** — `SearchBar` bound to the raw search text, plus `FilterBar` with three selects: year (11/21/31/41 + all), branch (from a local `BRANCHES` copy), and section (A–J plus `-`).
-- `Podium` — the top three merit entries, hidden while searching; the list below skips them when the podium is visible (`podiumVisible` / `listStats`, `src/web/src/Leaderboard.tsx:64-65`).
-- The infinite-scroll register list with its head row (Rnk / Roll / Name / Att % or Mid avg) and one `StudentRow` per student. `TheLine` — the 75% minimum — is drawn between the last row at or above the rule and the first below it (`TheLine.tsx`).
-- `FeedbackStates` pieces — `SkeletonRows`, `ErrorState` with retry, `LoadingSpinner`, `EmptyState`, and the end note.
+## Build
 
-`Podium.tsx` renders the top three as merit entries in second–left / first–center / third–right order with the active sort's score, strikes through a tied rank on the second or third card, and prints how many students tie at #1 (`src/web/src/components/Podium.tsx:12-77`). `StudentRow.tsx` highlights the current user (`isMe`), wires the sentinel ref on the last row, and uses tie-aware rank badges from `format.ts`, so identical ranks share a badge color — mirroring the backend's `RANK()` semantics. `formatScore` renders two decimals for attendance and one for mid-marks, with `-` for missing values.
+`src/web/package.json`:
 
-The `isMe` call site is guarded as `myRoll != null && stat.roll_no === myRoll` (`src/web/src/Leaderboard.tsx:160-163`): without the guard, an unidentified viewer (`myRoll = null`) would match every ghost row (`roll_no = null`) via `null === null` and highlight them all as "You". The backend's inner join excludes ghost rows too, so the guard is belt-and-braces.
+- `build` — `tsc -b && vite build`, the three GitHub Pages entries.
+- `build:library` — `tsc -b && vite build --config vite.library.config.ts`, the app; Vite emits `app.html`, and a `closeBundle` hook renames it to `index.html` so `/library/` serves it.
+- `dev` — Vite with `/api` proxied to `localhost:3000`.
 
-`constants.ts` duplicates the backend branch map (`BRANCHES`) with a comment explaining the copy — the web build must not reach into backend source layout — and derives the three mini app URLs (`WEBAPP_URL`, `PROFILE_URL`, `REPORT_URL`) from a `PAGES_ROOT` that defaults to the GitHub Pages origin.
-
-## Build and deployment
-
-`src/web/package.json` scripts: `dev` (Vite), `build` (`tsc -b && vite build`), `lint`, `test` (Vitest over `src/web/tests`), `preview`, and `deploy` (`gh-pages -d dist`). The Vite config declares the three HTML entries (`index.html`, `register.html`, `report.html`) in `build.rollupOptions.input`. Built assets land in `src/web/dist/` and all three pages publish to GitHub Pages; the site origin (`https://tobioffice.github.io`) is in the API's CORS allowlist (`CORS_ORIGINS` default).
+`scripts/deploy.sh` copies `dist-library/` to the server's `public/library/`. See [Deployment and Operations](../operations.md).
 
 ## Related pages
 
-- [REST API and Security](../api/server.md)
+- [Library Reader Mini App](../library/reader.md)
 - [Registration and Profile](../registration.md)
-- [Admin Panel](../api/admin-panel.md)
-- [Caching and Leaderboard Stats](../data/caching-and-stats.md)
+- [REST API and Security](../api/server.md)
+- [Deployment and Operations](../operations.md)

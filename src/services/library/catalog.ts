@@ -17,21 +17,19 @@ const CATALOG_PATH =
   process.env.LIBRARY_CATALOG_PATH?.trim() ||
   path.resolve(process.cwd(), "data", "syllabus-catalog.json");
 
-let cached: SyllabusCatalog | null = null;
-let loaded = false;
-
-export const catalogPath = (): string => CATALOG_PATH;
+/** The snapshot, once read. `undefined` means "not read yet". */
+let cached: SyllabusCatalog | null | undefined;
 
 export const loadCatalog = (): SyllabusCatalog | null => {
-  if (loaded) return cached;
-  loaded = true;
+  if (cached !== undefined) return cached;
 
   try {
     if (!existsSync(CATALOG_PATH)) {
       logger.warn(
         `[library] catalogue snapshot missing at ${CATALOG_PATH} — the library will show no subjects`,
       );
-      return null;
+      cached = null;
+      return cached;
     }
     cached = JSON.parse(readFileSync(CATALOG_PATH, "utf8")) as SyllabusCatalog;
     logger.info(
@@ -42,12 +40,6 @@ export const loadCatalog = (): SyllabusCatalog | null => {
     cached = null;
   }
   return cached;
-};
-
-/** Test seam: forget the cached snapshot. */
-export const resetCatalogCache = (): void => {
-  cached = null;
-  loaded = false;
 };
 
 /**
@@ -104,20 +96,6 @@ export const getSubjectsFor = (
   const catalog = loadCatalog();
   if (!catalog) return [];
   return catalog.departments?.[dept]?.[regulation]?.[yearSem]?.core ?? [];
-};
-
-/** Every regulation the catalogue holds for a department. */
-export const regulationsFor = (dept: string): string[] => {
-  const catalog = loadCatalog();
-  if (!catalog) return [];
-  return Object.keys(catalog.departments?.[dept] ?? {});
-};
-
-/** The year-sems the catalogue holds for a department and regulation. */
-export const yearSemsFor = (dept: string, regulation: string): string[] => {
-  const catalog = loadCatalog();
-  if (!catalog) return [];
-  return Object.keys(catalog.departments?.[dept]?.[regulation] ?? {});
 };
 
 /**

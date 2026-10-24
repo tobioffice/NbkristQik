@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:b05baeb8e9405643dfd910fc16ddcf78ff00a0bc284fc96eac5d33e7cee8980e",
+  "pageVersion": "sha256:0cb60a648c1d93f462ed309697770c8cc6baf6a77f3dc38e0c5ff09d5520f290",
   "claims": [
     {
       "id": "claim_54716cb5ae834c05994488b22bfe15d6",
@@ -122,21 +122,21 @@
     },
     {
       "id": "claim_e4b7c6bcfba24a8791afd43289053d8b",
-      "statement": "AcademicTG maps typed portal errors to static humanized HTML messages in errorMessages.ts (server down, no data, student not found, blocked report, generic, unknown); copy is template-only, no runtime model calls.",
+      "statement": "AcademicTG maps typed portal errors to static humanized HTML messages in errorMessages.ts (server down, no data, student not found, blocked report, generic, unknown); the copy is template-only with no runtime model calls.",
       "evidence": [
         {
-          "resource": "repo://src/services/student.utils/AcademicTG.ts#L27-L100",
-          "version": "repo-lines-v1:sha256:f2ae4da537fcef74b985ece1da5d90f9e968dccec87e798713bba13bbcfb6316:eyJzZWxlY3RlZExpbmVDb3VudCI6NzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlNzU3MDU2NmE1MTJmYjQ1ZDZiNTA2MjM2YzdhMGUxN2UzZjk0M2QxMzY0MGZlMWQxZDQ2NDRjMWFhOWY2ZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYzMWY3YTNlYjBkY2M0ZDlhZjQ2YTY1NTA4MTM0NTU5Y2FkM2Q3MWVlZjg1N2YyMDczNGIwODMyMzg0YzRlOTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+          "resource": "repo://src/services/student.utils/AcademicTG.ts",
+          "version": "repo-file-v1:sha256:37a24d34e46e3376057b435e6518fab6198470da8a37e0a90062e8ee180cb74e"
         },
         {
           "resource": "repo://src/services/student.utils/errorMessages.ts",
-          "version": "repo-file-v1:sha256:e03bf2fe3959d1fd6af3d25f9221cdbf4d9f619225a31394f2fab2de0d94b4ca"
+          "version": "repo-file-v1:sha256:d6f00305ca788a537d68042432c9235132c35ae65820fc472d0f7a04483930c3"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.2",
-    "at": "2026-10-15T21:12:57.495Z"
+    "at": "2026-10-24T11:00:48.405Z"
   }
 }

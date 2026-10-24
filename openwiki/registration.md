@@ -10,6 +10,8 @@ sources:
     resource: repo://src/api/resolveUser.ts
   - id: openwiki-source-714e0c91fd122c36f3217aa4
     resource: repo://src/api/server.ts
+  - id: openwiki-source-9628533565ba429ce21df54f
+    resource: repo://src/bot/authorization.ts
   - id: openwiki-source-c0fc486d88e5845eb0be7e75
     resource: repo://src/bot/commands/register.ts
   - id: openwiki-source-c86189a5f8e6fd33c86b338e
@@ -22,20 +24,18 @@ sources:
     resource: repo://src/db/registration.model.ts
   - id: openwiki-source-aaa8426155484904025fc71f
     resource: repo://src/web/register.html
-  - id: openwiki-source-09b79904e1465aba03a49169
-    resource: repo://src/web/src/constants.ts
-  - id: openwiki-source-111de05988dad8539a084233
-    resource: repo://src/web/src/ProfileApp.tsx
-  - id: openwiki-source-015b703aef696b45b61ab9e4
-    resource: repo://src/web/src/useProfile.ts
+  - id: openwiki-source-a7cc3bce3c9730332b62de43
+    resource: repo://src/web/src/AppShell.tsx
+  - id: openwiki-source-1658283cd619b2587565b508
+    resource: repo://src/web/src/libraryApi.ts
   - id: openwiki-source-efd9c0c6d9d834c3b9e533d4
     resource: repo://src/web/src/views/Profile.tsx
   - id: openwiki-source-73d3563b23c926309c9b707d
     resource: repo://src/web/vite.config.ts
-generated: { by: "opencode", at: "2026-10-15T21:12:57.495Z" }
+generated: { by: "opencode", at: "2026-10-24T11:41:29.189Z" }
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-15T21:12:57.495Z
+    at: 2026-10-24T11:41:29.189Z
 ---
 
 # Registration and Profile
@@ -95,7 +95,7 @@ Create or edit. Body: `{initData?, userId?, rollNo, displayName?}`.
 5. `upsertRegistration` runs, then a `register` activity event is recorded (with the roll as detail) for the admin panel.
 6. Response: `{ok:true, registered:{roll_no, name}}`.
 
-The route additionally sits behind `profileWriteLimit` — 20 requests / 15 minutes / IP (`src/api/server.ts:50-55`) — beyond the global API rate limit.
+The route additionally sits behind `profileWriteLimit` — 20 requests / 15 minutes / IP (`src/api/server.ts`) — beyond the global API rate limit. The library's roll form posts to this same endpoint, so a student registered from the shelf is registered everywhere.
 
 ## Registered shortcut commands
 
@@ -107,7 +107,7 @@ The route additionally sits behind `profileWriteLimit` — 20 requests / 15 minu
 2. **Registration found** → verifies the roll still exists in `studentsnew`; on success it fire-and-forgets a `tgusers` mapping refresh (keeping "You are #N" consistent) and returns the roll.
 3. **Stale registration** (roll left the master table after a sync) → sends a "semester rollover?" prompt with the same register button and returns null.
 
-The commands also enforce the existing gates before resolving anything: bot rate limiting, channel membership, and the group-use gate (identical to the roll-number flow), plus the chit-chat group silence.
+The commands also enforce the existing gates before resolving anything: the command rate limit and the shared `isAuthorizedUser` gate (admin, channel membership, daily check-in) — identical to the roll-number flow — plus the chit-chat group silence. All three shortcuts are one handler over a `Lookup` union, with the tracked activity name in a `LOOKUP_TRACKED_AS` map.
 
 `/register` itself (`src/bot/commands/register.ts`) posts an explainer with an "Open registration" `web_app` button pointing at the profile page.
 
@@ -122,7 +122,9 @@ The profile form is a **separate mini app page** from the leaderboard:
 - `src/web/src/useTelegramIdentity.ts` — the shared identity hook (WebApp user id + initData), also used by the leaderboard
 - `src/web/vite.config.ts` — builds the three entries (`index.html`, `register.html`, `report.html`)
 
-All three mini apps (leaderboard, profile, report) deploy to GitHub Pages from the same `dist/`; the URLs live in `src/constants/webapp.ts` (bot side) and `src/web/src/constants.ts` (web side), consumed as `web_app` buttons so Telegram opens them full-screen with a native back button.
+The profile form is also the app's **Profile** tab: `views/Profile.tsx` is rendered inside the shell's page head (with `compact`, so it does not repeat the heading) and its "report an issue" line switches to the Issues tab instead of leaving for another page.
+
+Every bot link points into the app now: the URLs live in `src/constants/webapp.ts` as one base plus hash routes — `#/profile` for the form, `#/rank` for the register, `#/issues` and `#/issues/reports` for the issue desk — consumed as `web_app` buttons so Telegram opens them full-screen with a native back button. The older GitHub Pages pages (leaderboard, profile, reports) are still built and deployed but no longer linked from the chat. The app is served from our own host so the library's session cookie stays first-party.
 
 The leaderboard (`index.html`) links to the profile page with a floating "👤 My profile" button.
 

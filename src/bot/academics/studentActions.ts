@@ -1,5 +1,4 @@
 import { Signal } from "../../constants/index.js";
-import { CHANNEL_ID } from "../../config/environmentals.js";
 import {
   getMidMarks,
   getAttendance,
@@ -69,25 +68,5 @@ export const sendAttendanceOrMidMarks = async (
 export const sendBunkPlan = async (msg: Message, rollno: string) => {
   await fetchAndEdit(msg, "Working out what you can bunk...", () =>
     getBunkPlan(rollno),
-  );
-};
-
-export const sendJoinChannelMsg = async (chatId: number): Promise<void> => {
-  const channelName = CHANNEL_ID.slice(1);
-  await bot.sendMessage(
-    chatId,
-    "I need you in the channel first, then I can help you here.",
-    {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: `Join @${channelName}`,
-              url: `https://t.me/${channelName}`,
-            },
-          ],
-        ],
-      },
-    },
   );
 };

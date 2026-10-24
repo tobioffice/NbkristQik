@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:f0fd4a0fc3fa6db87eac13e32c015dabfdb79ac687185f7436628a661dc64b9d",
+  "pageVersion": "sha256:9be7335c90fa9cd2686d319136ceb3c01a87a37f97acf7b89e35d518177d6771",
   "claims": [
     {
       "id": "claim_5e511cd255fd46348e8a4080651eb721",
-      "statement": "initDatabase is the single schema entry point, creating twelve tables (fallbackResponses, tgusers, studentsnew, botusers, activity_log, admin_sessions, registrations, reports, report_messages, report_reads, student_stats, uptime_log) and their indexes idempotently before handlers or the API start, then running the idempotent report-thread backfill.",
+      "statement": "initDatabase is the single schema entry point, creating fourteen tables (including library_documents and library_reads) and their indexes idempotently before handlers or the API start, then running the idempotent report-thread backfill.",
       "evidence": [
         {
-          "resource": "repo://src/db/init.ts#L12-L133",
-          "version": "repo-lines-v1:sha256:81206e881ccb393ce80acbb41f3707f8d88bab27177712f470f211be649b3d4c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIyZTFhNjRhNGJhM2JhZWZjNWU3NjJlY2NmNGRkMGQ1OTQ5ODJmZTVmNjliYmUxMWEwMjcyMWU1MGY1ZjE1MTE0IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJhYTFkMWE2MzM5MDIyOWM3OTgzNDdlODNhMDQwNTQ0MWM5NDAwMDM1Mjg0YWQxNjhjMWJmNmNkZjFkNzBhMzcwIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI0ZDYyZWY2YTA2NjZkN2MwOGY3OTcxYWFmYTdjMjViZDcxYzJhYzA5ODNjMzY1MTcxN2YyODgyMDZhZTZkYzZkIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJkYjY5MjkwNzgwYmJmY2UxMTIwNzY4Nzc2ZTBkNjQxOWE5YTM2ZDIxYzdhZDdiY2ZkMTExMDE3Yjg5NTdkYjAwIn0"
+          "resource": "repo://src/db/init.ts",
+          "version": "repo-file-v1:sha256:e5cf1b07d111a1ee3444dc51d158ed1395c8fc507f18b8a4905c6450adbf7001"
         },
         {
-          "resource": "repo://src/db/init.ts#L141-L173",
-          "version": "repo-lines-v1:sha256:9da38234912932f3050d13cd7c1e72f085b2f1147daf39412ff8d685f366f817:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0MWZkODNkYjBhZGY0NTZhMGI1Zjc4ZjQ5NWUyN2Y0YTkzYmQ1OWI5ZGJkY2YwZTk5MmM2NGE3ZGExZTQyOTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMTgyOGM5MWFhNWQzMDNmZGMxNGFmYWM5Y2Q1YWM4NGY1OTFjMTY2MzdiYjYxZWM0ZTg5NTU4MzE1Zjk4NGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://src/db/library.model.ts",
+          "version": "repo-file-v1:sha256:089b2841dbf0624e3a4f5e7b4879903344e78782505907c5837cef7d94ad961e"
         }
       ]
     },
@@ -45,7 +45,7 @@
       "statement": "studentsnew is the master student table with roll_no primary key and nullable name, created even on a fresh database so leaderboard indexes cannot fail before a first sync.",
       "evidence": [
         {
-          "resource": "repo://src/db/init.ts#L28-L38",
+          "resource": "repo://src/db/init.ts#L29-L39",
           "version": "repo-lines-v1:sha256:175c4586ac056cf010806a2807fe633bf46ac12b9519c6b64a3a50fba495c141:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjZTI4ZmVmYTdjYTgwYjc3ZTE4NGRhZGE3NDVlYTE3YWMzOGQzMmY5NDgzMTVkMWIyNzUwMjI0N2M5ZTE5YzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkZjIxMWZiMzU1YWNhM2VhYmU0MGFlYjEyNTRjMjc0ZWUzYjFlMjlmMTMzZDBlNzY2MjFjMWUyZmZiZDhmNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIzMGQwMjFiNmM1NGI4N2U4OWM3ZjRhOGJkMDkyN2RmOTlmMGRhM2YzOWM4ZjJhY2Y0Zjk0NDI2ODMxNzA5MTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIxNzE5MzFlMWQ4MTcwZTMyNjdjYjM4MThkZTZkMDc3ZjhiYjU5NjVkZWQxNGY3NjBiNzc5ZjBiYmEyMjExYjUifQ"
         },
         {
@@ -59,7 +59,7 @@
       "statement": "botusers holds per-user activity counters keyed by user_id, and activity_log is an append-only event stream with user_id, chat_type, action, detail, and a UTC created_at default.",
       "evidence": [
         {
-          "resource": "repo://src/db/init.ts#L39-L61",
+          "resource": "repo://src/db/init.ts#L40-L62",
           "version": "repo-lines-v1:sha256:3ee618bc27f5f8bc372f8567bd698d1b1c3fbef969fef1296b0a109f1e096a6e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgwMWZhNjE5NThlMjdkYmFjODBiNDk2MGZmY2MyZTg1NjI3NjY2ZjQxZTQ0NTdjYTYxMTY4MjU4NDY0YmIxMTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkZjIxMWZiMzU1YWNhM2VhYmU0MGFlYjEyNTRjMjc0ZWUzYjFlMjlmMTMzZDBlNzY2MjFjMWUyZmZiZDhmNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRlNTc0MDU0NDcxY2QyNjkzMWE4Y2UzY2ZkOTUyNjdkOWNkZjc3ZDAwZTgyMTg3ODc4NjJmMGRjNzVhOWEyODIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcyZGI1ZjlmZDVkMjgyYmI2ZTUzZmZkMjgwYTc3NGI3ZjM3NjVkZjQ4NzlhYzZmNDNmYzg3ZjBhOWYxMWMzMTgifQ"
         }
       ]
@@ -69,7 +69,7 @@
       "statement": "admin_sessions stores a token_hash primary key with created_at and expires_at, and expired rows are deleted on logout and by the uptime prune.",
       "evidence": [
         {
-          "resource": "repo://src/db/init.ts#L62-L68",
+          "resource": "repo://src/db/init.ts#L63-L69",
           "version": "repo-lines-v1:sha256:686a6217bbfb3e87a08fe0acafd37cd923005dc52e7a4d29246b00ccb6e042c2:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODAxZmE2MTk1OGUyN2RiYWM4MGI0OTYwZmZjYzJlODU2Mjc2NjZmNDFlNDQ1N2NhNjExNjgyNTg0NjRiYjExOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmRmMjExZmIzNTVhY2EzZWFiZTQwYWViMTI1NGMyNzRlZTNiMWUyOWYxMzNkMGU3NjYyMWMxZTJmZmJkOGY0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWNkZjdiNzU0NjQyOTdmMmIwYzFmZjU1NjU1M2E1NGZlMjBhODQ0MzdiMWQzNmQ2MWE1NWFiOTJkNTllM2FjYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTRiY2I1OGMxZGZkOGQwOGYyOTcwMzg0NTAzMGU5MjU0YzMzZWM3M2JhOWY2MTNlMzQwM2NmNDI1OTgwMTMzNiJ9"
         }
       ]
@@ -89,7 +89,7 @@
       "statement": "uptime_log records component, status, latency_ms, and created_at; the schema also creates eight indexes — idx_report_messages, idx_activity_created, idx_activity_user, idx_reports_created, idx_reports_user, idx_reports_status, idx_studentsnew_filters, and idx_uptime_component_time.",
       "evidence": [
         {
-          "resource": "repo://src/db/init.ts#L111-L128",
+          "resource": "repo://src/db/init.ts#L112-L129",
           "version": "repo-lines-v1:sha256:056b137db8f824e358ad4160dcab0d9d4ab5d0815309aa7d4f7b94f2391d0611:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE1ZDk5ZDdkYTU4MjZmNDhjYWVhZTgwYTg2YzU2ZmY3NDJmMmMxZjEwNmYzNWI4NTg3NDIwZTliMGRiMmJlYTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1ZWYwMWJjMDhkYmMzYjYzZTRlNzVlYTNkMjZhNWI5NDE4OTE4NzdlMjdhZDg5MTMyOWM4NDExZDdkOGRjNGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYzMGI1MzE4MTBmMGEyZDYzNmU0ODVmNDU0Yzk3OWM3MGQ0MWYxMTNmN2YxNTZjZDVhNWY1NDQzNGQ4Nzc3NjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ4OGEzZjk4YzNlNjYxNmIxYTk2ZjIwNjA4ZjI3YTk0YTg4ZWNmOTdiNmZjYzdlYjIxM2U1NjA0OGNiMjFjYjkifQ"
         },
         {
@@ -103,7 +103,7 @@
       "statement": "The only string interpolations in SQL are a day count clamped to 1-365 and the module constant retention of 95 days; all user-input queries use parameter placeholders.",
       "evidence": [
         {
-          "resource": "repo://src/db/student_stats.model.ts#L325-L327",
+          "resource": "repo://src/db/student_stats.model.ts#L330-L332",
           "version": "repo-lines-v1:sha256:8c93790517891a610ed66efe19d153fc4054957e5863c53e7047943a6d3b23bf:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGU3ZjdjM2I3ZDc2ZTBjMjYwNDdjZWNmOGQ3MWNhZDQyYjFmMmE0YjNlZjg4ZmY3ZjBmMTIxYTIxMzYyOTk1NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzQzM2RhNzM1ZWFmMTNiYWUyZjMxYjhkZDBhMTE2YmY2MWJlZDRhNzQ5NDkyOTNkZGFkYTg4ZmQxMTc3OTAyNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTc5ODk2ZDY0MzNlNWVmMjZmNWUxMjk0N2ExYmZjY2YyMDI5YWFmZWM2N2EzYjJhM2VhNTExNTc2NDc4MDUyOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjMxM2JhMzJhNDM3OThlZDYwNTA1YWRlNDNjOWJhMTI4ZWNlMmI1MDRmYTRlZTEzMzJjMjgzNzYwYjAzN2ViYyJ9"
         },
         {
@@ -127,7 +127,7 @@
       "statement": "The registrations table maps a Telegram userId to a registered roll_no plus optional display_name, with registered_at preserved and updated_at refreshed on upsert; it is separate from tgusers so lookup-driven mapping writes cannot overwrite a registration.",
       "evidence": [
         {
-          "resource": "repo://src/db/init.ts#L69-L76",
+          "resource": "repo://src/db/init.ts#L70-L77",
           "version": "repo-lines-v1:sha256:4c8624ea526b8526c5224d289e8bf909da2eadbe32cf10b78cf2457448d563e1:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODAxZmE2MTk1OGUyN2RiYWM4MGI0OTYwZmZjYzJlODU2Mjc2NjZmNDFlNDQ1N2NhNjExNjgyNTg0NjRiYjExOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODRlNDIwOGNkNmZmYjhjNGEzNTQ3YjJmNTRhZGExOTk3OGMzZjM2NWU3OGY5NTAyZWY1MTQ1Y2RkMmFhODU0MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmY1MDNiY2M3M2QzZjY2M2ZjZTdlZTc4NDIwNzk5NGI2NTNlYWU4NzQ0ZDc4MGRiNGQ5YmE3Zjk0ZjU0MzczZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGZjN2NhOWM5MTFjZWVmMWRhZjQ3ZGI4NjUzMTM0Y2NkY2VkNjY0ZjRkYzFhYzhlN2ViOTNkN2QxMDhkYjQzYiJ9"
         },
         {
@@ -141,12 +141,12 @@
       "statement": "uptime_log records one heartbeat per probe component (api, turso, redis, portal) with status and latency, retained 95 days.",
       "evidence": [
         {
-          "resource": "repo://src/db/init.ts#L62-L68",
-          "version": "repo-lines-v1:sha256:686a6217bbfb3e87a08fe0acafd37cd923005dc52e7a4d29246b00ccb6e042c2:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODAxZmE2MTk1OGUyN2RiYWM4MGI0OTYwZmZjYzJlODU2Mjc2NjZmNDFlNDQ1N2NhNjExNjgyNTg0NjRiYjExOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmRmMjExZmIzNTVhY2EzZWFiZTQwYWViMTI1NGMyNzRlZTNiMWUyOWYxMzNkMGU3NjYyMWMxZTJmZmJkOGY0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWNkZjdiNzU0NjQyOTdmMmIwYzFmZjU1NjU1M2E1NGZlMjBhODQ0MzdiMWQzNmQ2MWE1NWFiOTJkNTllM2FjYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTgzNDYzNTkyZjYwZjNhZjJkNTFjMmE4ZjMyY2VmYzJmMWUyMzFjMTkwMWVjZTcxOTM4OTJjOGNjMGM3NDNkZiJ9"
+          "resource": "repo://src/db/init.ts",
+          "version": "repo-file-v1:sha256:e5cf1b07d111a1ee3444dc51d158ed1395c8fc507f18b8a4905c6450adbf7001"
         },
         {
-          "resource": "repo://src/services/uptime.ts#L56-L77",
-          "version": "repo-lines-v1:sha256:fa627dfac6c8e9ce0367ebb2a5eb71a0720a12061655c38d1f104484cb8f0b1c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NjY1MzE4Nzg2YjcyNGI0N2Y5OTlhOWUzNTkzZmNkYTk0NGRlMWY2YjM5MzE5NGM0YjM3NjQ2YjI4ZmQwNDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYjJkMjk1YjQ2ZTg0Y2ZlY2I5YTFjMTVmMDBlYjdlZmE4YjAyZDViN2QwOTQ3N2RjODVhOGU0MTcyYzUzM2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgwMTkyOWY2YjQzNjNmYTE5YjRlODNmOWQ4MWVlZmFlZGRkOGE1NjkyMWFjYjc0YmY1OGY5NTliYTY1MzMwYTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU5MTEwMWViNTQ0ZTZjMjFhNTE2NjI2NzI0MTMzMTc2MjRiNjdlOGEyMmJlNTRkNzVlNDUyNjIwZDkwZDk5M2UifQ"
+          "resource": "repo://src/services/uptime.ts",
+          "version": "repo-file-v1:sha256:37fabc0a63c3b1ad783f92fc1fb4e8c477a94c6066cf7bae7b52bb2eaf422e17"
         }
       ]
     },
@@ -165,7 +165,7 @@
       "statement": "reports holds the inbox head (status open/answered/resolved, latest admin reply), report_messages is a report's conversation with author user/admin, and report_reads tracks how far each side has read without ever moving a marker backwards.",
       "evidence": [
         {
-          "resource": "repo://src/db/init.ts#L78-L110",
+          "resource": "repo://src/db/init.ts#L79-L111",
           "version": "repo-lines-v1:sha256:ece386c934e83c5ce29adb5c8f500af2291395bf99c8fef3328cc01625512530:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgwMWZhNjE5NThlMjdkYmFjODBiNDk2MGZmY2MyZTg1NjI3NjY2ZjQxZTQ0NTdjYTYxMTY4MjU4NDY0YmIxMTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkZjIxMWZiMzU1YWNhM2VhYmU0MGFlYjEyNTRjMjc0ZWUzYjFlMjlmMTMzZDBlNzY2MjFjMWUyZmZiZDhmNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4NWNmMTI1NmEyNmYzYTFkNTkzYjc2YWNmOTE1ODIzMTM1ZmE1YjNjNTQ5MDBlOGI4NjBiZmVjYzRlYzAwODMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdmZDA3ZmMzNmI4MjIzMjFiOTIzNDc2NjNhZDg3ZTUxYzIzOTA5M2Y4YmQwMTgwNmFkZjU5OWEyMTQyOGIyZWYifQ"
         },
         {
@@ -179,7 +179,7 @@
       "statement": "backfillReportThreads replays legacy opening messages and single admin replies into report_messages and seeds the student read marker, guarded by NOT EXISTS so it is a no-op after the first run.",
       "evidence": [
         {
-          "resource": "repo://src/db/init.ts#L141-L173",
+          "resource": "repo://src/db/init.ts#L143-L175",
           "version": "repo-lines-v1:sha256:9da38234912932f3050d13cd7c1e72f085b2f1147daf39412ff8d685f366f817:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0MWZkODNkYjBhZGY0NTZhMGI1Zjc4ZjQ5NWUyN2Y0YTkzYmQ1OWI5ZGJkY2YwZTk5MmM2NGE3ZGExZTQyOTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMTgyOGM5MWFhNWQzMDNmZGMxNGFmYWM5Y2Q1YWM4NGY1OTFjMTY2MzdiYjYxZWM0ZTg5NTU4MzE1Zjk4NGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
@@ -203,10 +203,34 @@
           "version": "repo-lines-v1:sha256:da91de37bd8ead59e5baea1c29a54b8aef25e23f63ef9826aaa162193adfea95:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3MmE0MjkzODJiMmUxNDcxOGUwZTM3YjA1NzBhOGExNzAyOTkxZmNkODQ5OGNkODQwNjBhOGJmNGYwNTAxN2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUwYjlhYjRiZmVlYjc4NDE1NmRjZWMyYmEzOWMyOTRmM2E1NjIzNDExMmM5ZjMyNjlmNjBlMTI5NjE0NGQwMTUifQ"
         }
       ]
+    },
+    {
+      "id": "claim_5c060fe2db6248ecbdd5cd06145776fd",
+      "statement": "library_documents holds one row per held document with a UNIQUE (code, unit, kind) constraint, and only rows with status live are listed or served.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/library.model.ts",
+          "version": "repo-file-v1:sha256:089b2841dbf0624e3a4f5e7b4879903344e78782505907c5837cef7d94ad961e"
+        }
+      ]
+    },
+    {
+      "id": "claim_96639826c1164c1cb2c35bcb78f8c1ae",
+      "statement": "library_reads stores one row per page served with the user id, document, page and watermark token, and is written fire-and-forget so a failed insert never stops a page.",
+      "evidence": [
+        {
+          "resource": "repo://src/db/library.model.ts",
+          "version": "repo-file-v1:sha256:089b2841dbf0624e3a4f5e7b4879903344e78782505907c5837cef7d94ad961e"
+        },
+        {
+          "resource": "repo://src/services/library/reads.ts",
+          "version": "repo-file-v1:sha256:527cd6d7cc5b1c68c636cc048ad77bad7be44e7171c9e991a93d0749c48f45bc"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.2",
-    "at": "2026-10-15T21:12:57.495Z"
+    "at": "2026-10-24T11:00:48.405Z"
   }
 }

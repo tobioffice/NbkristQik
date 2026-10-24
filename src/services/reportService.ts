@@ -21,10 +21,11 @@ import { getClient } from "./redis/getRedisClient.js";
 import { redisKeys } from "./redis/keys.js";
 import { logger } from "../config/logger.js";
 import { ADMIN_ID } from "../config/environmentals.js";
-import { REPORT_WEBAPP_URL } from "../constants/webapp.js";
-
-const escapeHtml = (text: string): string =>
-  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+import {
+  reportThreadUrl as threadUrl,
+  REPORT_LIST_WEBAPP_URL,
+} from "../constants/webapp.js";
+import { escapeHtml } from "./text.js";
 
 const bot = async (): Promise<import("node-telegram-bot-api") | null> => {
   try {
@@ -35,12 +36,11 @@ const bot = async (): Promise<import("node-telegram-bot-api") | null> => {
   }
 };
 
-/** Deep link straight into one conversation in the reports mini app. */
-export const reportThreadUrl = (issueId: string): string =>
-  `${REPORT_WEBAPP_URL}?issue=${encodeURIComponent(issueId)}`;
+/** Deep link straight into one conversation in the app. */
+export const reportThreadUrl = (issueId: string): string => threadUrl(issueId);
 
 /** Deep link into the reporter's own issue list. */
-export const reportListUrl = (): string => `${REPORT_WEBAPP_URL}?view=reports`;
+export const reportListUrl = (): string => REPORT_LIST_WEBAPP_URL;
 
 export interface ReportSubmission {
   userId: number;

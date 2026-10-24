@@ -5,6 +5,7 @@ import {
   type LibraryDocument,
 } from "../../db/library.model.js";
 import { getStudentCached } from "../redis/utils.js";
+import { canPreviewEverything } from "./access.js";
 import {
   entryYearFromRoll,
   findSubjectName,
@@ -72,6 +73,47 @@ export interface LibrarySubjectUnit {
   unit: string | null;
   pages: number;
 }
+
+/** The student, as the mini app needs them: no internals, no ids. */
+export interface StudentView {
+  rollNo: string;
+  name: string | null;
+  yearSem: string;
+  branch: string;
+  dept: string | null;
+  regulation: string;
+}
+
+/** Projects a resolved student into what the client is told about them. */
+export const studentView = (ctx: StudentContext): StudentView => ({
+  rollNo: ctx.rollNo,
+  name: ctx.name,
+  yearSem: ctx.yearSem,
+  branch: ctx.branch,
+  dept: ctx.dept,
+  regulation: ctx.regulation,
+});
+
+/**
+ * May this student read this document?
+ *
+ * The shelf is our own material, so the rule is the document's own semester:
+ * the reader's department, regulation and year-sem must match the document's.
+ * A document id alone gets nothing.
+ */
+export const mayReadDocument = (
+  ctx: StudentContext,
+  doc: LibraryDocument,
+): boolean => {
+  // the admin previews any live document while the library is theirs
+  if (canPreviewEverything(ctx.userId)) return true;
+  if (!ctx.dept) return false;
+  return (
+    doc.dept === ctx.dept &&
+    doc.regulation === ctx.regulation &&
+    doc.year_sem === ctx.yearSem
+  );
+};
 
 export interface LibrarySubject {
   code: string;

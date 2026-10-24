@@ -1,9 +1,5 @@
 import { useState } from "react";
-
-interface TelegramWebApp {
-  initData?: string;
-  initDataUnsafe?: { user?: { id?: number } };
-}
+import { telegramWebApp } from "./telegram";
 
 /**
  * Shared identity for all webapp API calls: the raw Telegram user id plus
@@ -17,13 +13,23 @@ export const useTelegramIdentity = (): {
 } => {
   const [{ tgUser, initData }] = useState(() => {
     try {
-      const tg = (window as { Telegram?: { WebApp?: TelegramWebApp } }).Telegram
-        ?.WebApp;
+      const tg = telegramWebApp();
       const id = tg?.initDataUnsafe?.user?.id;
-      return {
-        tgUser: id ? String(id) : null,
-        initData: id ? tg?.initData : undefined,
-      };
+      if (id) return { tgUser: String(id), initData: tg?.initData };
+
+      // dev only: `?devUser=123` lets the pages be opened in a browser with a
+      // stand-in identity. The build folds this branch away in production, so
+      // a deployed page can never be talked into believing one.
+      if (import.meta.env.DEV) {
+        const dev = new URLSearchParams(window.location.search).get("devUser");
+        if (dev) {
+          return {
+            tgUser: dev,
+            initData: `auth_date=1&hash=dev&user=${encodeURIComponent(`{"id":${dev}}`)}`,
+          };
+        }
+      }
+      return { tgUser: null, initData: undefined };
     } catch {
       return { tgUser: null, initData: undefined };
     }

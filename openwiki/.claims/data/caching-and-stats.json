@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:edd683a06cdd45cd3d05026342658787c688c213d7f95be3108bc0a184bde77a",
+  "pageVersion": "sha256:921aa9024faeadff58b32ed98768fb80f53dd3c6fe7a06e7433647e02a10944f",
   "claims": [
     {
       "id": "claim_3acc7611e73949be93027ee5211924a4",
@@ -39,7 +39,7 @@
       "statement": "The leaderboard API response is cached in Redis for 60 seconds per query key.",
       "evidence": [
         {
-          "resource": "repo://src/api/server.ts#L109-L132",
+          "resource": "repo://src/api/server.ts#L147-L170",
           "version": "repo-lines-v1:sha256:3261ebe3a96fe91988c9963a3fbbfd9e14101882523ac6053cff4672dd4b6a3b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMyZDA2ZGViOWJkZDVlZGNkNzhkNjM0NjZhYzIxOGZlNDAzNmQ0Y2QzY2E2NmZiMzQ5NzEyN2M1NDkyNjUzZjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5MWM1MjJkYjhmMGM2N2UwZDI1Zjg5ZWViMDEyMTVlZDFhZjIzOTVhZjcwNmIzYmI1OWJiNDNmNjkyNTZiNzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJkYmU3MzIxZDJiYzg2Y2ViMTVjYzdlNWFhMTUzZmRlODdhMjNkMGJkMDQ5MDQ2OWNlNGY0YTc5ODFjZjczNzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcyMTI5YzI3MzUyYjQ5NTU0OGIwNzFhZTM0YWI5MDgxMTcyODczNDI4ZjZmODdmNTRiNTgwZTUxNTNjOWFhMDIifQ"
         }
       ]
@@ -132,15 +132,11 @@
     },
     {
       "id": "claim_e4a13bc5086243dfb4557bdd88319aeb",
-      "statement": "All Redis key names are built by the shared redisKeys module (including the lifetime groupUses counter and the report throttles), and cacheFlushPatterns defines the SCAN globs deleted after /syncdb — groupUses is deliberately excluded so a sync never resets group answers.",
+      "statement": "All Redis key names are built by the shared redisKeys module (including the report throttles and the library session and read keys), and cacheFlushPatterns defines the SCAN globs deleted after /syncdb; library sessions, library reads and the check-in keys are deliberately excluded.",
       "evidence": [
         {
-          "resource": "repo://src/services/redis/keys.ts#L1-L28",
-          "version": "repo-lines-v1:sha256:1de0520ab88ae2aca64ab4a04932a9950b8fd5c554598b397a808b3f0755ec2d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3NGVlOGE4ZDFhYTg0NTM5MWJjNjc5ZWI3MGNlN2Y0NmEzY2Q2ZmIyZDE2ZmNjYTY3ZmExNzhmNGY4YzFlMGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE0NzhhMGM5YTZiMWFjOTgwNmE1Y2NmZjI2NjU1ZWEwMDNlM2ZiMDQ0Zjg5MTFiNTlhZTNjZmZmZDFjMTFiYzEifQ"
-        },
-        {
-          "resource": "repo://src/services/redis/keys.ts#L29-L35",
-          "version": "repo-lines-v1:sha256:31477f0cadd562ded0685ad5a06cfc60e3de0e6597ea5a0d3f2155f42e08aa4e:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjUwZDM4MTZiZjVkYWNiZWFjMDEyNDBiMjI2OWQ1ZmRiMDI1YWI0NmVhZWVjYTBmNzAxOWY5NjhkOGU3MmYwYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmNkYzc2ZDEyZTUzMDRkMzA3OWVkYjVmODkwMDA3ZWEwNWYyMjZlNGQ5M2I2OTU2ODQ2MGNhZmFmODAwNzQ0YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmQwZjgwODUwMjkxMDUzOTkzOTBiYWY4MGM2YzE4NmI2MjI5Y2I1YTc5YzMxYWE1YjJkZWFlOTc0YzY5YTljNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+          "resource": "repo://src/services/redis/keys.ts",
+          "version": "repo-file-v1:sha256:e08c0c81a321911206045caa90b2296fef9b48cc71947f46cd2d525d937d1bf9"
         }
       ]
     },
@@ -187,10 +183,30 @@
           "version": "repo-lines-v1:sha256:0728b1dd2486a891059bc11d92702224a6d489839ae25ebbd781fac3903cfcd7:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjgwNWEzZDVmZGVjNjZmOGE0OGRiNjNjZGNlYWY4YTU2NDliNjY3NzNkMDJjNWU5YjExOWU1MjBjYzU1N2NiMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmMzNmUxOTI2MzViZTFlYjkwNTAxNWEyM2MxOWJmMzUzZjFmNjU5ZmFhZmRkYjk0ZTk1NjEyOGZlYjZiMWExNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTRkOWUxNzBiMjcxMzRmNjU1OWY2MWQwZGZmNzBmODE0ODk4YjhiZmZmZjY0NWVmNGI0YzE5ZWIxNWU3MTc4ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmQwZjgwODUwMjkxMDUzOTkzOTBiYWY4MGM2YzE4NmI2MjI5Y2I1YTc5YzMxYWE1YjJkZWFlOTc0YzY5YTljNyJ9"
         }
       ]
+    },
+    {
+      "id": "claim_1661f808e340495bacc90b21fd2c5ddb",
+      "statement": "Library sessions live under lib:sess:{token} with a 12-hour TTL and are minted, read and dropped by src/services/library/session.ts; a Redis failure on read or drop is logged rather than thrown.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/library/session.ts",
+          "version": "repo-file-v1:sha256:57ab4f1a4ff783d924a7ba642f9639484fd2dc55a27dadf46f26fe10ac04becb"
+        }
+      ]
+    },
+    {
+      "id": "claim_a86cc2d261104a8d8f831a3943aa20d0",
+      "statement": "The library counts pages per reader in a 300-second lib:reads:{userId} window and logs a warning past 300 pages; a Redis failure leaves reading unaffected.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/library/reads.ts",
+          "version": "repo-file-v1:sha256:527cd6d7cc5b1c68c636cc048ad77bad7be44e7171c9e991a93d0749c48f45bc"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.2",
-    "at": "2026-10-15T21:12:57.495Z"
+    "at": "2026-10-24T11:00:48.405Z"
   }
 }

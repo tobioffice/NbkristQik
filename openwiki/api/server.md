@@ -22,15 +22,15 @@ sources:
     resource: repo://src/services/tracker.ts
   - id: openwiki-source-0be99d3f1664956f03d52278
     resource: repo://src/services/uptime.ts
-generated: { by: "opencode", at: "2026-10-15T21:12:57.495Z" }
+generated: { by: "opencode", at: "2026-10-24T11:00:48.405Z" }
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-15T21:12:57.495Z
+    at: 2026-10-24T11:00:48.405Z
 ---
 
 # REST API and Security
 
-The Express app in `src/api/server.ts` is created at module load and started from the bot process (`startServer`, `src/api/server.ts:321`). It serves the public leaderboard API consumed by the Telegram Web App, a per-user rank lookup, the optional profile/registration endpoints, issue reports and their threads, an internal health probe, and the public status page data. Admin routes are mounted first (see [Admin Panel](admin-panel.md)); everything below runs through the shared security middleware.
+The Express app in `src/api/server.ts` is created at module load and started from the bot process (`startServer`). It serves the public leaderboard API consumed by the Telegram Web App, a per-user rank lookup, the optional profile/registration endpoints, issue reports and their threads, the library mini app and its API, an internal health probe, and the public status page data. Admin routes and the library's static bundle are mounted first (see [Admin Panel](admin-panel.md) and [Library API](../library/api.md)); everything below them runs through the shared security middleware.
 
 ## Middleware stack and trust model
 
@@ -38,7 +38,7 @@ The app sets `trust proxy` to `1` (`src/api/server.ts:30`): it runs behind a sin
 
 CORS allows the origins in `CORS_ORIGINS` (`src/config/environmentals.ts:26-30`), a comma-separated list defaulting to `https://tobioffice.github.io` — the GitHub Pages host of the web apps. Override it in `.env` for additional origins (e.g. a local dev origin).
 
-`apiSecurityMiddlewares` (`src/middleware/security.ts`) is applied to all routes after the admin routes:
+`apiSecurityMiddlewares` (`src/middleware/security.ts`) is applied to all routes after the admin routes and the library's static bundle:
 
 1. **`securityLogger`** — logs requests matching suspicious patterns (path traversal, `<script`, `union … select`, `eval(`) against the URL and JSON-stringified body/query, and logs every 429 response on finish.
 2. **`sanitizeInput`** — strips angle brackets from **body** string values only and trims them. It deliberately does not mutate `req.query`: under Express 5, query and params come from getters, so in-place edits are unreliable; query input is constrained by the allowlist validators instead.
@@ -104,7 +104,7 @@ Both endpoints use the same `resolveUserId` identity rules (initData in query or
 
 ### Issue reports and threads
 
-Mounted from `src/api/report.ts` (`src/api/server.ts:56`, `76-77`). Every route is identity-authenticated; the per-IP limits sit on top of per-user throttles in the service:
+Mounted from `src/api/report.ts` (`src/api/server.ts`). Every route is identity-authenticated; the per-IP limits sit on top of per-user throttles in the service:
 
 | Method | Path | Extra limit | Purpose |
 |---|---|---|---|
@@ -114,6 +114,16 @@ Mounted from `src/api/report.ts` (`src/api/server.ts:56`, `76-77`). Every route 
 | `POST` | `/api/thread/:issue` | as above | a follow-up message; `410` once the issue is resolved |
 
 `threadLimit` is deliberately roomier than the report limit: threads are conversation-paced, and the tight per-user 3-second gate lives in the service. `/api/report` never matches `/api/thread`, so the two limits stay independent.
+
+### Library routes
+
+The library is mounted from `src/api/library.ts` under `/api/library`, and its static mini-app bundle is served from `/library` by `express.static` before the global security middleware (`src/api/server.ts`):
+
+- The static mount is skipped with a logged warning when the bundle directory (`public/library`, override `LIBRARY_WEB_DIR`) does not exist, so an API-only deploy still starts.
+- `POST /api/library/session` is capped at 20 requests per hour per IP (`librarySessionLimit`); it is the only way a caller obtains the session cookie.
+- Every other library route rides the global API limit, then checks the session cookie and the reader's registration.
+
+The routes, guards and response shapes are documented in [Library API and Session](../library/api.md).
 
 ### `GET /health`
 
@@ -149,6 +159,7 @@ Note the `turso` component name is historical: the probe runs through the same c
 ## Related pages
 
 - [Admin Panel](admin-panel.md)
+- [Library API and Session](../library/api.md)
 - [Registration and Profile](../registration.md)
 - [Caching and Leaderboard Stats](../data/caching-and-stats.md)
 - [Runtime Architecture](../architecture.md)

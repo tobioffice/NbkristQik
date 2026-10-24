@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:76f6143986a7e9939981ef7de113fd3cd2d7518ea710e6fb5b435262ec90edaa",
+  "claims": [
+    {
+      "id": "claim_523b4d49c84d49c8ba96e338fefce16a",
+      "statement": "LIBRARY_ACCESS defaults to admin and only all opens the library — and the admin preview — to every registered student; the flag is read per request.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/library/access.ts",
+          "version": "repo-file-v1:sha256:8f91b78cab84a72bc70f57e41e807178b49b0e0ea9d28fe30e7b1b61fa558b04"
+        }
+      ]
+    },
+    {
+      "id": "claim_a2e6ba05a58e4acda9fb735cd90fa95b",
+      "statement": "canOpenLibrary allows the admin and, once the library is open, everyone; canPreviewEverything is true only for the admin while the library is closed, which is what shows the whole shelf before students can open it.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/library/access.ts",
+          "version": "repo-file-v1:sha256:8f91b78cab84a72bc70f57e41e807178b49b0e0ea9d28fe30e7b1b61fa558b04"
+        }
+      ]
+    },
+    {
+      "id": "claim_f93a95f4b8dd4a7c9a39a822544dc605",
+      "statement": "resolveStudentContext resolves a Telegram id through the saved registration to the cached student record, deriving year-sem, branch, department and regulation, and returns null when either record is missing.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/library/entitlement.ts",
+          "version": "repo-file-v1:sha256:0fe0bbd75dfe9d73c3e3e43e804a451d6509a89fdf8da403589d5c4872d06926"
+        }
+      ]
+    },
+    {
+      "id": "claim_d033304de3cb4d5db3b06108f644d5e8",
+      "statement": "The shelf lists only documents of the student's own department, regulation and year-sem, grouped one row per college subject code, with the catalogue name falling back to the document title.",
+      "evidence": [
+        {
+          "resource": "repo://src/services/library/entitlement.ts",
+          "version": "repo-file-v1:sha256:0fe0bbd75dfe9d73c3e3e43e804a451d6509a89fdf8da403589d5c4872d06926"
+        }
+      ]
+    },
+    {
+      "id": "claim_49b50dc49a864e7d83af9b41ce325812",
+      "statement": "The source PDFs are never served; readers receive only rendered SVG pages stamped with their watermark token.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/library.ts",
+          "version": "repo-file-v1:sha256:294d1b7fa87ccdba1488fe519c79081ecaa5b3726dbd20cd7d0ff0bb01cff314"
+        },
+        {
+          "resource": "repo://src/tools/ingestLibrary.ts",
+          "version": "repo-file-v1:sha256:a8e368606191a0cf23cb6436cc7915b2e931e1d91fee58d1f0990bd953ed5ee7"
+        }
+      ]
+    },
+    {
+      "id": "claim_1dd982e9813247c0b18bab2536863bb1",
+      "statement": "The library is configured by LIBRARY_ACCESS, LIBRARY_WATERMARK_SECRET, LIBRARY_DATA_DIR, LIBRARY_CATALOG_PATH and LIBRARY_WEB_DIR, all with the documented defaults.",
+      "evidence": [
+        {
+          "resource": "repo://src/api/server.ts",
+          "version": "repo-file-v1:sha256:7dffe4a84c71ef4e1b21eb4d43b914175e02c4246f65f1f233c4a8a10c2f0d13"
+        },
+        {
+          "resource": "repo://src/config/environmentals.ts",
+          "version": "repo-file-v1:sha256:b43b78c9537ced9d2084228dd6cce535e31e01df6ec1d66fe09e5871577c4200"
+        },
+        {
+          "resource": "repo://src/services/library/access.ts",
+          "version": "repo-file-v1:sha256:8f91b78cab84a72bc70f57e41e807178b49b0e0ea9d28fe30e7b1b61fa558b04"
+        },
+        {
+          "resource": "repo://src/services/library/catalog.ts",
+          "version": "repo-file-v1:sha256:607db4e5a090ba44e0de4b567dd897ce5e1fcf4a20a283ade351a2bc3cb86c47"
+        },
+        {
+          "resource": "repo://src/services/library/paths.ts",
+          "version": "repo-file-v1:sha256:4e1e8626d498d2b4d7e01a9df3a4225e0f6024f5682b4e58297d989f4dcc3540"
+        }
+      ]
+    },
+    {
+      "id": "claim_0354d79655654b44b02b2f9a5d7c997a",
+      "statement": "/library is admin-only while the library is closed and sends a web_app button in private chats (a plain URL in groups) into the app's #/library route; the same entry is reachable through the ?start=library deep link.",
+      "evidence": [
+        {
+          "resource": "repo://src/bot/commands/library.ts",
+          "version": "repo-file-v1:sha256:87a4849a594c2741dc657b38af265a1a81badf4e6fecaeb97fcd9694487f76e0"
+        },
+        {
+          "resource": "repo://src/constants/webapp.ts",
+          "version": "repo-file-v1:sha256:4bb97e4a2d3d2f3069b1560ed614fb7669664b45c008a82bdc6838706b6f5b28"
+        }
+      ]
+    },
+    {
+      "id": "claim_a18dc74335ee4c64948d10cd67ae43ff",
+      "statement": "The library is a section of the app at #/library: LibraryView renders the shelf, units and reader inside the shell, publishes the ready-subject count into the band stamp, and asks the shell to hide its chrome while the reader is open.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/AppShell.tsx",
+          "version": "repo-file-v1:sha256:6a2a4785e98b9fa18d54bc8b446caf3d36b944f4e0d6d8cab3cc333bc34a7664"
+        },
+        {
+          "resource": "repo://src/web/src/views/LibraryView.tsx",
+          "version": "repo-file-v1:sha256:061cd8b78687ed9b19b880479a8d76480b1c5460fa8ebd38d807cb3e11e7740f"
+        }
+      ]
+    },
+    {
+      "id": "claim_e19904d9990e45e58df0f016a33b9fbf",
+      "statement": "A session refused with 'The library is not open yet.' becomes a calm closed-shelf state in useLibrary and is rendered as 'The library opens soon' with a Check again button, not as an error.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/useLibrary.ts",
+          "version": "repo-file-v1:sha256:94aad39d393a2c0581dc89074d53c501fabc5d43c526d7c6f0dfe98293743ce1"
+        },
+        {
+          "resource": "repo://src/web/src/views/LibraryView.tsx",
+          "version": "repo-file-v1:sha256:061cd8b78687ed9b19b880479a8d76480b1c5460fa8ebd38d807cb3e11e7740f"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-24T11:41:29.189Z"
+  }
+}

@@ -92,6 +92,9 @@ const toDocument = (row: Record<string, unknown>): LibraryDocument => ({
   version: Number(row.version ?? 1),
 });
 
+const toDocuments = (rows: Record<string, unknown>[]): LibraryDocument[] =>
+  rows.map(toDocument);
+
 /** Inserts or replaces a document row. */
 export const upsertLibraryDocument = async (
   doc: LibraryDocument,
@@ -138,30 +141,6 @@ export const getLibraryDocument = async (
   return row ? toDocument(row as Record<string, unknown>) : null;
 };
 
-/** The live documents for a list of subject codes, keyed by code. */
-export const getDocumentsByCodes = async (
-  codes: string[],
-): Promise<Map<string, LibraryDocument[]>> => {
-  const byCode = new Map<string, LibraryDocument[]>();
-  if (codes.length === 0) return byCode;
-
-  const placeholders = codes.map(() => "?").join(",");
-  const result = await turso.execute({
-    sql: `SELECT * FROM library_documents
-          WHERE code IN (${placeholders}) AND status = 'live'
-          ORDER BY code, unit`,
-    args: codes,
-  });
-
-  for (const row of result.rows) {
-    const doc = toDocument(row as Record<string, unknown>);
-    const list = byCode.get(doc.code) ?? [];
-    list.push(doc);
-    byCode.set(doc.code, list);
-  }
-  return byCode;
-};
-
 /** The live documents of one department, regulation and year-sem. */
 export const listLiveDocumentsForSemester = async (
   dept: string,
@@ -174,7 +153,7 @@ export const listLiveDocumentsForSemester = async (
           ORDER BY code, unit`,
     args: [dept, regulation, yearSem],
   });
-  return result.rows.map((row) => toDocument(row as Record<string, unknown>));
+  return toDocuments(result.rows as Record<string, unknown>[]);
 };
 
 /**
@@ -189,7 +168,7 @@ export const listLiveLibraryDocuments = async (): Promise<
   const result = await turso.execute(
     `SELECT * FROM library_documents WHERE status = 'live' ORDER BY code, unit`,
   );
-  return result.rows.map((row) => toDocument(row as Record<string, unknown>));
+  return toDocuments(result.rows as Record<string, unknown>[]);
 };
 
 /** Records one page delivery. Fire and forget. */
@@ -228,17 +207,4 @@ export const findReadsByToken = async (
     at: String(row.at ?? ""),
     count: Number(row.n ?? 0),
   }));
-};
-
-/** How many pages one student has pulled since a timestamp. */
-export const countLibraryReadsSince = async (
-  userId: string,
-  sinceIso: string,
-): Promise<number> => {
-  const result = await turso.execute({
-    sql: `SELECT COUNT(*) AS n FROM library_reads
-          WHERE user_id = ? AND at >= ?`,
-    args: [userId, sinceIso],
-  });
-  return Number(result.rows[0]?.n ?? 0);
 };

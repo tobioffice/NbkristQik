@@ -5,7 +5,7 @@ description: Private password-protected admin dashboard for bot activity trackin
 tags: [admin, dashboard, authentication, activity-tracking, uptime]
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-15T21:12:57.495Z
+    at: 2026-10-24T11:00:48.405Z
 sources:
   - id: openwiki-source-ea1d2fdd0d2b68c1b024e6f6
     resource: repo://src/api/admin/auth.ts

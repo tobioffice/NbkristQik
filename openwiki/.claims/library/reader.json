@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:0727e932ac29711291848fe2559c74e26dee12bbad7a3aeed29b35eaf8703e7a",
+  "claims": [
+    {
+      "id": "claim_10308598c2c54222a535c3e858c41003",
+      "statement": "The reader keeps at most twelve pages: wanted pages come from an IntersectionObserver with a 120% root margin, pages outside the wanted set are dropped with their object URLs revoked, and a page in view is never dropped.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/usePageWindow.ts",
+          "version": "repo-file-v1:sha256:ce31106ecece46e681d27afad8a722427b73883306a9461b63b4b9d9e6f23e9c"
+        },
+        {
+          "resource": "repo://src/web/src/views/DocumentReader.tsx",
+          "version": "repo-file-v1:sha256:2f3c3c619fcf18b681778372ee2ab040ed9fc52f54c12d2bfc12ac7688d390e6"
+        }
+      ]
+    },
+    {
+      "id": "claim_8184b99c31e6416d9f4bd5e8c8ae8b5b",
+      "statement": "Each page is fetched once with one retry after 700 ms and a 15-second render timeout; a failed page stays tappable and a tap retries it.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/usePageWindow.ts",
+          "version": "repo-file-v1:sha256:ce31106ecece46e681d27afad8a722427b73883306a9461b63b4b9d9e6f23e9c"
+        },
+        {
+          "resource": "repo://src/web/src/views/DocumentReader.tsx",
+          "version": "repo-file-v1:sha256:2f3c3c619fcf18b681778372ee2ab040ed9fc52f54c12d2bfc12ac7688d390e6"
+        }
+      ]
+    },
+    {
+      "id": "claim_1f65c77956d34932bc4661d42178d81e",
+      "statement": "Hiding the document releases every held page, so the Telegram app switcher cannot keep a readable snapshot.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/usePageWindow.ts",
+          "version": "repo-file-v1:sha256:ce31106ecece46e681d27afad8a722427b73883306a9461b63b4b9d9e6f23e9c"
+        },
+        {
+          "resource": "repo://src/web/src/views/DocumentReader.tsx",
+          "version": "repo-file-v1:sha256:2f3c3c619fcf18b681778372ee2ab040ed9fc52f54c12d2bfc12ac7688d390e6"
+        }
+      ]
+    },
+    {
+      "id": "claim_626961033f464de3bf90ed74afe1532a",
+      "statement": "A page box takes its A4 aspect ratio before the page arrives, shows a skeleton with its page number, and hides the skeleton once the SVG draws because the page is transparent where the PDF has no ink.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/index.css",
+          "version": "repo-file-v1:sha256:ea7db2622efb37d32125eee5f6a9528ff226adab34e9b9e4eea98b3a853ef3b4"
+        },
+        {
+          "resource": "repo://src/web/src/reader/ReaderPage.tsx",
+          "version": "repo-file-v1:sha256:566285b7b744df417a734308b105e844dd77006806be6141c690b57e00151f2a"
+        },
+        {
+          "resource": "repo://src/web/src/usePageWindow.ts",
+          "version": "repo-file-v1:sha256:ce31106ecece46e681d27afad8a722427b73883306a9461b63b4b9d9e6f23e9c"
+        }
+      ]
+    },
+    {
+      "id": "claim_5dc564509a2d4486be0432a9d9a18220",
+      "statement": "The zoom lives in a ref and is written to the column as a --zoom custom property so a pinch does not re-render the page list; only the printed label is React state.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/reader/useReaderViewport.ts",
+          "version": "repo-file-v1:sha256:849bd04f02e43e24dcf6dbe717affef10e0d1841a5c08bc50ef28565b83f77a4"
+        }
+      ]
+    },
+    {
+      "id": "claim_ff29cc1b58b943ebbc16b80eecd80e0d",
+      "statement": "applyZoom holds the point under the finger still by measuring it in fit-width pixels, then scrolling by the distance the point travelled back to the focal point.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/reader/useReaderViewport.ts",
+          "version": "repo-file-v1:sha256:849bd04f02e43e24dcf6dbe717affef10e0d1841a5c08bc50ef28565b83f77a4"
+        },
+        {
+          "resource": "repo://src/web/src/zoom.ts",
+          "version": "repo-file-v1:sha256:29723faa1e811335b1e74eff62350c81d0550052e90f80f26d43fafcd56dac12"
+        }
+      ]
+    },
+    {
+      "id": "claim_549b1fe6f15242338d4bbd94a8542181",
+      "statement": "Which page sits at the middle of the screen is computed from the top of page one and the step between page one and page two, not by walking the page elements.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/pagePosition.ts",
+          "version": "repo-file-v1:sha256:0c52435993f34c5dd2bdc29a80c91d534a8ee11a259ea6c30e67546664d2bc4c"
+        },
+        {
+          "resource": "repo://src/web/src/reader/useReaderViewport.ts",
+          "version": "repo-file-v1:sha256:849bd04f02e43e24dcf6dbe717affef10e0d1841a5c08bc50ef28565b83f77a4"
+        }
+      ]
+    },
+    {
+      "id": "claim_0e1de79c9912433aa434e13253e6dc57",
+      "statement": "Gestures are attached natively: a two-finger pinch anywhere on the reader, a double tap within 400 ms and 48 px on the pages only, ctrl/cmd wheel zoom, and a mouse double click ignored for 500 ms after a touch.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/reader/useReaderGestures.ts",
+          "version": "repo-file-v1:sha256:4e3f05b0d841e9f5de1d8ad3033040788ecce28a8afddf4a840cace8a625b56b"
+        }
+      ]
+    },
+    {
+      "id": "claim_57cd03b37c6945708ef72448113b9eae",
+      "statement": "The reader keeps its position per document in sessionStorage under nbk:read:{docId} and restores anything past page one on open.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/views/DocumentReader.tsx",
+          "version": "repo-file-v1:sha256:2f3c3c619fcf18b681778372ee2ab040ed9fc52f54c12d2bfc12ac7688d390e6"
+        }
+      ]
+    },
+    {
+      "id": "claim_d8f1ae01ab26482d878f967c436cc30b",
+      "statement": "The reader registers on the app's back-button stack while mounted, so the Telegram arrow closes it first; the button hides when the stack is empty and outside Telegram there is nothing to wire.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/backButton.ts",
+          "version": "repo-file-v1:sha256:873b8f4e1c4b4535609c88ed1a1339e3d2da1cd69c1f97afc2db08d786cc86b9"
+        },
+        {
+          "resource": "repo://src/web/src/telegram.ts",
+          "version": "repo-file-v1:sha256:3a5bc28e927043c9921efec700e39faef1bec391c10ed4b24e9d0064f33a9710"
+        }
+      ]
+    },
+    {
+      "id": "claim_bcded6d05a1340599fbaf700ad15c349",
+      "statement": "The shelf renders inside the app shell's page head instead of drawing its own band, publishes its ready-subject count into the band stamp, and asks the shell to hide its chrome while the reader is open; useLibrary exposes retry so the closed, error and roll-form states all re-run the session and shelf pair.",
+      "evidence": [
+        {
+          "resource": "repo://src/web/src/AppShell.tsx",
+          "version": "repo-file-v1:sha256:6a2a4785e98b9fa18d54bc8b446caf3d36b944f4e0d6d8cab3cc333bc34a7664"
+        },
+        {
+          "resource": "repo://src/web/src/useLibrary.ts",
+          "version": "repo-file-v1:sha256:94aad39d393a2c0581dc89074d53c501fabc5d43c526d7c6f0dfe98293743ce1"
+        },
+        {
+          "resource": "repo://src/web/src/views/LibraryView.tsx",
+          "version": "repo-file-v1:sha256:061cd8b78687ed9b19b880479a8d76480b1c5460fa8ebd38d807cb3e11e7740f"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-24T11:41:29.189Z"
+  }
+}

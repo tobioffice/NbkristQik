@@ -1,4 +1,4 @@
-import { Request, Response, Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { existsSync } from "fs";
 import path from "path";
 import { verifyInitData } from "../services/telegramAuth.js";
@@ -20,18 +20,18 @@ import {
 import {
   listAllLiveSubjects,
   listSubjectsForStudent,
+  mayReadDocument,
   resolveStudentContext,
+  studentView,
   type StudentContext,
 } from "../services/library/entitlement.js";
 import {
   getLibraryDocument,
-  recordLibraryRead,
   type LibraryDocument,
 } from "../db/library.model.js";
 import { documentPagesDir, pageFileName } from "../services/library/paths.js";
 import { stampPage, watermarkToken } from "../services/library/watermark.js";
-import { getClient } from "../services/redis/getRedisClient.js";
-import { redisKeys } from "../services/redis/keys.js";
+import { notePageRead, watchForBurst } from "../services/library/reads.js";
 
 /**
  * The library API.
@@ -42,6 +42,8 @@ import { redisKeys } from "../services/redis/keys.js";
  *     one. Opening the URL in a browser gets nothing.
  *   - the caller must be registered. A session without a roll number sees no
  *     subjects, and the app asks for the roll instead.
+ *
+ * Both are checked by the two helpers below, so no route can forget one.
  */
 
 export const libraryRouter = Router();
@@ -62,6 +64,12 @@ const clearSessionCookie = (res: Response): void => {
   res.clearCookie(LIBRARY_SESSION_COOKIE, { path: "/" });
 };
 
+/** Answers with an error status and returns null, for the guards below. */
+const refuse = (res: Response, status: number, error: string): null => {
+  res.status(status).json({ ok: false, error });
+  return null;
+};
+
 interface AuthedSession {
   userId: string;
   token: string;
@@ -75,17 +83,56 @@ const requireSession = async (
   const token = readCookie(req.headers.cookie, LIBRARY_SESSION_COOKIE);
   const session = await readSession(token);
   if (!session || !token) {
-    res
-      .status(401)
-      .json({ ok: false, error: "Open the library from Telegram" });
+    refuse(res, 401, "Open the library from Telegram");
     return null;
   }
   // a session made before the library was closed must not outlive the close
   if (!canOpenLibrary(session.userId)) {
-    res.status(403).json({ ok: false, error: "The library is not open yet." });
+    refuse(res, 403, "The library is not open yet.");
     return null;
   }
   return { userId: session.userId, token };
+};
+
+/** Resolves the reader, or answers 403 and returns null. */
+const requireStudent = async (
+  res: Response,
+  userId: string,
+): Promise<StudentContext | null> => {
+  const ctx = await resolveStudentContext(userId);
+  if (!ctx) {
+    res.status(403).json({
+      ok: false,
+      registered: false,
+      error: "Save your roll number first.",
+    });
+    return null;
+  }
+  return ctx;
+};
+
+/**
+ * Loads the document this student asked for, or answers and returns null.
+ *
+ * A document that is missing, not live, or not of the reader's own semester
+ * is refused here, so the page route cannot serve a page the reader may not
+ * open.
+ */
+const requireReadableDocument = async (
+  res: Response,
+  ctx: StudentContext,
+  id: string,
+): Promise<LibraryDocument | null> => {
+  const doc = await getLibraryDocument(String(id));
+  if (!doc || doc.status !== "live") {
+    refuse(res, 404, "That document is not here.");
+    return null;
+  }
+  if (!mayReadDocument(ctx, doc)) {
+    refuse(res, 403, "That subject is not yours.");
+    return null;
+  }
+  return doc;
 };
 
 // POST /api/library/session — swap Telegram's signed initData for a cookie
@@ -95,18 +142,13 @@ libraryRouter.post("/session", async (req: Request, res: Response) => {
       typeof req.body?.initData === "string" ? req.body.initData : "";
     const user = verifyInitData(initData);
     if (!user) {
-      res.status(401).json({
-        ok: false,
-        error: "This page only works inside the NbkristQik bot.",
-      });
+      refuse(res, 401, "This page only works inside the NbkristQik bot.");
       return;
     }
 
     // the library is the admin's until the shelf is filled
     if (!canOpenLibrary(user.id)) {
-      res
-        .status(403)
-        .json({ ok: false, error: "The library is not open yet." });
+      refuse(res, 403, "The library is not open yet.");
       return;
     }
 
@@ -123,20 +165,11 @@ libraryRouter.post("/session", async (req: Request, res: Response) => {
     res.json({
       ok: true,
       registered: Boolean(ctx),
-      student: ctx
-        ? {
-            rollNo: ctx.rollNo,
-            name: ctx.name,
-            yearSem: ctx.yearSem,
-            branch: ctx.branch,
-            dept: ctx.dept,
-            regulation: ctx.regulation,
-          }
-        : null,
+      student: ctx ? studentView(ctx) : null,
     });
   } catch (e) {
     logger.error("[library] session exchange failed:", e);
-    res.status(500).json({ ok: false, error: "Could not start a session" });
+    refuse(res, 500, "Could not start a session");
   }
 });
 
@@ -157,16 +190,7 @@ libraryRouter.get("/me", async (req: Request, res: Response) => {
   res.json({
     ok: true,
     registered: Boolean(ctx),
-    student: ctx
-      ? {
-          rollNo: ctx.rollNo,
-          name: ctx.name,
-          yearSem: ctx.yearSem,
-          branch: ctx.branch,
-          dept: ctx.dept,
-          regulation: ctx.regulation,
-        }
-      : null,
+    student: ctx ? studentView(ctx) : null,
   });
 });
 
@@ -175,15 +199,8 @@ libraryRouter.get("/subjects", async (req: Request, res: Response) => {
   const auth = await requireSession(req, res);
   if (!auth) return;
 
-  const ctx = await resolveStudentContext(auth.userId);
-  if (!ctx) {
-    res.status(403).json({
-      ok: false,
-      registered: false,
-      error: "Save your roll number first.",
-    });
-    return;
-  }
+  const ctx = await requireStudent(res, auth.userId);
+  if (!ctx) return;
 
   // the admin's preview shows the whole shelf, not just their own semester;
   // ?view=roll answers with exactly what the registered roll would see
@@ -192,59 +209,26 @@ libraryRouter.get("/subjects", async (req: Request, res: Response) => {
   const subjects = preview
     ? await listAllLiveSubjects()
     : await listSubjectsForStudent(ctx);
+
   res.json({
     ok: true,
     admin,
     preview,
-    student: {
-      rollNo: ctx.rollNo,
-      name: ctx.name,
-      yearSem: ctx.yearSem,
-      dept: ctx.dept,
-      regulation: ctx.regulation,
-    },
+    student: studentView(ctx),
     subjects,
   });
 });
-
-/**
- * May this student read this document?
- *
- * The shelf is our own material, so the rule is the document's own semester:
- * the reader's department, regulation and year-sem must match the document's.
- * A document id alone gets nothing.
- */
-const mayRead = (ctx: StudentContext, doc: LibraryDocument): boolean => {
-  // the admin previews any live document while the library is theirs
-  if (canPreviewEverything(ctx.userId)) return true;
-  if (!ctx.dept) return false;
-  return (
-    doc.dept === ctx.dept &&
-    doc.regulation === ctx.regulation &&
-    doc.year_sem === ctx.yearSem
-  );
-};
 
 // GET /api/library/document/:id — what is in a document, and may I read it
 libraryRouter.get("/document/:id", async (req: Request, res: Response) => {
   const auth = await requireSession(req, res);
   if (!auth) return;
 
-  const ctx = await resolveStudentContext(auth.userId);
-  if (!ctx) {
-    res.status(403).json({ ok: false, error: "Save your roll number first." });
-    return;
-  }
+  const ctx = await requireStudent(res, auth.userId);
+  if (!ctx) return;
 
-  const doc = await getLibraryDocument(String(req.params.id));
-  if (!doc || doc.status !== "live") {
-    res.status(404).json({ ok: false, error: "That document is not here." });
-    return;
-  }
-  if (!mayRead(ctx, doc)) {
-    res.status(403).json({ ok: false, error: "That subject is not yours." });
-    return;
-  }
+  const doc = await requireReadableDocument(res, ctx, req.params.id);
+  if (!doc) return;
 
   res.json({
     ok: true,
@@ -259,52 +243,26 @@ libraryRouter.get("/document/:id", async (req: Request, res: Response) => {
   });
 });
 
-/**
- * Counts pages per student over a short window, so a bulk pull
- * stands out. Best effort: if Redis is down the reading still works.
- */
-const countRecentPages = async (userId: string): Promise<number> => {
-  try {
-    const client = await getClient();
-    const key = redisKeys.libraryReads(userId);
-    const count = await client.incr(key);
-    if (count === 1) await client.expire(key, 300);
-    return count;
-  } catch {
-    return 0;
-  }
-};
-
 // GET /api/library/page/:id/:page — one page, stamped with the reader's id
 libraryRouter.get("/page/:id/:page", async (req: Request, res: Response) => {
   const auth = await requireSession(req, res);
   if (!auth) return;
 
-  const ctx = await resolveStudentContext(auth.userId);
-  if (!ctx) {
-    res.status(403).json({ ok: false, error: "Save your roll number first." });
-    return;
-  }
+  const ctx = await requireStudent(res, auth.userId);
+  if (!ctx) return;
 
-  const doc = await getLibraryDocument(String(req.params.id));
-  if (!doc || doc.status !== "live") {
-    res.status(404).json({ ok: false, error: "That document is not here." });
-    return;
-  }
-  if (!mayRead(ctx, doc)) {
-    res.status(403).json({ ok: false, error: "That subject is not yours." });
-    return;
-  }
+  const doc = await requireReadableDocument(res, ctx, req.params.id);
+  if (!doc) return;
 
   const page = Number(req.params.page);
   if (!Number.isInteger(page) || page < 1 || page > doc.page_count) {
-    res.status(400).json({ ok: false, error: "No such page." });
+    refuse(res, 400, "No such page.");
     return;
   }
 
   const file = path.join(documentPagesDir(doc.id), pageFileName(page));
   if (!existsSync(file)) {
-    res.status(404).json({ ok: false, error: "No such page." });
+    refuse(res, 404, "No such page.");
     return;
   }
 
@@ -324,14 +282,6 @@ libraryRouter.get("/page/:id/:page", async (req: Request, res: Response) => {
   res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
   res.send(stamped);
 
-  void recordLibraryRead(auth.userId, doc.id, page, token).catch((e) =>
-    logger.warn("[library] could not record a read:", e),
-  );
-
-  const recent = await countRecentPages(auth.userId);
-  if (recent > 300) {
-    logger.warn(
-      `[library] user ${auth.userId} pulled ${recent} pages in five minutes`,
-    );
-  }
+  notePageRead(auth.userId, doc.id, page, token);
+  await watchForBurst(auth.userId);
 });

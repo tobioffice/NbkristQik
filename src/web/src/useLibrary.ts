@@ -6,9 +6,14 @@ import {
   type LibrarySubject,
 } from "./libraryApi";
 
+/** What the shelf view can ask the server for. */
+export type LibraryView = "all" | "roll";
+
 export type LibraryStatus =
   | { state: "loading" }
   | { state: "unregistered" }
+  /** The shelf is still the admin's: the API refuses every other account. */
+  | { state: "closed" }
   | {
       state: "ready";
       student: LibraryStudent;
@@ -23,17 +28,16 @@ export type LibraryStatus =
 /**
  * Library data layer.
  *
- * `attempt` re-runs the load: the retry button and the roll-number form both
- * bump it, so the fetch always starts from the effect.
+ * One request pair: open the session, then read the shelf. `retry` re-runs
+ * both — the retry button, the roll-number form and the admin's view switch
+ * all start from the session, because a session can have gone stale between
+ * two looks at the shelf.
  */
-export type LibraryView = "all" | "roll";
-
 export const useLibrary = (
-  initData: string | undefined,
+  initData: string,
 ): {
   status: LibraryStatus;
   retry: () => void;
-  view: LibraryView;
   setView: (view: LibraryView) => void;
 } => {
   const [status, setStatus] = useState<LibraryStatus>({ state: "loading" });
@@ -41,35 +45,40 @@ export const useLibrary = (
   const [view, setView] = useState<LibraryView>("all");
 
   useEffect(() => {
-    if (!initData) return;
     let cancelled = false;
 
-    openLibrarySession(initData)
-      .then((session) => {
-        if (cancelled) return null;
-        if (!session.registered || !session.student) {
-          setStatus({ state: "unregistered" });
-          return null;
-        }
-        return fetchLibrarySubjects(view).then((list) => {
-          if (cancelled) return;
-          setStatus({
-            state: "ready",
-            student: session.student as LibraryStudent,
-            subjects: list.subjects ?? [],
-            admin: list.admin === true,
-            preview: list.preview === true,
-          });
-        });
-      })
-      .catch((e) => {
-        if (cancelled) return;
-        setStatus({
-          state: "error",
-          message:
-            e instanceof Error ? e.message : "Could not open the library",
-        });
+    const load = async () => {
+      const session = await openLibrarySession(initData);
+      if (cancelled) return;
+
+      if (!session.registered || !session.student) {
+        setStatus({ state: "unregistered" });
+        return;
+      }
+
+      const shelf = await fetchLibrarySubjects(view);
+      if (cancelled) return;
+
+      setStatus({
+        state: "ready",
+        student: session.student,
+        subjects: shelf.subjects ?? [],
+        admin: shelf.admin === true,
+        preview: shelf.preview === true,
       });
+    };
+
+    load().catch((e) => {
+      if (cancelled) return;
+      const message =
+        e instanceof Error ? e.message : "Could not open the library";
+      // a closed shelf is not a fault: it is simply not open yet
+      if (/not open yet/i.test(message)) {
+        setStatus({ state: "closed" });
+        return;
+      }
+      setStatus({ state: "error", message });
+    });
 
     return () => {
       cancelled = true;
@@ -78,8 +87,7 @@ export const useLibrary = (
 
   return {
     status,
-    retry: () => setAttempt((n) => n + 1),
-    view,
+    retry: () => setAttempt((count) => count + 1),
     setView,
   };
 };

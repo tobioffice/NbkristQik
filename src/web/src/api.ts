@@ -1,3 +1,5 @@
+import { readJson } from "./http";
+
 // Centralized API origin. Dev builds default to same-origin so the vite
 // proxy forwards /api to the local backend; prod builds need the real origin.
 export const API_BASE =
@@ -109,16 +111,8 @@ export const registerRoll = async (req: RegisterRequest): Promise<void> => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
   });
-  const body = (await res.json().catch(() => ({}))) as {
-    ok?: boolean;
-    error?: string;
-    suggestions?: string[];
-  };
-  if (!res.ok) {
-    const err = new Error(body.error ?? `register failed: ${res.status}`);
-    (err as Error & { suggestions?: string[] }).suggestions = body.suggestions;
-    throw err;
-  }
+  // the body is only wanted for the error it may carry
+  await readJson(res);
 };
 
 // ---------- issue reports ----------
