@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useReaderViewport } from "../reader/useReaderViewport";
 import { useReaderGestures } from "../reader/useReaderGestures";
 import { useBackHandler } from "../backButton";
@@ -40,9 +40,22 @@ export default function DocumentReader({
   onClose,
 }: DocumentReaderProps) {
   const viewport = useReaderViewport(pages);
-  const pageWindow = usePageWindow(docId);
   const [current, setCurrent] = useState(1);
   const [failed, setFailed] = useState<Set<number>>(() => new Set());
+  const [loaded, setLoaded] = useState<Set<number>>(() => new Set());
+
+  /** A page whose image has drawn stops showing its skeleton. */
+  const markDrawn = useCallback((page: number, drawn: boolean) => {
+    setLoaded((previous) => {
+      if (drawn === previous.has(page)) return previous;
+      const next = new Set(previous);
+      if (drawn) next.add(page);
+      else next.delete(page);
+      return next;
+    });
+  }, []);
+
+  const pageWindow = usePageWindow(docId, markDrawn);
 
   const { columnRef, pageAtMiddle, setPlaceholder, jumpTo } = viewport;
 
@@ -90,22 +103,24 @@ export default function DocumentReader({
   );
 
   // which pages are wanted, and what to draw
+  const onScreen = useRef<Set<number>>(new Set());
   useEffect(() => {
-    const onScreen = new Set<number>();
+    const visible = onScreen.current;
+    visible.clear();
 
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           const page = Number((entry.target as HTMLElement).dataset.page);
           if (!page) continue;
-          if (entry.isIntersecting) onScreen.add(page);
-          else onScreen.delete(page);
+          if (entry.isIntersecting) visible.add(page);
+          else visible.delete(page);
         }
 
         // the window holds what is on screen, and lets go of what is not
-        pageWindow.setWanted(new Set(onScreen));
+        pageWindow.setWanted(new Set(visible));
 
-        for (const page of onScreen) draw(page);
+        for (const page of visible) draw(page);
         setCurrent(pageAtMiddle());
       },
       {
@@ -160,11 +175,22 @@ export default function DocumentReader({
   // the Telegram app switcher must not keep a readable snapshot of the page
   useEffect(() => {
     const onVisibility = () => {
-      if (document.visibilityState === "hidden") pageWindow.releaseAll();
+      if (document.visibilityState === "hidden") {
+        pageWindow.releaseAll();
+        return;
+      }
+
+      // Coming back, the pages that were let go do not redraw by themselves:
+      // nothing moved, so the observer has nothing to report, and the reader
+      // sits in front of a screen of skeletons until it is scrolled.
+      const again = new Set(onScreen.current);
+      pageWindow.setWanted(again);
+      for (const page of again) draw(page);
+      setCurrent(pageAtMiddle());
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
-  }, [pageWindow]);
+  }, [pageWindow, draw, pageAtMiddle]);
 
   /**
    * The pages.
@@ -180,12 +206,13 @@ export default function DocumentReader({
           key={page}
           page={page}
           failed={failed.has(page)}
+          loaded={loaded.has(page)}
           onRetry={retry}
           onBox={setPlaceholder}
           onImage={attachImage}
         />
       )),
-    [pages, failed, retry, setPlaceholder, attachImage],
+    [pages, failed, loaded, retry, setPlaceholder, attachImage],
   );
 
   const progress = pages > 1 ? (current - 1) / (pages - 1) : 0;

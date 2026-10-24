@@ -14,6 +14,8 @@ import { PAGE_RATIO } from "../pagePosition";
 interface ReaderPageProps {
   page: number;
   failed: boolean;
+  /** True once the page image has drawn: the skeleton steps aside. */
+  loaded: boolean;
   onRetry: (page: number) => void;
   onBox: (page: number, element: HTMLDivElement | null) => void;
   onImage: (page: number, element: HTMLImageElement | null) => void;
@@ -22,12 +24,15 @@ interface ReaderPageProps {
 const ReaderPage = ({
   page,
   failed,
+  loaded,
   onRetry,
   onBox,
   onImage,
 }: ReaderPageProps) => (
   <div
-    className={`reader__page${failed ? " reader__page--failed" : ""}`}
+    className={`reader__page${failed ? " reader__page--failed" : ""}${
+      loaded ? " reader__page--loaded" : ""
+    }`}
     data-page={page}
     ref={(element) => onBox(page, element)}
     style={{ aspectRatio: `1 / ${PAGE_RATIO}` }}

@@ -70,7 +70,16 @@ const waitForRender = (
     image.addEventListener("error", fail);
   });
 
-export const usePageWindow = (docId: string): PageWindow => {
+/**
+ * `onDrawn` is how the reader learns that a page's box should stop showing its
+ * skeleton, and start again when the page is let go. The class is not written
+ * straight onto the box: the box is React's, and a later re-render would drop
+ * a class set behind its back — the skeleton then sat over a drawn page.
+ */
+export const usePageWindow = (
+  docId: string,
+  onDrawn?: (page: number, drawn: boolean) => void,
+): PageWindow => {
   const held = useRef(new Map<number, HeldPage>());
   const inflight = useRef(new Set<number>());
   const images = useRef(new Map<number, HTMLImageElement>());
@@ -84,17 +93,18 @@ export const usePageWindow = (docId: string): PageWindow => {
    * has to draw again — the browser has nothing left to show, and a blank
    * sheet with no loading state reads as a broken document.
    */
-  const forget = useCallback((page: number) => {
-    const entry = held.current.get(page);
-    if (entry) URL.revokeObjectURL(entry.url);
-    held.current.delete(page);
+  const forget = useCallback(
+    (page: number) => {
+      const entry = held.current.get(page);
+      if (entry) URL.revokeObjectURL(entry.url);
+      held.current.delete(page);
 
-    const image = images.current.get(page);
-    if (image) {
-      image.removeAttribute("src");
-      image.closest(".reader__page")?.classList.remove("reader__page--loaded");
-    }
-  }, []);
+      const image = images.current.get(page);
+      if (image) image.removeAttribute("src");
+      onDrawn?.(page, false);
+    },
+    [onDrawn],
+  );
 
   /** Show the held bytes in the page's image and wait for the render. */
   const draw = useCallback(
@@ -103,7 +113,6 @@ export const usePageWindow = (docId: string): PageWindow => {
       const image = images.current.get(page);
       if (!entry || !image) return false;
 
-      const box = image.closest(".reader__page");
       try {
         if (image.getAttribute("src") !== entry.url) image.src = entry.url;
         if (!image.complete || image.naturalWidth === 0) {
@@ -112,7 +121,7 @@ export const usePageWindow = (docId: string): PageWindow => {
 
         const drawn = image.naturalWidth > 0;
         // the skeleton must go, or it shows through the page's empty space
-        box?.classList.toggle("reader__page--loaded", drawn);
+        onDrawn?.(page, drawn);
         if (!drawn) forget(page);
         return drawn;
       } catch {
@@ -121,7 +130,7 @@ export const usePageWindow = (docId: string): PageWindow => {
         return false;
       }
     },
-    [forget],
+    [forget, onDrawn],
   );
 
   const setWanted = useCallback(

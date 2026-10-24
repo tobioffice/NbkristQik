@@ -51,6 +51,7 @@ export default function LibraryView({
   if (unit) {
     return (
       <DocumentReader
+        key={unit.id}
         docId={unit.id}
         title={unit.title}
         unit={unit.unit}
