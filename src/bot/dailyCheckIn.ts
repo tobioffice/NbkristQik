@@ -17,6 +17,32 @@ import { BOT_USERNAME, botLink, channelLink } from "../constants/telegram.js";
 
 const MSG_ID_KEY = redisKeys.checkinPostMsgId;
 
+/** How long a /postcheckin status reply stays before the bot clears it. */
+const ADMIN_REPLY_TTL_MS = 30_000;
+
+/**
+ * Send a status reply that removes itself. The admin already knows what they
+ * ran; leaving the result in the chat just buries the next message.
+ */
+const replyAutoDelete = async (
+  chatId: number,
+  text: string,
+  parseMode?: "HTML",
+): Promise<void> => {
+  try {
+    const sent = await bot.sendMessage(
+      chatId,
+      text,
+      parseMode ? { parse_mode: parseMode } : {},
+    );
+    setTimeout(() => {
+      bot.deleteMessage(chatId, sent.message_id).catch(() => {});
+    }, ADMIN_REPLY_TTL_MS);
+  } catch (e) {
+    logger.warn("[dailyCheckIn] reply failed:", e);
+  }
+};
+
 /** Seconds until next midnight IST (UTC+5:30), calendar-day reset. */
 export const secondsUntilMidnightIST = (now: Date = new Date()): number => {
   const istNow = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
@@ -115,23 +141,21 @@ bot.onText(/^\/postcheckin$/, async (msg) => {
     const { messageId, pinned } = await createCheckInPost(redis);
 
     const link = channelLink(messageId);
-    await bot.sendMessage(
+    await replyAutoDelete(
       msg.chat.id,
       pinned
         ? `✅ Check-in post created and pinned: ${link}\n<i>Gate is now ACTIVE for all users (until midnight IST).</i>`
         : `✅ Check-in post created: ${link}\n⚠️ I couldn't pin it. Give @${BOT_USERNAME} "Pin messages" rights in the channel, then run /postcheckin again.\n<i>Gate is now ACTIVE for all users (until midnight IST).</i>`,
-      { parse_mode: "HTML" },
+      "HTML",
     );
   } catch (e) {
     logger.error("[dailyCheckIn] /postcheckin error:", e);
     const reason = e instanceof Error ? e.message : String(e);
-    bot
-      .sendMessage(
-        msg.chat.id,
-        `❌ Couldn't post the check-in: ${reason}\n\n` +
-          `Make sure @${BOT_USERNAME} is a channel admin with "Post messages" turned on.`,
-      )
-      .catch(() => {});
+    await replyAutoDelete(
+      msg.chat.id,
+      `❌ Couldn't post the check-in: ${reason}\n\n` +
+        `Make sure @${BOT_USERNAME} is a channel admin with "Post messages" turned on.`,
+    );
   }
 });
 
