@@ -135,7 +135,7 @@ where — private chat, group or channel — and how often) plus service health.
 - Design system (read before any UI change): [`DESIGN.md`](DESIGN.md) — "The Class Register, Open on the Desk"
 - Product brief: [`PRODUCT.md`](PRODUCT.md)
 - Generated, source-grounded wiki: [`openwiki/quickstart.md`](openwiki/quickstart.md)
-- Hand-written guides: [`docs/`](docs/) (API, architecture, database, deployment)
+- Hand-written guides: [`docs/`](docs/) (API, architecture, database, deployment, [marketing site](docs/SITE.md))
 
 ## Deployment
 

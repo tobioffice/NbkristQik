@@ -10,4 +10,8 @@ testing
 package-lock.json
 src/web/package-lock.json
 src/web/dist
+src/web/dist-library
 .playwright-mcp/
+# the library's runtime data (the catalogue snapshot is the one file we keep)
+/data/*
+!/data/syllabus-catalog.json

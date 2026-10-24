@@ -1305,6 +1305,349 @@ a:focus-visible {
   color: var(--ink-2);
 }
 
+/* ---------- library ---------- */
+.lib-list-head {
+  grid-template-columns: 104px 1fr 78px;
+}
+
+.lib-list-head--units {
+  grid-template-columns: 1fr 78px;
+}
+
+.lib-row {
+  display: grid;
+  grid-template-columns: 104px 1fr 78px;
+  gap: 6px;
+  align-items: center;
+  padding: 10px 16px;
+  min-height: 45px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+
+.lib-row--units {
+  grid-template-columns: 1fr 78px;
+}
+
+.lib-row__code {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.lib-row__name {
+  min-width: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+  /* a subject name is the one thing that must not be guessed at: two lines */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.lib-row__state {
+  text-align: right;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.lib-row__state--live {
+  color: var(--green-ink);
+}
+
+.lib-form {
+  margin-top: 4px;
+}
+
+.lib-row--open {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.lib-row--open:hover,
+.lib-row--open:active {
+  background: var(--paper-3);
+}
+
+/* ---------- the reader ---------- */
+.reader {
+  min-height: 100vh;
+  background: var(--paper);
+}
+
+.reader__head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 11px;
+  background: var(--cloth);
+  color: var(--paper-3);
+}
+
+.reader__back {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 9px 6px;
+  border: 1px solid rgba(246, 239, 221, 0.42);
+  border-radius: 1px;
+  background: transparent;
+  color: var(--paper-3);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.reader__back span {
+  font-size: 16px;
+  line-height: 1;
+  margin-top: -1px;
+}
+
+.reader__back:active {
+  background: rgba(246, 239, 221, 0.14);
+}
+
+.reader__title {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.2;
+}
+
+.reader__title b {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.reader__title span {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(246, 239, 221, 0.72);
+}
+
+.reader__title span em {
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  color: var(--paper-3);
+}
+
+/* reading progress, drawn on the band's bottom rule */
+.reader__progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--paper-3);
+  transform-origin: left center;
+  transition: transform 140ms linear;
+}
+
+/* the zoom controls, in the band with the page counter */
+.reader__zoom {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.reader__zoom-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 34px;
+  padding: 0 8px;
+  border: 1px solid rgba(246, 239, 221, 0.42);
+  border-radius: 1px;
+  background: transparent;
+  color: var(--paper-3);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  cursor: pointer;
+  /* no double-tap delay on the zoom buttons themselves */
+  touch-action: manipulation;
+}
+
+.reader__zoom-btn:active {
+  background: rgba(246, 239, 221, 0.14);
+}
+
+.reader__zoom-value {
+  min-width: 48px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * The pages.
+ *
+ * The column is the horizontal scroller: a page that has been zoomed in is
+ * wider than the screen, and the student pans across it. The zoom itself is
+ * a custom property, written straight onto the column, so a pinch can move
+ * it every frame without the page list re-rendering.
+ */
+.reader__pages {
+  --zoom: 1;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 14px 12px 30px;
+  overflow-x: auto;
+  /* a swipe to the left must not become a swipe back out of the app */
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
+}
+
+.reader__pages::-webkit-scrollbar {
+  height: 4px;
+}
+
+.reader__pages::-webkit-scrollbar-thumb {
+  background: var(--rule-strong);
+}
+
+.reader__page {
+  position: relative;
+  /* the page grows with the zoom; the aspect ratio gives it the height */
+  width: calc(100% * var(--zoom));
+  margin: 0 auto 18px;
+  /* white, like the printed page: the PDF's figures are set on white, and
+     they must not sit in white boxes on a cream sheet */
+  background: #fff;
+  border: 1px solid var(--rule);
+  /* the sticky head must not cover a page scrolled back to */
+  scroll-margin-top: 60px;
+}
+
+.reader__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* the page is the PDF's own layout: nothing here to select, drag or save */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  /* the reader does the pinch itself, so the browser gets pan and nothing else */
+  touch-action: pan-x pan-y;
+}
+
+/* what sits under a page that has not arrived yet */
+.reader__skeleton {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+
+.reader__skeleton b {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 34px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.2;
+}
+
+.reader__skeleton span {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+.reader__page--failed {
+  cursor: pointer;
+}
+
+/* the page is transparent where the PDF has no ink: once it is drawn, the
+   skeleton underneath must not show through it */
+.reader__page--loaded .reader__skeleton {
+  display: none;
+}
+
+.reader__page--failed .reader__skeleton span {
+  color: var(--red-ink);
+  opacity: 1;
+}
+
+.reader__end {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 26px;
+  padding-top: 13px;
+  border-top: 1.5px solid var(--rule-strong);
+}
+
+.reader__end span {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.reader__end-btn {
+  padding: 7px 11px;
+  border: 1px solid var(--ink);
+  border-radius: 1px;
+  background: var(--paper-2);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reader__end-btn:active {
+  background: var(--paper-3);
+}
+
 /* ---------- motion floor ---------- */
 @media (prefers-reduced-motion: reduce) {
   *,

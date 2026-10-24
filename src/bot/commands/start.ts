@@ -1,12 +1,21 @@
 import { bot } from "../bot.js";
 import { trackMessage } from "../../services/tracker.js";
+import { sendLibraryEntry } from "./library.js";
+import { startPayload } from "./startPayload.js";
 
 /** Escape user-controlled text for Telegram HTML parse mode. */
 const esc = (s: string): string =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-bot.onText(/\/start/, (msg) => {
+bot.onText(/^\/start/, (msg) => {
   trackMessage(msg, "command:start");
+
+  // the channel's "Open the library" button is a deep link with this
+  // payload: the student lands on the same one-tap library entry
+  if (startPayload(msg.text ?? "")?.toLowerCase() === "library") {
+    sendLibraryEntry(msg);
+    return;
+  }
 
   const first = msg.from?.first_name?.trim();
   const greeting = first ? `Hi ${esc(first)}, welcome in` : `Welcome in`;

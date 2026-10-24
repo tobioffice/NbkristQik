@@ -8,3 +8,10 @@ export const REPORT_WEBAPP_URL =
   "https://tobioffice.github.io/NbkristQik/report.html";
 /** The same mini app, opened straight on the reporter's own issue list. */
 export const REPORT_LIST_WEBAPP_URL = `${REPORT_WEBAPP_URL}?view=reports`;
+
+/**
+ * The library is served by our own host, not from GitHub Pages: its session
+ * cookie has to be first-party, or iOS drops it and the student is signed
+ * out on every open.
+ */
+export const LIBRARY_WEBAPP_URL = "https://checker.tobioffice.dev/library/";

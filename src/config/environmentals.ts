@@ -21,6 +21,15 @@ const REDIS_URL = process.env.REDIS_URL || "";
 
 const PORT = process.env.PORT || 3000;
 
+// Secret behind the watermark token. Without it the bot token is used, which
+// is secret too, but a dedicated value lets the marks stay stable if the bot
+// is ever re-issued. The last resort is for a dev box with no bot token at
+// all: the marks still work, they are just not worth much.
+const LIBRARY_WATERMARK_SECRET =
+  process.env.LIBRARY_WATERMARK_SECRET?.trim() ||
+  TELEGRAM_BOT_TOKEN ||
+  "nbkristqik-library-watermark";
+
 // Comma-separated allowlist for the web leaderboard origin(s). Defaults to
 // the GitHub Pages host so existing deployments keep working unchanged.
 const CORS_ORIGINS = (
@@ -42,4 +51,5 @@ export {
   REDIS_URL,
   PORT,
   CORS_ORIGINS,
+  LIBRARY_WATERMARK_SECRET,
 };

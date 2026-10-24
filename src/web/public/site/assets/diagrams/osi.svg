@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="430" viewBox="0 0 900 430">
+<style>text{font-family:'Liberation Serif',Georgia,serif;fill:#1e2a38}</style>
+<text x="270" y="32" font-size="15" text-anchor="middle">OSI: 7 layers</text>
+<text x="630" y="32" font-size="15" text-anchor="middle">TCP/IP: 4 layers</text>
+<!-- OSI -->
+<rect x="150" y="48" width="240" height="40" fill="#f7f5ee" stroke="#5a5140"/>
+<text x="270" y="73" font-size="13" text-anchor="middle">7 application</text>
+<rect x="150" y="88" width="240" height="40" fill="#f6efdd" stroke="#5a5140"/>
+<text x="270" y="113" font-size="13" text-anchor="middle">6 presentation</text>
+<rect x="150" y="128" width="240" height="40" fill="#f7f5ee" stroke="#5a5140"/>
+<text x="270" y="153" font-size="13" text-anchor="middle">5 session</text>
+<rect x="150" y="168" width="240" height="40" fill="#f6efdd" stroke="#5a5140"/>
+<text x="270" y="193" font-size="13" text-anchor="middle">4 transport</text>
+<rect x="150" y="208" width="240" height="40" fill="#f7f5ee" stroke="#5a5140"/>
+<text x="270" y="233" font-size="13" text-anchor="middle">3 network</text>
+<rect x="150" y="248" width="240" height="40" fill="#f6efdd" stroke="#5a5140"/>
+<text x="270" y="273" font-size="13" text-anchor="middle">2 data link</text>
+<rect x="150" y="288" width="240" height="40" fill="#f7f5ee" stroke="#5a5140"/>
+<text x="270" y="313" font-size="13" text-anchor="middle">1 physical</text>
+<!-- TCP/IP -->
+<rect x="510" y="48" width="240" height="56" fill="#f7f5ee" stroke="#5a5140"/>
+<text x="630" y="81" font-size="13" text-anchor="middle">application</text>
+<rect x="510" y="104" width="240" height="56" fill="#f6efdd" stroke="#5a5140"/>
+<text x="630" y="137" font-size="13" text-anchor="middle">transport</text>
+<rect x="510" y="160" width="240" height="80" fill="#f7f5ee" stroke="#5a5140"/>
+<text x="630" y="193" font-size="13" text-anchor="middle">network (internet)</text>
+<rect x="510" y="240" width="240" height="88" fill="#f6efdd" stroke="#5a5140"/>
+<text x="630" y="273" font-size="13" text-anchor="middle">link + physical</text>
+<text x="630" y="293" font-size="13" text-anchor="middle">(host-to-network)</text>
+<!-- mapping lines -->
+<line x1="390" y1="68" x2="510" y2="76" stroke="#1e2a38" stroke-width="1"/>
+<line x1="390" y1="188" x2="510" y2="132" stroke="#1e2a38" stroke-width="1"/>
+<line x1="390" y1="228" x2="510" y2="190" stroke="#1e2a38" stroke-width="1"/>
+<line x1="390" y1="288" x2="510" y2="274" stroke="#1e2a38" stroke-width="1"/>
+<text x="450" y="356" font-size="13" text-anchor="middle">OSI 5-7 collapse into one application layer;</text>
+<text x="450" y="378" font-size="13" text-anchor="middle">OSI 1-2 merge into host-to-network. The 5-layer teaching stack</text>
+<text x="450" y="400" font-size="13" text-anchor="middle">splits host-to-network back into link + physical.</text>
+</svg>

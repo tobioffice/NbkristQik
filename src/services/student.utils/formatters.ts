@@ -12,40 +12,93 @@ export const formatAttendanceMessage = (data: Attendance): string => {
   const { rollno, year_branch_section, percentage, totalClasses, subjects } =
     data;
 
-  // Header section
   let msg =
-    `🧑‍🎓 <b>ROLL:</b> <code>${rollno}</code>\n` +
-    `🏫 <b>Branch:</b> <code>${year_branch_section}</code>\n` +
-    `📚 <b>Attended:</b> <code>${totalClasses.attended}/${totalClasses.conducted}</code>\n\n` +
-    `📈 <b>Percentage:</b> <b>${percentage.toFixed(2)}%</b>\n`;
+    `🧑‍🎓 ROLL: ${rollno}\n` +
+    `🏫 Branch: ${year_branch_section}\n` +
+    `📚 Attended: ${totalClasses.attended}/${totalClasses.conducted}\n\n` +
+    `📈 Percentage: ${percentage.toFixed(2)}%\n` +
+    buildProgressBar(percentage);
 
-  msg += buildProgressBar(percentage);
-  msg += buildAttendanceTable(subjects);
-  msg += `\n<i>Stay above 75% and you're safe.</i>`;
+  if (subjects.length > 0) {
+    msg += `\n${buildAttendanceTable(subjects)}`;
 
-  return msg;
-};
+    const risky = subjects.filter(
+      (sub) => sub.conducted > 0 && (sub.attended / sub.conducted) * 100 < 75,
+    );
+    if (risky.length > 0) {
+      msg +=
+        `Below 75% in ${risky.length} subject${risky.length !== 1 ? "s" : ""}: ` +
+        risky
+          .map((sub) => `<code>${escapeHtml(sub.subject)}</code>`)
+          .join(", ") +
+        "\n";
+    }
 
-const buildAttendanceTable = (subjects: AttendanceBySubject[]): string => {
-  let msg =
-    `<pre>` +
-    `SUBJ     │ ST │ATT/TOT│LAST\n` +
-    `────────────────────────────\n`;
-
-  for (const sub of subjects) {
-    const subPercentage = (sub.attended / sub.conducted) * 100;
-    const status = getStatusEmoji(subPercentage);
-    const lastUpdated = formatLastUpdated(sub.lastUpdated);
-    const subjectName = truncateText(sub.subject, 8);
-
-    msg +=
-      `${subjectName.padEnd(9)} │ ${status} │` +
-      `${String(sub.attended).padStart(2)}/${String(sub.conducted).padStart(2)} │` +
-      `${lastUpdated.padEnd(5)}\n`;
+    msg += `\n<i>Stay above 75% and you're safe.</i>`;
   }
 
-  msg += `────────────────────────────</pre>\n`;
-  return msg;
+  return msg.trimEnd();
+};
+
+/** The name column, wide enough for the portal's course names, not the codes. */
+const NAME_WIDTH = 11;
+const COUNT_WIDTH = 7;
+const PERCENT_WIDTH = 4;
+const SEEN_WIDTH = 5;
+
+/**
+ * The other half of the attendance reply: what the percentage is made of.
+ *
+ * The card alone cannot tell a student whether the 82% is safe across the
+ * board or carried by two subjects, so every subject gets a row with its
+ * own attended/conducted, its percentage, and when the portal last saw it.
+ */
+const buildAttendanceTable = (subjects: AttendanceBySubject[]): string => {
+  const line =
+    NAME_WIDTH + 3 + COUNT_WIDTH + 3 + PERCENT_WIDTH + 3 + SEEN_WIDTH;
+
+  let table = `<pre>`;
+  table +=
+    `${"SUBJ".padEnd(NAME_WIDTH)} │ ` +
+    `${"ATT/TOT".padStart(COUNT_WIDTH)} │ ` +
+    `${"NOW".padStart(PERCENT_WIDTH)} │ LAST\n`;
+  table += `${"─".repeat(line)}\n`;
+
+  for (const sub of subjects) {
+    // pad first, escape second: the entity must not count towards the column
+    const name = escapeHtml(
+      truncateText(sub.subject, NAME_WIDTH).padEnd(NAME_WIDTH),
+    );
+    const seen = `${sub.attended}/${sub.conducted}`.padStart(COUNT_WIDTH);
+    const now =
+      sub.conducted > 0
+        ? `${Math.round((sub.attended / sub.conducted) * 100)}%`.padStart(
+            PERCENT_WIDTH,
+          )
+        : "—".padStart(PERCENT_WIDTH);
+    const last = formatLastUpdated(sub.lastUpdated);
+
+    table += `${name} │ ${seen} │ ${now} │ ${last}\n`;
+  }
+
+  table += `${"─".repeat(line)}</pre>\n`;
+  return table;
+};
+
+/** Telegram parses HTML in replies; a course name must not break the parse. */
+const escapeHtml = (value: string): string =>
+  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+const formatLastUpdated = (value: string): string => {
+  const trimmed = value.trim();
+
+  // the portal sends DD-MM-YYYY, often with a "(2 days ago)" tail that the
+  // parser already cut; the day and month are enough on a chat line
+  if (/^\d{2}-\d{2}-\d{4}$/.test(trimmed)) {
+    return trimmed.slice(0, 5);
+  }
+
+  return trimmed || "N/A";
 };
 
 /**
@@ -205,24 +258,8 @@ const buildProgressBar = (percentage: number): string => {
   );
 };
 
-const getStatusEmoji = (percentage: number): string => {
-  if (percentage >= 75) return "🟢";
-  if (percentage >= 50) return "🟡";
-  return "🔴";
-};
-
-const formatLastUpdated = (dateStr: string): string => {
-  const trimmed = dateStr.trim();
-
-  // If it's a date in DD-MM-YYYY format, show only DD-MM
-  if (/^\d{2}-\d{2}-\d{4}$/.test(trimmed)) {
-    return trimmed.slice(0, 5);
-  }
-
-  return trimmed || "N/A";
-};
-
 const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength - 2) + "..";
+  // trim first: "COMPUTER .." reads like a typo, "COMPUTER.." reads like a cut
+  return text.substring(0, maxLength - 2).trimEnd() + "..";
 };

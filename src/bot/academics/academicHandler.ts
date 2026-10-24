@@ -25,7 +25,7 @@ import {
 import { ADMIN_ID } from "../../config/environmentals.js";
 import { logger } from "../../config/logger.js";
 import { trackActivity, ChatSurface } from "../../services/tracker.js";
-import { checkGroupUse } from "../groupLimit.js";
+import { isDailyUnlocked, getCheckInLink } from "../dailyCheckIn.js";
 import { WEBAPP_URL } from "../../constants/webapp.js";
 
 const getCachedMembership = async (userId: number): Promise<boolean> => {
@@ -42,6 +42,7 @@ const getCachedMembership = async (userId: number): Promise<boolean> => {
 const isAuthorizedUser = async (
   userId: number,
   chatId: number,
+  replyToMessageId?: number,
 ): Promise<boolean> => {
   // admin always allowed
   if (userId === ADMIN_ID) return true;
@@ -53,13 +54,33 @@ const isAuthorizedUser = async (
     } catch (e) {
       logger.warn("[academicHandler] membership check failed:", e);
       // cannot verify membership right now — let the request through rather
-      // than locking out members
+      // than locking out members (the daily gate still applies below)
       isMember = true;
     }
   }
 
   if (!isMember && !(chatId === PROTECTED_CHAT_ID)) {
     await sendJoinChannelMsg(userId);
+    return false;
+  }
+
+  // daily check-in gate (dormant until /postcheckin creates the post)
+  if (!(await isDailyUnlocked(userId))) {
+    const checkInLink = await getCheckInLink();
+    // reply in the group if used there, DM only for private chats
+    const target = chatId < 0 ? chatId : userId;
+    await bot.sendMessage(
+      target,
+      "🔓 <b>Quick human check</b>\n\nTap <b>\"I'm not a robot\"</b> below and you're in.",
+      {
+        parse_mode: "HTML",
+        // show as a reply to the user's message so it's clearly for them
+        ...(replyToMessageId ? { reply_to_message_id: replyToMessageId } : {}),
+        reply_markup: {
+          inline_keyboard: [[{ text: "👇 I'm not a robot", url: checkInLink }]],
+        },
+      },
+    );
     return false;
   }
 
@@ -139,12 +160,8 @@ const handleRollNumberMessage = async (msg: Message): Promise<void> => {
     return;
   }
 
-  const authorized = await isAuthorizedUser(userId, chatId);
+  const authorized = await isAuthorizedUser(userId, chatId, msg.message_id);
   if (!authorized) return;
-
-  // group chats get 2 lifetime answers; past that, point the user to DM
-  if (!(await checkGroupUse(userId, chatId, msg.message_id, msg.chat.type)))
-    return;
 
   trackActivity({
     userId,
@@ -231,6 +248,10 @@ const handleCallbackQuery = async (
 
   if (!msg) return;
 
+  // dailycheck is fully handled in dailyCheckIn.ts (would otherwise
+  // rate-limit + try to delete the pinned channel post)
+  if (data === "dailycheck") return;
+
   // channel taps: dismiss the spinner, serve nothing (broadcast, not a chat)
   if (msg.chat.type === "channel") {
     await bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
@@ -254,21 +275,16 @@ const handleCallbackQuery = async (
     return;
   }
 
-  const authorized = await isAuthorizedUser(userId, msg.chat.id);
+  const authorized = await isAuthorizedUser(
+    userId,
+    msg.chat.id,
+    msg.message_id,
+  );
   if (!authorized) {
     await bot.answerCallbackQuery(callbackQuery.id, {
       text: "Join the channel first, then try again.",
       show_alert: true,
     });
-    return;
-  }
-
-  // same group gate as the message flow; the redirect goes to the group,
-  // so just dismiss the spinner here
-  if (
-    !(await checkGroupUse(userId, msg.chat.id, msg.message_id, msg.chat.type))
-  ) {
-    await bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
     return;
   }
 

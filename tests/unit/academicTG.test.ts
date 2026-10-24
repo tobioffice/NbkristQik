@@ -12,7 +12,7 @@ describe("AcademicTG Module", () => {
   });
 
   describe("getAttendanceMessage", () => {
-    it("should format attendance message with proper structure", async () => {
+    it("should format attendance message with the compact summary", async () => {
       vi.spyOn(academicTG, "getAttendanceJSON").mockResolvedValue(
         mockAttendance,
       );
@@ -24,8 +24,12 @@ describe("AcademicTG Module", () => {
       // The percentage is formatted as 85.50% not 85.5%
       expect(message).toContain("85.50%");
       expect(message).toContain("450/526");
+      // the other half: the percentage is broken down per subject, so a
+      // strong overall line cannot hide a weak subject
       expect(message).toContain("<pre>");
-      expect(message).toContain("</pre>");
+      expect(message).toContain("Data Stru..");
+      expect(message).toContain("45/50");
+      expect(message).toContain("│  90% │ 01-02");
     });
 
     it("should include progress bar in message", async () => {
@@ -38,18 +42,15 @@ describe("AcademicTG Module", () => {
       expect(message).toMatch(/[🟩🟨🟥⬜]/u);
     });
 
-    it("should format subjects correctly (names are truncated to 8 chars)", async () => {
+    it("should show one bar block per ten percent", async () => {
       vi.spyOn(academicTG, "getAttendanceJSON").mockResolvedValue(
         mockAttendance,
       );
 
       const message = await academicTG.getAttendanceMessage();
 
-      // Subject names are truncated to 8 characters with ".." if longer
-      expect(message).toContain("Data S..");
-      expect(message).toContain("Operat..");
-      expect(message).toContain("45/50");
-      expect(message).toContain("40/45");
+      // 85.5% -> 8 filled, 2 empty
+      expect(message).toContain("🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜");
     });
 
     it("should return error message on failure", async () => {
@@ -127,41 +128,41 @@ describe("AcademicTG Module", () => {
   });
 
   describe("Message Formatting Helpers", () => {
-    it("should generate correct progress bar for high percentage", () => {
+    it("should generate correct progress bar for high percentage", async () => {
       // Test through actual message generation
       const highAttendance = { ...mockAttendance, percentage: 85 };
       vi.spyOn(academicTG, "getAttendanceJSON").mockResolvedValue(
         highAttendance,
       );
 
-      academicTG.getAttendanceMessage().then((message) => {
-        expect(message).toContain("🟩");
-      });
+      const message = await academicTG.getAttendanceMessage();
+
+      expect(message).toContain("🟩");
     });
 
-    it("should generate correct progress bar for medium percentage", () => {
+    it("should generate correct progress bar for medium percentage", async () => {
       const mediumAttendance = { ...mockAttendance, percentage: 60 };
       vi.spyOn(academicTG, "getAttendanceJSON").mockResolvedValue(
         mediumAttendance,
       );
 
-      academicTG.getAttendanceMessage().then((message) => {
-        expect(message).toContain("🟨");
-      });
+      const message = await academicTG.getAttendanceMessage();
+
+      expect(message).toContain("🟨");
     });
 
-    it("should generate correct progress bar for low percentage", () => {
+    it("should generate correct progress bar for low percentage", async () => {
       const lowAttendance = { ...mockAttendance, percentage: 40 };
       vi.spyOn(academicTG, "getAttendanceJSON").mockResolvedValue(
         lowAttendance,
       );
 
-      academicTG.getAttendanceMessage().then((message) => {
-        expect(message).toContain("🟥");
-      });
+      const message = await academicTG.getAttendanceMessage();
+
+      expect(message).toContain("🟥");
     });
 
-    it("should truncate long subject names", async () => {
+    it("should truncate long subject names in the bunk plan", async () => {
       const longNameAttendance = {
         ...mockAttendance,
         subjects: [
@@ -178,31 +179,10 @@ describe("AcademicTG Module", () => {
         longNameAttendance,
       );
 
-      const message = await academicTG.getAttendanceMessage();
+      const message = await academicTG.getBunkPlanMessage();
 
-      expect(message).toContain("..");
-    });
-
-    it("should format dates correctly", async () => {
-      const dateAttendance = {
-        ...mockAttendance,
-        subjects: [
-          {
-            subject: "Test Subject",
-            attended: 45,
-            conducted: 50,
-            lastUpdated: "01-02-2026",
-          },
-        ],
-      };
-
-      vi.spyOn(academicTG, "getAttendanceJSON").mockResolvedValue(
-        dateAttendance,
-      );
-
-      const message = await academicTG.getAttendanceMessage();
-
-      expect(message).toContain("01-02");
+      // Subject names are truncated to 8 characters with ".." if longer
+      expect(message).toContain("Very L..");
     });
   });
 });

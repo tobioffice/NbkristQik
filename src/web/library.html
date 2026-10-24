@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+  <title>NbkristQik Library</title>
+  <meta name="theme-color" content="#3f6457" />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+
+  <!-- Telegram WebApp SDK, vendored (public/telegram-web-app.js, rev 59). -->
+  <script src="./telegram-web-app.js"></script>
+  <script>
+    var tg = window.Telegram && window.Telegram.WebApp;
+    if (tg) {
+      tg.setHeaderColor && tg.setHeaderColor("#3f6457");
+      tg.setBackgroundColor && tg.setBackgroundColor("#e7dcc3");
+      tg.ready && tg.ready();
+    }
+  </script>
+
+  <!-- paint the paper before the CSS chunk arrives -->
+  <style>
+    html { background: #e7dcc3; }
+    body { margin: 0; background: #e7dcc3; color: #1e2a38; }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/library-main.tsx"></script>
+</body>
+
+</html>

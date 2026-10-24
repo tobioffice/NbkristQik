@@ -1,5 +1,7 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
+import { existsSync } from "fs";
+import path from "path";
 import {
   getLeaderboard,
   getStudentRank,
@@ -22,6 +24,7 @@ import { logger } from "../config/logger.js";
 import { registerAdminRoutes } from "./admin/index.js";
 import { profileRouter } from "./profile.js";
 import { reportRouter } from "./report.js";
+import { libraryRouter } from "./library.js";
 
 export const app = express();
 
@@ -41,6 +44,30 @@ app.use(express.json());
 // (which strips angle brackets — it would mangle passwords containing them)
 // and has its own auth + login rate limiting instead.
 registerAdminRoutes(app);
+
+// The library mini app, served from this same origin so its session cookie
+// is first-party. Mounted before the global middlewares: it is static files,
+// it needs no body sanitising, and it should not spend the API rate limit.
+const libraryWebDir =
+  process.env.LIBRARY_WEB_DIR?.trim() ||
+  path.resolve(process.cwd(), "public", "library");
+if (existsSync(libraryWebDir)) {
+  app.use(
+    "/library",
+    express.static(libraryWebDir, {
+      index: "index.html",
+      maxAge: "1h",
+      setHeaders: (res) => {
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("Referrer-Policy", "no-referrer");
+      },
+    }),
+  );
+} else {
+  logger.warn(
+    `[library] web bundle not found at ${libraryWebDir} — /library will not open`,
+  );
+}
 
 // Apply security middleware to all routes
 app.use(apiSecurityMiddlewares);
@@ -75,6 +102,17 @@ const threadLimit = createRateLimit(
 );
 app.use("/api/thread", threadLimit);
 app.use("/api", reportRouter);
+
+// Library web app: session exchange, then the student's own subject list.
+// The session exchange is the only way in, so it gets its own tight limit;
+// everything after it rides on the global API limit.
+const librarySessionLimit = createRateLimit(
+  60 * 60 * 1000,
+  20,
+  "Too many library sessions, please try again later.",
+);
+app.use("/api/library/session", librarySessionLimit);
+app.use("/api/library", libraryRouter);
 
 interface LeaderboardQuery {
   page: number;

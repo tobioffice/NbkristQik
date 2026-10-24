@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>card</title>
+<!--
+  Social preview card generator for the marketing site.
+
+  How to regenerate:
+    1. cp src/web/scripts/og-card.html src/web/public/site/og-card.html
+    2. cd src/web/public && python3 -m http.server 8101 --bind 127.0.0.1
+    3. open http://127.0.0.1:8101/site/og-card.html?k=<kicker>&t=<title>&s=<standfirst>&p=<plate label>&img=<image url>
+    4. screenshot the viewport at 1200 x 630 (device scale 1) and save it to
+       src/web/public/site/assets/og-<name>.png
+    5. rm src/web/public/site/og-card.html
+
+  Query parameters: k, t, s, p, img, stats=none
+-->
+
+<style>
+  @font-face {
+    font-family: "Public Sans";
+    src: url("http://127.0.0.1:8101/site/assets/fonts/public-sans.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+  }
+  @font-face {
+    font-family: "Zilla Slab";
+    src: url("http://127.0.0.1:8101/site/assets/fonts/zilla-slab-600.woff2") format("woff2");
+    font-weight: 600;
+    font-style: normal;
+  }
+  :root {
+    --paper: #e7dcc3;
+    --paper-raised: #efe5cd;
+    --paper-bright: #f6efdd;
+    --ink: #1e2a38;
+    --ink-soft: #5a5140;
+    --cloth: #3f6457;
+    --cloth-deep: #33544a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    width: 1200px;
+    height: 630px;
+    overflow: hidden;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Public Sans", system-ui, sans-serif;
+  }
+  .band {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 92px;
+    padding: 0 64px;
+    background: var(--cloth);
+    color: var(--paper-bright);
+    border-bottom: 1px solid var(--cloth-deep);
+  }
+  .brand { display: flex; align-items: baseline; gap: 14px; }
+  .brand b { font-family: "Zilla Slab", Georgia, serif; font-size: 36px; font-weight: 600; letter-spacing: .005em; }
+  .brand span { font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: rgba(246,239,221,.7); }
+  .band em { font-style: normal; font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: rgba(246,239,221,.8); }
+  .stage { display: flex; align-items: center; gap: 48px; height: 466px; padding: 0 64px; }
+  .copy { flex: 1 1 auto; min-width: 0; }
+  .kicker { display: flex; align-items: center; gap: 12px; margin: 0 0 20px; color: var(--cloth-deep); font-size: 13px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+  .kicker::before { content: ""; width: 34px; height: 1px; background: var(--cloth-deep); }
+  h1 { margin: 0 0 20px; font-family: "Zilla Slab", Georgia, serif; font-size: 66px; font-weight: 600; letter-spacing: -.024em; line-height: .98; max-width: 13ch; }
+  .sub { margin: 0 0 30px; max-width: 34ch; color: var(--ink-soft); font-size: 21px; line-height: 1.45; }
+  .stats { display: flex; gap: 34px; border-top: 1px solid var(--ink); padding-top: 18px; }
+  .stats div b { display: block; font-size: 32px; font-weight: 700; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stats div span { display: block; margin-top: 8px; color: var(--ink-soft); font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+  .plate { flex: 0 0 286px; border: 1px solid var(--ink); background: var(--paper-raised); }
+  .plate span { display: block; padding: 9px 11px 8px; border-bottom: 1px solid rgba(30,42,56,.2); color: var(--ink-soft); font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+  .plate img { display: block; width: 100%; height: 396px; object-fit: contain; object-position: center; padding: 9px; }
+  .foot { display: flex; align-items: center; justify-content: space-between; height: 72px; padding: 0 64px; border-top: 1px solid var(--ink); color: var(--ink-soft); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+  <div class="band">
+    <div class="brand"><b>NbkristQik</b><span>The college bot</span></div>
+    <em>Vol. 01 &middot; October 2026 &middot; Warangal</em>
+  </div>
+  <div class="stage">
+    <div class="copy">
+      <p class="kicker" id="kicker">Introducing the library</p>
+      <h1 id="title">The textbook, rebuilt for the phone.</h1>
+      <p class="sub" id="sub">Eleven subjects, set again from the R23 syllabus. Every diagram redrawn. Every page streamed inside Telegram, one at a time.</p>
+      <div class="stats" id="stats">
+        <div><b>11</b><span>Subjects set</span></div>
+        <div><b>51</b><span>Documents</span></div>
+        <div><b>1,248</b><span>Pages</span></div>
+        <div><b>0</b><span>PDFs served</span></div>
+      </div>
+    </div>
+    <figure class="plate">
+      <span id="plate">Plate 01 &middot; CN &middot; R23</span>
+      <img id="plateImg" src="http://127.0.0.1:8101/site/assets/pages/cn-cover.jpg" alt="">
+    </figure>
+  </div>
+  <div class="foot">
+    <span>tobioffice.github.io/NbkristQik/site/</span>
+    <span>@NbkristQik_bot</span>
+  </div>
+  <script>
+    const p = new URLSearchParams(location.search);
+    const set = (id, v) => { if (v) document.getElementById(id).textContent = v; };
+    set("kicker", p.get("k"));
+    set("title", p.get("t"));
+    set("sub", p.get("s"));
+    set("plate", p.get("p"));
+    if (p.get("img")) document.getElementById("plateImg").src = p.get("img");
+    if (p.get("stats") === "none") document.getElementById("stats").style.display = "none";
+  </script>
+</body>
+</html>

@@ -4,6 +4,14 @@ Webapp-exclusive library of subject materials and solved assignments.
 Students read inside the Telegram mini app only. Files are never
 forwarded in chat and there is no download button.
 
+> **The plan of record for delivery is `docs/LIBRARY.md`.** It changes how
+> the library is served: the PDF never reaches the phone (pages are rasterised
+> on the server and streamed one at a time, watermarked with the reader's
+> Telegram id), access is Telegram-only and registration-gated, and the
+> subject list is derived from the student's roll number against a snapshot of
+> the college syllabus site. The content model below still stands; the
+> "Storage", "Viewer" and "Serving" sections are superseded by that file.
+
 ## Content model
 
 Two types, one storage shape: a single PDF per subject.

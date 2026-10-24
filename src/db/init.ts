@@ -4,6 +4,7 @@ import {
   initUptimeTable,
   initLeaderboardIndexes,
 } from "./student_stats.model.js";
+import { initLibraryTables } from "./library.model.js";
 
 /**
  * Single schema entry point — creates every table/index the app assumes.
@@ -129,6 +130,7 @@ export const initDatabase = async () => {
   await initStatsTable();
   await initUptimeTable();
   await initLeaderboardIndexes();
+  await initLibraryTables();
   await backfillReportThreads();
 };
 

@@ -1,0 +1,6060 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-20T19:12:16.789Z",
+  "source": "https://at.nbkrist.org/Syllabi/showSyllabi.php?dept=<DEPT>",
+  "departments": {
+    "CSE": {
+      "R23": {
+        "11": {
+          "core": [
+            {
+              "code": "23BS11P2",
+              "name": "Chemistry Lab"
+            },
+            {
+              "code": "23BS11P3",
+              "name": "Communicative English Lab"
+            },
+            {
+              "code": "23BS11P5",
+              "name": "Health And Wellness, Yoga And Sports"
+            },
+            {
+              "code": "23BS11T2",
+              "name": "Chemistry"
+            },
+            {
+              "code": "23BS11T3",
+              "name": "Linear Algebra & Calculus"
+            },
+            {
+              "code": "23BS11T4",
+              "name": "Communicative English"
+            },
+            {
+              "code": "23ES11P1",
+              "name": "Computer Programming Laboratory"
+            },
+            {
+              "code": "23ES11P4",
+              "name": "Engineering Workshop"
+            },
+            {
+              "code": "23ES11T1",
+              "name": "Introduction To Programming"
+            },
+            {
+              "code": "23ES11T2",
+              "name": "Basic Civil And Mechanical Engineering"
+            }
+          ],
+          "elective": []
+        },
+        "12": {
+          "core": [
+            {
+              "code": "23BS12P1",
+              "name": "Engineering Physics Lab"
+            },
+            {
+              "code": "23BS12P6",
+              "name": "Nss-ncc-scouts & Guides-community Service"
+            },
+            {
+              "code": "23BS12T1",
+              "name": "Engineering Physics"
+            },
+            {
+              "code": "23BS12T4",
+              "name": "Differential Equations And Vector Calculus"
+            },
+            {
+              "code": "23CS12P1",
+              "name": "Data Structures Laboratory"
+            },
+            {
+              "code": "23CS12T1",
+              "name": "Data Structures"
+            },
+            {
+              "code": "23ES12P1",
+              "name": "Electrical & Electronics Engineering Workshop"
+            },
+            {
+              "code": "23ES12P2",
+              "name": "It Workshop"
+            },
+            {
+              "code": "23ES12T2",
+              "name": "Basic Electrical & Electronics Engineering"
+            },
+            {
+              "code": "23ES12T6",
+              "name": "Engineering Graphics"
+            }
+          ],
+          "elective": []
+        },
+        "21": {
+          "core": [
+            {
+              "code": "23AC21T1",
+              "name": "Environmental Science"
+            },
+            {
+              "code": "23BS21T5",
+              "name": "Discrete Mathematics & Graph Theory"
+            },
+            {
+              "code": "23BS21T6",
+              "name": "Universal Human Values-understanding Harmony And Ethical Human Conduct"
+            },
+            {
+              "code": "23CS21P1",
+              "name": "Advanced Data Structures & Algorithm Analysis Lab"
+            },
+            {
+              "code": "23CS21P2",
+              "name": "Object-oriented Programming Through Java Lab"
+            },
+            {
+              "code": "23CS21SC",
+              "name": "Python Programming"
+            },
+            {
+              "code": "23CS21T1",
+              "name": "Advanced Data Structures & Algorithm Analysis"
+            },
+            {
+              "code": "23CS21T2",
+              "name": "Object-oriented Programming Through Java"
+            },
+            {
+              "code": "23IT21T1",
+              "name": "Digital Logic & Computer Organization"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "23AD22P1",
+              "name": "Database Management Systems Lab"
+            },
+            {
+              "code": "23AD22T1",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "23BS22T2",
+              "name": "Probability & Statistics"
+            },
+            {
+              "code": "23BS22T5",
+              "name": "Business Environment"
+            },
+            {
+              "code": "23CS22P1",
+              "name": "Operating Systems Lab"
+            },
+            {
+              "code": "23CS22SC",
+              "name": "Full Stack Development - 1"
+            },
+            {
+              "code": "23CS22T1",
+              "name": "Operating Systems"
+            },
+            {
+              "code": "23CS22T2",
+              "name": "Software Engineering"
+            },
+            {
+              "code": "23ES22T1",
+              "name": "Design Thinking & Innovation"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "23AD31SC",
+              "name": "Full Stack Development-ii"
+            },
+            {
+              "code": "23CS31P1",
+              "name": "Artificial Intelligence Lab"
+            },
+            {
+              "code": "23CS31P2",
+              "name": "Computer Networks & Internet Protocols Lab"
+            },
+            {
+              "code": "23CS31T1",
+              "name": "Artificial Intelligence"
+            },
+            {
+              "code": "23CS31T2",
+              "name": "Computer Networks & Internet Protocols"
+            },
+            {
+              "code": "23CS31T3",
+              "name": "Automata Theory And Compiler Design"
+            },
+            {
+              "code": "23ES31P1",
+              "name": "Tinkering Lab"
+            },
+            {
+              "code": "23ES31T1",
+              "name": "Introduction To Quantum Technologies And Applications"
+            }
+          ],
+          "elective": [
+            {
+              "code": "23CS31E1",
+              "name": "Object Oriented Analysis And Design"
+            },
+            {
+              "code": "23CS31E2",
+              "name": "Soft Computing"
+            },
+            {
+              "code": "23CS31E3",
+              "name": "Microprocessors And Microcontrollers"
+            },
+            {
+              "code": "23CS31E4",
+              "name": "Data Mining & Data Warehousing"
+            },
+            {
+              "code": "23CS31O1",
+              "name": "Java Programming"
+            },
+            {
+              "code": "23CS31O2",
+              "name": "Introduction To Artificial Intelligence"
+            }
+          ]
+        },
+        "32": {
+          "core": [
+            {
+              "code": "23CS32P1",
+              "name": "Machine Learning Lab"
+            },
+            {
+              "code": "23CS32P2",
+              "name": "Cryptography And Network Security Lab"
+            },
+            {
+              "code": "23CS32SC",
+              "name": "Soft Skills"
+            },
+            {
+              "code": "23CS32T1",
+              "name": "Machine Learning"
+            },
+            {
+              "code": "23CS32T2",
+              "name": "Cloud Computing"
+            },
+            {
+              "code": "23CS32T3",
+              "name": "Cryptography & Network Security"
+            },
+            {
+              "code": "23ES32MC",
+              "name": "Technical Paper Writing & Ipr"
+            }
+          ],
+          "elective": [
+            {
+              "code": "23CS32O1",
+              "name": "Operating Systems"
+            },
+            {
+              "code": "23CS32O2",
+              "name": "introduction To Machine Learning"
+            },
+            {
+              "code": "23CS32E1",
+              "name": "software Testing Methodologies"
+            },
+            {
+              "code": "23CS32E2",
+              "name": "cyber Security"
+            },
+            {
+              "code": "23CS32E3",
+              "name": "devops"
+            },
+            {
+              "code": "23CS32E4",
+              "name": "embedded System Design"
+            },
+            {
+              "code": "23CD32T1",
+              "name": "natural Language Processing"
+            },
+            {
+              "code": "23CS32E5",
+              "name": "software Project Management"
+            },
+            {
+              "code": "23CS32E6",
+              "name": "mobile Adhoc Networks"
+            },
+            {
+              "code": "23CS32E7",
+              "name": "distributed Operating Systems"
+            }
+          ]
+        },
+        "41": {
+          "core": [
+            {
+              "code": "23CS41SC",
+              "name": "Prompt Engineering"
+            },
+            {
+              "code": "23CS41T1",
+              "name": "Deep Learning"
+            }
+          ],
+          "elective": [
+            {
+              "code": "23BS41T1",
+              "name": "business Ethics And Corporate Governance"
+            },
+            {
+              "code": "23BS41T2",
+              "name": "e-business"
+            },
+            {
+              "code": "23BS41T3",
+              "name": "management Science"
+            },
+            {
+              "code": "23CS41O1",
+              "name": "database Management Systems"
+            },
+            {
+              "code": "23CS41O2",
+              "name": "cyber Security"
+            },
+            {
+              "code": "23CS41O3",
+              "name": "computer Networks"
+            },
+            {
+              "code": "23CS41O4",
+              "name": "internet Of Things"
+            },
+            {
+              "code": "23CS41E1",
+              "name": "software Architecture And Design Patterns"
+            },
+            {
+              "code": "23CS41E2",
+              "name": "block Chain Technology"
+            },
+            {
+              "code": "23CS41E3",
+              "name": "augmented Reality And Virtual Reality"
+            },
+            {
+              "code": "23CS41E4",
+              "name": "internet Of Things"
+            },
+            {
+              "code": "23CS41E5",
+              "name": "agile Methodologies"
+            },
+            {
+              "code": "23CS41E6",
+              "name": "metaverse"
+            },
+            {
+              "code": "23CS41E7",
+              "name": "computer Vision"
+            },
+            {
+              "code": "23CS41E8",
+              "name": "cyber Physical Systems"
+            }
+          ]
+        }
+      },
+      "R20": {
+        "11": {
+          "core": [
+            {
+              "code": "20CS1101",
+              "name": "Programming For Problem Solving"
+            },
+            {
+              "code": "20CS11P1",
+              "name": "Programming For Problem Solving Laboratory"
+            },
+            {
+              "code": "20EE1102",
+              "name": "Basic Electrical Engineering"
+            },
+            {
+              "code": "20ME11P2",
+              "name": "Engineering Workshop"
+            },
+            {
+              "code": "20SH1101",
+              "name": "Communicative English"
+            },
+            {
+              "code": "20SH1102",
+              "name": "Applied Physics"
+            },
+            {
+              "code": "20SH1105",
+              "name": "Engineering Mathematics - I"
+            },
+            {
+              "code": "20SH11P2",
+              "name": "Applied Physics Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "12": {
+          "core": [
+            {
+              "code": "20CS1201",
+              "name": "Python Programming"
+            },
+            {
+              "code": "20CS1202",
+              "name": "Data Structures"
+            },
+            {
+              "code": "20CS12P1",
+              "name": "Data Structures Using Python Laboratory"
+            },
+            {
+              "code": "20CS12P2",
+              "name": "Python Programming Laboratory (ece & Eee)"
+            },
+            {
+              "code": "20CS12P3",
+              "name": "C Programming Laboratory (me)"
+            },
+            {
+              "code": "20ME12P1",
+              "name": "Computer Aided Engineering Drawing Laboratory"
+            },
+            {
+              "code": "20SH1203",
+              "name": "Applied Chemistry"
+            },
+            {
+              "code": "20SH1204",
+              "name": "Engineering Mathematics - Ii"
+            },
+            {
+              "code": "20SH12P1",
+              "name": "English Language Laboratory"
+            },
+            {
+              "code": "20SH12P4",
+              "name": "Applied Chemistry Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "21": {
+          "core": [
+            {
+              "code": "20CS2101",
+              "name": "Discrete Mathematical Structures"
+            },
+            {
+              "code": "20CS2102",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "20CS2103",
+              "name": "Computer Networks"
+            },
+            {
+              "code": "20CS21P1",
+              "name": "Database Management Systems Laboratory"
+            },
+            {
+              "code": "20CS21P2",
+              "name": "Computer Networks Laboratory"
+            },
+            {
+              "code": "20CS21SC",
+              "name": "Application Development Using Java Programming"
+            },
+            {
+              "code": "20EC2106",
+              "name": "Digital Logic Design & Computer Organization"
+            },
+            {
+              "code": "20EC21P5",
+              "name": "Vhdl Programming Laboratory"
+            },
+            {
+              "code": "20MC2101",
+              "name": "Environmental Science"
+            },
+            {
+              "code": "20SH2103",
+              "name": "Numerical Methods, Probability And Statistics"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "20CS2201",
+              "name": "Design And Analysis Of Algorithms"
+            },
+            {
+              "code": "20CS2202",
+              "name": "Operating Systems"
+            },
+            {
+              "code": "20CS2203",
+              "name": "Software Engineering"
+            },
+            {
+              "code": "20CS2204",
+              "name": "Formal Languages And Automata Theory"
+            },
+            {
+              "code": "20CS2205",
+              "name": "Object Oriented Programming Through Java (eee)"
+            },
+            {
+              "code": "20CS22P1",
+              "name": "Design And Analysis Of Algorithms Laboratory"
+            },
+            {
+              "code": "20CS22P2",
+              "name": "Operating Systems Laboratory"
+            },
+            {
+              "code": "20CS22P3",
+              "name": "Software Engineering Laboratory"
+            },
+            {
+              "code": "20CS22P4",
+              "name": "Object Oriented Programming Through Java Laboratory (eee)"
+            },
+            {
+              "code": "20CS22SC",
+              "name": "Web Development"
+            },
+            {
+              "code": "20SH2201",
+              "name": "Managerial Economics And Financial Accounting"
+            },
+            {
+              "code": "20SH2202",
+              "name": "Universal Human Values"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "20AD3101",
+              "name": "Artificial Intelligence"
+            },
+            {
+              "code": "20AD31P1",
+              "name": "Artificial Intelligence Laboratory"
+            },
+            {
+              "code": "20CS3101",
+              "name": "Data Warehousing And Mining"
+            },
+            {
+              "code": "20CS31P1",
+              "name": "Data Warehousing And Mining Laboratory"
+            },
+            {
+              "code": "20IT3101",
+              "name": "Wireless And Ad Hoc Networks"
+            },
+            {
+              "code": "20MC3101",
+              "name": "Entrepreneurship"
+            }
+          ],
+          "elective": [
+            {
+              "code": "20CS31E1",
+              "name": "Object Oriented Analysis And Design"
+            },
+            {
+              "code": "20CS31E2",
+              "name": "Principles Of Programming Languages"
+            },
+            {
+              "code": "20CS31E3",
+              "name": "Computer Graphics"
+            },
+            {
+              "code": "20IT31E1",
+              "name": "Free And Open Source Software"
+            },
+            {
+              "code": "20SH31SC",
+              "name": "Communication And Soft Skills"
+            }
+          ]
+        },
+        "32": {
+          "core": [
+            {
+              "code": "20CS3201",
+              "name": "Machine Learning Applications"
+            },
+            {
+              "code": "20CS32P1",
+              "name": "Machine Learning Applications Laboratory"
+            },
+            {
+              "code": "20IT3201",
+              "name": "Internet Of Things"
+            },
+            {
+              "code": "20IT3202",
+              "name": "Cryptography And Network Security"
+            },
+            {
+              "code": "20IT32P1",
+              "name": "Internet Of Things Laboratory"
+            },
+            {
+              "code": "20IT32P2",
+              "name": "Cryptography And Network Security Laboratory"
+            },
+            {
+              "code": "20MC3201",
+              "name": "Advanced Aptitude And Reasoning Skills"
+            }
+          ],
+          "elective": [
+            {
+              "code": "20IT32J1",
+              "name": "Cloud Computing"
+            },
+            {
+              "code": "20IT32J2",
+              "name": "Software Testing Tools"
+            },
+            {
+              "code": "20AD32E1",
+              "name": "Natural Language Processing"
+            },
+            {
+              "code": "20IT32E1",
+              "name": "Software Project Management"
+            },
+            {
+              "code": "20IT32E2",
+              "name": "Software Architecture"
+            },
+            {
+              "code": "20IT32E3",
+              "name": "Social Information Networks"
+            },
+            {
+              "code": "20IT32SC",
+              "name": "Mobile App Development Laboratory"
+            }
+          ]
+        },
+        "41": {
+          "core": [],
+          "elective": [
+            {
+              "code": "20SH41E1",
+              "name": "Management Science"
+            },
+            {
+              "code": "20SH41E2",
+              "name": "Customer Relationship Management"
+            },
+            {
+              "code": "20SH41E3",
+              "name": "Strategic Management"
+            },
+            {
+              "code": "20SH41E4",
+              "name": "Corporate Governance And Business Ethics"
+            },
+            {
+              "code": "20CS41J1",
+              "name": "Service Oriented Architecture"
+            },
+            {
+              "code": "20CS41J2",
+              "name": "Cyber Security"
+            },
+            {
+              "code": "20AD41E7",
+              "name": "Game Programming"
+            },
+            {
+              "code": "20AD41E8",
+              "name": "Reinforcement Learning"
+            },
+            {
+              "code": "20AD41E9",
+              "name": "Knowledge Representations And Reasoning"
+            },
+            {
+              "code": "20IT41E2",
+              "name": "Block Chain Technologies"
+            },
+            {
+              "code": "20AD41E1",
+              "name": "Big Data And Applications"
+            },
+            {
+              "code": "20AD41E2",
+              "name": "Data Science"
+            },
+            {
+              "code": "20AD41E3",
+              "name": "Neural Networks And Fuzzy Logic"
+            },
+            {
+              "code": "20CS41E1",
+              "name": "Compiler Design"
+            },
+            {
+              "code": "20AD41E4",
+              "name": "Deep Learning"
+            },
+            {
+              "code": "20AD41E5",
+              "name": "Nature Inspired Computing For Data Science"
+            },
+            {
+              "code": "20AD41E6",
+              "name": "Virtual Reality"
+            },
+            {
+              "code": "20CS41E3",
+              "name": "Python Programming - Ii"
+            },
+            {
+              "code": "20AD41SC",
+              "name": "Data Representation And Analysis Using Python"
+            },
+            {
+              "code": "20CS31O1",
+              "name": "Fundamentals Of Data Structures"
+            },
+            {
+              "code": "20CS31O2",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "20CS31O3",
+              "name": "Computer Networks"
+            },
+            {
+              "code": "20CS31O4",
+              "name": "Object Oriented Programming Through Java"
+            },
+            {
+              "code": "20CS32O1",
+              "name": "Software Engineering"
+            },
+            {
+              "code": "20CS32O2",
+              "name": "Operating Systems"
+            },
+            {
+              "code": "20CS32O3",
+              "name": "Fundamentals Of Algorithms"
+            },
+            {
+              "code": "20CS32O4",
+              "name": "Artificial Intelligence"
+            },
+            {
+              "code": "20CS41O1",
+              "name": "R Programming"
+            },
+            {
+              "code": "20CS41O2",
+              "name": "Machine Learning"
+            },
+            {
+              "code": "20CS41O3",
+              "name": "Foundations Of Data Science"
+            }
+          ]
+        }
+      },
+      "R19": {
+        "11": {
+          "core": [
+            {
+              "code": "19CS1101",
+              "name": "Programming For Problem Solving"
+            },
+            {
+              "code": "19CS11P1",
+              "name": "Programming For Problem Solving Laboratory"
+            },
+            {
+              "code": "19EE1101",
+              "name": "Basic Electrical Sciences"
+            },
+            {
+              "code": "19ME11P2",
+              "name": "Engineering Workshop"
+            },
+            {
+              "code": "19SH1101",
+              "name": "Functional English"
+            },
+            {
+              "code": "19SH1102",
+              "name": "Applied Physics"
+            },
+            {
+              "code": "19SH1104",
+              "name": "Engineering Mathematics - I"
+            },
+            {
+              "code": "19SH11P1",
+              "name": "English Language Laboratory"
+            },
+            {
+              "code": "19SH11P2",
+              "name": "Applied Physics Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "12": {
+          "core": [
+            {
+              "code": "19CS1201",
+              "name": "Python And Data Structures"
+            },
+            {
+              "code": "19CS1203",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "19CS12P1",
+              "name": "Python And Data Structures Laboratory"
+            },
+            {
+              "code": "19ME12P1",
+              "name": "Computer Aided Engineering Drawing Laboratory"
+            },
+            {
+              "code": "19SH1201",
+              "name": "Professional English"
+            },
+            {
+              "code": "19SH1203",
+              "name": "Engineering Chemistry"
+            },
+            {
+              "code": "19SH1204",
+              "name": "Engineering Mathematics - Ii"
+            },
+            {
+              "code": "19SH12P3",
+              "name": "Engineering Chemistry Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "21": {
+          "core": [
+            {
+              "code": "19CS2101",
+              "name": "Computer Organization"
+            },
+            {
+              "code": "19CS2102",
+              "name": "Object Oriented Programming Through Java"
+            },
+            {
+              "code": "19CS2103",
+              "name": "Operating Systems"
+            },
+            {
+              "code": "19CS2104",
+              "name": "Software Engineering"
+            },
+            {
+              "code": "19CS21P1",
+              "name": "Object Oriented Programming Through Java Laboratory"
+            },
+            {
+              "code": "19CS21P2",
+              "name": "Operating Systems Laboratory"
+            },
+            {
+              "code": "19CS21P3",
+              "name": "Database And It Essentials Laboratory"
+            },
+            {
+              "code": "19MC2101",
+              "name": "Environmental Sciences"
+            },
+            {
+              "code": "19SH2102",
+              "name": "Numerical Methods, Probability And Statistics"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "19CS2201",
+              "name": "Discrete Mathematical Structures"
+            },
+            {
+              "code": "19CS2202",
+              "name": "Design And Analysis Of Algorithms"
+            },
+            {
+              "code": "19CS2203",
+              "name": "Formal Languages And Automata Theory"
+            },
+            {
+              "code": "19CS2204",
+              "name": "Computer Networks"
+            },
+            {
+              "code": "19CS22P1",
+              "name": "Design And Analysis Of Algorithms Laboratory"
+            },
+            {
+              "code": "19CS22P2",
+              "name": "Computer Networks Laboratory"
+            },
+            {
+              "code": "19MC2202",
+              "name": "Technical English And Soft Skills"
+            },
+            {
+              "code": "19SH2202",
+              "name": "Engineering Economics And Financial Accounting"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "19CS3101",
+              "name": "Compiler Design"
+            },
+            {
+              "code": "19CS3102",
+              "name": "Object Oriented Analysis And Design"
+            },
+            {
+              "code": "19CS3103",
+              "name": "Cryptography & Network Security"
+            },
+            {
+              "code": "19CS3104",
+              "name": "Advanced Database Systems"
+            },
+            {
+              "code": "19CS31P1",
+              "name": "Object Oriented Analysis And Design Laboratory"
+            },
+            {
+              "code": "19CS31P2",
+              "name": "Cryptography And Network Security Laboratory"
+            }
+          ],
+          "elective": [
+            {
+              "code": "19CS31E1",
+              "name": "Software Architecture"
+            },
+            {
+              "code": "19CS31E2",
+              "name": "Distributed Systems"
+            },
+            {
+              "code": "19CS31E3",
+              "name": "Pattern Recognition"
+            },
+            {
+              "code": "19CS31E4",
+              "name": "Cloud Computing"
+            }
+          ]
+        },
+        "32": {
+          "core": [
+            {
+              "code": "19AC3201",
+              "name": "Universal Human Values"
+            },
+            {
+              "code": "19CS3201",
+              "name": "Internet Of Things"
+            },
+            {
+              "code": "19CS3202",
+              "name": "Artificial Intelligence"
+            },
+            {
+              "code": "19CS3203",
+              "name": "Data Warehousing And Mining"
+            },
+            {
+              "code": "19CS32MP",
+              "name": "Mini Project"
+            },
+            {
+              "code": "19CS32P1",
+              "name": "Internet Of Things Laboratory"
+            },
+            {
+              "code": "19CS32P2",
+              "name": "Data Warehousing And Mining Laboratory"
+            },
+            {
+              "code": "19SH3201",
+              "name": "Management Science"
+            }
+          ],
+          "elective": [
+            {
+              "code": "19CS32E1",
+              "name": "Software Project Management"
+            },
+            {
+              "code": "19CS32E2",
+              "name": "R Programming"
+            },
+            {
+              "code": "19CS32E3",
+              "name": "High Performance Computing"
+            },
+            {
+              "code": "19CS32E4",
+              "name": "Wireless Networks"
+            }
+          ]
+        },
+        "41": {
+          "core": [
+            {
+              "code": "19CS4101",
+              "name": "Machine Learning"
+            },
+            {
+              "code": "19CS4102",
+              "name": "Data Analytics"
+            },
+            {
+              "code": "19CS4103",
+              "name": "Web Technologies"
+            },
+            {
+              "code": "19CS41P1",
+              "name": "Machine Learning Laboratory"
+            },
+            {
+              "code": "19CS41P2",
+              "name": "Data Analytics Laboratory"
+            }
+          ],
+          "elective": [
+            {
+              "code": "19CS41E1",
+              "name": "Service Oriented Architecture"
+            },
+            {
+              "code": "19CS41E2",
+              "name": "Embedded Systems"
+            },
+            {
+              "code": "19CS41E3",
+              "name": "Image Processing And Visualization"
+            },
+            {
+              "code": "19CS41E4",
+              "name": "Adhoc & Sensor Networks"
+            }
+          ]
+        },
+        "42": {
+          "core": [
+            {
+              "code": "19CS42IS",
+              "name": "Internship"
+            },
+            {
+              "code": "19CS42MO",
+              "name": "Massive Open Online Courses"
+            },
+            {
+              "code": "19CS42PR",
+              "name": "Project"
+            }
+          ],
+          "elective": [
+            {
+              "code": "19CS42E1",
+              "name": "Software Testing And Quality Assurance"
+            },
+            {
+              "code": "19CS42E2",
+              "name": "Intelligent Software Agents"
+            },
+            {
+              "code": "19CS42E3",
+              "name": "Mobile Application Development"
+            },
+            {
+              "code": "19CS42E4",
+              "name": "Natural Language Processing"
+            },
+            {
+              "code": "19CS41O1",
+              "name": "Advanced Python Programming"
+            },
+            {
+              "code": "19CS41O2",
+              "name": "Artificial Intelligence"
+            },
+            {
+              "code": "19CS41O3",
+              "name": "Java Programming"
+            },
+            {
+              "code": "19CS41O4",
+              "name": "Software Engineering"
+            },
+            {
+              "code": "19CS42O1",
+              "name": "Data Analytics"
+            },
+            {
+              "code": "19CS42O2",
+              "name": "Web Design And Management"
+            },
+            {
+              "code": "19CS42O3",
+              "name": "R Programming"
+            },
+            {
+              "code": "19CS42O4",
+              "name": "Machine Learning"
+            }
+          ]
+        }
+      },
+      "R17": {
+        "11": {
+          "core": [
+            {
+              "code": "17CS1101",
+              "name": "Basic Computer Engineering"
+            },
+            {
+              "code": "17CS11P1",
+              "name": "Basic Computer Engineering Laboratory"
+            },
+            {
+              "code": "17EE1101",
+              "name": "Basic Electrical Sciences"
+            },
+            {
+              "code": "17ME11P2",
+              "name": "Computer Aided Engineering Drawing"
+            },
+            {
+              "code": "17SH1101",
+              "name": "Functional English"
+            },
+            {
+              "code": "17SH1102",
+              "name": "Engineering Physics"
+            },
+            {
+              "code": "17SH1104",
+              "name": "Numerical Analysis"
+            },
+            {
+              "code": "17SH11P1",
+              "name": "English Language Laboratory"
+            },
+            {
+              "code": "17SH11P2",
+              "name": "Engineering Physics Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "12": {
+          "core": [
+            {
+              "code": "17CS1201",
+              "name": "C-programming"
+            },
+            {
+              "code": "17CS1202",
+              "name": "Data Structures"
+            },
+            {
+              "code": "17CS12P1",
+              "name": "C-programming Laboratory"
+            },
+            {
+              "code": "17EC1201",
+              "name": "Electronic Devices"
+            },
+            {
+              "code": "17ME12P1",
+              "name": "Engineering Workshop"
+            },
+            {
+              "code": "17SH1201",
+              "name": "Professional English"
+            },
+            {
+              "code": "17SH1203",
+              "name": "Engineering Chemistry"
+            },
+            {
+              "code": "17SH1204",
+              "name": "Engineering Mathematics - I"
+            },
+            {
+              "code": "17SH12P3",
+              "name": "Engineering Chemistry Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "21": {
+          "core": [
+            {
+              "code": "17CS2101",
+              "name": "Mathematical Foundations Of Computer Science"
+            },
+            {
+              "code": "17CS2102",
+              "name": "Java Programming"
+            },
+            {
+              "code": "17CS2103",
+              "name": "Operating Systems"
+            },
+            {
+              "code": "17CS2104",
+              "name": "Basic Computer Organization"
+            },
+            {
+              "code": "17CS2105",
+              "name": "Software Engineering"
+            },
+            {
+              "code": "17CS21P1",
+              "name": "Java Programming Laboratory"
+            },
+            {
+              "code": "17CS21P2",
+              "name": "Operating Systems Laboratory"
+            },
+            {
+              "code": "17MC2101",
+              "name": "Environmental Studies"
+            },
+            {
+              "code": "17SH2106",
+              "name": "Probability And Statistics"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "17CS2201",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "17CS2202",
+              "name": "Formal Languages And Automata Theory"
+            },
+            {
+              "code": "17CS2203",
+              "name": "Design And Analysis Of Algorithms"
+            },
+            {
+              "code": "17CS2204",
+              "name": "Software Project Management"
+            },
+            {
+              "code": "17CS2205",
+              "name": "Computer Networks"
+            },
+            {
+              "code": "17CS2206",
+              "name": "Principles Of Programming Languages"
+            },
+            {
+              "code": "17CS22P1",
+              "name": "Database Management Systems Laboratory"
+            },
+            {
+              "code": "17CS22P2",
+              "name": "Computer Networks Laboratory"
+            },
+            {
+              "code": "17MC2202",
+              "name": "Technical English And Soft Skills"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "17CS3101",
+              "name": "Image Processing And Visualization"
+            },
+            {
+              "code": "17CS3102",
+              "name": "Artificial Intelligence"
+            },
+            {
+              "code": "17CS3103",
+              "name": "Cryptography And Network Security"
+            },
+            {
+              "code": "17CS3104",
+              "name": "Compiler Design"
+            },
+            {
+              "code": "17CS3105",
+              "name": "Web Application Development Using Python"
+            },
+            {
+              "code": "17CS31P1",
+              "name": "Image Processing And Visualization Laboratory"
+            },
+            {
+              "code": "17CS31P2",
+              "name": "Web Application Development Using Python Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "32": {
+          "core": [
+            {
+              "code": "17AC3201",
+              "name": "Professional Ethics And Life Skills"
+            },
+            {
+              "code": "17CS3201",
+              "name": "Internet Of Things"
+            },
+            {
+              "code": "17CS3202",
+              "name": "Object Oriented Analysis And Design"
+            },
+            {
+              "code": "17CS3203",
+              "name": "High Performance Computing"
+            },
+            {
+              "code": "17CS3204",
+              "name": "Data Mining And Data Warehousing"
+            },
+            {
+              "code": "17CS3205",
+              "name": "Cloud Computing"
+            },
+            {
+              "code": "17CS32MP",
+              "name": "Mini Project"
+            },
+            {
+              "code": "17CS32P1",
+              "name": "Internet Of Things Laboratory"
+            },
+            {
+              "code": "17CS32P2",
+              "name": "Object Oriented Analysis And Design Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "41": {
+          "core": [
+            {
+              "code": "17CS4101",
+              "name": "Mobile Application And Development"
+            },
+            {
+              "code": "17CS4102",
+              "name": "R Programming"
+            },
+            {
+              "code": "17CS4103",
+              "name": "Big Data And Hadoop"
+            },
+            {
+              "code": "17CS41P1",
+              "name": "Mobile Application And Development Laboratory"
+            },
+            {
+              "code": "17CS41P2",
+              "name": "Big Data And Hadoop Laboratory"
+            },
+            {
+              "code": "17SH4101",
+              "name": "Management Science"
+            }
+          ],
+          "elective": []
+        },
+        "42": {
+          "core": [
+            {
+              "code": "17CS42IS",
+              "name": "Internship"
+            },
+            {
+              "code": "17CS42MO",
+              "name": "Massive Open Online Courses"
+            },
+            {
+              "code": "17CS42PR",
+              "name": "Project"
+            }
+          ],
+          "elective": [
+            {
+              "code": "17CS31E1",
+              "name": "Advanced Database Management Systems"
+            },
+            {
+              "code": "17CS31E2",
+              "name": "Multimedia And Applications"
+            },
+            {
+              "code": "17CS31E3",
+              "name": "Software Architecture"
+            },
+            {
+              "code": "17CS31E4",
+              "name": "Genetic Algorithms And Applications"
+            },
+            {
+              "code": "17CS32E1",
+              "name": "C Sharp And Dotnet Framework"
+            },
+            {
+              "code": "17CS32E2",
+              "name": "Bioinformatics"
+            },
+            {
+              "code": "17CS32E3",
+              "name": "Intelligent Software Agents"
+            },
+            {
+              "code": "17CS32E4",
+              "name": "Microprocessor And Interfacing"
+            },
+            {
+              "code": "17CS41E1",
+              "name": "Introduction To Robotics And Navigation"
+            },
+            {
+              "code": "17CS41E2",
+              "name": "Information Retrieval"
+            },
+            {
+              "code": "17CS41E3",
+              "name": "Software Testing And Quality Assurance"
+            },
+            {
+              "code": "17CS41E4",
+              "name": "Machine Learning"
+            },
+            {
+              "code": "17CS42E1",
+              "name": "Wireless Networks"
+            },
+            {
+              "code": "17CS42E2",
+              "name": "Free And Open Source Software"
+            },
+            {
+              "code": "17CS42E3",
+              "name": "Pattern Recognition"
+            },
+            {
+              "code": "17CS42E4",
+              "name": "Virtual Reality"
+            },
+            {
+              "code": "17CS41O1",
+              "name": "Fundamentals Of Data Structures"
+            },
+            {
+              "code": "17CS41O2",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "17CS41O3",
+              "name": "C++ Programming"
+            },
+            {
+              "code": "17CS41O4",
+              "name": "Java Programming"
+            },
+            {
+              "code": "17CS42O1",
+              "name": "Python Programming"
+            },
+            {
+              "code": "17CS42O2",
+              "name": "Software Engineering"
+            },
+            {
+              "code": "17CS42O3",
+              "name": "Web Design And Management (wdm)"
+            },
+            {
+              "code": "17CS42O4",
+              "name": "Network Management"
+            }
+          ]
+        }
+      },
+      "R13": {}
+    },
+    "EEE": {
+      "R23": {
+        "11": {
+          "core": [
+            {
+              "code": "23EE1101",
+              "name": "Basic Electrical & Electronics Engineering"
+            },
+            {
+              "code": "23EE11P1",
+              "name": "Electrical & Electronics Engineering Workshop"
+            }
+          ],
+          "elective": []
+        },
+        "12": {
+          "core": [
+            {
+              "code": "23EE1201",
+              "name": "Electrical Circuit Analysis -i"
+            },
+            {
+              "code": "23EE12P1",
+              "name": "Electrical Circuits Lab"
+            },
+            {
+              "code": "23EE12P2",
+              "name": "Network Analysis And Simulation Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "21": {
+          "core": [
+            {
+              "code": "23AC21T1",
+              "name": "Environmental Science"
+            },
+            {
+              "code": "23AD21SC",
+              "name": "Data Structures"
+            },
+            {
+              "code": "23BS21T2",
+              "name": "Complex Variables And Numerical Methods"
+            },
+            {
+              "code": "23BS21T6",
+              "name": "Universal Human Values-understanding Harmony"
+            },
+            {
+              "code": "23EE12T2",
+              "name": "Electrical Circuit Analysis-ii"
+            },
+            {
+              "code": "23EE12T3",
+              "name": "Dc Machines & Transformers"
+            },
+            {
+              "code": "23EE21P1",
+              "name": "Electrical Circuit Analysis-ii And Simulation Lab"
+            },
+            {
+              "code": "23EE21P2",
+              "name": "Dc Machines & Transformers Lab"
+            },
+            {
+              "code": "23EE21T1",
+              "name": "Electromagnetic Fields"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "23BS22T4",
+              "name": "Managerial Economics And Financial Analysis"
+            },
+            {
+              "code": "23BS22T5",
+              "name": "Business Environment"
+            },
+            {
+              "code": "23BS22T6",
+              "name": "Organisational Behaviour"
+            },
+            {
+              "code": "23CS22SC",
+              "name": "Python Programming"
+            },
+            {
+              "code": "23EE22P1",
+              "name": "Induction And Synchronous Machines Lab"
+            },
+            {
+              "code": "23EE22P2",
+              "name": "Control Systems Lab"
+            },
+            {
+              "code": "23EE22T1",
+              "name": "Analog Circuits"
+            },
+            {
+              "code": "23EE22T2",
+              "name": "Power Systems-i"
+            },
+            {
+              "code": "23EE22T3",
+              "name": "Induction And Synchronous Machines"
+            },
+            {
+              "code": "23EE22T4",
+              "name": "Control Systems"
+            },
+            {
+              "code": "23ES22T1",
+              "name": "Design Thinking & Innovation"
+            }
+          ],
+          "elective": []
+        }
+      },
+      "R20": {
+        "11": {
+          "core": [
+            {
+              "code": "20CS1101",
+              "name": "Programming For Problem Solving"
+            },
+            {
+              "code": "20CS11P1",
+              "name": "Programming For Problem Solving Laboratory"
+            },
+            {
+              "code": "20EE1101",
+              "name": "Basic Electrical Sciences"
+            },
+            {
+              "code": "20ME11P2",
+              "name": "Engineering Workshop Laboratory"
+            },
+            {
+              "code": "20SH1101",
+              "name": "Communicative English"
+            },
+            {
+              "code": "20SH1102",
+              "name": "Applied Physics"
+            },
+            {
+              "code": "20SH1105",
+              "name": "Engineering Mathematics -i"
+            },
+            {
+              "code": "20SH11P2",
+              "name": "Applied Physics Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "12": {
+          "core": [
+            {
+              "code": "20CS12P2",
+              "name": "Python Programming Laboratory"
+            },
+            {
+              "code": "20EE1201",
+              "name": "Circuits & Networks"
+            },
+            {
+              "code": "20ME12P1",
+              "name": "Computer Aided Engineering Drawing Laboratory"
+            },
+            {
+              "code": "20SH1203",
+              "name": "Applied Chemistry"
+            },
+            {
+              "code": "20SH1204",
+              "name": "Engineering Mathematics -ii"
+            },
+            {
+              "code": "20SH12P1",
+              "name": "English Language Laboratory"
+            },
+            {
+              "code": "20SH12P4",
+              "name": "Applied Chemistry Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "21": {
+          "core": [
+            {
+              "code": "20EC2103",
+              "name": "Signals And Systems"
+            },
+            {
+              "code": "20EC2105",
+              "name": "Analog & Digital Electronics"
+            },
+            {
+              "code": "20EE2101",
+              "name": "Electro Mechanical Energy Conversion -i"
+            },
+            {
+              "code": "20EE2103",
+              "name": "Emcs-mechanical-ii-i"
+            },
+            {
+              "code": "20EE21P2",
+              "name": "Electrical Circuits And Simulation Lab"
+            },
+            {
+              "code": "20EE21P3",
+              "name": "Electro Mechanical Energy Conversion-i Lab"
+            },
+            {
+              "code": "20EE21S1",
+              "name": "Electrical Workshop"
+            },
+            {
+              "code": "20MC2102",
+              "name": "Managerial Economics And Financial Accounting"
+            },
+            {
+              "code": "20SH2101",
+              "name": "Engineering Mathematics -iii"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "20EE2201",
+              "name": "Electromechanical Energy Conversion - Ii"
+            },
+            {
+              "code": "20EE2202",
+              "name": "Power Electronics"
+            },
+            {
+              "code": "20EE2203",
+              "name": "Power Systems-i"
+            },
+            {
+              "code": "20EE22P1",
+              "name": "Iot Lab"
+            },
+            {
+              "code": "20EE22P2",
+              "name": "Power Electronics & Simulation Lab"
+            },
+            {
+              "code": "20EE22P3",
+              "name": "Eee Lab-mech -ii-ii"
+            },
+            {
+              "code": "20EE22S1",
+              "name": "Basics Of Pv System Installation"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "20EE3101",
+              "name": "Control Systems"
+            },
+            {
+              "code": "20EE3102",
+              "name": "Electromechanical Energy Conversion - Iii"
+            },
+            {
+              "code": "20EE3103",
+              "name": "Power Systems-ii"
+            },
+            {
+              "code": "20EE31P1",
+              "name": "Control Systems & Simulation Lab"
+            },
+            {
+              "code": "20EE31P2",
+              "name": "Elctromechanical Energy Conversion -ii Lab"
+            },
+            {
+              "code": "20MC3101",
+              "name": "Entrepreneurship"
+            },
+            {
+              "code": "20SH31SC",
+              "name": "Communication And Soft Skills"
+            }
+          ],
+          "elective": [
+            {
+              "code": "20CS31O1",
+              "name": "Fundamentals Of Data Structures"
+            },
+            {
+              "code": "20CS31O2",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "20CS31O4",
+              "name": "Object Oriented Programming Through Java"
+            },
+            {
+              "code": "20EC31O4",
+              "name": "embedded Systems"
+            },
+            {
+              "code": "20EE31E1",
+              "name": "industrial Electrical Systems"
+            },
+            {
+              "code": "20EE31E2",
+              "name": "high Voltage Engineering"
+            },
+            {
+              "code": "20EE31E3",
+              "name": "Pulse And Digital Circuits"
+            },
+            {
+              "code": "20EE31E4",
+              "name": "wind & Solar Energy Systems"
+            }
+          ]
+        },
+        "32": {
+          "core": [
+            {
+              "code": "20EC3204",
+              "name": "Microprocessors And Interfacing"
+            },
+            {
+              "code": "20EC32P4",
+              "name": "Microprocessor & Interfacing Laboratory"
+            },
+            {
+              "code": "20EE3201",
+              "name": "Electrical & Electronic Measurements"
+            },
+            {
+              "code": "20EE3202",
+              "name": "Power Systems-iii"
+            },
+            {
+              "code": "20EE32P1",
+              "name": "Electrical & Electronic Measurements Lab"
+            },
+            {
+              "code": "20EE32P2",
+              "name": "Power Systems & Simulation Lab"
+            },
+            {
+              "code": "20IT32SC",
+              "name": "Mobile App Development Laboratory"
+            },
+            {
+              "code": "20MC3201",
+              "name": "Advanced Aptitude And Reasoning Skills"
+            }
+          ],
+          "elective": [
+            {
+              "code": "20CE32O2",
+              "name": "Building Technology"
+            },
+            {
+              "code": "20CS32O1",
+              "name": "Software Engineering"
+            },
+            {
+              "code": "20CS32O2",
+              "name": "Operating Systems"
+            },
+            {
+              "code": "20EC32O3",
+              "name": "vlsi Design"
+            },
+            {
+              "code": "20EE32E1",
+              "name": "electrical Machine Design"
+            },
+            {
+              "code": "20EE32E2",
+              "name": "hvdc Transmission Systems"
+            },
+            {
+              "code": "20EE32E3",
+              "name": "modern Control Theory"
+            },
+            {
+              "code": "20EE32E4",
+              "name": "power Semiconductor Drives"
+            }
+          ]
+        },
+        "41": {
+          "core": [
+            {
+              "code": "20AD41SC",
+              "name": "Data Representation And Analysis Using R Laboratory"
+            }
+          ],
+          "elective": [
+            {
+              "code": "20SH41E1",
+              "name": "Management Science"
+            },
+            {
+              "code": "20SH41E2",
+              "name": "Customer Relationship Management"
+            },
+            {
+              "code": "20SH41E3",
+              "name": "Strategic Management"
+            },
+            {
+              "code": "20SH41E4",
+              "name": "Corporate Governance And Business Ethics"
+            },
+            {
+              "code": "20CE41O8",
+              "name": "Environmental Pollution And Control"
+            },
+            {
+              "code": "20CS41O2",
+              "name": "Python Programming - Ii"
+            },
+            {
+              "code": "20EC41O2",
+              "name": "dsp Processors & Architecture"
+            },
+            {
+              "code": "20ME41O2",
+              "name": "Robotics"
+            },
+            {
+              "code": "20EE41E1",
+              "name": "Analog Ic Applications"
+            },
+            {
+              "code": "20EE41E2",
+              "name": "basics Of Power System Harmonics & Electrical Insulation"
+            },
+            {
+              "code": "20EE41E3",
+              "name": "flexible Ac Transmission Systems"
+            },
+            {
+              "code": "20EE41E4",
+              "name": "Switchgear And Protection"
+            },
+            {
+              "code": "20EE41E5",
+              "name": "Digital Signal Processing"
+            },
+            {
+              "code": "20EE41E6",
+              "name": "electrical Energy Conservation & Auditing"
+            },
+            {
+              "code": "20EE41E7",
+              "name": "smart Grid Technology"
+            },
+            {
+              "code": "20EE41E8",
+              "name": "utilization Of Electric Power"
+            },
+            {
+              "code": "20EE41E9",
+              "name": "artificial Intelligence"
+            },
+            {
+              "code": "20EE41EA",
+              "name": "electrical Distribution Systems"
+            },
+            {
+              "code": "20EE41EB",
+              "name": "electrical And Hybrid Vehicles"
+            },
+            {
+              "code": "20EE41EC",
+              "name": "power System Operation And Control"
+            }
+          ]
+        },
+        "42": {
+          "core": [
+            {
+              "code": "20EE42PW",
+              "name": "Project Work& Summer Industry Internship"
+            }
+          ],
+          "elective": []
+        }
+      },
+      "R19": {
+        "11": {
+          "core": [
+            {
+              "code": "19CS11P1",
+              "name": "Lab (common To All Branches)"
+            },
+            {
+              "code": "19EE1101",
+              "name": "Basic Electrical Sciences"
+            },
+            {
+              "code": "19ME11P2",
+              "name": "Engineering Workshop"
+            },
+            {
+              "code": "19SH1101",
+              "name": "Functional English"
+            },
+            {
+              "code": "19SH1102",
+              "name": "Applied Physics"
+            },
+            {
+              "code": "19SH1104",
+              "name": "Engineering Mathematics-i"
+            },
+            {
+              "code": "19SH11P1",
+              "name": "English Language Laboratory"
+            },
+            {
+              "code": "19SH11P2",
+              "name": "Applied Physics Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "12": {
+          "core": [
+            {
+              "code": "19CS1202",
+              "name": "Data Structures"
+            },
+            {
+              "code": "19CS12P2",
+              "name": "Data Structures Laboratory"
+            },
+            {
+              "code": "19EE1201",
+              "name": "Circuits & Networks"
+            },
+            {
+              "code": "19ME12P1",
+              "name": "Computer Aided Engineering Drawing Laboratory"
+            },
+            {
+              "code": "19SH1201",
+              "name": "Professional English"
+            },
+            {
+              "code": "19SH1203",
+              "name": "Engineering Chemistry"
+            },
+            {
+              "code": "19SH1204",
+              "name": "Engineering Mathematics -ii"
+            },
+            {
+              "code": "19SH12P3",
+              "name": "Engineering Chemistry Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "21": {
+          "core": [
+            {
+              "code": "19EC2103",
+              "name": "Signals And Systems"
+            },
+            {
+              "code": "19EC2105",
+              "name": "Analog & Digital Electronics"
+            },
+            {
+              "code": "19EC21P4",
+              "name": "Analog & Digital Electronics Lab"
+            },
+            {
+              "code": "19EE2101",
+              "name": "Electro Mechanical Energy Conversion -i"
+            },
+            {
+              "code": "19EE2102",
+              "name": "Power Systems-i"
+            },
+            {
+              "code": "19EE21P1",
+              "name": "Electrical Circuits And Simulation Lab"
+            },
+            {
+              "code": "19EE21P2",
+              "name": "Electro Mechanical Energy Conversion-i Lab"
+            },
+            {
+              "code": "19MC2101",
+              "name": "Environmental Sciences"
+            },
+            {
+              "code": "19SH2101",
+              "name": "Engineering Mathematics -iii"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "19EE2201",
+              "name": "Electrical & Electronic Measurements"
+            },
+            {
+              "code": "19EE2202",
+              "name": "Electromagnetic Fields"
+            },
+            {
+              "code": "19EE2203",
+              "name": "Control Systems"
+            },
+            {
+              "code": "19EE2204",
+              "name": "Electromechanical Energy Conversion - Ii"
+            },
+            {
+              "code": "19EE2205",
+              "name": "Power Systems-ii"
+            },
+            {
+              "code": "19EE22P1",
+              "name": "Electrical Workshop"
+            },
+            {
+              "code": "19EE22P2",
+              "name": "Electrical & Electronic Measurements Lab"
+            },
+            {
+              "code": "19MC2203",
+              "name": "Engineering Economics And Financial Accounting"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "19AC3101",
+              "name": "Human Resource Management And Organisational Behaviour"
+            },
+            {
+              "code": "19EC3101",
+              "name": "Microprocessors And Microcontrollers"
+            },
+            {
+              "code": "19EC3103",
+              "name": "Pulse & Digital Circuits"
+            },
+            {
+              "code": "19EE3101",
+              "name": "Power Systems-iii"
+            },
+            {
+              "code": "19EE3102",
+              "name": "Modern Control Theory"
+            },
+            {
+              "code": "19EE31P1",
+              "name": "Control Systems& Simulation Lab"
+            },
+            {
+              "code": "19EE31P2",
+              "name": "Elctromechanical Energy Conversion -ii Lab"
+            }
+          ],
+          "elective": [
+            {
+              "code": "19EE31E1",
+              "name": "Advanced Instrumentation Systems"
+            },
+            {
+              "code": "19EE31E2",
+              "name": "High Voltage Engineering"
+            },
+            {
+              "code": "19EE31E3",
+              "name": "Industrial Electrical Systems"
+            },
+            {
+              "code": "19EE31E4",
+              "name": "Utilization Of Electric Power"
+            }
+          ]
+        },
+        "32": {
+          "core": [
+            {
+              "code": "19EC3205",
+              "name": "Analog Ic Applications"
+            },
+            {
+              "code": "19EC32P4",
+              "name": "Mp & Mc Lab"
+            },
+            {
+              "code": "19EE3201",
+              "name": "Power System Operation And Control"
+            },
+            {
+              "code": "19EE3202",
+              "name": "Power Electronics"
+            },
+            {
+              "code": "19EE3203",
+              "name": "Switchgear And Protection"
+            },
+            {
+              "code": "19EE32P1",
+              "name": "Power Electronics & Simulationlab"
+            }
+          ],
+          "elective": [
+            {
+              "code": "19EC32E5",
+              "name": "Embedded Systems"
+            },
+            {
+              "code": "19EE32E1",
+              "name": "Basics Of Power System Harmonics & Electrical Insulation"
+            },
+            {
+              "code": "19EE32E2",
+              "name": "Electrical Machine Design"
+            },
+            {
+              "code": "19EE32E3",
+              "name": "Wind &solar Energy Systems"
+            }
+          ]
+        },
+        "41": {
+          "core": [
+            {
+              "code": "19EE4101",
+              "name": "Electrical Distribution Systems"
+            },
+            {
+              "code": "19EE4102",
+              "name": "Power Semiconductor Drives"
+            },
+            {
+              "code": "19EE41P1",
+              "name": "Iot Lab"
+            },
+            {
+              "code": "19EE41P2",
+              "name": "Power Systems & Simulation Lab"
+            },
+            {
+              "code": "19SH4101",
+              "name": "Management Science"
+            }
+          ],
+          "elective": [
+            {
+              "code": "19CS41O1",
+              "name": "Advanced Python Programming"
+            },
+            {
+              "code": "19CS41O3",
+              "name": "Java Programming"
+            },
+            {
+              "code": "19ME41O1",
+              "name": "Robotics"
+            },
+            {
+              "code": "19SH41O1",
+              "name": "Nanotechnology"
+            },
+            {
+              "code": "19EC41E5",
+              "name": "Digital Signal Processing"
+            },
+            {
+              "code": "19EE41E1",
+              "name": "electrical And Hybrid Vehicles"
+            },
+            {
+              "code": "19EE41E3",
+              "name": "hvdc Transmission Systems"
+            },
+            {
+              "code": "19EE41E4",
+              "name": "smart Grid Technology"
+            }
+          ]
+        },
+        "42": {
+          "core": [
+            {
+              "code": "19EE42PW",
+              "name": "Project Work"
+            }
+          ],
+          "elective": [
+            {
+              "code": "19CE42O1",
+              "name": "Building Planning And Construction Techniques"
+            },
+            {
+              "code": "19CS42O3",
+              "name": "r Programming"
+            },
+            {
+              "code": "19EC41O2",
+              "name": "vlsi Design"
+            },
+            {
+              "code": "19EC42O1",
+              "name": "computer Organization"
+            },
+            {
+              "code": "19EE42E1",
+              "name": "Digital Control Systems"
+            },
+            {
+              "code": "19EE42E2",
+              "name": "electrical Energy Conservation & Auditing"
+            },
+            {
+              "code": "19EE42E3",
+              "name": "flexible Ac Transmission Systems"
+            },
+            {
+              "code": "19EE42E4",
+              "name": "neural Networks And Fuzzy Logic"
+            }
+          ]
+        }
+      },
+      "R17": {
+        "21": {
+          "core": [
+            {
+              "code": "17EC2101",
+              "name": "Signals & Systems"
+            },
+            {
+              "code": "17EC2102",
+              "name": "Switching Theory & Logic Design"
+            },
+            {
+              "code": "17EC21P1",
+              "name": "Electronic Devices Lab"
+            },
+            {
+              "code": "17EE2101",
+              "name": "Electro Mechanical Energy Conversion -i"
+            },
+            {
+              "code": "17EE2102",
+              "name": "Generation Of Electric Power"
+            },
+            {
+              "code": "17EE2103",
+              "name": "Electrical Measurements"
+            },
+            {
+              "code": "17EE21P1",
+              "name": "Circuits & Networks Lab"
+            },
+            {
+              "code": "17MC2101",
+              "name": "Environmental Studies"
+            },
+            {
+              "code": "17SH2101",
+              "name": "Engineering Mathematics -ii"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "17EC2201",
+              "name": "Pulse & Switching Circuits"
+            },
+            {
+              "code": "17EC22P4",
+              "name": "Pulse & Switching Circuits Lab"
+            },
+            {
+              "code": "17EE2201",
+              "name": "Electromagnetic Fields"
+            },
+            {
+              "code": "17EE2202",
+              "name": "Electromechanical Energy Conversion - Ii"
+            },
+            {
+              "code": "17EE2203",
+              "name": "Power Systems-i"
+            },
+            {
+              "code": "17EE22P1",
+              "name": "Electro Mechanical Energy Convertion-i Lab"
+            },
+            {
+              "code": "17MC2201",
+              "name": "Technical English And Soft Skills"
+            },
+            {
+              "code": "17SH2201",
+              "name": "Engineering Mathematics -iii"
+            },
+            {
+              "code": "17SH2202",
+              "name": "Engineering Economics And Financial Accounting"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "17EC3104",
+              "name": "Analog Ic Applications"
+            },
+            {
+              "code": "17EE3101",
+              "name": "Electronic Measurements"
+            },
+            {
+              "code": "17EE3102",
+              "name": "Electromechanical Energy Conversion - Iii"
+            },
+            {
+              "code": "17EE3103",
+              "name": "Linear Control Systems"
+            },
+            {
+              "code": "17EE3104",
+              "name": "Power Systems-ii"
+            },
+            {
+              "code": "17EE31P1",
+              "name": "Electrical Measurements Lab"
+            },
+            {
+              "code": "17EE31P2",
+              "name": "Elctromechanical Energy Conversion -ii Lab"
+            }
+          ],
+          "elective": [
+            {
+              "code": "17EE31E1",
+              "name": "advanced Instrumentation Systems"
+            },
+            {
+              "code": "17EE31E2",
+              "name": "industrial Electrical Systems"
+            },
+            {
+              "code": "17EE31E3",
+              "name": "wind &solar Energy Systems"
+            }
+          ]
+        },
+        "32": {
+          "core": [
+            {
+              "code": "17EC3206",
+              "name": "Microprocessors And Interfacing"
+            },
+            {
+              "code": "17EE3201",
+              "name": "Modern Control Theory"
+            },
+            {
+              "code": "17EE3202",
+              "name": "Power Electronics"
+            },
+            {
+              "code": "17EE3203",
+              "name": "Switchgear And Protection"
+            },
+            {
+              "code": "17EE3204",
+              "name": "Utilization Of Electric Power"
+            },
+            {
+              "code": "17EE32P1",
+              "name": "Control Systems Lab"
+            },
+            {
+              "code": "17SH32P1",
+              "name": "Advanced Communication Skills Lab"
+            }
+          ],
+          "elective": [
+            {
+              "code": "17EE32E1",
+              "name": "basics Of Power System Harmonics & Electrical Insulation"
+            },
+            {
+              "code": "17EE32E2",
+              "name": "electrical Energy Conservation & Auditing"
+            },
+            {
+              "code": "17EE32E3",
+              "name": "electrical Machine Design"
+            },
+            {
+              "code": "17EE32E4",
+              "name": "neural Networks And Fuzzy Logic"
+            }
+          ]
+        },
+        "41": {
+          "core": [
+            {
+              "code": "17EC41P4",
+              "name": "Microprocessor & Interfacing Lab"
+            },
+            {
+              "code": "17EE4101",
+              "name": "Power System Analysis"
+            },
+            {
+              "code": "17EE4102",
+              "name": "Power Semiconductor Drives"
+            },
+            {
+              "code": "17EE4103",
+              "name": "Power System Operation And Control"
+            },
+            {
+              "code": "17EE41P1",
+              "name": "Power Electronics Lab"
+            },
+            {
+              "code": "17EE41P2",
+              "name": "Power Systems Lab"
+            },
+            {
+              "code": "17SH4102",
+              "name": "Management Science"
+            }
+          ],
+          "elective": [
+            {
+              "code": "17CS41O2",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "17ME41O2",
+              "name": "Robotics"
+            },
+            {
+              "code": "17SH41O1",
+              "name": "Nanotechnology"
+            },
+            {
+              "code": "17EC41E5",
+              "name": "embedded Systems"
+            },
+            {
+              "code": "17EE41E1",
+              "name": "Digital Control Systems"
+            },
+            {
+              "code": "17EE41E2",
+              "name": "electrical And Hybrid Vehicles"
+            },
+            {
+              "code": "17EE41E3",
+              "name": "high Voltage Engineering"
+            }
+          ]
+        },
+        "42": {
+          "core": [
+            {
+              "code": "17EE42PW",
+              "name": "Project Work"
+            }
+          ],
+          "elective": [
+            {
+              "code": "17CE42O1",
+              "name": "Building Planning And Construction Techniques"
+            },
+            {
+              "code": "17CS42O1",
+              "name": "python Programming"
+            },
+            {
+              "code": "17EC42O1",
+              "name": "internet Of Things"
+            },
+            {
+              "code": "17EE42E1",
+              "name": "electrical Distribution Systems"
+            },
+            {
+              "code": "17EE42E2",
+              "name": "high Voltage Direct Current Transmission Systems"
+            },
+            {
+              "code": "17EE42E3",
+              "name": "power Quality And Facts"
+            },
+            {
+              "code": "17EE42E4",
+              "name": "smart Grid Technology"
+            }
+          ]
+        }
+      },
+      "R13": {
+        "11": {
+          "core": [
+            {
+              "code": "17PS1101",
+              "name": "Computer Methods In Power System"
+            },
+            {
+              "code": "17PS1102",
+              "name": "Hvdc & Facts"
+            },
+            {
+              "code": "17PS1103",
+              "name": "Power System Operation & Control"
+            },
+            {
+              "code": "17PS1104",
+              "name": "Power Quality"
+            },
+            {
+              "code": "17SH1101",
+              "name": "Probability, Statistics And Computational Techniques"
+            }
+          ],
+          "elective": [
+            {
+              "code": "17PS11E1",
+              "name": "Electrical Distribution Systems (eds)"
+            },
+            {
+              "code": "17PS11E2",
+              "name": "Distributed Generation"
+            },
+            {
+              "code": "17PS11E3",
+              "name": "Power System Instrumentation"
+            },
+            {
+              "code": "17PS11E4",
+              "name": "Smart Electric Grid"
+            }
+          ]
+        },
+        "12": {
+          "core": [
+            {
+              "code": "13PS1208",
+              "name": "Voltage Stability"
+            },
+            {
+              "code": "17PS1205",
+              "name": "Advanced Power System Protection"
+            },
+            {
+              "code": "17PS1206",
+              "name": "Power System Dynamics & Stability"
+            },
+            {
+              "code": "17PS1207",
+              "name": "Ai Techniques In Power Systems"
+            },
+            {
+              "code": "17PS1209",
+              "name": "Reactive Power Control"
+            }
+          ],
+          "elective": [
+            {
+              "code": "17PS12E1",
+              "name": "Power System Transients (pst)"
+            },
+            {
+              "code": "17PS12E2",
+              "name": "Power System Reliabillity"
+            },
+            {
+              "code": "17PS12E3",
+              "name": "Ehvac Transmission"
+            },
+            {
+              "code": "17PS12E4",
+              "name": "Advanced Digital Signal Processing"
+            }
+          ]
+        },
+        "32": {
+          "core": [
+            {
+              "code": "13EE3211",
+              "name": "Modern Controltheory"
+            },
+            {
+              "code": "13EE3212",
+              "name": "Power Systems-ii"
+            },
+            {
+              "code": "13EE3213",
+              "name": "Power Electronics"
+            }
+          ],
+          "elective": [
+            {
+              "code": "13CS3205",
+              "name": "Computer Organization"
+            },
+            {
+              "code": "13CS3208",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "13EE32E1",
+              "name": "Utilization Of Electric Power"
+            },
+            {
+              "code": "13EE32E2",
+              "name": "Embedded Systems"
+            }
+          ]
+        },
+        "41": {
+          "core": [
+            {
+              "code": "13EC4101",
+              "name": "Digital Signal Processing"
+            },
+            {
+              "code": "13EE4114",
+              "name": "Power Semiconductor Drives"
+            },
+            {
+              "code": "13EE4115",
+              "name": "Switchgear And Protection"
+            },
+            {
+              "code": "13EE4116",
+              "name": "Power System Analysis"
+            },
+            {
+              "code": "13SH4102",
+              "name": "Management Science"
+            }
+          ],
+          "elective": [
+            {
+              "code": "13EC41E2",
+              "name": "Computer Networks"
+            },
+            {
+              "code": "13EE41E1",
+              "name": "Neural Networks And Fuzzy Logic"
+            },
+            {
+              "code": "13EE41E2",
+              "name": "Electrical Distribution Systems"
+            },
+            {
+              "code": "13EE41E3",
+              "name": "Digital Control Systems"
+            }
+          ]
+        },
+        "42": {
+          "core": [
+            {
+              "code": "13EE4217",
+              "name": "High Voltage Engineering"
+            },
+            {
+              "code": "13EE4218",
+              "name": "Power System Operation & Control"
+            }
+          ],
+          "elective": [
+            {
+              "code": "13EE42E1",
+              "name": "high Voltage Direct Current Transmission"
+            },
+            {
+              "code": "13EE42E2",
+              "name": "electrical Machine Design"
+            },
+            {
+              "code": "13EE42E3",
+              "name": "electrical Power Quality"
+            },
+            {
+              "code": "13EE42E4",
+              "name": "bio-medical Engineering"
+            }
+          ]
+        }
+      }
+    },
+    "IT": {
+      "R23": {
+        "11": {
+          "core": [
+            {
+              "code": "23BS11P2",
+              "name": "Chemistry Lab"
+            },
+            {
+              "code": "23BS11P3",
+              "name": "Communicative English Lab"
+            },
+            {
+              "code": "23BS11P5",
+              "name": "Health And Wellness, Yoga And Sports"
+            },
+            {
+              "code": "23BS11T2",
+              "name": "Chemistry"
+            },
+            {
+              "code": "23BS11T3",
+              "name": "Linear Algebra & Calculus"
+            },
+            {
+              "code": "23BS11T4",
+              "name": "Communicative English"
+            },
+            {
+              "code": "23ES11P1",
+              "name": "Computer Programming Laboratory"
+            },
+            {
+              "code": "23ES11P4",
+              "name": "Engineering Workshop"
+            },
+            {
+              "code": "23ES11T1",
+              "name": "Introduction To Programming"
+            },
+            {
+              "code": "23ES11T2",
+              "name": "Basic Civil And Mechanical Engineering"
+            }
+          ],
+          "elective": []
+        },
+        "12": {
+          "core": [
+            {
+              "code": "23BS12P1",
+              "name": "Engineering Physics Lab"
+            },
+            {
+              "code": "23BS12P6",
+              "name": "Nss-ncc-scouts & Guides-community Service"
+            },
+            {
+              "code": "23BS12T1",
+              "name": "Engineering Physics"
+            },
+            {
+              "code": "23BS12T4",
+              "name": "Differential Equations And Vector Calculus"
+            },
+            {
+              "code": "23CS12P1",
+              "name": "Data Structures Laboratory"
+            },
+            {
+              "code": "23CS12T1",
+              "name": "Data Structures"
+            },
+            {
+              "code": "23ES12P1",
+              "name": "Electrical & Electronics Engineering Workshop"
+            },
+            {
+              "code": "23ES12P2",
+              "name": "It Workshop"
+            },
+            {
+              "code": "23ES12T2",
+              "name": "Basic Electrical & Electronics Engineering"
+            },
+            {
+              "code": "23ES12T6",
+              "name": "Engineering Graphics"
+            }
+          ],
+          "elective": []
+        },
+        "21": {
+          "core": [
+            {
+              "code": "23AC21T1",
+              "name": "Environmental Science"
+            },
+            {
+              "code": "23BS21T5",
+              "name": "Discrete Mathematics & Graph Theory"
+            },
+            {
+              "code": "23BS21T6",
+              "name": "Universal Human Values-understanding Harmony And Ethical Human Conduct"
+            },
+            {
+              "code": "23CS21P1",
+              "name": "Advanced Data Structures & Algorithm Analysis Lab"
+            },
+            {
+              "code": "23CS21P2",
+              "name": "Object-oriented Programming Through Java Lab"
+            },
+            {
+              "code": "23CS21SC",
+              "name": "Python Programming"
+            },
+            {
+              "code": "23CS21T1",
+              "name": "Advanced Data Structures & Algorithm Analysis"
+            },
+            {
+              "code": "23CS21T2",
+              "name": "Object-oriented Programming Through Java"
+            },
+            {
+              "code": "23IT21T1",
+              "name": "Digital Logic & Computer Organization"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "23AD22P1",
+              "name": "Database Management Systems Lab"
+            },
+            {
+              "code": "23AD22T1",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "23BS22T2",
+              "name": "Probability & Statistics"
+            },
+            {
+              "code": "23CS22T1",
+              "name": "Operating Systems"
+            },
+            {
+              "code": "23CS22T2",
+              "name": "Software Engineering"
+            },
+            {
+              "code": "23ES22T1",
+              "name": "Design Thinking & Innovation"
+            },
+            {
+              "code": "23ES22T2",
+              "name": "Optimization Techniques"
+            },
+            {
+              "code": "23IT22P1",
+              "name": "Operating Systems & Software Engineering Lab"
+            },
+            {
+              "code": "23IT22SC",
+              "name": "Python With Django"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "23CS31P1",
+              "name": "Artificial Intelligence Lab"
+            },
+            {
+              "code": "23CS31P2",
+              "name": "Computer Networks & Internet Protocols Lab"
+            },
+            {
+              "code": "23CS31SC",
+              "name": "Full Stack Development - I"
+            },
+            {
+              "code": "23CS31T1",
+              "name": "Artificial Intelligence"
+            },
+            {
+              "code": "23CS31T2",
+              "name": "Computer Networks & Internet Protocols"
+            },
+            {
+              "code": "23CS31T3",
+              "name": "Automata Theory And Compiler Design"
+            },
+            {
+              "code": "23ES31P1",
+              "name": "Tinkering Lab"
+            },
+            {
+              "code": "23ES31T1",
+              "name": "Introduction To Quantum Technologies And Applications"
+            }
+          ],
+          "elective": [
+            {
+              "code": "23CS31O1",
+              "name": "Java Programming"
+            },
+            {
+              "code": "23CS31O2",
+              "name": "Introduction To Artificial Intelligence"
+            },
+            {
+              "code": "23CS31E1",
+              "name": "Object Oriented Analysis And Design"
+            },
+            {
+              "code": "23CS31E2",
+              "name": "Soft Computing"
+            },
+            {
+              "code": "23CS31E3",
+              "name": "Microprocessors And Microcontrollers"
+            },
+            {
+              "code": "23CS31E4",
+              "name": "Data Mining & Data Warehousing"
+            }
+          ]
+        },
+        "32": {
+          "core": [
+            {
+              "code": "23CS32P1",
+              "name": "Machine Learning Lab"
+            },
+            {
+              "code": "23CS32P2",
+              "name": "Cryptography And Network Security Lab"
+            },
+            {
+              "code": "23CS32SC",
+              "name": "Soft Skills"
+            },
+            {
+              "code": "23CS32T1",
+              "name": "Machine Learning"
+            },
+            {
+              "code": "23CS32T2",
+              "name": "Cloud Computing"
+            },
+            {
+              "code": "23CS32T3",
+              "name": "Cryptography & Network Securit"
+            },
+            {
+              "code": "23ES32MC",
+              "name": "Technical Paper Writing & Ipr"
+            }
+          ],
+          "elective": [
+            {
+              "code": "23CS32O1",
+              "name": "Operating Systems"
+            },
+            {
+              "code": "23CS32O2",
+              "name": "introduction To Machine Learning"
+            },
+            {
+              "code": "23CS32E1",
+              "name": "software Testing Methodologies"
+            },
+            {
+              "code": "23CS32E2",
+              "name": "cyber Security"
+            },
+            {
+              "code": "23CS32E3",
+              "name": "devops"
+            },
+            {
+              "code": "23CS32E4",
+              "name": "embedded System Design"
+            },
+            {
+              "code": "23CD32T1",
+              "name": "natural Language Processing"
+            },
+            {
+              "code": "23CS32E5",
+              "name": "software Project Management"
+            },
+            {
+              "code": "23CS32E6",
+              "name": "mobile Adhoc Networks"
+            },
+            {
+              "code": "23CS32E7",
+              "name": "distributed Operating Systems"
+            }
+          ]
+        },
+        "41": {
+          "core": [
+            {
+              "code": "23CS41SC",
+              "name": "Prompt Engineering"
+            },
+            {
+              "code": "23CS41T1",
+              "name": "Deep Learning"
+            }
+          ],
+          "elective": [
+            {
+              "code": "23BS41T1",
+              "name": "business Ethics And Corporate Governance"
+            },
+            {
+              "code": "23BS41T2",
+              "name": "e-business"
+            },
+            {
+              "code": "23BS41T3",
+              "name": "management Science"
+            },
+            {
+              "code": "23CS41O1",
+              "name": "database Management Systems"
+            },
+            {
+              "code": "23CS41O2",
+              "name": "cyber Security"
+            },
+            {
+              "code": "23CS41O3",
+              "name": "computer Networks"
+            },
+            {
+              "code": "23CS41O4",
+              "name": "internet Of Things"
+            },
+            {
+              "code": "23CS41E1",
+              "name": "software Architecture And Design Patterns"
+            },
+            {
+              "code": "23CS41E2",
+              "name": "block Chain Technology"
+            },
+            {
+              "code": "23CS41E3",
+              "name": "augmented Reality And Virtual Reality"
+            },
+            {
+              "code": "23CS41T1",
+              "name": "deep Learning"
+            },
+            {
+              "code": "23CS41E5",
+              "name": "agile Methodologies"
+            },
+            {
+              "code": "23CS41E6",
+              "name": "metaverse"
+            },
+            {
+              "code": "23CS41E7",
+              "name": "computer Vision"
+            },
+            {
+              "code": "23CS41E8",
+              "name": "cyber Physical Systems"
+            }
+          ]
+        }
+      },
+      "R20": {
+        "11": {
+          "core": [
+            {
+              "code": "20CS1101",
+              "name": "Programming For Problem Solving"
+            },
+            {
+              "code": "20CS11P1",
+              "name": "Programming For Problem Solving Laboratory"
+            },
+            {
+              "code": "20EE1102",
+              "name": "Basic Electrical Engineering"
+            },
+            {
+              "code": "20ME11P2",
+              "name": "Engineering Workshop"
+            },
+            {
+              "code": "20SH1101",
+              "name": "Communicative English"
+            },
+            {
+              "code": "20SH1102",
+              "name": "Applied Physics"
+            },
+            {
+              "code": "20SH1105",
+              "name": "Engineering Mathematics - I"
+            },
+            {
+              "code": "20SH11P2",
+              "name": "Applied Physics Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "12": {
+          "core": [
+            {
+              "code": "20CS1201",
+              "name": "Python Programming"
+            },
+            {
+              "code": "20CS1202",
+              "name": "Data Structures"
+            },
+            {
+              "code": "20CS12P1",
+              "name": "Data Structures Using Python Laboratory"
+            },
+            {
+              "code": "20CS12P2",
+              "name": "Python Programming Laboratory (ece & Eee)"
+            },
+            {
+              "code": "20CS12P3",
+              "name": "C Programming Laboratory (me)"
+            },
+            {
+              "code": "20ME12P1",
+              "name": "Computer Aided Engineering Drawing Laboratory"
+            },
+            {
+              "code": "20SH1203",
+              "name": "Applied Chemistry"
+            },
+            {
+              "code": "20SH1204",
+              "name": "Engineering Mathematics - Ii"
+            },
+            {
+              "code": "20SH12P1",
+              "name": "English Language Laboratory"
+            },
+            {
+              "code": "20SH12P4",
+              "name": "Applied Chemistry Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "21": {
+          "core": [
+            {
+              "code": "20CS2101",
+              "name": "Discrete Mathematical Structures"
+            },
+            {
+              "code": "20CS2102",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "20CS2103",
+              "name": "Computer Networks"
+            },
+            {
+              "code": "20CS21P1",
+              "name": "Database Management Systems Laboratory"
+            },
+            {
+              "code": "20CS21P2",
+              "name": "Computer Networks Laboratory"
+            },
+            {
+              "code": "20CS21SC",
+              "name": "Application Development Using Java Programming"
+            },
+            {
+              "code": "20EC2106",
+              "name": "Digital Logic Design & Computer Organization"
+            },
+            {
+              "code": "20EC21P5",
+              "name": "Vhdl Programming Laboratory"
+            },
+            {
+              "code": "20MC2101",
+              "name": "Environmental Science"
+            },
+            {
+              "code": "20SH2103",
+              "name": "Numerical Methods, Probability And Statistics"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "20CS2201",
+              "name": "Design And Analysis Of Algorithms (1)"
+            },
+            {
+              "code": "20CS2202",
+              "name": "Operating Systems"
+            },
+            {
+              "code": "20CS2203",
+              "name": "Software Engineering"
+            },
+            {
+              "code": "20CS2204",
+              "name": "Formal Languages And Automata Theory"
+            },
+            {
+              "code": "20CS22P1",
+              "name": "Design And Analysis Of Algorithms Laboratory"
+            },
+            {
+              "code": "20CS22P2",
+              "name": "Operating Systems Laboratory"
+            },
+            {
+              "code": "20CS22P3",
+              "name": "Software Engineering Laboratory"
+            },
+            {
+              "code": "20CS22SC",
+              "name": "Web Development"
+            },
+            {
+              "code": "20SH2201",
+              "name": "Managerial Economics And Financial Accounting"
+            },
+            {
+              "code": "20SH2202",
+              "name": "Universal Human Values"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "20AD3101",
+              "name": "Artificial Intelligence"
+            },
+            {
+              "code": "20AD31P1",
+              "name": "Artificial Intelligence Laboratory"
+            },
+            {
+              "code": "20CS3101",
+              "name": "Data Warehousing And Mining"
+            },
+            {
+              "code": "20CS31P1",
+              "name": "Data Warehousing And Mining Laboratory"
+            },
+            {
+              "code": "20IT3101",
+              "name": "Wireless And Ad Hoc Networks"
+            },
+            {
+              "code": "20MC3101",
+              "name": "Entrepreneurship"
+            }
+          ],
+          "elective": [
+            {
+              "code": "20CS31E1",
+              "name": "Object Oriented Analysis And Design"
+            },
+            {
+              "code": "20CS31E2",
+              "name": "Principles Of Programming Languages"
+            },
+            {
+              "code": "20CS31E3",
+              "name": "Computer Graphics"
+            },
+            {
+              "code": "20IT31E1",
+              "name": "Free And Open Source Software"
+            },
+            {
+              "code": "20SH31SC",
+              "name": "Communication And Soft Skills"
+            }
+          ]
+        },
+        "32": {
+          "core": [
+            {
+              "code": "20CS3201",
+              "name": "Machine Learning Applications"
+            },
+            {
+              "code": "20CS32P1",
+              "name": "Machine Learning Applications Laboratory"
+            },
+            {
+              "code": "20IT3201",
+              "name": "Internet Of Things"
+            },
+            {
+              "code": "20IT3202",
+              "name": "Cryptography And Network Security"
+            },
+            {
+              "code": "20IT32P1",
+              "name": "Internet Of Things Laboratory"
+            },
+            {
+              "code": "20IT32P2",
+              "name": "Cryptography And Network Security Laboratory"
+            },
+            {
+              "code": "20MC3201",
+              "name": "Advanced Aptitude And Reasoning Skills"
+            }
+          ],
+          "elective": [
+            {
+              "code": "20IT32J1",
+              "name": "Cloud Computing"
+            },
+            {
+              "code": "20IT32J2",
+              "name": "Software Testing Tools"
+            },
+            {
+              "code": "20AD32E1",
+              "name": "Natural Language Processing"
+            },
+            {
+              "code": "20IT32E1",
+              "name": "Software Project Management"
+            },
+            {
+              "code": "20IT32E2",
+              "name": "Software Architecture"
+            },
+            {
+              "code": "20IT32E3",
+              "name": "Social Information Networks"
+            },
+            {
+              "code": "20IT32SC",
+              "name": "Mobile App Development Laboratory"
+            }
+          ]
+        },
+        "41": {
+          "core": [],
+          "elective": [
+            {
+              "code": "20SH41E1",
+              "name": "Management Science"
+            },
+            {
+              "code": "20SH41E2",
+              "name": "Customer Relationship Management"
+            },
+            {
+              "code": "20SH41E3",
+              "name": "Strategic Management"
+            },
+            {
+              "code": "20SH41E4",
+              "name": "Corporate Governance And Business Ethics"
+            },
+            {
+              "code": "20CS41J1",
+              "name": "Service Oriented Architecture"
+            },
+            {
+              "code": "20CS41J2",
+              "name": "Cyber Security"
+            },
+            {
+              "code": "20AD41E1",
+              "name": "Big Data And Applications"
+            },
+            {
+              "code": "20AD41E2",
+              "name": "Data Science"
+            },
+            {
+              "code": "20AD41E3",
+              "name": "Neural Networks And Fuzzy Logic"
+            },
+            {
+              "code": "20CS41E1",
+              "name": "Compiler Design"
+            },
+            {
+              "code": "20AD41E4",
+              "name": "Deep Learning"
+            },
+            {
+              "code": "20AD41E5",
+              "name": "Nature Inspired Computing For Data Science"
+            },
+            {
+              "code": "20AD41E6",
+              "name": "Virtual Reality"
+            },
+            {
+              "code": "20CS41E3",
+              "name": "Python Programming - Ii"
+            },
+            {
+              "code": "20AD41E7",
+              "name": "Game Programming"
+            },
+            {
+              "code": "20AD41E8",
+              "name": "Reinforcement Learning"
+            },
+            {
+              "code": "20AD41E9",
+              "name": "Knowledge Representations And Reasoning"
+            },
+            {
+              "code": "20IT41E2",
+              "name": "Block Chain Technologies"
+            },
+            {
+              "code": "20AD41SC",
+              "name": "Data Representation And Analysis Using Python"
+            }
+          ]
+        }
+      },
+      "R19": {
+        "11": {
+          "core": [
+            {
+              "code": "19CS1101",
+              "name": "Programming For Problem Solving"
+            },
+            {
+              "code": "19CS11P1",
+              "name": "Programming For Problem Solving Laboratory"
+            },
+            {
+              "code": "19EE1101",
+              "name": "Basic Electrical Sciences"
+            },
+            {
+              "code": "19ME11P2",
+              "name": "Engineering Workshop"
+            },
+            {
+              "code": "19SH1101",
+              "name": "Functional English"
+            },
+            {
+              "code": "19SH1102",
+              "name": "Applied Physics"
+            },
+            {
+              "code": "19SH1104",
+              "name": "Engineering Mathematics - I"
+            },
+            {
+              "code": "19SH11P1",
+              "name": "English Language Laboratory"
+            },
+            {
+              "code": "19SH11P2",
+              "name": "Applied Physics Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "12": {
+          "core": [
+            {
+              "code": "19CS1201",
+              "name": "Python And Data Structures"
+            },
+            {
+              "code": "19CS1203",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "19CS12P1",
+              "name": "Python And Data Structures Laboratory"
+            },
+            {
+              "code": "19ME12P1",
+              "name": "Computer Aided Engineering Drawing Laboratory"
+            },
+            {
+              "code": "19SH1201",
+              "name": "Professional English"
+            },
+            {
+              "code": "19SH1203",
+              "name": "Engineering Chemistry"
+            },
+            {
+              "code": "19SH1204",
+              "name": "Engineering Mathematics - Ii"
+            },
+            {
+              "code": "19SH12P3",
+              "name": "Engineering Chemistry Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "21": {
+          "core": [
+            {
+              "code": "19CS2101",
+              "name": "Computer Organization"
+            },
+            {
+              "code": "19CS2102",
+              "name": "Object Oriented Programming Through Java"
+            },
+            {
+              "code": "19CS2103",
+              "name": "Operating Systems"
+            },
+            {
+              "code": "19CS21P1",
+              "name": "Object Oriented Programming Through Java Laboratory"
+            },
+            {
+              "code": "19CS21P2",
+              "name": "Operating Systems Laboratory"
+            },
+            {
+              "code": "19IT21P1",
+              "name": "I T Skills Laboratory"
+            },
+            {
+              "code": "19MC2101",
+              "name": "Environmental Sciences"
+            },
+            {
+              "code": "19SH2102",
+              "name": "Numerical Methods, Probability And Statistics"
+            },
+            {
+              "code": "19SH2103",
+              "name": "Engineering Economics And Financial Accounting"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "19CS2201",
+              "name": "Discrete Mathematical Structures"
+            },
+            {
+              "code": "19CS2202",
+              "name": "Design And Analysis Of Algorithms"
+            },
+            {
+              "code": "19CS2204",
+              "name": "Computer Networks"
+            },
+            {
+              "code": "19CS22P2",
+              "name": "Computer Networks Laboratory"
+            },
+            {
+              "code": "19IT2201",
+              "name": "Object Oriented Analysis And Design"
+            },
+            {
+              "code": "19IT2202",
+              "name": "Software Engineering"
+            },
+            {
+              "code": "19IT22P1",
+              "name": "Software Engineering Laboratory"
+            },
+            {
+              "code": "19MC2202",
+              "name": "Technical English And Soft Skills"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "19CS3103",
+              "name": "Cryptography & Network Security"
+            },
+            {
+              "code": "19CS3104",
+              "name": "Advanced Database Systems"
+            },
+            {
+              "code": "19CS31P2",
+              "name": "Cryptography And Network Security Laboratory"
+            },
+            {
+              "code": "19IT3101",
+              "name": "Wireless Networks"
+            },
+            {
+              "code": "19IT3102",
+              "name": "Formal Languages And Automata Theory"
+            },
+            {
+              "code": "19IT31P1",
+              "name": "Advanced Database Systems Laboratory"
+            }
+          ],
+          "elective": [
+            {
+              "code": "19CS31E1",
+              "name": "Software Architecture"
+            },
+            {
+              "code": "19CS31E2",
+              "name": "Distributed Systems"
+            },
+            {
+              "code": "19CS31E3",
+              "name": "Pattern Recognition"
+            },
+            {
+              "code": "19CS31E4",
+              "name": "Cloud Computing"
+            }
+          ]
+        },
+        "32": {
+          "core": [
+            {
+              "code": "19AC3201",
+              "name": "Universal Human Values"
+            },
+            {
+              "code": "19CS3201",
+              "name": "Internet Of Things"
+            },
+            {
+              "code": "19CS3202",
+              "name": "Artificial Intelligence"
+            },
+            {
+              "code": "19CS3203",
+              "name": "Data Warehousing And Mining"
+            },
+            {
+              "code": "19CS32P1",
+              "name": "Internet Of Things Laboratory"
+            },
+            {
+              "code": "19CS32P2",
+              "name": "Data Warehousing And Mining Laboratory"
+            },
+            {
+              "code": "19IT32MP",
+              "name": "Mini Project"
+            },
+            {
+              "code": "19SH3201",
+              "name": "Management Science"
+            }
+          ],
+          "elective": [
+            {
+              "code": "19CS32E1",
+              "name": "Software Project Management"
+            },
+            {
+              "code": "19CS32E2",
+              "name": "R Programming"
+            },
+            {
+              "code": "19CS32E3",
+              "name": "High Performance Computing"
+            },
+            {
+              "code": "19IT32E1",
+              "name": "Adhoc & Sensor Networks"
+            }
+          ]
+        },
+        "41": {
+          "core": [
+            {
+              "code": "19CS4101",
+              "name": "Machine Learning"
+            },
+            {
+              "code": "19CS4102",
+              "name": "Data Analytics"
+            },
+            {
+              "code": "19CS41P1",
+              "name": "Machine Learning Laboratory"
+            },
+            {
+              "code": "19CS41P2",
+              "name": "Data Analytics Laboratory"
+            },
+            {
+              "code": "19IT4101",
+              "name": "Introduction To Robotics And Navigation"
+            }
+          ],
+          "elective": [
+            {
+              "code": "19CS41E1",
+              "name": "Service Oriented Architecture"
+            },
+            {
+              "code": "19CS41E2",
+              "name": "Embedded Systems"
+            },
+            {
+              "code": "19CS41E3",
+              "name": "Image Processing And Visualization"
+            },
+            {
+              "code": "19IT41E1",
+              "name": "Computer Graphics"
+            }
+          ]
+        },
+        "42": {
+          "core": [
+            {
+              "code": "19IT42IS",
+              "name": "Internship"
+            },
+            {
+              "code": "19IT42MO",
+              "name": "Massive Open Online Courses"
+            },
+            {
+              "code": "19IT42PR",
+              "name": "Project"
+            }
+          ],
+          "elective": [
+            {
+              "code": "19CS42E1",
+              "name": "Software Testing And Quality Assurance"
+            },
+            {
+              "code": "19CS42E2",
+              "name": "Intelligent Software Agents"
+            },
+            {
+              "code": "19CS42E3",
+              "name": "Mobile Application Development"
+            },
+            {
+              "code": "19CS42E4",
+              "name": "Natural Language Processing"
+            },
+            {
+              "code": "19IT41O1",
+              "name": "Python Programming"
+            }
+          ]
+        }
+      },
+      "R17": {
+        "11": {
+          "core": [
+            {
+              "code": "17CS1101",
+              "name": "Basic Computer Engineering"
+            },
+            {
+              "code": "17CS11P1",
+              "name": "Basic Computer Engineering Laboratory"
+            },
+            {
+              "code": "17EE1101",
+              "name": "Basic Electrical Sciences"
+            },
+            {
+              "code": "17ME11P2",
+              "name": "Computer Aided Engineering Drawing"
+            },
+            {
+              "code": "17SH1101",
+              "name": "Functional English"
+            },
+            {
+              "code": "17SH1102",
+              "name": "Engineering Physics"
+            },
+            {
+              "code": "17SH1104",
+              "name": "Numerical Analysis"
+            },
+            {
+              "code": "17SH11P1",
+              "name": "English Language Laboratory"
+            },
+            {
+              "code": "17SH11P2",
+              "name": "Engineering Physics Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "12": {
+          "core": [
+            {
+              "code": "17CS1201",
+              "name": "C-programming"
+            },
+            {
+              "code": "17CS1202",
+              "name": "Data Structures"
+            },
+            {
+              "code": "17CS12P1",
+              "name": "C-programming Laboratory"
+            },
+            {
+              "code": "17EC1201",
+              "name": "Electronic Devices"
+            },
+            {
+              "code": "17ME12P1",
+              "name": "Engineering Workshop"
+            },
+            {
+              "code": "17SH1201",
+              "name": "Professional English"
+            },
+            {
+              "code": "17SH1203",
+              "name": "Engineering Chemistry"
+            },
+            {
+              "code": "17SH1204",
+              "name": "Engineering Mathematics - I"
+            },
+            {
+              "code": "17SH12P3",
+              "name": "Engineering Chemistry Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "21": {
+          "core": [
+            {
+              "code": "17CS2101",
+              "name": "Mathematical Foundations Of Computer Science"
+            },
+            {
+              "code": "17CS2102",
+              "name": "Java Programming"
+            },
+            {
+              "code": "17CS2103",
+              "name": "Operating Systems"
+            },
+            {
+              "code": "17CS2104",
+              "name": "Basic Computer Organization"
+            },
+            {
+              "code": "17CS2105",
+              "name": "Software Engineering"
+            },
+            {
+              "code": "17CS21P1",
+              "name": "Java Programming Laboratory"
+            },
+            {
+              "code": "17CS21P2",
+              "name": "Operating Systems Laboratory"
+            },
+            {
+              "code": "17MC2101",
+              "name": "Environmental Studies"
+            },
+            {
+              "code": "17SH2106",
+              "name": "Probability And Statistics"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "17CS2201",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "17CS2202",
+              "name": "Formal Languages And Automata Theory"
+            },
+            {
+              "code": "17CS2203",
+              "name": "Design And Analysis Of Algorithms"
+            },
+            {
+              "code": "17CS2204",
+              "name": "Software Project Management"
+            },
+            {
+              "code": "17CS2205",
+              "name": "Computer Networks"
+            },
+            {
+              "code": "17CS2206",
+              "name": "Principles Of Programming Languages"
+            },
+            {
+              "code": "17CS22P1",
+              "name": "Database Management Systems Laboratory"
+            },
+            {
+              "code": "17CS22P2",
+              "name": "Computer Networks Laboratory"
+            },
+            {
+              "code": "17MC2202",
+              "name": "Technical English And Soft Skills"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "17CS3101",
+              "name": "Image Processing And Visualization"
+            },
+            {
+              "code": "17CS3102",
+              "name": "Artificial Intelligence"
+            },
+            {
+              "code": "17CS3104",
+              "name": "Compiler Design"
+            },
+            {
+              "code": "17CS3105",
+              "name": "Web Application Development Using Python"
+            },
+            {
+              "code": "17CS31P1",
+              "name": "Image Processing And Visualization Laboratory"
+            },
+            {
+              "code": "17CS31P2",
+              "name": "Web Application Development Using Python Laboratory"
+            },
+            {
+              "code": "17IT3101",
+              "name": "Distributed Systems"
+            }
+          ],
+          "elective": []
+        },
+        "32": {
+          "core": [
+            {
+              "code": "17AC3201",
+              "name": "Professional Ethics And Life Skills"
+            },
+            {
+              "code": "17CS3201",
+              "name": "Internet Of Things"
+            },
+            {
+              "code": "17CS3202",
+              "name": "Object Oriented Analysis And Design"
+            },
+            {
+              "code": "17CS3204",
+              "name": "Data Mining And Data Warehousing"
+            },
+            {
+              "code": "17CS3205",
+              "name": "Cloud Computing"
+            },
+            {
+              "code": "17CS32P1",
+              "name": "Internet Of Things Laboratory"
+            },
+            {
+              "code": "17CS32P2",
+              "name": "Object Oriented Analysis And Design Laboratory"
+            },
+            {
+              "code": "17IT3201",
+              "name": "Grid Computing"
+            },
+            {
+              "code": "17IT32MP",
+              "name": "Mini Project"
+            }
+          ],
+          "elective": []
+        },
+        "41": {
+          "core": [
+            {
+              "code": "17CS4101",
+              "name": "Mobile Application And Development"
+            },
+            {
+              "code": "17CS4103",
+              "name": "Big Data And Hadoop"
+            },
+            {
+              "code": "17CS41P1",
+              "name": "Mobile Application And Development Laboratory"
+            },
+            {
+              "code": "17CS41P2",
+              "name": "Big Data And Hadoop Laboratory"
+            },
+            {
+              "code": "17IT4101",
+              "name": "Service Oriented Architecture"
+            },
+            {
+              "code": "17SH4101",
+              "name": "Management Science"
+            }
+          ],
+          "elective": []
+        },
+        "42": {
+          "core": [
+            {
+              "code": "17IT42IS",
+              "name": "Internship"
+            },
+            {
+              "code": "17IT42MO",
+              "name": "Massive Open Online Courses"
+            },
+            {
+              "code": "17IT42PR",
+              "name": "Project"
+            }
+          ],
+          "elective": [
+            {
+              "code": "17CS31E1",
+              "name": "Advanced Database Management Systems"
+            },
+            {
+              "code": "17CS31E2",
+              "name": "Multimedia And Applications"
+            },
+            {
+              "code": "17CS31E3",
+              "name": "Software Architecture"
+            },
+            {
+              "code": "17CS31E4",
+              "name": "Genetic Algorithms And Applications"
+            },
+            {
+              "code": "17CS32E1",
+              "name": "C Sharp And Dotnet Framework"
+            },
+            {
+              "code": "17CS32E2",
+              "name": "Bioinformatics"
+            },
+            {
+              "code": "17CS32E3",
+              "name": "Intelligent Software Agents"
+            },
+            {
+              "code": "17CS32E4",
+              "name": "Microprocessor And Interfacing"
+            },
+            {
+              "code": "17CS41E1",
+              "name": "Introduction To Robotics And Navigation"
+            },
+            {
+              "code": "17CS41E2",
+              "name": "Information Retrieval"
+            },
+            {
+              "code": "17CS41E3",
+              "name": "Software Testing And Quality Assurance"
+            },
+            {
+              "code": "17CS41E4",
+              "name": "Machine Learning"
+            },
+            {
+              "code": "17CS42E1",
+              "name": "Wireless Networks"
+            },
+            {
+              "code": "17CS42E2",
+              "name": "Free And Open Source Software"
+            },
+            {
+              "code": "17CS42E3",
+              "name": "Pattern Recognition"
+            },
+            {
+              "code": "17CS42E4",
+              "name": "Virtual Reality"
+            },
+            {
+              "code": "17CS41O1",
+              "name": "Fundamentals Of Data Structures"
+            },
+            {
+              "code": "17CS41O2",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "17CS41O3",
+              "name": "C++ Programming"
+            },
+            {
+              "code": "17CS41O4",
+              "name": "Java Programming"
+            },
+            {
+              "code": "17CS42O1",
+              "name": "Python Programming"
+            },
+            {
+              "code": "17CS42O2",
+              "name": "Software Engineering"
+            },
+            {
+              "code": "17CS42O3",
+              "name": "Web Design And Management (wdm)"
+            },
+            {
+              "code": "17CS42O4",
+              "name": "Network Management"
+            }
+          ]
+        }
+      }
+    },
+    "CE": {
+      "R23": {},
+      "R20": {},
+      "R19": {},
+      "R17": {
+        "42": {
+          "core": [],
+          "elective": [
+            {
+              "code": "17CE42IS",
+              "name": "Internship"
+            },
+            {
+              "code": "17CE42PR",
+              "name": "Project Work"
+            },
+            {
+              "code": "17CE4XO1",
+              "name": "Air Pollution And Control"
+            },
+            {
+              "code": "17CE4XO2",
+              "name": "Disaster Mitigation And Management"
+            },
+            {
+              "code": "17CE4XO3",
+              "name": "Remote Sensing & Gis"
+            },
+            {
+              "code": "17CE4XO4",
+              "name": "Building Planning And Construction Techniques"
+            },
+            {
+              "code": "17CE4XO5",
+              "name": "Cost Effective Housing Techniques"
+            },
+            {
+              "code": "17CE4XO6",
+              "name": "Building Plumbing Services"
+            }
+          ]
+        }
+      },
+      "R13": {
+        "21": {
+          "core": [
+            {
+              "code": "13CE21P1",
+              "name": "I"
+            },
+            {
+              "code": "13CE21P2",
+              "name": "_ENGINEERING GEOLOGY LABORATORY"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "13CE22P1",
+              "name": "Ii"
+            },
+            {
+              "code": "13CE22P2",
+              "name": "_FLUID MECHANICS & HYDRAULIC MACHINERY LABORATORY"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "13CE22P2",
+              "name": "_FLUID MECHANICS & HYDRAULIC MACHINERY LABORATORY"
+            },
+            {
+              "code": "13CE31P1",
+              "name": "Ii"
+            },
+            {
+              "code": "13CE31P2",
+              "name": "Ii"
+            }
+          ],
+          "elective": []
+        },
+        "32": {
+          "core": [
+            {
+              "code": "13CE32EX",
+              "name": "I"
+            },
+            {
+              "code": "13CE32P1",
+              "name": "_HIGHWAY MATERIALS LABORATORY"
+            },
+            {
+              "code": "13SH32P1",
+              "name": "_ADVANCED COMMUNICATION SKILLS LABORATORY"
+            }
+          ],
+          "elective": []
+        },
+        "41": {
+          "core": [
+            {
+              "code": "13CE41EX",
+              "name": "Ii"
+            },
+            {
+              "code": "13CE41P1",
+              "name": "_CONCRETE TECHNOLOGY LABORATORY"
+            },
+            {
+              "code": "13CE41P2",
+              "name": "_ENVIRONMENTAL ENGINEERING LABORATORY"
+            }
+          ],
+          "elective": []
+        },
+        "42": {
+          "core": [
+            {
+              "code": "13CE42EX",
+              "name": "Iii"
+            },
+            {
+              "code": "13CE42P1",
+              "name": "_CAAD LABORATORY"
+            },
+            {
+              "code": "13CE42PR",
+              "name": "_PROJECT WORK"
+            }
+          ],
+          "elective": []
+        }
+      },
+      "R10": {}
+    },
+    "AIDS": {
+      "R23": {
+        "11": {
+          "core": [
+            {
+              "code": "23BS11P1",
+              "name": "Engineering Physics Lab"
+            },
+            {
+              "code": "23BS11P4",
+              "name": "Nss-ncc-scouts & Guides-community Service"
+            },
+            {
+              "code": "23BS11T1",
+              "name": "Engineering Physics"
+            },
+            {
+              "code": "23BS11T3",
+              "name": "Linear Algebra & Calculus"
+            },
+            {
+              "code": "23ES11P1",
+              "name": "Computer Programming Laboratory"
+            },
+            {
+              "code": "23ES11P2",
+              "name": "Electrical & Electronics Engineering Workshop"
+            },
+            {
+              "code": "23ES11P3",
+              "name": "It Workshop"
+            },
+            {
+              "code": "23ES11T1",
+              "name": "Introduction To Programming"
+            },
+            {
+              "code": "23ES11T3",
+              "name": "Basic Electrical & Electronics Engineering"
+            },
+            {
+              "code": "23ES11T4",
+              "name": "Engineering Graphics"
+            }
+          ],
+          "elective": []
+        },
+        "12": {
+          "core": [
+            {
+              "code": "23BS12P2",
+              "name": "Chemistry Laboratory"
+            },
+            {
+              "code": "23BS12P4",
+              "name": "Communicative English Lab"
+            },
+            {
+              "code": "23BS12P5",
+              "name": "Health And Welness, Yoga & Sports"
+            },
+            {
+              "code": "23BS12T2",
+              "name": "Chemistry"
+            },
+            {
+              "code": "23BS12T4",
+              "name": "Differential Equations & Vector Calculus"
+            },
+            {
+              "code": "23BS12T5",
+              "name": "Communicative English"
+            },
+            {
+              "code": "23CS12P1",
+              "name": "Data Structures Laboratory"
+            },
+            {
+              "code": "23CS12T1",
+              "name": "Data Structures"
+            },
+            {
+              "code": "23ES12P3",
+              "name": "Engineering Workshop"
+            },
+            {
+              "code": "23ES12T1",
+              "name": "Basic Civil And Mechanical Engineering"
+            }
+          ],
+          "elective": []
+        },
+        "21": {
+          "core": [
+            {
+              "code": "23AC21T1",
+              "name": "Environmental Science"
+            },
+            {
+              "code": "23AD21T1",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "23BS21T5",
+              "name": "Discrete Mathematics & Graph Theory"
+            },
+            {
+              "code": "23BS21T6",
+              "name": "Universal Human Values-understanding Harmony And Ethical Human Conduct"
+            },
+            {
+              "code": "23CS21P1",
+              "name": "Advanced Data Structures & Algorithm Analysis Lab"
+            },
+            {
+              "code": "23CS21P2",
+              "name": "Object-oriented Programming Through Java Lab"
+            },
+            {
+              "code": "23CS21SC",
+              "name": "Python Programming"
+            },
+            {
+              "code": "23CS21T1",
+              "name": "Advanced Data Structures & Algorithm Analysis"
+            },
+            {
+              "code": "23CS21T2",
+              "name": "Object-oriented Programming Through Java"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "23AD22T2",
+              "name": "Digital Logic & Computer Organization"
+            },
+            {
+              "code": "23BS22T3",
+              "name": "Statistical Methods For Data Science"
+            },
+            {
+              "code": "23BS22T5",
+              "name": "Business Environment"
+            },
+            {
+              "code": "23CA22P1",
+              "name": "Artificial Intelligence Lab"
+            },
+            {
+              "code": "23CA22T1",
+              "name": "Artificial Intelligence"
+            },
+            {
+              "code": "23CD22P1",
+              "name": "Data Science Using Python Lab"
+            },
+            {
+              "code": "23CD22T2",
+              "name": "Introduction To Data Science"
+            },
+            {
+              "code": "23CS22SC",
+              "name": "Full Stack Development - 1"
+            },
+            {
+              "code": "23ES22T1",
+              "name": "Design Thinking & Innovation"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "23AD31P1",
+              "name": "Data Warehousing And Data Mining Lab"
+            },
+            {
+              "code": "23AD31P2",
+              "name": "Machine Learning Lab"
+            },
+            {
+              "code": "23AD31SC",
+              "name": "Full Stack Development-ii"
+            },
+            {
+              "code": "23AD31T1",
+              "name": "Data Warehousing And Data Mining"
+            },
+            {
+              "code": "23AD31T2",
+              "name": "Machine Learning"
+            },
+            {
+              "code": "23AD31T3",
+              "name": "Multi Agent Systems"
+            },
+            {
+              "code": "23ES31P1",
+              "name": "Tinkering Lab"
+            },
+            {
+              "code": "23ES31T1",
+              "name": "Introduction To Quantum Technologies And Applications"
+            }
+          ],
+          "elective": [
+            {
+              "code": "23CS31O1",
+              "name": "java Programming"
+            },
+            {
+              "code": "23CS31O2",
+              "name": "introduction To Artificial Intelligence"
+            },
+            {
+              "code": "23AD31E1",
+              "name": "data Visualization"
+            },
+            {
+              "code": "23AD31E3",
+              "name": "internet Of Things For Ai Applications"
+            },
+            {
+              "code": "23AD31E4",
+              "name": "exploratory Data Analysis With Python"
+            },
+            {
+              "code": "23CS31E2",
+              "name": "soft Computing"
+            }
+          ]
+        },
+        "32": {
+          "core": [
+            {
+              "code": "23AD32P1",
+              "name": "Deep Learning Lab"
+            },
+            {
+              "code": "23AD32P2",
+              "name": "Big Data Analytics & Data Visualization Lab"
+            },
+            {
+              "code": "23AD32T1",
+              "name": "Big Data Analytics"
+            },
+            {
+              "code": "23AD32T2",
+              "name": "Deep Learning"
+            },
+            {
+              "code": "23AD32T3",
+              "name": "Natural Language Processing"
+            },
+            {
+              "code": "23CS32SC",
+              "name": "Soft Skills"
+            },
+            {
+              "code": "23ES32MC",
+              "name": "Technical Paper Writing & Ipr"
+            }
+          ],
+          "elective": [
+            {
+              "code": "23CS32O1",
+              "name": "operating Systems"
+            },
+            {
+              "code": "23CS32O2",
+              "name": "introduction To Machine Learning"
+            },
+            {
+              "code": "23AD32E1",
+              "name": "reinforcement Learning"
+            },
+            {
+              "code": "23AD32E2",
+              "name": "recommender Systems"
+            },
+            {
+              "code": "23AD32E3",
+              "name": "predictive Analytics"
+            },
+            {
+              "code": "23AD32E4",
+              "name": "ai For Finance"
+            },
+            {
+              "code": "23AD32E5",
+              "name": "Introduction To Quantum Computing"
+            },
+            {
+              "code": "23AD32E6",
+              "name": "computer Vision"
+            },
+            {
+              "code": "23AD32E7",
+              "name": "cloud Computing For Ai"
+            },
+            {
+              "code": "23AD32E8",
+              "name": "social Network Analysis"
+            }
+          ]
+        },
+        "41": {
+          "core": [
+            {
+              "code": "23AD41T1",
+              "name": "Generative Ai"
+            },
+            {
+              "code": "23CS41SC",
+              "name": "Prompt Engineering"
+            }
+          ],
+          "elective": [
+            {
+              "code": "23BS41T1",
+              "name": "business Ethics And Corporate Governance"
+            },
+            {
+              "code": "23BS41T2",
+              "name": "e-business"
+            },
+            {
+              "code": "23BS41T3",
+              "name": "management Science"
+            },
+            {
+              "code": "23CS41O1",
+              "name": "database Management Systems"
+            },
+            {
+              "code": "23CS41O2",
+              "name": "cyber Security"
+            },
+            {
+              "code": "23CS41O3",
+              "name": "computer Networks"
+            },
+            {
+              "code": "23CS41O4",
+              "name": "internet Of Things"
+            },
+            {
+              "code": "23AD41E1",
+              "name": "edge Ai"
+            },
+            {
+              "code": "23AD41E2",
+              "name": "human-computer Interaction"
+            },
+            {
+              "code": "23AD41E3",
+              "name": "machine Learning Operations"
+            },
+            {
+              "code": "23AD41E4",
+              "name": "no Sql Database"
+            },
+            {
+              "code": "23AD41E5",
+              "name": "data Wrangling"
+            },
+            {
+              "code": "23AD41E6",
+              "name": "drone Technology"
+            },
+            {
+              "code": "23AD41E7",
+              "name": "robotics"
+            },
+            {
+              "code": "23AD41E8",
+              "name": "mining Massive Data Sets"
+            }
+          ]
+        }
+      },
+      "R20": {
+        "11": {
+          "core": [
+            {
+              "code": "20CS1101",
+              "name": "Programming For Problem Solving"
+            },
+            {
+              "code": "20CS11P1",
+              "name": "Programming For Problem Solving Laboratory"
+            },
+            {
+              "code": "20EE1102",
+              "name": "Basic Electrical Engineering"
+            },
+            {
+              "code": "20ME11P2",
+              "name": "Engineering Workshop"
+            },
+            {
+              "code": "20SH1101",
+              "name": "Communicative English"
+            },
+            {
+              "code": "20SH1102",
+              "name": "Applied Physics"
+            },
+            {
+              "code": "20SH1105",
+              "name": "Engineering Mathematics - I"
+            },
+            {
+              "code": "20SH11P2",
+              "name": "Applied Physics Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "12": {
+          "core": [
+            {
+              "code": "20CS1201",
+              "name": "Python Programming"
+            },
+            {
+              "code": "20CS1202",
+              "name": "Data Structures"
+            },
+            {
+              "code": "20CS12P1",
+              "name": "Data Structures Using Python Laboratory"
+            },
+            {
+              "code": "20CS12P2",
+              "name": "Python Programming Laboratory (ece & Eee)"
+            },
+            {
+              "code": "20CS12P3",
+              "name": "C Programming Laboratory (me)"
+            },
+            {
+              "code": "20ME12P1",
+              "name": "Computer Aided Engineering Drawing Laboratory"
+            },
+            {
+              "code": "20SH1203",
+              "name": "Applied Chemistry"
+            },
+            {
+              "code": "20SH1204",
+              "name": "Engineering Mathematics - Ii"
+            },
+            {
+              "code": "20SH12P1",
+              "name": "English Language Laboratory"
+            },
+            {
+              "code": "20SH12P4",
+              "name": "Applied Chemistry Laboratory"
+            }
+          ],
+          "elective": []
+        },
+        "21": {
+          "core": [
+            {
+              "code": "20AD2101",
+              "name": "Computer Organization"
+            },
+            {
+              "code": "20CS2101",
+              "name": "Discrete Mathematical Structures"
+            },
+            {
+              "code": "20CS2102",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "20CS21P1",
+              "name": "Database Management Systems Laboratory"
+            },
+            {
+              "code": "20CS21SC",
+              "name": "Application Development Using Java Programming"
+            },
+            {
+              "code": "20EC2107",
+              "name": "Digital Logic Design"
+            },
+            {
+              "code": "20EC21P6",
+              "name": "Digital Logic Design Laboratory"
+            },
+            {
+              "code": "20MC2101",
+              "name": "Environmental Science"
+            },
+            {
+              "code": "20SH2103",
+              "name": "Numerical Methods, Probability And Statistics"
+            },
+            {
+              "code": "20SH2104",
+              "name": "Applied Linear Algebra"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "20AD2201",
+              "name": "Computer Networks"
+            },
+            {
+              "code": "20AD22P1",
+              "name": "Computer Networks Laboratory"
+            },
+            {
+              "code": "20CS2201",
+              "name": "Design And Analysis Of Algorithms (1)"
+            },
+            {
+              "code": "20CS2202",
+              "name": "Operating Systems"
+            },
+            {
+              "code": "20CS2203",
+              "name": "Software Engineering"
+            },
+            {
+              "code": "20CS22P2",
+              "name": "Operating Systems Laboratory"
+            },
+            {
+              "code": "20CS22P3",
+              "name": "Software Engineering Laboratory"
+            },
+            {
+              "code": "20CS22SC",
+              "name": "Web Development"
+            },
+            {
+              "code": "20SH2201",
+              "name": "Managerial Economics And Financial Accounting"
+            },
+            {
+              "code": "20SH2202",
+              "name": "Universal Human Values"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "20AD3101",
+              "name": "Artificial Intelligence"
+            },
+            {
+              "code": "20AD31P1",
+              "name": "Artificial Intelligence Laboratory"
+            },
+            {
+              "code": "20CS3101",
+              "name": "Data Warehousing And Mining"
+            },
+            {
+              "code": "20CS3102",
+              "name": "Formal Languages And Automata Theory"
+            },
+            {
+              "code": "20CS31P1",
+              "name": "Data Warehousing And Mining Laboratory"
+            },
+            {
+              "code": "20MC3101",
+              "name": "Entrepreneurship"
+            }
+          ],
+          "elective": [
+            {
+              "code": "20CS31E1",
+              "name": "Object Oriented Analysis And Design"
+            },
+            {
+              "code": "20CS31E2",
+              "name": "Principles Of Programming Languages"
+            },
+            {
+              "code": "20CS31E3",
+              "name": "Computer Graphics"
+            },
+            {
+              "code": "20IT3101",
+              "name": "Wireless And Ad Hoc Networks"
+            },
+            {
+              "code": "20SH31SC",
+              "name": "Communication And Soft Skills"
+            }
+          ]
+        },
+        "32": {
+          "core": [
+            {
+              "code": "20AD3202",
+              "name": "Data Science"
+            },
+            {
+              "code": "20AD32P2",
+              "name": "Data Science Laboratory"
+            },
+            {
+              "code": "20CS3202",
+              "name": "Compiler Design"
+            },
+            {
+              "code": "20CS32P2",
+              "name": "Compiler Design Laboratory"
+            },
+            {
+              "code": "20IT3202",
+              "name": "Cryptography And Network Security"
+            },
+            {
+              "code": "20IT32P2",
+              "name": "Cryptography And Network Security Laboratory"
+            },
+            {
+              "code": "20MC3201",
+              "name": "Advanced Aptitude And Reasoning Skills"
+            }
+          ],
+          "elective": [
+            {
+              "code": "20IT32J1",
+              "name": "Cloud Computing"
+            },
+            {
+              "code": "20IT32J2",
+              "name": "Software Testing Tools"
+            },
+            {
+              "code": "20AD32E1",
+              "name": "Natural Language Processing"
+            },
+            {
+              "code": "20IT32E1",
+              "name": "Software Project Management"
+            },
+            {
+              "code": "20IT32E2",
+              "name": "Software Architecture"
+            },
+            {
+              "code": "20IT32E3",
+              "name": "Social Information Networks"
+            },
+            {
+              "code": "20IT32SC",
+              "name": "Mobile App Development Laboratory"
+            }
+          ]
+        },
+        "41": {
+          "core": [],
+          "elective": [
+            {
+              "code": "20SH41E1",
+              "name": "Management Science"
+            },
+            {
+              "code": "20SH41E2",
+              "name": "Customer Relationship Management"
+            },
+            {
+              "code": "20SH41E3",
+              "name": "Strategic Management"
+            },
+            {
+              "code": "20SH41E4",
+              "name": "Corporate Governance And Business Ethics"
+            },
+            {
+              "code": "20CS41J1",
+              "name": "Service Oriented Architecture"
+            },
+            {
+              "code": "20CS41J2",
+              "name": "Cyber Security"
+            },
+            {
+              "code": "20AD41E1",
+              "name": "Big Data And Applications"
+            },
+            {
+              "code": "20AD41E3",
+              "name": "Neural Networks And Fuzzy Logic"
+            },
+            {
+              "code": "20CS41E2",
+              "name": "Machine Learning Applications"
+            },
+            {
+              "code": "20IT41E1",
+              "name": "Internet Of Things"
+            },
+            {
+              "code": "20AD41E4",
+              "name": "Deep Learning"
+            },
+            {
+              "code": "20AD41E5",
+              "name": "Nature Inspired Computing For Data Science"
+            },
+            {
+              "code": "20AD41E6",
+              "name": "Virtual Reality"
+            },
+            {
+              "code": "20CS41E3",
+              "name": "Python Programming - Ii"
+            },
+            {
+              "code": "20AD41E7",
+              "name": "Game Programming"
+            },
+            {
+              "code": "20AD41E8",
+              "name": "Reinforcement Learning"
+            },
+            {
+              "code": "20AD41E9",
+              "name": "Knowledge Representations And Reasoning"
+            },
+            {
+              "code": "20IT41E2",
+              "name": "Block Chain Technologies"
+            },
+            {
+              "code": "20AD41SC",
+              "name": "Data Representation And Analysis Using Python"
+            }
+          ]
+        }
+      }
+    },
+    "CSE(DS)": {
+      "R23": {
+        "11": {
+          "core": [
+            {
+              "code": "23BS11P2",
+              "name": "Chemistry Lab"
+            },
+            {
+              "code": "23BS11P3",
+              "name": "Communicative English Lab"
+            },
+            {
+              "code": "23BS11P5",
+              "name": "Health And Wellness, Yoga And Sports"
+            },
+            {
+              "code": "23BS11T2",
+              "name": "Chemistry"
+            },
+            {
+              "code": "23BS11T3",
+              "name": "Linear Algebra & Calculus"
+            },
+            {
+              "code": "23BS11T4",
+              "name": "Communicative English"
+            },
+            {
+              "code": "23ES11P1",
+              "name": "Computer Programming Laboratory"
+            },
+            {
+              "code": "23ES11P4",
+              "name": "Engineering Workshop"
+            },
+            {
+              "code": "23ES11T1",
+              "name": "Introduction To Programming"
+            },
+            {
+              "code": "23ES11T2",
+              "name": "Basic Civil And Mechanical Engineering"
+            }
+          ],
+          "elective": []
+        },
+        "12": {
+          "core": [
+            {
+              "code": "23BS12P1",
+              "name": "Engineering Physics Lab"
+            },
+            {
+              "code": "23BS12P6",
+              "name": "Nss-ncc-scouts & Guides-community Service"
+            },
+            {
+              "code": "23BS12T1",
+              "name": "Engineering Physics"
+            },
+            {
+              "code": "23BS12T4",
+              "name": "Differential Equations And Vector Calculus"
+            },
+            {
+              "code": "23CS12P1",
+              "name": "Data Structures Laboratory"
+            },
+            {
+              "code": "23CS12T1",
+              "name": "Data Structures"
+            },
+            {
+              "code": "23ES12P1",
+              "name": "Electrical & Electronics Engineering Workshop"
+            },
+            {
+              "code": "23ES12P2",
+              "name": "I T Workshop"
+            },
+            {
+              "code": "23ES12T2",
+              "name": "Basic Electrical & Electronics Engineering"
+            },
+            {
+              "code": "23ES12T6",
+              "name": "Engineering Graphics"
+            }
+          ],
+          "elective": []
+        },
+        "21": {
+          "core": [
+            {
+              "code": "23AC21T1",
+              "name": "Environmental Science"
+            },
+            {
+              "code": "23BS21T5",
+              "name": "Discrete Mathematics & Graph Theory"
+            },
+            {
+              "code": "23BS21T6",
+              "name": "Universal Human Values-understanding Harmony And Ethical Human Conduct"
+            },
+            {
+              "code": "23CD21P1",
+              "name": "Data Science Lab"
+            },
+            {
+              "code": "23CD21T1",
+              "name": "Introduction To Data Science"
+            },
+            {
+              "code": "23CS21P2",
+              "name": "Object-oriented Programming Through Java Lab"
+            },
+            {
+              "code": "23CS21SC",
+              "name": "Python Programming"
+            },
+            {
+              "code": "23CS21T1",
+              "name": "Advanced Data Structures & Algorithm Analysis"
+            },
+            {
+              "code": "23CS21T2",
+              "name": "Object-oriented Programming Through Java"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "23AD22P1",
+              "name": "Database Management Systems Lab"
+            },
+            {
+              "code": "23AD22T1",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "23BS22T3",
+              "name": "Statistical Methods For Data Science"
+            },
+            {
+              "code": "23CD22P1",
+              "name": "Data Engineering Lab"
+            },
+            {
+              "code": "23CD22SC",
+              "name": "Exploratory Data Analysis With Python"
+            },
+            {
+              "code": "23CD22T1",
+              "name": "Data Engineering"
+            },
+            {
+              "code": "23ES22T1",
+              "name": "Design Thinking & Innovation"
+            },
+            {
+              "code": "23ES22T2",
+              "name": "Optimization Techniques"
+            },
+            {
+              "code": "23IT21T1",
+              "name": "Digital Logic & Computer Organization"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "23AD31P2",
+              "name": "Machine Learning Lab"
+            },
+            {
+              "code": "23AD31T2",
+              "name": "Machine Learning"
+            },
+            {
+              "code": "23CD31P1",
+              "name": "Operating Systems Lab"
+            },
+            {
+              "code": "23CD31T1",
+              "name": "Operating Systems"
+            },
+            {
+              "code": "23CD31T2",
+              "name": "Software Engineering"
+            },
+            {
+              "code": "23CS31SC",
+              "name": "Full Stack Development-i"
+            },
+            {
+              "code": "23ES31P1",
+              "name": "Tinkering Lab"
+            },
+            {
+              "code": "23ES31T1",
+              "name": "Introduction To Quantum Technologies And Applications"
+            }
+          ],
+          "elective": [
+            {
+              "code": "23CS31O1",
+              "name": "java Programming"
+            },
+            {
+              "code": "23CS31O2",
+              "name": "introduction To Artificial Intelligence"
+            },
+            {
+              "code": "23CD31E1",
+              "name": "object Oriented Analysis And Design Concepts"
+            },
+            {
+              "code": "23CD31E2",
+              "name": "internet Of Things"
+            },
+            {
+              "code": "23CS31E2",
+              "name": "soft Computing"
+            },
+            {
+              "code": "23CS31T3",
+              "name": "automata Theory & Compiler Design"
+            }
+          ]
+        },
+        "32": {
+          "core": [
+            {
+              "code": "23CD32P1",
+              "name": "Nlp And Data Visualization Lab"
+            },
+            {
+              "code": "23CD32P2",
+              "name": "Predictive Analytics Laboratory"
+            },
+            {
+              "code": "23CD32T1",
+              "name": "Natural Language Processing"
+            },
+            {
+              "code": "23CD32T2",
+              "name": "Predictive Analytics"
+            },
+            {
+              "code": "23CD32T3",
+              "name": "Data Visualization"
+            },
+            {
+              "code": "23CS32SC",
+              "name": "Soft Skills"
+            },
+            {
+              "code": "23ES32MC",
+              "name": "Technical Paper Writing & Ipr"
+            }
+          ],
+          "elective": [
+            {
+              "code": "23CS32O1",
+              "name": "operating Systems"
+            },
+            {
+              "code": "23CS32O2",
+              "name": "introduction To Machine Learning"
+            },
+            {
+              "code": "23AD32T2",
+              "name": "deep Learning"
+            },
+            {
+              "code": "23CD32E1",
+              "name": "social Network Analysis"
+            },
+            {
+              "code": "23CD32E2",
+              "name": "computer Networks"
+            },
+            {
+              "code": "23CD32E3",
+              "name": "recommender Systems"
+            },
+            {
+              "code": "23CS32T3",
+              "name": "cryptography & Network Security"
+            },
+            {
+              "code": "23CD32E5",
+              "name": "computer Vision"
+            },
+            {
+              "code": "23CD32E6",
+              "name": "cloud Computing"
+            },
+            {
+              "code": "23CS32E5",
+              "name": "software Project Management"
+            }
+          ]
+        },
+        "41": {
+          "core": [],
+          "elective": [
+            {
+              "code": "23BS41T1",
+              "name": "business Ethics And Corporate Governance"
+            },
+            {
+              "code": "23BS41T2",
+              "name": "e-business"
+            },
+            {
+              "code": "23BS41T3",
+              "name": "management Science"
+            },
+            {
+              "code": "23CS41O1",
+              "name": "database Management Systems"
+            },
+            {
+              "code": "23CS41O2",
+              "name": "cyber Security"
+            },
+            {
+              "code": "23CS41O3",
+              "name": "computer Networks"
+            },
+            {
+              "code": "23CS41O4",
+              "name": "internet Of Things"
+            },
+            {
+              "code": "23CD41SC",
+              "name": "Full Stack Development-ii"
+            },
+            {
+              "code": "23CD41T1",
+              "name": "Big Data Analytics"
+            },
+            {
+              "code": "23AD41E4",
+              "name": "no Sql Database"
+            },
+            {
+              "code": "23CD41E1",
+              "name": "software Architecture And Design Patterns"
+            },
+            {
+              "code": "23CD41E2",
+              "name": "devops"
+            },
+            {
+              "code": "23CS41E2",
+              "name": "block Chain Technology"
+            },
+            {
+              "code": "23CD41E3",
+              "name": "expert Systems"
+            },
+            {
+              "code": "23CD41E4",
+              "name": "reinforcement Learning"
+            },
+            {
+              "code": "23CD41E5",
+              "name": "high Performance Computing"
+            },
+            {
+              "code": "23CS41E5",
+              "name": "agile Methodologies"
+            }
+          ]
+        }
+      }
+    },
+    "CSE(AIML)": {
+      "R23": {
+        "11": {
+          "core": [
+            {
+              "code": "23BS11P2",
+              "name": "Chemistry Lab"
+            },
+            {
+              "code": "23BS11P3",
+              "name": "Communicative English Lab"
+            },
+            {
+              "code": "23BS11P5",
+              "name": "Health And Wellness, Yoga And Sports"
+            },
+            {
+              "code": "23BS11T2",
+              "name": "Chemistry"
+            },
+            {
+              "code": "23BS11T3",
+              "name": "Linear Algebra & Calculus"
+            },
+            {
+              "code": "23BS11T4",
+              "name": "Communicative English"
+            },
+            {
+              "code": "23ES11P1",
+              "name": "Computer Programming Laboratory"
+            },
+            {
+              "code": "23ES11P4",
+              "name": "Engineering Workshop"
+            },
+            {
+              "code": "23ES11T1",
+              "name": "Introduction To Programming"
+            },
+            {
+              "code": "23ES11T2",
+              "name": "Basic Civil And Mechanical Engineering"
+            }
+          ],
+          "elective": []
+        },
+        "12": {
+          "core": [
+            {
+              "code": "23BS12P1",
+              "name": "Engineering Physics Lab"
+            },
+            {
+              "code": "23BS12P6",
+              "name": "Nss-ncc-scouts & Guides-community Service"
+            },
+            {
+              "code": "23BS12T1",
+              "name": "Engineering Physics"
+            },
+            {
+              "code": "23BS12T4",
+              "name": "Differential Equations And Vector Calculus"
+            },
+            {
+              "code": "23CS12P1",
+              "name": "Data Structures Laboratory"
+            },
+            {
+              "code": "23CS12T1",
+              "name": "Data Structures"
+            },
+            {
+              "code": "23ES12P1",
+              "name": "Electrical & Electronics Engineering Workshop"
+            },
+            {
+              "code": "23ES12T2",
+              "name": "Basic Civil And Mechanical Engineering"
+            },
+            {
+              "code": "23IT12P2",
+              "name": "It Workshop"
+            }
+          ],
+          "elective": []
+        },
+        "21": {
+          "core": [
+            {
+              "code": "23AC21T1",
+              "name": "Environmental Science"
+            },
+            {
+              "code": "23BS21T5",
+              "name": "Discrete Mathematics & Graph Theory"
+            },
+            {
+              "code": "23BS21T6",
+              "name": "Universal Human Values-understanding Harmony And Ethical Human Conduct"
+            },
+            {
+              "code": "23CA21T1",
+              "name": "Artificial Intelligence"
+            },
+            {
+              "code": "23CS21P1",
+              "name": "Advanced Data Structures & Algorithm Analysis Lab"
+            },
+            {
+              "code": "23CS21P2",
+              "name": "Object-oriented Programming Through Java Lab"
+            },
+            {
+              "code": "23CS21SC",
+              "name": "Python Programming"
+            },
+            {
+              "code": "23CS21T1",
+              "name": "Advanced Data Structures & Algorithm Analysis"
+            },
+            {
+              "code": "23CS21T2",
+              "name": "Object-oriented Programming Through Java"
+            }
+          ],
+          "elective": []
+        },
+        "22": {
+          "core": [
+            {
+              "code": "23AD22P1",
+              "name": "Database Management Systems Lab"
+            },
+            {
+              "code": "23AD22T1",
+              "name": "Database Management Systems"
+            },
+            {
+              "code": "23BS22T2",
+              "name": "Probability & Statistics"
+            },
+            {
+              "code": "23CA22P2",
+              "name": "Machine Learning Lab"
+            },
+            {
+              "code": "23CA22T2",
+              "name": "Machine Learning"
+            },
+            {
+              "code": "23CS22SC",
+              "name": "Full Stack Development - 1"
+            },
+            {
+              "code": "23CS22T2",
+              "name": "Digital Logic & Computer Organization"
+            },
+            {
+              "code": "23ES22T1",
+              "name": "Design Thinking & Innovation"
+            },
+            {
+              "code": "23ES22T2",
+              "name": "Optimization Techniques"
+            }
+          ],
+          "elective": []
+        },
+        "31": {
+          "core": [
+            {
+              "code": "23AD31SC",
+              "name": "Full Stack Development-ii"
+            },
+            {
+              "code": "23CA31P1",
+              "name": "Machine Learning & Nlp Lab"
+            },
+            {
+              "code": "23CA31P2",
+              "name": "Data Wrangling Lab"
+            },
+            {
+              "code": "23CA31T1",
+              "name": "Applied Machine Learning"
+            },
+            {
+              "code": "23CA31T2",
+              "name": "Data Wrangling And Pre-processing"
+            },
+            {
+              "code": "23CA31T3",
+              "name": "Natural Language Processing"
+            },
+            {
+              "code": "23ES31P1",
+              "name": "Tinkering Lab"
+            },
+            {
+              "code": "23ES31T1",
+              "name": "Introduction To Quantum Technologies And Applications"
+            }
+          ],
+          "elective": [
+            {
+              "code": "23CA31O1",
+              "name": "Quantum Technologies And Applications"
+            },
+            {
+              "code": "23CS31O1",
+              "name": "Java Programming"
+            },
+            {
+              "code": "23CS31O2",
+              "name": "Introduction To Artificial Intelligence"
+            },
+            {
+              "code": "23AD31E1",
+              "name": "data Visualization"
+            },
+            {
+              "code": "23AD31E4",
+              "name": "exploratory Data Analysis With Python"
+            },
+            {
+              "code": "23CA31E1",
+              "name": "Introduction To Reinforcement Learning"
+            },
+            {
+              "code": "23CS31E2",
+              "name": "soft Computing"
+            }
+          ]
+        },
+        "32": {
+          "core": [
+            {
+              "code": "23CA32P1",
+              "name": "Big Data & Cloud Computing Lab"
+            },
+            {
+              "code": "23CA32P2",
+              "name": "Full Stack Ai Lab"
+            },
+            {
+              "code": "23CA32T1",
+              "name": "Cloud Computing For Ai"
+            },
+            {
+              "code": "23CA32T2",
+              "name": "Big Data Analytics & Ai Applications"
+            },
+            {
+              "code": "23CA32T3",
+              "name": "Full Stack Ai Development"
+            },
+            {
+              "code": "23CS32SC",
+              "name": "Soft Skills"
+            },
+            {
+              "code": "23ES32MC",
+              "name": "Technical Paper Writing & Ipr"
+            }
+          ],
+          "elective": [
+            {
+              "code": "23CS32O1",
+              "name": "operating Systems"
+            },
+            {
+              "code": "23CS32O2",
+              "name": "introduction To Machine Learning"
+            },
+            {
+              "code": "23CA32E1",
+              "name": "Graph Neural Networks"
+            },
+            {
+              "code": "23CA32E2",
+              "name": "recommender Systems"
+            },
+            {
+              "code": "23CA32E3",
+              "name": "predictive Analytics"
+            },
+            {
+              "code": "23CA32E4",
+              "name": "Blockchain For Ai"
+            },
+            {
+              "code": "23CA32E5",
+              "name": "system Software Programming"
+            },
+            {
+              "code": "23CA32E6",
+              "name": "Ai For Finance"
+            },
+            {
+              "code": "23CA32E7",
+              "name": "social Network Analysis"
+            },
+            {
+              "code": "23CA32E8",
+              "name": "Cybersecurity & Ai-driven Threat Detection"
+            }
+          ]
+        },
+        "41": {
+          "core": [
+            {
+              "code": "23CA41T1",
+              "name": "Generative Ai"
+            },
+            {
+              "code": "23CS41SC",
+              "name": "Prompt Engineering"
+            }
+          ],
+          "elective": [
+            {
+              "code": "23BS41T1",
+              "name": "business Ethics And Corporate Governance"
+            },
+            {
+              "code": "23BS41T2",
+              "name": "e-business"
+            },
+            {
+              "code": "23BS41T3",
+              "name": "management Science"
+            },
+            {
+              "code": "23CA31O2",
+              "name": "introduction To Quantum Computing"
+            },
+            {
+              "code": "23CS41O1",
+              "name": "database Management Systems"
+            },
+            {
+              "code": "23CS41O2",
+              "name": "cyber Security"
+            },
+            {
+              "code": "23CS41O3",
+              "name": "computer Networks"
+            },
+            {
+              "code": "23CS41O4",
+              "name": "internet Of Things"
+            },
+            {
+              "code": "23CA41E1",
+              "name": "Explainable Ai &model Interpretability"
+            },
+            {
+              "code": "23CA41E2",
+              "name": "ai In Cybersecurity"
+            },
+            {
+              "code": "23CA41E3",
+              "name": "Ai-driven Software Engineering & Devops"
+            },
+            {
+              "code": "23CA41E4",
+              "name": "Ai For Robotics"
+            },
+            {
+              "code": "23CA41E5",
+              "name": "ml Ops & Ai Model Deployment"
+            },
+            {
+              "code": "23CA41E6",
+              "name": "computer Vision & Image Processing"
+            },
+            {
+              "code": "23CA41E7",
+              "name": "Healthcare Ai"
+            },
+            {
+              "code": "23CA41E8",
+              "name": "Ai For Smart Cities & Iot Systems"
+            },
+            {
+              "code": "23CA0HP1",
+              "name": "Ai & Machine Learning Lab"
+            },
+            {
+              "code": "23CA0HP2",
+              "name": "Robotics & Autonomous Systems Lab"
+            },
+            {
+              "code": "23CA0HT1",
+              "name": "Advanced Algorithms For Ai & Ml"
+            },
+            {
+              "code": "23CA0HT2",
+              "name": "Deep Learning & Neural Network Architectures"
+            },
+            {
+              "code": "23CA0HT3",
+              "name": "Reinforcement Learning & Decision Making"
+            },
+            {
+              "code": "23CA0HT4",
+              "name": "Ai For Robotics & Automation"
+            },
+            {
+              "code": "23CA0HT5",
+              "name": "Ai Ethics, Fairness & Explainability"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

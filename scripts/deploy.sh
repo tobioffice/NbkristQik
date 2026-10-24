@@ -14,13 +14,31 @@ HOST="${DEPLOY_HOST:-oracle3}"
 DIR="${DEPLOY_DIR:-/home/ubuntu/nbkristqik}"
 SERVICE="${DEPLOY_SERVICE:-nbkristqik}"
 
+echo "==> Checking before anything ships"
+# A green build is not a green product. The attendance table once shipped
+# missing because the tests of the day had been rewritten to match it, and
+# a build-only deploy cannot notice that. These checks run first; set -e
+# stops the deploy on the first red test.
+pnpm run typecheck
+pnpm run lint
+pnpm exec vitest run
+(cd src/web && pnpm exec vitest run)
+
 echo "==> Building locally"
 pnpm build
+
+echo "==> Building the library web app"
+(cd src/web && pnpm install --frozen-lockfile && pnpm run build:library)
 
 echo "==> Syncing dist/ + manifest to $HOST:$DIR"
 ssh "$HOST" "mkdir -p '$DIR'"
 rsync -az --delete dist/ "$HOST:$DIR/dist/"
 rsync -az package.json pnpm-lock.yaml "$HOST:$DIR/"
+
+echo "==> Syncing the library bundle and the syllabus catalogue"
+ssh "$HOST" "mkdir -p '$DIR/public/library' '$DIR/data'"
+rsync -az --delete src/web/dist-library/ "$HOST:$DIR/public/library/"
+rsync -az data/syllabus-catalog.json "$HOST:$DIR/data/syllabus-catalog.json"
 
 echo "==> Installing production dependencies on server"
 ssh "$HOST" "cd '$DIR' && export PATH=\$HOME/.local/bin:\$PATH &&

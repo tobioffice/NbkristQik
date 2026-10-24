@@ -50,7 +50,7 @@ async function startBot() {
     await initDatabase();
 
     // Setup bot commands
-    setupBot(bot);
+    await setupBot(bot);
 
     // Import handler modules — each registers its bot.on* handlers on import
     await Promise.all([
@@ -61,8 +61,10 @@ async function startBot() {
       import("./commands/leaderboard.js"),
       import("./commands/register.js"),
       import("./commands/registered.js"),
+      import("./commands/library.js"),
       import("./commands/postopen.js"),
       import("./academics/academicHandler.js"),
+      import("./dailyCheckIn.js"),
       import("./syncdb.js"),
       import("../services/uptime.js"),
       import("../api/server.js"),

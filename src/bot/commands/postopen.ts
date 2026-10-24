@@ -2,7 +2,7 @@ import { bot } from "../bot.js";
 import { ADMIN_ID, CHANNEL_ID } from "../../config/environmentals.js";
 import { trackMessage } from "../../services/tracker.js";
 import { logger } from "../../config/logger.js";
-import { BOT_USERNAME } from "../groupLimit.js";
+import { BOT_USERNAME } from "../mentionNormalizer.js";
 
 // Admin-only: repost the "open me in private" card to the channel whenever
 // people look confused about how to reach the bot. Same copy as the group
