@@ -75,19 +75,38 @@ describe("initLeaderboardIndexes", () => {
 describe("getUptimeDailyBuckets", () => {
   it("should group buckets by IST day boundaries, not UTC", async () => {
     await initUptimeTable();
-    // 18:20 UTC = 23:50 IST Sep 24; 18:40 UTC = 00:10 IST Sep 25
-    await turso.execute(
-      "INSERT INTO uptime_log (component, status, latency_ms, created_at) VALUES ('api', 'up', 5, '2026-09-24 18:20:00')",
-    );
-    await turso.execute(
-      "INSERT INTO uptime_log (component, status, latency_ms, created_at) VALUES ('api', 'up', 6, '2026-09-24 18:40:00')",
-    );
+
+    // Built from the clock, not from fixed dates: the query keeps only the
+    // last 30 days, so a hard-coded pair of rows stops straddling a boundary
+    // as soon as the calendar walks past it.
+    const IST_MS = 5.5 * 60 * 60 * 1000;
+    const istDay = (at: Date) =>
+      new Date(at.getTime() + IST_MS).toISOString().slice(0, 10);
+    const sqlTime = (at: Date) =>
+      at.toISOString().slice(0, 19).replace("T", " ");
+    const ist = new Date(Date.now() + IST_MS);
+    const midnight =
+      Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth(), ist.getUTCDate()) -
+      IST_MS;
+    // 10 minutes either side of IST midnight: two UTC timestamps, two IST days
+    const before = new Date(midnight - 10 * 60 * 1000);
+    const after = new Date(midnight + 10 * 60 * 1000);
+
+    await turso.execute({
+      sql: "INSERT INTO uptime_log (component, status, latency_ms, created_at) VALUES (?, ?, ?, ?)",
+      args: ["api", "up", 5, sqlTime(before)],
+    });
+    await turso.execute({
+      sql: "INSERT INTO uptime_log (component, status, latency_ms, created_at) VALUES (?, ?, ?, ?)",
+      args: ["api", "up", 6, sqlTime(after)],
+    });
 
     const buckets = await getUptimeDailyBuckets("api", 30);
     const byDay = Object.fromEntries(buckets.map((b) => [b.day, b.pings]));
 
-    expect(byDay["2026-09-24"]).toBe(1);
-    expect(byDay["2026-09-25"]).toBe(1);
+    expect(istDay(before)).not.toBe(istDay(after));
+    expect(byDay[istDay(before)]).toBe(1);
+    expect(byDay[istDay(after)]).toBe(1);
   });
 });
 
