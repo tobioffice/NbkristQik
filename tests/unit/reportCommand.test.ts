@@ -16,9 +16,8 @@ vi.mock("../../src/services/tracker.js", () => ({
 }));
 
 await import("../../src/bot/commands/report.js");
-const { REPORT_LIST_WEBAPP_URL, REPORT_WEBAPP_URL } = await import(
-  "../../src/constants/webapp.js"
-);
+const { REPORT_LIST_WEBAPP_URL, REPORT_WEBAPP_URL } =
+  await import("../../src/constants/webapp.js");
 
 /** The bare "/report" handler (the other one requires a message). */
 const bareReport = onText.mock.calls.find(([pattern]: [RegExp]) =>

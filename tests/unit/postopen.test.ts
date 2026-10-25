@@ -12,9 +12,8 @@ process.env.ADMIN_ID = "777";
 process.env.TEST_CHANNEL = "-100123";
 
 await import("../../src/bot/commands/postopen.js");
-const { POSTOPEN_TEXT, POSTOPEN_BUTTON_TEXT } = await import(
-  "../../src/bot/commands/postopen.js"
-);
+const { POSTOPEN_TEXT, POSTOPEN_BUTTON_TEXT } =
+  await import("../../src/bot/commands/postopen.js");
 
 /** The /postopen handler (admin-only, no arguments). */
 const postopen = onText.mock.calls.find(([pattern]: [RegExp]) =>

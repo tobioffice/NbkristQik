@@ -123,9 +123,8 @@ beforeAll(async () => {
 });
 
 const { app } = await import("../../src/api/server.js");
-const { upsertRegistration } = await import(
-  "../../src/db/registration.model.js"
-);
+const { upsertRegistration } =
+  await import("../../src/db/registration.model.js");
 
 const REGISTERED = 111222333;
 const UNREGISTERED = 999888777;

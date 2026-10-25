@@ -24,7 +24,7 @@
         "node": ">=20"
     },
     "dependencies": {
-        "@libsql/client": "^0.15.15",
+        "@libsql/client": "^0.18.0",
         "axios": "^1.20.0",
         "cheerio": "^1.2.0",
         "cors": "^2.8.6",
@@ -36,24 +36,24 @@
         "redis": "^5.8.2"
     },
     "devDependencies": {
-        "@eslint/js": "^9.34.0",
+        "@eslint/js": "^9.39.5",
         "@types/cors": "^2.8.19",
-        "@types/express": "^5.0.3",
+        "@types/express": "^5.0.6",
         "@types/node-telegram-bot-api": "^0.64.7",
         "@types/supertest": "^7.2.1",
-        "@typescript-eslint/eslint-plugin": "^8.42.0",
-        "@typescript-eslint/parser": "^8.42.0",
+        "@typescript-eslint/eslint-plugin": "^8.72.0",
+        "@typescript-eslint/parser": "^8.72.0",
         "@vitest/coverage-v8": "^2.1.9",
         "@vitest/ui": "^2.1.8",
         "domhandler": "^6.0.1",
         "eslint": "^9.34.0",
         "eslint-config-prettier": "^10.1.8",
-        "eslint-plugin-prettier": "^5.5.4",
+        "eslint-plugin-prettier": "^5.5.7",
         "happy-dom": "^15.11.7",
-        "prettier": "^3.6.2",
+        "prettier": "^3.9.10",
         "supertest": "^7.3.1",
         "ts-node": "^10.9.2",
-        "typescript": "^5.9.2",
+        "typescript": "^5.9.3",
         "vitest": "^2.1.9"
     },
     "pnpm": {

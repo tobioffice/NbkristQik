@@ -216,9 +216,7 @@ export const adminReplyToReport = async (
 };
 
 export type AppendUserMessageResult =
-  | { issueId: string }
-  | { closed: true }
-  | null;
+  { issueId: string } | { closed: true } | null;
 
 /**
  * Reporter follow-up on a thread: one write round trip appends the message,

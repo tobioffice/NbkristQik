@@ -27,9 +27,8 @@ vi.mock("../../src/bot/bot.js", () => ({
 }));
 
 const { app } = await import("../../src/api/server.js");
-const { createReport, formatIssueId } = await import(
-  "../../src/db/report.model.js"
-);
+const { createReport, formatIssueId } =
+  await import("../../src/db/report.model.js");
 
 const PASSWORD = "panel-pass";
 const BASE = "/panels-test";
@@ -163,9 +162,8 @@ describe("admin reports endpoints", () => {
   });
 
   it("opens a thread, clears its new stamp and shows both sides", async () => {
-    const { appendUserMessage } = await import(
-      "../../src/services/reportService.js"
-    );
+    const { appendUserMessage } =
+      await import("../../src/services/reportService.js");
     const id = await createReport(7, "Panel thread drill-down check");
     const issueId = formatIssueId(id);
     await appendUserMessage(issueId, 7, "One more detail from the student");

@@ -46,9 +46,8 @@ beforeAll(async () => {
 });
 
 const { app } = await import("../../src/api/server.js");
-const { upsertRegistration, getRegistration } = await import(
-  "../../src/db/registration.model.js"
-);
+const { upsertRegistration, getRegistration } =
+  await import("../../src/db/registration.model.js");
 
 // test env keeps the dev userId shortcut available (ENV !== production)
 const ME = "444555666";

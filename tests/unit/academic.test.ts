@@ -259,9 +259,8 @@ describe("Academic Module", () => {
 
   describe("getAttendanceJSON", () => {
     it("should return cached attendance if available", async () => {
-      const { getClient } = await import(
-        "../../src/services/redis/getRedisClient.js"
-      );
+      const { getClient } =
+        await import("../../src/services/redis/getRedisClient.js");
       const mockClient = await getClient();
       vi.mocked(mockClient.get).mockResolvedValue(
         JSON.stringify(mockAttendance),
@@ -287,9 +286,8 @@ describe("Academic Module", () => {
 
   describe("getMidmarksJSON", () => {
     it("should return cached midmarks if available", async () => {
-      const { getClient } = await import(
-        "../../src/services/redis/getRedisClient.js"
-      );
+      const { getClient } =
+        await import("../../src/services/redis/getRedisClient.js");
       const mockClient = await getClient();
       vi.mocked(mockClient.get).mockResolvedValue(JSON.stringify(mockMidmarks));
 

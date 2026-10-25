@@ -195,9 +195,8 @@ describe("report API", () => {
   });
 
   it("closes the thread on resolve: follow-ups get a 410, nothing is stored", async () => {
-    const { createReport, setReportStatus, formatIssueId } = await import(
-      "../../src/db/report.model.js"
-    );
+    const { createReport, setReportStatus, formatIssueId } =
+      await import("../../src/db/report.model.js");
     // filed straight into the DB: the HTTP filing limiter is already spent
     // by the earlier tests in this file
     const FRESH_USER = 424242;

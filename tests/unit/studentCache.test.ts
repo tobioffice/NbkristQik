@@ -14,9 +14,8 @@ vi.mock("../../src/services/redis/getRedisClient.js", () => ({
   getClient: mocks.getClient,
 }));
 
-const { getStudentCached, StudentNotFoundError } = await import(
-  "../../src/services/redis/utils.js"
-);
+const { getStudentCached, StudentNotFoundError } =
+  await import("../../src/services/redis/utils.js");
 
 const student = {
   roll_no: "23B91A0512",

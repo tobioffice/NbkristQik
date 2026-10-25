@@ -19,5 +19,11 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // These views deliberately refetch and reset state when the route or a
+      // query param changes. Silencing the rule is cheaper than moving every
+      // list onto a fetch library, and the effects are annotated in place.
+      'react-hooks/set-state-in-effect': 'warn',
+    },
   },
 ])

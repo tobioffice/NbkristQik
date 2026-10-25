@@ -65,9 +65,8 @@ describe("AcademicTG Module", () => {
     });
 
     it("should handle AcademicError specially", async () => {
-      const { AcademicError } = await import(
-        "../../src/services/student.utils/Academic"
-      );
+      const { AcademicError } =
+        await import("../../src/services/student.utils/Academic");
       vi.spyOn(academicTG, "getAttendanceJSON").mockRejectedValue(
         new AcademicError("Custom error", "TEST"),
       );
