@@ -53,7 +53,7 @@
         "prettier": "^3.9.10",
         "supertest": "^7.3.1",
         "ts-node": "^10.9.2",
-        "typescript": "^5.9.3",
+        "typescript": "^6.0.3",
         "vitest": "^2.1.9"
     },
     "pnpm": {
