@@ -16,6 +16,10 @@
       tg.setHeaderColor && tg.setHeaderColor("#3f6457");
       tg.setBackgroundColor && tg.setBackgroundColor("#e7dcc3");
       tg.ready && tg.ready();
+      tg.expand && tg.expand();
+      // the register scrolls vertically: a swipe must scroll it, not shrink
+      // the mini app back to its compact height
+      tg.disableVerticalSwipes && tg.disableVerticalSwipes();
     }
   </script>
 

@@ -222,7 +222,7 @@ export const initLeaderboardIndexes = async () => {
 export const getStudentRank = async (
   rollNo: string,
   sortBy: "attendance" | "midmarks",
-): Promise<{ rank: number; total: number } | null> => {
+): Promise<{ rank: number; total: number; value: number | null } | null> => {
   const column =
     sortBy === "attendance" ? "attendance_percentage" : "mid_marks_avg";
 
@@ -238,13 +238,14 @@ export const getStudentRank = async (
     sql: `
       WITH ranked AS (
         SELECT st.roll_no,
+               ${scoreExpr} as score,
                RANK() OVER (ORDER BY ${scoreExpr} DESC) as rank,
                COUNT(*) OVER() as total
         FROM student_stats st
         JOIN studentsnew s ON st.roll_no = s.roll_no
         WHERE ${column} IS NOT NULL
       )
-      SELECT rank, total FROM ranked WHERE roll_no = ?
+      SELECT rank, total, score FROM ranked WHERE roll_no = ?
     `,
     args: [rollNo.toUpperCase()],
   });
@@ -254,7 +255,49 @@ export const getStudentRank = async (
   return {
     rank: Number(result.rows[0].rank),
     total: Number(result.rows[0].total || 0),
+    // the same rounded figure the register prints, so the strip and the row
+    // can never disagree
+    value: result.rows[0].score == null ? null : Number(result.rows[0].score),
   };
+};
+
+/**
+ * The sections that actually exist for the chosen year/branch, so the filter
+ * offers live options instead of a hard-coded A-J.
+ */
+export const getLeaderboardFacets = async (
+  filters: Pick<LeaderboardFilters, "year" | "branch">,
+): Promise<string[]> => {
+  const conditions: string[] = ["section IS NOT NULL", "TRIM(section) <> ''"];
+  const args: string[] = [];
+
+  if (filters.year) {
+    conditions.push("year = ?");
+    args.push(filters.year);
+  }
+  if (filters.branch) {
+    conditions.push("branch = ?");
+    args.push(filters.branch);
+  }
+
+  const result = await turso.execute({
+    sql: `SELECT DISTINCT section FROM studentsnew WHERE ${conditions.join(" AND ")} ORDER BY section ASC`,
+    args,
+  });
+
+  return result.rows.map((row) => String(row.section));
+};
+
+/**
+ * When the attendance/mid-mark numbers were last written (UTC, SQLite
+ * datetime format). The register prints this so a stale page says so.
+ */
+export const getLastSyncAt = async (): Promise<string | null> => {
+  const result = await turso.execute(
+    `SELECT MAX(last_updated) AS at FROM student_stats`,
+  );
+  const at = result.rows[0]?.at;
+  return at == null ? null : String(at);
 };
 
 /**

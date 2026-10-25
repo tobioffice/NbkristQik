@@ -4,6 +4,8 @@ import { existsSync } from "fs";
 import path from "path";
 import {
   getLeaderboard,
+  getLeaderboardFacets,
+  getLastSyncAt,
   getStudentRank,
   getUptimeSummary,
   getUptimeDailyBuckets,
@@ -178,12 +180,25 @@ const buildLeaderboardPayload = async (query: LeaderboardQuery) => {
     (query.page - 1) * query.limit,
     query.filters,
   );
+
+  // Freshness and the live section list belong to the first page only;
+  // later pages already have them, and each extra query costs Turso reads.
+  const asOf =
+    query.page === 1
+      ? await Promise.all([
+          getLastSyncAt(),
+          getLeaderboardFacets(query.filters),
+        ])
+      : null;
+
   return {
     success: true,
     page: query.page,
     limit: query.limit,
     total,
     data: rows,
+    updated_at: asOf ? asOf[0] : null,
+    facets: asOf ? { sections: asOf[1] } : null,
   };
 };
 
@@ -258,10 +273,18 @@ app.get(
         found: true,
         roll_no: rollNo,
         attendance: attendance
-          ? { rank: attendance.rank, total: attendance.total }
+          ? {
+              rank: attendance.rank,
+              total: attendance.total,
+              value: attendance.value,
+            }
           : null,
         midmarks: midmarks
-          ? { rank: midmarks.rank, total: midmarks.total }
+          ? {
+              rank: midmarks.rank,
+              total: midmarks.total,
+              value: midmarks.value,
+            }
           : null,
       });
     } catch (error) {

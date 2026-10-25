@@ -4,9 +4,35 @@ import type { LeaderboardFilters } from "../api";
 interface FilterBarProps {
   filters: LeaderboardFilters;
   onChange: (patch: Partial<LeaderboardFilters>) => void;
+  /** Sections the API reports for the chosen year/branch; null until known. */
+  sections: string[] | null;
 }
 
-export default function FilterBar({ filters, onChange }: FilterBarProps) {
+const FALLBACK_SECTIONS = [
+  "-",
+  ...Array.from({ length: 10 }, (_, i) => String.fromCharCode(65 + i)),
+];
+
+const sectionLabel = (value: string): string =>
+  value === "-"
+    ? "No section"
+    : /^[a-z]$/i.test(value)
+      ? `Section ${value.toUpperCase()}`
+      : value;
+
+export default function FilterBar({
+  filters,
+  onChange,
+  sections,
+}: FilterBarProps) {
+  const known = sections && sections.length > 0 ? sections : FALLBACK_SECTIONS;
+  // keep the current choice selectable while a new branch's facets are in
+  // flight, so the control never goes blank
+  const options =
+    filters.section !== "all" && !known.includes(filters.section)
+      ? [filters.section, ...known]
+      : known;
+
   return (
     <div className="filter-row">
       <select
@@ -43,14 +69,11 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
         className="field-select"
       >
         <option value="all">All Sections</option>
-        <option value="-">-</option>
-        {Array.from({ length: 10 }, (_, i) => String.fromCharCode(65 + i)).map(
-          (char) => (
-            <option key={char} value={char}>
-              Section {char}
-            </option>
-          ),
-        )}
+        {options.map((value) => (
+          <option key={value} value={value}>
+            {sectionLabel(value)}
+          </option>
+        ))}
       </select>
     </div>
   );

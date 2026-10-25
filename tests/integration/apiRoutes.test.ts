@@ -14,7 +14,9 @@ vi.mock("../../src/db/student_stats.model.js", () => ({
     ],
     total: 1,
   })),
-  getStudentRank: vi.fn(async () => ({ rank: 3, total: 245 })),
+  getStudentRank: vi.fn(async () => ({ rank: 3, total: 245, value: 95.5 })),
+  getLeaderboardFacets: vi.fn(async () => ["A", "B"]),
+  getLastSyncAt: vi.fn(async () => "2026-10-25 10:00:00"),
   getUptimeSummary: vi.fn(async () => [
     {
       component: "api",
@@ -62,8 +64,20 @@ describe("API contracts", () => {
       page: 1,
       limit: 20,
       total: 1,
+      updated_at: "2026-10-25 10:00:00",
+      facets: { sections: ["A", "B"] },
     });
     expect(res.body.data[0]).toMatchObject({ roll_no: "21B81A05E9", rank: 1 });
+  });
+
+  it("GET /api/leaderboard leaves freshness off later pages", async () => {
+    const res = await request(app).get(
+      "/api/leaderboard?page=2&limit=20&sort=attendance",
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.body.updated_at).toBeNull();
+    expect(res.body.facets).toBeNull();
   });
 
   it("GET /api/leaderboard rejects invalid query parameters", async () => {
@@ -88,8 +102,8 @@ describe("API contracts", () => {
     expect(res.body).toMatchObject({
       found: true,
       roll_no: "21B81A05E9",
-      attendance: { rank: 3, total: 245 },
-      midmarks: { rank: 3, total: 245 },
+      attendance: { rank: 3, total: 245, value: 95.5 },
+      midmarks: { rank: 3, total: 245, value: 95.5 },
     });
   });
 

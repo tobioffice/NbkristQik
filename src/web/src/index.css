@@ -133,6 +133,12 @@ a:focus-visible {
   flex-direction: column;
 }
 
+/* the standalone page floats a "My profile" tab over the foot of the sheet;
+   without this the last rows and the load-more button sit under it */
+.sheet--docked {
+  padding-bottom: 76px;
+}
+
 @media (min-width: 720px) {
   .app {
     background: var(--cloth-deep);
@@ -235,9 +241,11 @@ a:focus-visible {
 
 .entry-strip__id {
   min-width: 0;
+  display: block;
 }
 
 .entry-strip__roll {
+  display: block;
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.04em;
@@ -246,6 +254,7 @@ a:focus-visible {
 }
 
 .entry-strip__rank {
+  display: block;
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 29px;
@@ -276,6 +285,32 @@ a:focus-visible {
   color: var(--ink-2);
   line-height: 1.6;
   display: block;
+}
+
+.entry-strip__meta .entry-strip__score {
+  font-family: var(--font-ui);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-transform: none;
+}
+
+/* the strip is a button: pressing it narrows the register to your own row */
+.entry-strip--action {
+  width: calc(100% - 32px);
+  box-sizing: border-box;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.entry-strip--action:hover {
+  background: var(--paper-3);
 }
 
 @keyframes bracket-land {
@@ -319,6 +354,31 @@ a:focus-visible {
 .sort-tabs button[aria-pressed="true"] {
   background: var(--ink);
   color: var(--paper-3);
+}
+
+/* clear-filters / freshness line under the controls */
+.reg-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 16px;
+  padding: 1px 1px 0;
+}
+
+.reg-meta__clear {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.reg-meta__sync {
+  margin-left: auto;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
 }
 
 /* ---------- controls ---------- */
@@ -386,7 +446,8 @@ a:focus-visible {
   background-color: var(--paper-2);
   border: 1.5px solid var(--ink);
   border-radius: 2px;
-  padding: 10px 22px 10px 9px;
+  /* 45px tall: a thumb target, not a desktop select */
+  padding: 12px 22px 12px 9px;
   font-size: 12.5px;
   font-weight: 600;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235a5140' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
@@ -419,8 +480,17 @@ a:focus-visible {
 }
 
 .merit-entry--first {
+  grid-column: 2;
   min-height: 148px;
   padding: 15px 9px 13px;
+}
+
+.merit-entry--second {
+  grid-column: 1;
+}
+
+.merit-entry--third {
+  grid-column: 3;
 }
 
 .merit-mark {
@@ -861,6 +931,33 @@ a:focus-visible {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-2);
+}
+
+/* the ranked rows are a real list: no markers, no default indent */
+.reg-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ---------- load more ---------- */
+.load-more {
+  padding: 20px 16px 8px;
+  text-align: center;
+}
+
+.load-more__btn {
+  width: 100%;
+}
+
+.load-more__note {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.load-more__note[role="alert"] {
+  color: var(--red-ink);
 }
 
 /* ---------- profile dock ---------- */
@@ -1932,6 +2029,28 @@ a:focus-visible {
 .tabbar__item[aria-current="page"] {
   background: var(--ink);
   color: var(--paper-3);
+}
+
+/* ---------- narrow phones ---------- */
+/* three filters at 12.5px do not fit an iPhone SE row; give the section
+   select the full width instead of clipping its label */
+@media (max-width: 359px) {
+  .filter-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filter-row .field-select:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .entry-strip {
+    gap: 10px;
+    padding-right: 11px;
+  }
+
+  .entry-strip__rank {
+    font-size: 26px;
+  }
 }
 
 /* ---------- motion floor ---------- */

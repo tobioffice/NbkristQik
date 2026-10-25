@@ -32,8 +32,8 @@ export const ErrorState = ({ onRetry }: { onRetry: () => void }) => (
       <path d="M5 5a10 10 0 0 1 14 0" />
       <line x1="12" x2="12.01" y1="2" y2="2" />
     </svg>
-    <p className="title">The leaderboard didn&rsquo;t load</p>
-    <p className="sub">The register couldn&rsquo;t be fetched just now.</p>
+    <p className="title">The register didn&rsquo;t open</p>
+    <p className="sub">It couldn&rsquo;t be fetched just now.</p>
     <p style={{ marginTop: 18 }}>
       <button onClick={onRetry} className="btn-ink">
         Try again
@@ -48,9 +48,9 @@ export const LoadingSpinner = () => (
   </div>
 );
 
-export const EndNote = () => (
+export const EndNote = ({ filtered }: { filtered: boolean }) => (
   <div className="end-note">
-    <p>That&rsquo;s everyone</p>
+    <p>{filtered ? "That’s everyone in this view" : "That’s everyone"}</p>
   </div>
 );
 
@@ -95,9 +95,14 @@ const SearchIcon = () => (
 export const EmptyState = ({
   search,
   sortBy,
+  filtered,
+  onClearFilters,
 }: {
   search: string;
   sortBy: SortBy;
+  /** A year/branch/section choice is narrowing the register. */
+  filtered: boolean;
+  onClearFilters: () => void;
 }) => (
   <div className="state-block">
     {search ? <SearchIcon /> : <NotesIcon />}
@@ -105,6 +110,19 @@ export const EmptyState = ({
       <>
         <p>No results for &ldquo;{search}&rdquo;</p>
         <p className="sub">Try a roll number or part of a name</p>
+      </>
+    ) : filtered ? (
+      <>
+        <p>Nobody is in this view.</p>
+        <p className="sub">
+          The filters are narrower than the register. Try another branch,
+          section or year.
+        </p>
+        <p style={{ marginTop: 18 }}>
+          <button onClick={onClearFilters} className="btn-outline">
+            Clear filters
+          </button>
+        </p>
       </>
     ) : sortBy === "midmarks" ? (
       <>

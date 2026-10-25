@@ -1,11 +1,22 @@
 import { useEffect, useState } from "react";
-import { buildMeUrl, type MyRank } from "./api";
+import { buildMeUrl, type MyRank, type RankInfo } from "./api";
 import { useTelegramIdentity } from "./useTelegramIdentity";
 
 interface TelegramUser {
   myRoll: string | null;
   myRank: MyRank | null;
 }
+
+const rankInfo = (raw: unknown): RankInfo | null => {
+  if (!raw || typeof raw !== "object") return null;
+  const info = raw as Partial<RankInfo>;
+  if (typeof info.rank !== "number") return null;
+  return {
+    rank: info.rank,
+    total: typeof info.total === "number" ? info.total : 0,
+    value: typeof info.value === "number" ? info.value : null,
+  };
+};
 
 /**
  * "You are #N" — resolves the Telegram user to their roll + global ranks.
@@ -26,8 +37,8 @@ export const useTelegramUser = (): TelegramUser => {
         if (d.found) {
           setMyRoll(d.roll_no);
           setMyRank({
-            attendance: d.attendance?.rank ?? null,
-            midmarks: d.midmarks?.rank ?? null,
+            attendance: rankInfo(d.attendance),
+            midmarks: rankInfo(d.midmarks),
           });
         }
       })

@@ -1,10 +1,13 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import ProfileApp from './ProfileApp.tsx'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import { expandApp } from "./telegram";
+import ProfileApp from "./ProfileApp.tsx";
 
-createRoot(document.getElementById('root')!).render(
+expandApp();
+
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ProfileApp />
   </StrictMode>,
-)
+);

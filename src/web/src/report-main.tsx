@@ -1,10 +1,13 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import ReportApp from './ReportApp.tsx'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import { expandApp } from "./telegram";
+import ReportApp from "./ReportApp.tsx";
 
-createRoot(document.getElementById('root')!).render(
+expandApp();
+
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ReportApp />
   </StrictMode>,
-)
+);

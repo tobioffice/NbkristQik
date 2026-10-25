@@ -33,12 +33,18 @@ Paginated, filterable leaderboard rows.
 Responses are cached in Redis for 60 s per unique query. Invalid parameters
 return `400 { "success": false, "error": "Validation failed", "details": [...] }`.
 
+Page 1 also carries the sync freshness and the sections that exist for the
+chosen year/branch. Later pages return `null` for both (the client already has
+them, and each extra query costs Turso reads).
+
 ```json
 {
   "success": true,
   "page": 1,
   "limit": 50,
   "total": 245,
+  "updated_at": "2026-10-25 10:00:00",
+  "facets": { "sections": ["A", "B", "C"] },
   "data": [
     {
       "roll_no": "21B81A05E9",
@@ -51,9 +57,13 @@ return `400 { "success": false, "error": "Validation failed", "details": [...] }
 }
 ```
 
+`updated_at` is the newest `student_stats.last_updated` (UTC, SQLite
+`datetime('now')` format), for the client's "Synced 2 hours ago" line.
+
 ### `GET /api/me`
 
-Returns the caller's roll number and global ranks.
+Returns the caller's roll number and global ranks, each with the rounded score
+the register prints (`value`) so the personal strip and the row agree.
 
 - In production, sends Telegram WebApp `initData` (HMAC-verified, 24 h replay
   window). Inputs longer than 4096 chars are rejected.
@@ -63,8 +73,8 @@ Returns the caller's roll number and global ranks.
 {
   "found": true,
   "roll_no": "21B81A05E9",
-  "attendance": { "rank": 12, "total": 245 },
-  "midmarks": { "rank": 30, "total": 245 }
+  "attendance": { "rank": 12, "total": 245, "value": 95.5 },
+  "midmarks": { "rank": 30, "total": 245, "value": 18.8 }
 }
 ```
 

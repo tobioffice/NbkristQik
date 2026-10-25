@@ -11,7 +11,7 @@ export default function SearchBar({ value, onChange }: SearchBarProps) {
         aria-label="Search students by name or roll number"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Search by name or roll number"
+        placeholder="Name or roll number"
       />
       <span aria-hidden="true" className="search-icon">
         <svg

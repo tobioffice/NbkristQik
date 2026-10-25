@@ -23,8 +23,21 @@ export interface LeaderboardFilters {
 }
 
 export interface MyRank {
-  attendance: number | null;
-  midmarks: number | null;
+  attendance: RankInfo | null;
+  midmarks: RankInfo | null;
+}
+
+/** Global position plus the figure printed for it. */
+export interface RankInfo {
+  rank: number;
+  total: number;
+  value: number | null;
+}
+
+/** What page 1 adds to the envelope: sync freshness and live filter options. */
+export interface LeaderboardMeta {
+  updated_at: string | null;
+  facets: { sections: string[] } | null;
 }
 
 export const buildLeaderboardUrl = (

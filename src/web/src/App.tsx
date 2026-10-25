@@ -4,7 +4,7 @@ import { PROFILE_URL } from "./constants";
 function App() {
   return (
     <div className="app">
-      <div className="sheet">
+      <div className="sheet sheet--docked">
         <Leaderboard />
       </div>
       <div className="profile-dock">

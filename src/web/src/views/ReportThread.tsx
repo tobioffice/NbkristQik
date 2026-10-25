@@ -8,6 +8,7 @@ import {
   type ReportThread,
   type ThreadMessage,
 } from "../api";
+import { useClosingConfirmation } from "../telegram";
 
 interface ReportThreadViewProps {
   identity: { initData?: string; userId?: string };
@@ -75,7 +76,8 @@ const threadFromSeed = (seed: MyReport): ReportThread => ({
 const knownThread = (
   issueId: string,
   seed: MyReport | null,
-): ReportThread | null => peekThread(issueId) ?? (seed ? threadFromSeed(seed) : null);
+): ReportThread | null =>
+  peekThread(issueId) ?? (seed ? threadFromSeed(seed) : null);
 
 /**
  * One issue, as a conversation. It paints the moment the row is tapped —
@@ -100,6 +102,8 @@ export default function ReportThreadView({
   const [sending, setSending] = useState(false);
   const bottom = useRef<HTMLDivElement | null>(null);
   const seenCount = useRef(initial?.messageCount ?? 0);
+
+  useClosingConfirmation(draft.trim().length > 0);
 
   const load = (silent: boolean) => {
     if (!silent) {
@@ -272,9 +276,7 @@ export default function ReportThreadView({
                 />
                 <span className="char-count">{draft.length}/1000</span>
               </label>
-              {error ? (
-                <p className="note note--err mt-4">{error}</p>
-              ) : null}
+              {error ? <p className="note note--err mt-4">{error}</p> : null}
               <button
                 type="submit"
                 disabled={sending || draft.trim().length === 0}

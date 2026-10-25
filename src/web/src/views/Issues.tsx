@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import { submitReport, fetchMyReports, type MyReport } from "../api";
-import {
-  FORM_ROUTE,
-  HISTORY_ROUTE,
-  type IssuesRoute,
-} from "../issuesRoute";
+import { useClosingConfirmation } from "../telegram";
+import { FORM_ROUTE, HISTORY_ROUTE, type IssuesRoute } from "../issuesRoute";
 import ReportThreadView from "./ReportThread";
 
 /**
@@ -45,6 +42,9 @@ export default function Issues({
   const [reports, setReports] = useState<MyReport[] | null>(null);
   const [loadingReports, setLoadingReports] = useState(false);
   const [loadingError, setLoadingError] = useState(false);
+
+  // a half-written report is worth more than a fast exit
+  useClosingConfirmation(message.trim().length > 0 && !ticket);
 
   const loadReports = () => {
     if (!identity.userId) return;
@@ -118,7 +118,11 @@ export default function Issues({
         {loadingReports && (
           <div aria-hidden="true">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="sk" style={{ height: 72, marginTop: 12 }} />
+              <div
+                key={i}
+                className="sk"
+                style={{ height: 72, marginTop: 12 }}
+              />
             ))}
           </div>
         )}

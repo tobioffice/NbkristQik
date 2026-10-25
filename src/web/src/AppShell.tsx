@@ -5,6 +5,7 @@ import type { BandStamp } from "./bandStamp";
 import { useBackHandler } from "./backButton";
 import { useTelegramIdentity } from "./useTelegramIdentity";
 import { useTelegramUser } from "./useTelegramUser";
+import { haptic } from "./telegram";
 import Leaderboard from "./Leaderboard";
 import LibraryView from "./views/LibraryView";
 import Issues from "./views/Issues";
@@ -128,6 +129,7 @@ export default function AppShell() {
   const { initData } = useTelegramIdentity();
 
   const go = useCallback((next: Route) => {
+    haptic.select();
     const hash = hashFor(next);
     if (window.location.hash !== hash) window.location.hash = hash;
     setRoute(next);
@@ -188,9 +190,7 @@ export default function AppShell() {
           <main className="shell-body">
             {route.section === "index" && (
               <IndexPage
-                onOpen={(section) =>
-                  go({ section, issue: null, mine: false })
-                }
+                onOpen={(section) => go({ section, issue: null, mine: false })}
               />
             )}
             {route.section === "rank" && <Leaderboard showBand={false} />}
@@ -213,7 +213,11 @@ export default function AppShell() {
             {route.section === "issues" && (
               <IssuesSection
                 route={{
-                  view: route.issue ? "thread" : route.mine ? "history" : "form",
+                  view: route.issue
+                    ? "thread"
+                    : route.mine
+                      ? "history"
+                      : "form",
                   issue: route.issue,
                 }}
                 onRoute={onIssuesRoute}
@@ -295,7 +299,7 @@ const IndexPage = ({
   onOpen: (section: Exclude<Section, "index">) => void;
 }) => {
   const { myRoll, myRank } = useTelegramUser();
-  const rank = myRank?.attendance ?? myRank?.midmarks ?? null;
+  const rank = myRank?.attendance?.rank ?? myRank?.midmarks?.rank ?? null;
 
   return (
     <div className="cover">
@@ -350,8 +354,8 @@ const IndexPage = ({
       </div>
 
       <p className="cover__foot">
-        Tap the wordmark to come back here. The bot still answers in chat:
-        send a roll number, or use /help.
+        Tap the wordmark to come back here. The bot still answers in chat: send
+        a roll number, or use /help.
       </p>
     </div>
   );
@@ -422,7 +426,8 @@ const IssuesSection = ({
     );
   }
 
-  const eyebrow = route.view === "thread" ? (route.issue ?? "Issues") : "Issues";
+  const eyebrow =
+    route.view === "thread" ? (route.issue ?? "Issues") : "Issues";
   const title =
     route.view === "history"
       ? "My reports"
