@@ -479,18 +479,29 @@ a:focus-visible {
   text-align: center;
 }
 
+/* All three entries sit in ONE grid row, so their bottoms share a baseline
+   and only the tops step: gold stands a level above silver and bronze.
+   (Explicit columns alone auto-place gold in row 1 and the other two in
+   row 2 — that makes a staircase, not a podium.) */
 .merit-entry--first {
+  grid-row: 1;
   grid-column: 2;
-  min-height: 148px;
+  min-height: 196px;
   padding: 15px 9px 13px;
 }
 
 .merit-entry--second {
+  grid-row: 1;
   grid-column: 1;
+  /* silver and bronze share one height so the podium reads as two levels,
+     not three */
+  min-height: 161px;
 }
 
 .merit-entry--third {
+  grid-row: 1;
   grid-column: 3;
+  min-height: 161px;
 }
 
 .merit-mark {
@@ -519,6 +530,11 @@ a:focus-visible {
   font-size: 14.5px;
   line-height: 1.2;
   overflow-wrap: anywhere;
+  /* two lines at most: a longer name must not lift one card off the level */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .merit-entry--first .merit-name {
