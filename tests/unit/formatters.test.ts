@@ -62,6 +62,26 @@ describe("formatAttendanceMessage", () => {
     expect(message).toContain("—");
     expect(message).toContain("N/A");
   });
+
+  it("escapes portal text so Telegram does not reject the markup", () => {
+    const message = formatAttendanceMessage({
+      ...sample,
+      subjects: [
+        {
+          subject: "OS & DBMS",
+          attended: 10,
+          conducted: 20,
+          lastUpdated: "12-10-2026",
+        },
+      ],
+    });
+
+    // an unescaped & would fail HTML parsing and lose the whole reply
+    expect(message).toContain("OS &amp; DBMS");
+    expect(message).not.toContain("OS & DBMS");
+    // padding is measured before escaping, so the row still lines up
+    expect(message).toContain("│  50% │ 12-10");
+  });
 });
 
 const withSubjects: Attendance = {

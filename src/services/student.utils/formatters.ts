@@ -34,8 +34,11 @@ const preTable = (columns: Column[], rows: string[][]): string => {
     columns.reduce((sum, column) => sum + column.width, 0) +
     3 * (columns.length - 1);
   const rule = "─".repeat(width);
+  // width is measured on the raw text and escaping happens after padding, so
+  // a subject like "OS & DBMS" cannot shift the columns once Telegram renders
+  // the entity as one character.
   const lines = rows.map((cells) =>
-    cells.map((cell, i) => pad(cell, columns[i])).join(" │ "),
+    cells.map((cell, i) => escapeHtml(pad(cell, columns[i]))).join(" │ "),
   );
 
   return [
@@ -67,7 +70,9 @@ const belowTargetLine = (
   const risky = subjectsBelowTarget(subjects);
   if (risky.length === 0) return "";
 
-  const names = risky.map((subject) => `<code>${name(subject)}</code>`);
+  const names = risky.map(
+    (subject) => `<code>${escapeHtml(name(subject))}</code>`,
+  );
   return (
     `Below ${TARGET_PERCENT}% in ${risky.length} subject` +
     `${risky.length === 1 ? "" : "s"}: ${names.join(", ")}`
@@ -83,8 +88,8 @@ export const formatAttendanceMessage = (data: Attendance): string => {
     data;
 
   let msg =
-    `🧑‍🎓 ROLL: ${rollno}\n` +
-    `🏫 Branch: ${year_branch_section}\n` +
+    `🧑‍🎓 ROLL: ${escapeHtml(rollno)}\n` +
+    `🏫 Branch: ${escapeHtml(year_branch_section)}\n` +
     `📚 Attended: ${totalClasses.attended}/${totalClasses.conducted}\n\n` +
     `📈 Percentage: ${percentage.toFixed(2)}%\n` +
     buildProgressBar(percentage);
@@ -119,7 +124,7 @@ const buildAttendanceTable = (subjects: AttendanceBySubject[]): string =>
     subjects.map((subject) => {
       const percentage = percentOf(subject);
       return [
-        escapeHtml(truncateText(subject.subject, 11)),
+        truncateText(subject.subject, 11),
         `${subject.attended}/${subject.conducted}`,
         percentage === null ? "—" : `${Math.round(percentage)}%`,
         formatLastUpdated(subject.lastUpdated),
@@ -144,8 +149,8 @@ export const formatMidmarksMessage = (data: Midmarks): string => {
   const { rollno, year_branch_section, subjects } = data;
 
   return (
-    `Mid marks for <code>${rollno}</code>\n` +
-    `<code>${year_branch_section}</code>\n\n` +
+    `Mid marks for <code>${escapeHtml(rollno)}</code>\n` +
+    `<code>${escapeHtml(year_branch_section)}</code>\n\n` +
     buildMidmarksTable(subjects) +
     `\n<i>Give the low ones some extra time.</i>`
   );
@@ -189,8 +194,8 @@ export const formatBunkPlanMessage = (data: Attendance): string => {
     Math.max(0, Math.ceil((target * cond - att) / (1 - target)));
 
   let msg =
-    `Bunk plan for <code>${rollno}</code>\n` +
-    `<code>${year_branch_section}</code> · <b>${percentage.toFixed(2)}%</b> ` +
+    `Bunk plan for <code>${escapeHtml(rollno)}</code>\n` +
+    `<code>${escapeHtml(year_branch_section)}</code> · <b>${percentage.toFixed(2)}%</b> ` +
     `(${totalClasses.attended}/${totalClasses.conducted})\n\n`;
 
   msg += buildBunkHeadline(
