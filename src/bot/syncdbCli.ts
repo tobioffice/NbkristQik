@@ -18,7 +18,21 @@ import { getClient } from "../services/redis/getRedisClient.js";
 import { redisKeys } from "../services/redis/keys.js";
 import { logger } from "../config/logger.js";
 
-const stripTags = (s: string): string => s.replace(/<[^>]+>/g, "");
+/**
+ * Progress lines come from the portal as HTML, and the CLI prints them as
+ * plain text. Drop tags to a fixed point so a nested payload like
+ * `<<script>script>` cannot leave a tag behind, then remove any stray
+ * angle brackets that survived.
+ */
+const stripTags = (s: string): string => {
+  let out = s;
+  let prev: string;
+  do {
+    prev = out;
+    out = out.replace(/<[^>]*>/g, "");
+  } while (out !== prev);
+  return out.replace(/[<>]/g, "");
+};
 
 const main = async (): Promise<void> => {
   const argv = process.argv.slice(2);

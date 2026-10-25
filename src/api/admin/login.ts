@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
 import crypto from "crypto";
+import rateLimit from "express-rate-limit";
 import { turso } from "../../db/db.js";
 import { ENV } from "../../config/environmentals.js";
 import { logger } from "../../config/logger.js";
@@ -21,40 +22,57 @@ export const registerLoginRoutes = (
   password: string,
   requireAdmin: RequireAdmin,
 ): void => {
-  app.post(`${base}/login`, async (req: Request, res: Response) => {
-    try {
-      const ip = req.ip || "unknown";
-      if (tooManyAttempts(ip)) {
-        res.status(429).json({ error: "Too many attempts — try again later" });
-        return;
-      }
-      const given =
-        typeof req.body?.password === "string" ? req.body.password : "";
-      if (!given || !safeEqual(given, password)) {
-        res.status(401).json({ error: "Wrong password" });
-        return;
-      }
-
-      clearLoginAttempts(ip);
-      const token = crypto.randomBytes(32).toString("hex");
-      await turso.execute({
-        sql: `INSERT INTO admin_sessions (token_hash, expires_at)
-              VALUES (?, datetime('now', '+${SESSION_TTL_SECONDS} seconds'))`,
-        args: [tokenHash(token, password)],
-      });
-      res.cookie(SESSION_COOKIE, token, {
-        httpOnly: true,
-        sameSite: "strict",
-        secure: ENV === "production",
-        maxAge: SESSION_TTL_SECONDS * 1000,
-        path: base,
-      });
-      res.json({ ok: true });
-    } catch (e) {
-      logger.error("[admin] login failed:", e);
-      res.status(500).json({ error: "Internal Server Error" });
-    }
+  // Coarse IP guard before any password comparison. The failure counter in
+  // auth.ts is the tighter gate (5 wrong guesses); this one stops a flood of
+  // requests from ever reaching the route body.
+  const loginBurstLimit = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Too many attempts — try again later" },
   });
+
+  app.post(
+    `${base}/login`,
+    loginBurstLimit,
+    async (req: Request, res: Response) => {
+      try {
+        const ip = req.ip || "unknown";
+        if (tooManyAttempts(ip)) {
+          res
+            .status(429)
+            .json({ error: "Too many attempts — try again later" });
+          return;
+        }
+        const given =
+          typeof req.body?.password === "string" ? req.body.password : "";
+        if (!given || !safeEqual(given, password)) {
+          res.status(401).json({ error: "Wrong password" });
+          return;
+        }
+
+        clearLoginAttempts(ip);
+        const token = crypto.randomBytes(32).toString("hex");
+        await turso.execute({
+          sql: `INSERT INTO admin_sessions (token_hash, expires_at)
+              VALUES (?, datetime('now', '+${SESSION_TTL_SECONDS} seconds'))`,
+          args: [tokenHash(token, password)],
+        });
+        res.cookie(SESSION_COOKIE, token, {
+          httpOnly: true,
+          sameSite: "strict",
+          secure: ENV === "production",
+          maxAge: SESSION_TTL_SECONDS * 1000,
+          path: base,
+        });
+        res.json({ ok: true });
+      } catch (e) {
+        logger.error("[admin] login failed:", e);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
+    },
+  );
 
   app.post(
     `${base}/logout`,

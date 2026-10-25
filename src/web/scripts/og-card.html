@@ -111,7 +111,22 @@
     set("title", p.get("t"));
     set("sub", p.get("s"));
     set("plate", p.get("p"));
-    if (p.get("img")) document.getElementById("plateImg").src = p.get("img");
+    // only local page art: same origin, under /site/assets/. keeps ?img= from
+    // pointing the card at js:, data: or a remote host during capture.
+    const plateSrc = (raw) => {
+      if (!raw) return null;
+      let url;
+      try {
+        url = new URL(raw, location.href);
+      } catch {
+        return null;
+      }
+      if (url.origin !== location.origin) return null;
+      if (!url.pathname.startsWith("/site/assets/")) return null;
+      return url.href;
+    };
+    const img = plateSrc(p.get("img"));
+    if (img) document.getElementById("plateImg").src = img;
     if (p.get("stats") === "none") document.getElementById("stats").style.display = "none";
   </script>
 </body>
