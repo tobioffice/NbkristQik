@@ -72,6 +72,7 @@ const sendRollOptions = (
     chatId,
     `${notice ? `${notice}\n\n` : ""}What do you want to check?`,
     {
+      parse_mode: "HTML",
       reply_markup: {
         inline_keyboard: [
           [{ text: "Attendance 🚀", callback_data: `att_${rollNumber}` }],
