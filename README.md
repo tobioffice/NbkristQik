@@ -1,168 +1,289 @@
-# NbkristQik Bot
+<div align="center">
 
-A Telegram bot for students to check attendance and mid-term marks.
+<img src="assets/images/icon.png" alt="NbkristQik icon" width="128" height="128" />
+
+# NbkristQik
+
+**Attendance, mid-term marks and your syllabus — inside Telegram.**
+
+A Telegram bot and companion web app for students of NBKRIST. Send a roll
+number, get an answer in seconds. No install, no separate account.
+
+[Bot](https://t.me/NbkristQik_bot) · [App](https://checker.tobioffice.dev/library/) · [Status](https://checker.tobioffice.dev/status) · [Website](https://tobioffice.github.io/NbkristQik/site/)
+
+[![Tests](https://github.com/tobioffice/NbkristQik/actions/workflows/test.yml/badge.svg)](https://github.com/tobioffice/NbkristQik/actions/workflows/test.yml)
+[![Node.js](https://img.shields.io/badge/Node.js-20%2B-1e2a38)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-1e2a38)](https://www.typescriptlang.org)
+[![License](https://img.shields.io/badge/license-MIT-3f6457)](LICENSE.md)
+
+</div>
+
+---
+
+## Overview
+
+NbkristQik reads the college portal so students do not have to. Attendance
+percentages, mid-term marks and a "how much can I bunk?" plan arrive as a
+Telegram reply, formatted for a phone held in a corridor between classes.
+
+The same service also runs a Telegram Mini App with the live leaderboard, an
+optional roll-number profile, a watermarked library of semester material and a
+threaded issue desk. The maintainer gets a private admin panel for activity,
+reports and uptime, and a public status page for service health.
 
 ## Features
 
-### ✅ Already Implemented
-- Check attendance details
-- View mid-term examination marks  
-- **🏆 Live Leaderboard (Telegram Web App)**
-- **👤 Optional registration** — set your roll once in the web app, unlock
-  `/attendance`, `/midmarks`, `/bunk` instant commands; edit anytime
-- Admin controls
+**For students**
 
-### 🚀 Upcoming Features
-- 🔔 Automatic Notifications
-- AI-powered chat capabilities
+- **Instant lookups** — send a roll number and get attendance, mid-term marks
+  and a bunk plan without leaving the chat.
+- **Optional registration** — save your roll once, then use `/attendance`,
+  `/midmarks` and `/bunk` as one-tap commands. Edit it at any time.
+- **Live leaderboard** — the attendance register ranks students by attendance
+  or mid-term marks, filtered by year, branch and section.
+- **Library** — read your semester's syllabus units as paged documents,
+  watermarked for the signed-in reader.
+- **Issue reports** — file a report with a trackable id (for example
+  `QIK-0007`) and keep the whole conversation with the admin in one thread.
 
+**For the maintainer**
 
-## Technology Stack
+- **Admin panel** — overview, student search, live activity feed, report
+  threads and 90-day health, behind a secret path and a password.
+- **Uptime monitoring** — five-minute probes for the API, database, Redis and
+  college portal, with Telegram alerts on state changes.
+- **Semester sync** — `/setsem` and `/syncdb` refresh sections from the portal
+  without a redeploy.
+- **Daily check-in** — an optional pinned channel post that unlocks the bot for
+  the day.
 
-- **Backend**: Node.js, Express, TypeScript
-- **Database**: Embedded SQLite via libSQL (`LOCAL_DB_URL`), Redis
-- **Frontend**: React, Vite, TailwindCSS
-- **Integration**: Telegram Bot API
-- **Scraping**: Cheerio, Axios
+## Architecture
 
-## Project Structure
+```mermaid
+flowchart LR
+    student["Student<br/>Telegram"] --> bot["Bot<br/>node-telegram-bot-api"]
+    web["Mini App<br/>React + Vite"] --> api["Express API"]
+    bot --> scraper["Portal scraper<br/>Axios + Cheerio"]
+    scraper --> portal[("College portal")]
+    bot --> redis[("Redis<br/>cache")]
+    api --> redis
+    bot --> db[("libSQL<br/>embedded or Turso")]
+    api --> db
+    api --> admin["Admin panel"]
+    api --> status["Status page"]
+```
+
+A single Node process serves the bot (long polling), the REST API, the admin
+panel and the health probes. The Mini App is a static React build served
+alongside it; the status page is a single static file. The schema is created
+idempotently on boot, so a fresh database needs no migration step.
+
+## Technology stack
+
+| Layer      | Choice                                                            |
+| ---------- | ----------------------------------------------------------------- |
+| Runtime    | Node.js 20 or newer, ESM, TypeScript 5                            |
+| Bot        | `node-telegram-bot-api`, long polling                             |
+| API        | Express 5 with CORS, rate limiting and input validation           |
+| Database   | libSQL/SQLite via `@libsql/client` — embedded file or Turso Cloud |
+| Cache      | Redis 5                                                           |
+| Scraping   | Axios and Cheerio                                                 |
+| Frontend   | React 19, Vite 7 and Tailwind CSS                                 |
+| Testing    | Vitest, v8 coverage, ESLint and Prettier                          |
+| Deployment | systemd on a Linux host; static assets on GitHub Pages            |
+
+## Repository layout
 
 ```
-src/
-├── api/               # Express API server (leaderboard, status)
-├── bot/
-│   ├── academics/     # Roll-number + callback flows
-│   ├── commands/      # Bot command handlers
-│   └── setup.ts       # Bot initialization
-├── config/            # Configuration files
-├── constants/         # Constant values
-├── db/                # Database models + schema init
-├── middleware/        # API security middleware
-├── services/          # Business logic services (scraping, redis, uptime)
-├── types/             # TypeScript type definitions
-└── web/               # Leaderboard React app (Telegram Web App)
+.
+├── src/
+│   ├── api/          Express app, admin panel, API routes
+│   ├── bot/          Entry point, commands, academic and check-in flows
+│   ├── config/       Environment and logger
+│   ├── constants/    Bot, web app and channel constants
+│   ├── db/           libSQL client, schema and models
+│   ├── middleware/   Request sanitisation and security
+│   ├── services/     Portal scraping, caches, library, uptime, tracking
+│   ├── status/       Static 90-day status page
+│   ├── tools/        Library ingest and catalogue utilities
+│   └── web/          React Mini App and marketing site (own package)
+├── tests/            Unit and integration tests
+├── docs/             Hand-written guides
+├── openwiki/         Generated, source-grounded wiki
+├── scripts/          Deploy, backup and import helpers
+└── assets/           Brand assets
 ```
 
-## Setup
+## Getting started
 
-1. Clone the repository
+### Prerequisites
+
+- Node.js 20 or newer
+- pnpm 10
+- A Redis instance
+- A Telegram bot token from [@BotFather](https://t.me/BotFather)
+- NBKRIST portal credentials with access to attendance and marks
+
+Turso is optional. Without it, set `LOCAL_DB_URL` and the bot uses an embedded
+SQLite file.
+
+### Installation
+
 ```bash
-git clone https://github.com/yourusername/NbkristQik.git
+git clone https://github.com/tobioffice/NbkristQik.git
 cd NbkristQik
-```
-
-2. Install dependencies
-```bash
 pnpm install
+cp .env.example .env
 ```
 
-3. Configure environment variables
-- Copy `.env.example` to `.env`
-- Fill in the required values:
-  - Telegram bot tokens
-  - Turso database credentials
-  - Authentication details
-  - Admin configuration
+Fill in the values in `.env` (see [Configuration](#configuration)), then start
+the bot and API together:
 
-4. Build and run
 ```bash
-# Development
 pnpm dev
-
-# Production
-pnpm build
-pnpm start
 ```
 
-## Available Commands
+For the Mini App, run its package separately:
 
-- `/start` - Initialize the bot
-- `/help` - Get usage instructions
-- `/report` - Report an issue (opens the web form; gets an issue id like QIK-0007;
-  you can also type `/report <message>` directly). The message carries a
-  second button, **🗂 My reports**, which opens your own issue list
-  (`report.html?view=reports`)
-- `/leaderboard` - Open the live leaderboard
-- `/register` - Set your roll number once (via the web app) for instant lookups
-- `/attendance`, `/midmarks`, `/bunk` - Instant lookups for registered users
-- Check attendance and marks by sending your roll number (works for everyone)
-
-Every report is a conversation: open it under **My reports** on the report
-page, add to the thread while it's open, and the admin's reply arrives there
-and as a Telegram DM (`report.html?issue=QIK-0007` deep-links straight to
-it). Resolving closes the thread read-only — if the issue comes back, file
-it as a new report.
-
-Admin commands: `/reply QIK-0007 <answer>` appends to a report's thread and DMs
-the reporter, `/close QIK-0007` marks it resolved. The admin panel lists every
-issue with its unread stamp and opens the full thread in the side drawer.
-
-## Environment Variables
-
-```env
-ENV=development|production
-TELEGRAM_BOT_TOKEN_DEV=your_dev_bot_token
-TELEGRAM_BOT_TOKEN=your_production_bot_token
-TURSO_DATABASE_URL=your_database_url
-TURSO_AUTH_TOKEN=your_auth_token
-REDIS_URL=your_redis_url
-N_USERNAME=your_username
-N_PASSWORD=your_password
-ADMIN_ID=your_admin_id
-PROD_CHANNEL=your_prod_channel
-TEST_CHANNEL=your_test_channel
-# Optional: override the college portal base (portal is plain HTTP by default)
-PORTAL_BASE_URL=http://103.203.175.91
+```bash
+cd src/web
+pnpm install
+pnpm dev
 ```
 
-## Admin Panel
+### Configuration
 
-A private dashboard for tracking student activity (who's using the bot, from
-where — private chat, group or channel — and how often) plus service health.
+The full list, with defaults, lives in [`.env.example`](.env.example) and
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). The variables you will need first:
 
-- **Access**: served at `https://<your-domain>/<ADMIN_PANEL_PATH>` — set both
-  `ADMIN_PANEL_PATH` (an unguessable path segment) and `ADMIN_PANEL_PASSWORD`
-  in `.env`. If either is unset the panel is disabled entirely.
-- **Auth**: password sign-in issues a 24h session cookie (HttpOnly, SameSite=Strict).
-  Changing the password invalidates all sessions instantly; login is rate-limited.
-- **Views**: Overview (30-day activity pulse, surface split, top actions),
-  Students (searchable activity table + per-student drill-down), Live (10s feed),
-  Health (90-day uptime for API, database, Redis, and the college portal; the admin
-  is alerted in Telegram when a component goes down or recovers).
+| Variable                                        | Purpose                                                                      |
+| ----------------------------------------------- | ---------------------------------------------------------------------------- |
+| `ENV`                                           | `development` or `production`; selects the token and channel                 |
+| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_BOT_TOKEN_DEV` | Bot credentials                                                              |
+| `N_USERNAME` / `N_PASSWORD`                     | College portal login                                                         |
+| `ADMIN_ID`                                      | Telegram id allowed to run admin commands                                    |
+| `REDIS_URL`                                     | Cache connection                                                             |
+| `LOCAL_DB_URL`                                  | Embedded SQLite file; takes precedence over Turso                            |
+| `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN`       | Turso connection when `LOCAL_DB_URL` is unset                                |
+| `ADMIN_PANEL_PATH` / `ADMIN_PANEL_PASSWORD`     | Admin panel location and password; the panel is disabled unless both are set |
+| `CORS_ORIGINS`                                  | Comma-separated allowlist for the API                                        |
+| `PORTAL_BASE_URL`                               | Optional portal override; plain HTTP by default                              |
+| `LIBRARY_ACCESS`                                | `admin` (default) or `all`                                                   |
 
-## Documentation
+## Commands
 
-- Design system (read before any UI change): [`DESIGN.md`](DESIGN.md) — "The Class Register, Open on the Desk"
-- Product brief: [`PRODUCT.md`](PRODUCT.md)
-- Generated, source-grounded wiki: [`openwiki/quickstart.md`](openwiki/quickstart.md)
-- Hand-written guides: [`docs/`](docs/) (API, architecture, database, deployment, [marketing site](docs/SITE.md))
+### Student
+
+| Command        | What it does                                         |
+| -------------- | ---------------------------------------------------- |
+| `/start`       | Open the bot and its menu button                     |
+| `/attendance`  | Attendance for your saved roll number                |
+| `/midmarks`    | Mid-term marks for your saved roll number            |
+| `/bunk`        | How many classes you can skip and stay above 75%     |
+| `/register`    | Save your roll number once, edit it any time         |
+| `/leaderboard` | Open the attendance register                         |
+| `/library`     | Open your semester's library, when the shelf is open |
+| `/report`      | File an issue, or `/report <message>` directly       |
+| `/help`        | How the bot works                                    |
+
+Sending a roll number such as `23KB1A0599` works for everyone, registered or
+not.
+
+### Admin
+
+| Command                    | What it does                                        |
+| -------------------------- | --------------------------------------------------- |
+| `/reply QIK-0007 <answer>` | Append to a report thread and notify the reporter   |
+| `/close QIK-0007`          | Resolve a report and close its thread               |
+| `/setsem 1\|2`             | Set the semester used by the next sync              |
+| `/syncdb`                  | Refresh student sections from the portal            |
+| `/postcheckin`             | Post and pin today's channel check-in               |
+| `/postopen`                | Repost the "open me in private" card to the channel |
+
+Admin commands are accepted only from `ADMIN_ID` and are not listed in the
+public command menu.
+
+## Web surfaces
+
+| Surface        | Location                                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Mini App       | [`/library/`](https://checker.tobioffice.dev/library/) — hash routes `#/rank`, `#/profile`, `#/library`, `#/issues` |
+| Status page    | [`/status`](https://checker.tobioffice.dev/status) — live health and 90-day bars per component                      |
+| Admin panel    | `/<ADMIN_PANEL_PATH>` — Overview, Students, Live, Health, Reports                                                   |
+| Marketing site | [NbkristQik site](https://tobioffice.github.io/NbkristQik/site/)                                                    |
+
+API routes and their validation rules are documented in
+[`docs/API.md`](docs/API.md). The Mini App authenticates with signed Telegram
+`initData`; the admin panel uses a 24-hour HttpOnly session cookie and a
+rate-limited login.
+
+## Development
+
+| Script                 | What it does                        |
+| ---------------------- | ----------------------------------- |
+| `pnpm dev`             | Run the bot and API from TypeScript |
+| `pnpm build`           | Compile to `dist/`                  |
+| `pnpm start`           | Run the compiled build              |
+| `pnpm lint`            | ESLint over `src/` and `tests/`     |
+| `pnpm typecheck`       | Type-check without emitting         |
+| `pnpm format`          | Format with Prettier                |
+| `pnpm exec vitest run` | Run the test suite once             |
+| `pnpm test:coverage`   | Run tests with a coverage report    |
+
+`pnpm test` starts Vitest in watch mode; use `pnpm exec vitest run` in scripts
+and CI.
+
+Continuous integration runs lint, type-check, a production dependency audit and
+coverage on Node 20, and a separate job for the web package's lint, tests and
+production build. Every pull request to `main` or `develop` runs the same
+checks.
 
 ## Deployment
 
-The bot runs as the `nbkristqik` systemd service on the production server.
-Builds happen locally (the server has very little RAM) and only `dist/` is
-shipped:
+The bot runs as the `nbkristqik` systemd service. Builds happen locally because
+the production host has little memory, and only `dist/` is shipped:
 
 ```bash
 scripts/deploy.sh
 ```
 
-Requires the `oracle3` ssh alias, rsync, and sudo rights for
-`systemctl restart nbkristqik` on the server.
+The script builds, rsyncs `dist/` and the manifests, installs production
+dependencies with a frozen lockfile, restarts the service and verifies it is
+active. It expects the `oracle3` SSH alias by default; see
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for host, directory and service
+overrides. The web package deploys to GitHub Pages with
+`cd src/web && pnpm deploy`.
 
-## Development
+## Documentation
+
+| Document                                           | Contents                                    |
+| -------------------------------------------------- | ------------------------------------------- |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)     | Runtime, data flow and module map           |
+| [`docs/API.md`](docs/API.md)                       | REST endpoints, parameters and responses    |
+| [`docs/DATABASE.md`](docs/DATABASE.md)             | Schema, models and caching                  |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)         | Environment, build and production           |
+| [`docs/LIBRARY.md`](docs/LIBRARY.md)               | Library, reader and watermarking            |
+| [`docs/DOCUMENTS.md`](docs/DOCUMENTS.md)           | Document ingest and catalogue               |
+| [`docs/SITE.md`](docs/SITE.md)                     | Marketing site                              |
+| [`DESIGN.md`](DESIGN.md)                           | Design system, binding before any UI change |
+| [`PRODUCT.md`](PRODUCT.md)                         | Product brief, users and principles         |
+| [`openwiki/quickstart.md`](openwiki/quickstart.md) | Generated, source-grounded wiki             |
+
+If a hand-written guide and the generated wiki disagree, the code and
+`openwiki/` are authoritative.
+
+## Contributing
+
+Contributions are welcome. Read
+[`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for the workflow, coding
+standards and commit conventions. Before opening a pull request, run:
 
 ```bash
-# Run in development mode
-pnpm dev
-
-# Build TypeScript
-pnpm build
-
-# Start production server
-pnpm start
+pnpm lint
+pnpm typecheck
+pnpm exec vitest run
 ```
 
 ## License
 
-See [LICENSE.md](LICENSE.md) for details.
+Released under the [MIT License](LICENSE.md).
