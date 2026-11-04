@@ -1,9 +1,14 @@
 import { describe, it, expect, vi } from "vitest";
+import {
+  createOnTextMock,
+  createSendMessageMock,
+  sentMessage,
+} from "../mocks/telegram.mock.js";
 
 // Capture the handler the module registers and the message it sends instead
 // of talking to Telegram.
-const onText = vi.fn();
-const sendMessage = vi.fn(async () => ({ message_id: 1 }));
+const onText = createOnTextMock();
+const sendMessage = createSendMessageMock();
 
 vi.mock("../../src/bot/bot.js", () => ({
   bot: {
@@ -28,7 +33,7 @@ vi.mock("../../src/bot/authorization.js", () => ({
 
 await import("../../src/bot/academics/academicHandler.js");
 
-const rollHandler = onText.mock.calls[0]?.[1] as (msg: unknown) => void;
+const rollHandler = onText.mock.calls[0][1] as (msg: unknown) => void;
 
 const sendRoll = (text: string) =>
   rollHandler({
@@ -46,11 +51,7 @@ describe("roll number O/0 notice", () => {
 
     await vi.waitFor(() => expect(sendMessage).toHaveBeenCalled());
 
-    const [, text, options] = sendMessage.mock.calls[0] as [
-      number,
-      string,
-      { parse_mode?: string },
-    ];
+    const [, text, options] = sentMessage(sendMessage);
     expect(text).toContain("<code>25KB1A05AR</code>");
     // the tags only render when the message is sent as HTML
     expect(options.parse_mode).toBe("HTML");
@@ -63,7 +64,7 @@ describe("roll number O/0 notice", () => {
 
     await vi.waitFor(() => expect(sendMessage).toHaveBeenCalled());
 
-    const [, text] = sendMessage.mock.calls[0] as [number, string];
+    const [, text] = sentMessage(sendMessage);
     expect(text).not.toContain("Heads up");
     expect(text).not.toContain("<code>");
   });

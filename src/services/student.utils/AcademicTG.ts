@@ -26,11 +26,22 @@ import {
  */
 export class AcademicTG extends Academic {
   /**
+   * Prints the freshness warning above the card when the numbers did not
+   * come from a live portal request. A cached figure must never look fresh:
+   * a student may skip a class on a stale number.
+   */
+  private withFreshnessNotice(body: string): string {
+    const notice = this.getDataNotice();
+    return notice ? `<i>⚠️ ${notice}</i>\n\n${body}` : body;
+  }
+
+  /**
    * Gets attendance data formatted for Telegram message
    */
   async getAttendanceMessage(): Promise<string> {
     try {
-      return formatAttendanceMessage(await this.getAttendanceJSON());
+      const data = await this.getAttendanceJSON();
+      return this.withFreshnessNotice(formatAttendanceMessage(data));
     } catch (error) {
       logger.error("[AcademicTG] Attendance error:", error);
       return this.formatErrorMessage(error, "attendance");
@@ -42,7 +53,8 @@ export class AcademicTG extends Academic {
    */
   async getBunkPlanMessage(): Promise<string> {
     try {
-      return formatBunkPlanMessage(await this.getAttendanceJSON());
+      const data = await this.getAttendanceJSON();
+      return this.withFreshnessNotice(formatBunkPlanMessage(data));
     } catch (error) {
       logger.error("[AcademicTG] Bunk plan error:", error);
       return this.formatErrorMessage(error, "attendance");
@@ -54,7 +66,8 @@ export class AcademicTG extends Academic {
    */
   async getMidmarksMessage(): Promise<string> {
     try {
-      return formatMidmarksMessage(await this.getMidmarksJSON());
+      const data = await this.getMidmarksJSON();
+      return this.withFreshnessNotice(formatMidmarksMessage(data));
     } catch (error) {
       logger.error("[AcademicTG] Midmarks error:", error);
       return this.formatErrorMessage(error, "midmarks");

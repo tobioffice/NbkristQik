@@ -18,15 +18,14 @@ export const useTelegramIdentity = (): {
       if (id) return { tgUser: String(id), initData: tg?.initData };
 
       // dev only: `?devUser=123` lets the pages be opened in a browser with a
-      // stand-in identity. The build folds this branch away in production, so
-      // a deployed page can never be talked into believing one.
+      // stand-in identity. There is no real signed initData off Telegram, so
+      // the id travels as the dev fallback; the server only accepts it when
+      // ALLOW_DEV_IDENTITY is on. The build folds this branch away in
+      // production, so a deployed page can never be talked into believing it.
       if (import.meta.env.DEV) {
         const dev = new URLSearchParams(window.location.search).get("devUser");
         if (dev) {
-          return {
-            tgUser: dev,
-            initData: `auth_date=1&hash=dev&user=${encodeURIComponent(`{"id":${dev}}`)}`,
-          };
+          return { tgUser: dev, initData: undefined };
         }
       }
       return { tgUser: null, initData: undefined };

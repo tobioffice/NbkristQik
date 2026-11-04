@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ROLL_REGEX } from "../api";
-import { REPORT_URL } from "../constants";
 import { useProfile } from "../useProfile";
 
 interface ProfileViewProps {
@@ -8,11 +7,11 @@ interface ProfileViewProps {
   initData?: string;
   /**
    * Drop the view's own heading. On inside the app, where the printed page
-   * head already names the form; off on the standalone profile page.
+   * head already names the form.
    */
   compact?: boolean;
-  /** Where "report an issue" goes; the standalone page links out instead. */
-  onReportIssue?: () => void;
+  /** Opens the issue desk; the app owns this navigation. */
+  onReportIssue: () => void;
 }
 
 const LockIcon = () => (
@@ -235,15 +234,9 @@ export default function ProfileView({
         </button>
       </div>
 
-      {onReportIssue ? (
-        <button className="foot-link" onClick={onReportIssue}>
-          Found a problem with the bot? Report an issue
-        </button>
-      ) : (
-        <a href={REPORT_URL} className="foot-link">
-          Found a problem with the bot? Report an issue
-        </a>
-      )}
+      <button className="foot-link" onClick={onReportIssue}>
+        Found a problem with the bot? Report an issue
+      </button>
     </>
   );
 }

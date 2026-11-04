@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  cacheThread,
   fetchThread,
   peekThread,
   sendThreadMessage,
   type MyReport,
   type ReportThread,
-  type ThreadMessage,
 } from "../api";
+import { clearDraft, readDraft, threadDraftKey, writeDraft } from "../drafts";
 import { useClosingConfirmation } from "../telegram";
 
 interface ReportThreadViewProps {
@@ -98,12 +97,18 @@ export default function ReportThreadView({
   const [thread, setThread] = useState<ReportThread | null>(initial);
   const [loading, setLoading] = useState(initial === null);
   const [error, setError] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
+  const draftKey = threadDraftKey(issueId);
+  const [draft, setDraft] = useState(() => readDraft(draftKey));
   const [sending, setSending] = useState(false);
   const bottom = useRef<HTMLDivElement | null>(null);
   const seenCount = useRef(initial?.messageCount ?? 0);
 
   useClosingConfirmation(draft.trim().length > 0);
+
+  // a reply is just as easy to lose as a report: keep it per issue
+  useEffect(() => {
+    writeDraft(draftKey, draft);
+  }, [draftKey, draft]);
 
   const load = (silent: boolean) => {
     if (!silent) {
@@ -158,26 +163,13 @@ export default function ReportThreadView({
     setSending(true);
     setError(null);
 
-    // the message shows immediately; the quiet refetch below reconciles it
-    const optimistic: ThreadMessage = {
-      id: -Date.now(),
-      author: "user",
-      body: clean,
-      createdAt: new Date().toISOString().slice(0, 19).replace("T", " "),
-    };
-    if (thread) {
-      const next: ReportThread = {
-        ...thread,
-        messages: [...thread.messages, optimistic],
-        messageCount: thread.messageCount + 1,
-      };
-      cacheThread(next);
-      setThread(next);
-    }
-
+    // Nothing goes on the thread until the server has accepted it: a bubble
+    // that looks delivered but failed is worse than a moment's wait. The
+    // draft stays put on failure, so the words are never lost.
     try {
       await sendThreadMessage(identity, issueId, clean);
       setDraft("");
+      clearDraft(draftKey);
       load(true);
     } catch (e) {
       setError((e as Error).message || "Could not send that.");

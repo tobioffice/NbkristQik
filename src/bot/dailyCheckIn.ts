@@ -1,11 +1,10 @@
 /**
- * Daily check-in: attention farm for channel ad impressions.
+ * Daily check-in: one tap that records the student for the day.
  *
- * - /postcheckin (admin only): posts + pins the check-in message in the channel,
- *   stores its message_id in Redis.
- * - Users click "I'm not a robot" on the pinned channel post -> dailyUnlocked:{userId}
- *   with TTL until next midnight IST (calendar-day reset).
- * - academicHandler gates bot access on this key.
+ * - /postcheckin (admin only): posts + pins a check-in message in the channel
+ *   and stores its message_id in Redis.
+ * - Users tap "Check in" on the post -> dailyUnlocked:{userId} is written with
+ *   a TTL until next midnight IST. It records the day; nothing gates on it.
  */
 import { bot } from "./bot.js";
 import { ADMIN_ID, CHANNEL_ID } from "../config/environmentals.js";
@@ -13,7 +12,8 @@ import { getClient } from "../services/redis/getRedisClient.js";
 import { redisKeys } from "../services/redis/keys.js";
 import { logger } from "../config/logger.js";
 import { trackActivity, ChatSurface } from "../services/tracker.js";
-import { BOT_USERNAME, botLink, channelLink } from "../constants/telegram.js";
+import { BOT_USERNAME, channelLink } from "../constants/telegram.js";
+import { CHECK_IN_PROMPT } from "./replies.js";
 
 const MSG_ID_KEY = redisKeys.checkinPostMsgId;
 
@@ -62,30 +62,6 @@ export const secondsUntilMidnightIST = (now: Date = new Date()): number => {
   );
 };
 
-/** Check if user unlocked today. Gate is OFF until /postcheckin has been run once. */
-export const isDailyUnlocked = async (userId: number): Promise<boolean> => {
-  try {
-    const redis = await getClient();
-    // no check-in post created yet -> gate dormant
-    if (!(await redis.get(MSG_ID_KEY))) return true;
-    return (await redis.get(redisKeys.dailyUnlocked(userId))) === "1";
-  } catch (e) {
-    logger.error("[dailyCheckIn] isDailyUnlocked error:", e);
-    return true; // never hard-lock users on redis failure
-  }
-};
-
-/** Deep link to the pinned check-in post, or channel root as fallback. */
-export const getCheckInLink = async (): Promise<string> => {
-  try {
-    const redis = await getClient();
-    return channelLink((await redis.get(MSG_ID_KEY)) ?? undefined);
-  } catch (e) {
-    logger.error("[dailyCheckIn] getCheckInLink error:", e);
-    return channelLink();
-  }
-};
-
 // remove previous pinned check-in post if it exists
 const deletePreviousPost = async (
   redis: Awaited<ReturnType<typeof getClient>>,
@@ -99,22 +75,16 @@ const deletePreviousPost = async (
 const createCheckInPost = async (
   redis: Awaited<ReturnType<typeof getClient>>,
 ): Promise<{ messageId: number; pinned: boolean }> => {
-  const sent = await bot.sendMessage(
-    CHANNEL_ID,
-    `🔓 <b>Quick human check</b>\n\n👇 Tap <b>I'm not a robot</b> and you're in.`,
-    {
-      parse_mode: "HTML",
-      disable_notification: true,
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "🤖 I'm not a robot 👇", callback_data: "dailycheck" }],
-        ],
-      },
+  const sent = await bot.sendMessage(CHANNEL_ID, CHECK_IN_PROMPT, {
+    parse_mode: "HTML",
+    disable_notification: true,
+    reply_markup: {
+      inline_keyboard: [[{ text: "✅ Check in", callback_data: "dailycheck" }]],
     },
-  );
+  });
 
-  // store the post first: even without pin rights the gate can work, and a
-  // second /postcheckin won't leave the previous post behind
+  // store the post first: even without pin rights students can still tap it,
+  // and a second /postcheckin won't leave the previous post behind
   await redis.set(MSG_ID_KEY, String(sent.message_id));
 
   let pinned = true;
@@ -144,8 +114,8 @@ bot.onText(/^\/postcheckin$/, async (msg) => {
     await replyAutoDelete(
       msg.chat.id,
       pinned
-        ? `✅ Check-in post created and pinned: ${link}\n<i>Gate is now ACTIVE for all users (until midnight IST).</i>`
-        : `✅ Check-in post created: ${link}\n⚠️ I couldn't pin it. Give @${BOT_USERNAME} "Pin messages" rights in the channel, then run /postcheckin again.\n<i>Gate is now ACTIVE for all users (until midnight IST).</i>`,
+        ? `✅ Daily check-in posted and pinned: ${link}\n<i>It stays up until the next one replaces it.</i>`
+        : `✅ Daily check-in posted: ${link}\n⚠️ I couldn't pin it. Give @${BOT_USERNAME} "Pin messages" rights in the channel, then run /postcheckin again.`,
       "HTML",
     );
   } catch (e) {
@@ -169,6 +139,7 @@ bot.on("callback_query", async (query) => {
     const key = redisKeys.dailyUnlocked(userId);
 
     const ttl = secondsUntilMidnightIST();
+    // record the day; nothing gates on this key any more
     await redis.set(key, "1", { EX: ttl });
     await redis.sAdd(redisKeys.broadcastUsers, String(userId));
 
@@ -182,7 +153,6 @@ bot.on("callback_query", async (query) => {
 
     await bot.answerCallbackQuery(query.id, {
       text: "✅ You're all set!",
-      url: botLink("unlocked"),
     });
   } catch (e) {
     logger.error("[dailyCheckIn] callback error:", e);

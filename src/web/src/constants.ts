@@ -24,13 +24,3 @@ export const BRANCHES: { [key: number]: string } = {
   37: "DIP_ECE",
   38: "DIP_ME",
 };
-
-// GitHub Pages URLs for the two mini app pages (register is a standalone
-// page, separate from the leaderboard app).
-const PAGES_ROOT =
-  (import.meta.env.VITE_PAGES_ROOT as string | undefined) ||
-  "https://tobioffice.github.io/NbkristQik";
-
-export const WEBAPP_URL = `${PAGES_ROOT}/index.html`;
-export const PROFILE_URL = `${PAGES_ROOT}/register.html`;
-export const REPORT_URL = `${PAGES_ROOT}/report.html`;

@@ -26,24 +26,51 @@ interface SectionWrite<T> {
   value: number; // attendance % or mid average persisted to student_stats
 }
 
-/** Writes each student's payload to Redis + their stat to Turso in parallel. */
+/**
+ * Writes each student's stat to the database and their payload to Redis.
+ *
+ * The leaderboard stat is the durable output: it is written unconditionally,
+ * each row in its own logged try/catch, and never gated on Redis. A Redis
+ * connect can take seconds to fail, so it is started at the same time as the
+ * DB writes instead of being awaited first; every cache key is written
+ * best-effort, so a cache outage cannot fail (or veto) the batch.
+ */
 const persistSectionWrites = async <T>(
   writes: SectionWrite<T>[],
   cacheKey: (roll: string) => string,
   ttlSeconds: number,
   writeStat: (roll: string, value: number) => Promise<void>,
 ) => {
-  const redisClient = await getClient();
-  await Promise.all(
-    writes.map(({ roll, payload, value }) =>
-      Promise.all([
-        redisClient.set(cacheKey(roll), JSON.stringify(payload), {
-          EX: ttlSeconds,
-        }),
-        writeStat(roll, value).catch(() => {}),
-      ]),
+  // DB first and independently — one failure is logged with its roll and the
+  // rest of the section still lands.
+  const dbWrites = Promise.all(
+    writes.map(({ roll, value }) =>
+      writeStat(roll, value).catch((e) => {
+        logger.warn(`[leaderboard] stat write failed for ${roll}:`, e);
+      }),
     ),
   );
+
+  // Connect alongside the DB writes. A failure is expected when Redis is down
+  // and must not reject the batch.
+  const redisClient = await getClient().catch((e) => {
+    logger.warn("[cache] Redis unavailable — student stats still written:", e);
+    return null;
+  });
+
+  if (redisClient) {
+    await Promise.all(
+      writes.map(({ roll, payload }) =>
+        redisClient
+          .set(cacheKey(roll), JSON.stringify(payload), { EX: ttlSeconds })
+          .catch((e) => {
+            logger.warn(`[cache] Redis write failed for ${roll}:`, e);
+          }),
+      ),
+    );
+  }
+
+  await dbWrites;
 };
 
 /**

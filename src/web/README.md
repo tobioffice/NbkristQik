@@ -1,73 +1,35 @@
-# React + TypeScript + Vite
+# NbkristQik web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The Telegram mini app: one Vite entry in this package.
 
-Currently, two official plugins are available:
+`app.html` → `src/app-main.tsx` → `src/AppShell.tsx`
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+It holds every surface the bot links to — the index, the attendance register,
+the library, the profile and the issue desk. `vite.library.config.ts` sets the
+`/library/` base, builds into `dist-library/`, and renames the emitted
+`app.html` to `index.html` so the Express host can serve it at `/library/`.
 
-## React Compiler
+## Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Run these from `src/web`:
 
-## Expanding the ESLint configuration
+- `pnpm dev` — Vite dev server with the library config. The app is at
+  `/library/app.html`; `/api` is proxied to `http://localhost:3000`.
+- `pnpm build` — typecheck (`tsc -b`) and build the app into `dist-library/`.
+- `pnpm build:library` — the same build, kept for the deploy script and CI.
+- `pnpm preview` — serve the built `dist-library/` bundle at `/library/`.
+- `pnpm test` — Vitest unit tests under `tests/`.
+- `pnpm lint` — ESLint.
+- `pnpm deploy:site` — publish only `public/site/` to GitHub Pages (it stages
+  the site under `dist-site/site/` and pushes that branch). The app itself is
+  deployed with the backend at `/library/`, not by this script.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Marketing site
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+`public/site/` is static HTML, CSS and JS. It is not part of the Vite build and
+is published by `pnpm deploy:site`. Edit those files directly; don't move them
+behind the app.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+There is no GitHub Pages app build any more. The old `index.html`,
+`register.html` and `report.html` entries, their React roots and the Pages
+deploy scripts are gone, and this is the only web build.

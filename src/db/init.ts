@@ -1,16 +1,69 @@
-import { turso } from "./db.js";
+import { configureDatabase, turso } from "./db.js";
 import {
   initStatsTable,
   initUptimeTable,
   initLeaderboardIndexes,
 } from "./student_stats.model.js";
 import { initLibraryTables } from "./library.model.js";
+import { logger } from "../config/logger.js";
+
+/**
+ * Current schema version stored in `PRAGMA user_version`.
+ *
+ * Bump this whenever a change adds a column, table or index that an existing
+ * database must also get. There is no migration framework: the bump is the
+ * signal, and the migration itself lives in initDatabase() next to the
+ * idempotent CREATE/ALTER it needs. The guard below stops an older build from
+ * booting against a database a newer build already wrote:
+ *
+ *   - version 0  -> fresh (or pre-versioning) database; stamp current
+ *   - version  > current -> refuse to start with a clear error
+ *
+ * Existing tables stay compatible because every schema statement here is
+ * IF NOT EXISTS; only genuinely new columns need an ALTER guarded by a
+ * version check.
+ *
+ * The embedded database always supports PRAGMA user_version. A legacy remote
+ * Turso endpoint may not: reading there is logged and skipped rather than
+ * turned into a boot failure, since the guard is a safety net, not a
+ * connection requirement.
+ */
+export const SCHEMA_VERSION = 1;
+
+/** Reads the database's user_version, treating a missing row as 0. */
+const readSchemaVersion = async (): Promise<number> => {
+  try {
+    const result = await turso.execute("PRAGMA user_version");
+    return Number(result.rows[0]?.user_version ?? 0);
+  } catch (e) {
+    // e.g. a legacy remote Turso endpoint that does not expose the pragma —
+    // the guard is a safety net, not a connection requirement.
+    logger.warn(
+      "[db] could not read PRAGMA user_version — skipping the schema-version check:",
+      e,
+    );
+    return 0;
+  }
+};
 
 /**
  * Single schema entry point — creates every table/index the app assumes.
  * Called once from bot/index.ts before any handlers or the API start.
  */
 export const initDatabase = async () => {
+  // connection-level settings first: WAL must be on before the schema is
+  // written (journal_mode is persisted in the file header)
+  await configureDatabase();
+
+  const schemaVersion = await readSchemaVersion();
+  if (schemaVersion > SCHEMA_VERSION) {
+    throw new Error(
+      `Database schema version ${schemaVersion} is newer than this build ` +
+        `(schema version ${SCHEMA_VERSION}). Refusing to start: deploy the ` +
+        `matching newer build or restore a compatible backup.`,
+    );
+  }
+
   await turso.execute(`
     CREATE TABLE IF NOT EXISTS fallbackResponses (
         id TEXT PRIMARY KEY CHECK(LENGTH(id) <= 50),
@@ -76,6 +129,13 @@ export const initDatabase = async () => {
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
+  await dedupeRegistrations();
+  // One roll number maps to one registration. The API also rejects a second
+  // user registering a taken roll; this index is the database-level backstop
+  // for racing requests and pre-guard data.
+  await turso.execute(
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_registrations_roll ON registrations (roll_no);`,
+  );
   await turso.execute(`
     CREATE TABLE IF NOT EXISTS reports (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -132,6 +192,51 @@ export const initDatabase = async () => {
   await initLeaderboardIndexes();
   await initLibraryTables();
   await backfillReportThreads();
+
+  // Stamp a fresh/pre-versioning database only after every table exists, so a
+  // crash mid-init leaves version 0 and the next boot retries the whole
+  // (idempotent) schema instead of claiming a version it never finished.
+  if (schemaVersion === 0) {
+    try {
+      await turso.execute(`PRAGMA user_version = ${SCHEMA_VERSION}`);
+      logger.debug(`[db] schema version stamped at ${SCHEMA_VERSION}`);
+    } catch (e) {
+      logger.warn("[db] could not stamp PRAGMA user_version:", e);
+    }
+  }
+};
+
+/**
+ * The unique roll index can only be created over clean data. Older databases
+ * may hold several users on one roll; keep the newest registration per roll
+ * (latest updated_at, then highest rowid) and log how many went.
+ */
+const dedupeRegistrations = async (): Promise<void> => {
+  const result = await turso.execute(`
+    DELETE FROM registrations
+    WHERE rowid NOT IN (
+      SELECT candidate.rowid
+      FROM registrations candidate
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM registrations newer
+        WHERE newer.roll_no = candidate.roll_no
+          AND (
+            COALESCE(newer.updated_at, '') > COALESCE(candidate.updated_at, '')
+            OR (
+              COALESCE(newer.updated_at, '') = COALESCE(candidate.updated_at, '')
+              AND newer.rowid > candidate.rowid
+            )
+          )
+      )
+    );
+  `);
+  const removed = Number(result.rowsAffected ?? 0);
+  if (removed > 0) {
+    logger.warn(
+      `[db] removed ${removed} duplicate registration row(s) for the unique roll index`,
+    );
+  }
 };
 
 /**

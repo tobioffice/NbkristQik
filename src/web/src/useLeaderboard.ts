@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  authHeaders,
   buildLeaderboardUrl,
   PAGE_SIZE,
   type LeaderboardFilters,
   type SortBy,
   type StudentStat,
 } from "./api";
+import { fetchWithTimeout } from "./http";
 
 /** Load this many rows on scroll, then let the reader ask for more. */
 export const AUTO_LOAD_LIMIT = 200;
@@ -37,11 +39,16 @@ interface LeaderboardResult {
  *
  * `initialLoading` is true for every fresh query (not just the first ever),
  * so a sort or filter change shows skeletons instead of a blank page.
+ *
+ * The signed identity rides on every page request, not just the first: the
+ * server names rows only for a verified caller. The hook still aborts
+ * superseded requests itself, with the same 15s ceiling as the wrapper.
  */
 export const useLeaderboard = (
   sortBy: SortBy,
   filters: LeaderboardFilters,
   search: string,
+  initData?: string,
 ): LeaderboardResult => {
   const [stats, setStats] = useState<StudentStat[]>([]);
   const [page, setPage] = useState(1);
@@ -93,9 +100,12 @@ export const useLeaderboard = (
     }
 
     try {
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         buildLeaderboardUrl(pageNum, sort, filters, search),
-        { signal: controller.signal },
+        {
+          signal: controller.signal,
+          headers: authHeaders(initData),
+        },
       );
       if (!response.ok) throw new Error("API error");
 
@@ -154,7 +164,7 @@ export const useLeaderboard = (
     setInitialLoading(true);
     fetchLeaderboard(1, sortBy);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortBy, filters, search]);
+  }, [sortBy, filters, search, initData]);
 
   useEffect(() => {
     if (page > 1) {
@@ -179,13 +189,13 @@ export const useLeaderboard = (
     setPage(1);
     fetchLeaderboard(1, sortBy);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortBy]);
+  }, [sortBy, initData]);
 
   const retryMore = useCallback(() => {
     setMoreErrorBoth(false);
     fetchLeaderboard(page, sortBy);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, sortBy]);
+  }, [page, sortBy, initData]);
 
   const lastElementRef = useCallback(
     (node: HTMLLIElement) => {

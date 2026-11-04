@@ -1,13 +1,14 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { turso } from "../../src/db/db";
+import { turso } from "../../src/db/db.js";
 import {
   getLeaderboard,
   initLeaderboardIndexes,
   initUptimeTable,
   getUptimeDailyBuckets,
   getUptimeSummary,
-  recordHeartbeat,
-} from "../../src/db/student_stats.model";
+  recordHeartbeatAt,
+  recordHeartbeatsAt,
+} from "../../src/db/student_stats.model.js";
 
 beforeAll(async () => {
   await turso.execute(`CREATE TABLE student_stats (
@@ -22,6 +23,15 @@ beforeAll(async () => {
     section TEXT,
     branch TEXT,
     year TEXT
+  )`);
+  // getLeaderboard reads explicit display names from registrations; the
+  // privacy/name cases live in leaderboardPrivacy.test.ts.
+  await turso.execute(`CREATE TABLE registrations (
+    userId TEXT PRIMARY KEY,
+    roll_no TEXT NOT NULL,
+    display_name TEXT,
+    registered_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`);
 
   const students = [
@@ -47,7 +57,7 @@ describe("getLeaderboard", () => {
     const { rows, total } = await getLeaderboard("attendance", 10, 0, {});
 
     expect(total).toBe(3);
-    expect(rows.map((r: { rank: number }) => r.rank)).toEqual([1, 1, 3]);
+    expect(rows.map((r) => r.rank)).toEqual([1, 1, 3]);
   });
 
   it("should apply section filters to rows and total", async () => {
@@ -57,7 +67,7 @@ describe("getLeaderboard", () => {
 
     expect(total).toBe(1);
     expect(rows).toHaveLength(1);
-    expect((rows[0] as { roll_no: string }).roll_no).toBe("AAA00003");
+    expect(rows[0].roll_no).toBe("AAA00003");
   });
 });
 
@@ -110,14 +120,62 @@ describe("getUptimeDailyBuckets", () => {
   });
 });
 
+describe("recordHeartbeatAt", () => {
+  it("stores a replayed spool row only once", async () => {
+    await initUptimeTable();
+    await turso.execute("DELETE FROM uptime_log WHERE component = 'redis'");
+
+    const at = new Date(Date.now() - 60_000)
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " ");
+
+    await recordHeartbeatAt("redis", "up", 20, at);
+    await recordHeartbeatAt("redis", "up", 20, at);
+
+    const summary = await getUptimeSummary();
+    const redis = summary.find((s) => s.component === "redis");
+
+    expect(redis?.pings).toBe(1);
+    expect(redis?.lastPing).toBe(at);
+  });
+});
+
+describe("recordHeartbeatsAt", () => {
+  it("writes a replayed batch once and ignores duplicate timestamps", async () => {
+    await initUptimeTable();
+    await turso.execute("DELETE FROM uptime_log WHERE component = 'api'");
+
+    const at = new Date(Date.now() - 30_000)
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " ");
+    const rows = [
+      { component: "api", status: "up" as const, latencyMs: 12, at },
+      { component: "api", status: "up" as const, latencyMs: 13, at },
+    ];
+
+    await recordHeartbeatsAt(rows);
+    await recordHeartbeatsAt(rows);
+
+    const summary = await getUptimeSummary();
+    expect(summary.find((s) => s.component === "api")?.pings).toBe(1);
+  });
+});
+
 describe("getUptimeSummary", () => {
   it("reports the newest heartbeat's status, not just the newest ping", async () => {
     await initUptimeTable();
     await turso.execute("DELETE FROM uptime_log WHERE component = 'portal'");
 
-    await recordHeartbeat("portal", "up", 12);
-    await recordHeartbeat("portal", "down", null);
-    await recordHeartbeat("portal", "down", null);
+    const at = (secondsAgo: number) =>
+      new Date(Date.now() - secondsAgo * 1000)
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " ");
+    await recordHeartbeatAt("portal", "up", 12, at(3));
+    await recordHeartbeatAt("portal", "down", null, at(2));
+    await recordHeartbeatAt("portal", "down", null, at(1));
 
     const summary = await getUptimeSummary();
     const portal = summary.find((s) => s.component === "portal");

@@ -1,7 +1,9 @@
 # Marketing site
 
-A separate, hand-written static site for NbkristQik. It lives inside the same
-GitHub Pages project as the leaderboard app, under `/site/`.
+A separate, hand-written static marketing site for NbkristQik. It lives in
+`src/web/public/site/` and is published under `/site/` on GitHub Pages. It is
+not part of the app: the shipped application is served by Express at
+<https://checker.tobioffice.dev/library/>.
 
 - Live: <https://tobioffice.github.io/NbkristQik/site/>
 - Blog: <https://tobioffice.github.io/NbkristQik/site/blog/>
@@ -15,10 +17,10 @@ GitHub Pages project as the leaderboard app, under `/site/`.
 | Making-of | `blog/the-page-is-the-product.html` | how the 51 documents were set |
 
 The landing is about the bot, top to bottom: the hero transcript, the ledger
-(9 commands, 4 mini apps, 1 roll number, 0 passwords), then chapters in
-order — `01 Between classes` (`/midmarks`, `/bunk`, `/register`), `02 The
-leaderboard` (the register's grammar: rings, the bracketed row, the red 75%
-line), `03 The report line` (a QIK-0007 thread), `04 The library` (the
+(9 commands, one app with four sections, 1 roll number, 0 passwords), then
+chapters in order — `01 Between classes` (`/midmarks`, `/bunk`, `/register`),
+`02 The leaderboard` (the register's grammar: rings, the bracketed row, the red
+75% line), `03 The report line` (a QIK-0007 thread), `04 The library` (the
 compressed chapter: cover plate, three pages, pointers to both notes), `05
 The commands` (the full register table), `06 Notes`. Chapter anchors are
 `#answers`, `#board`, `#library`, `#commands`; the blog nav and footers link
@@ -28,8 +30,8 @@ making-of post, not the landing.
 ## How it is built
 
 No framework and no JavaScript. Plain HTML, one stylesheet, and images. Every
-page is under `src/web/public/site/`, so Vite copies it into `dist/site/`
-verbatim; `pnpm run build` is the only build step that touches it.
+page is under `src/web/public/site/`; it is not imported by the Vite entry and
+there is no site build step. Edit the files directly.
 
 ```
 src/web/public/site/
@@ -43,26 +45,24 @@ The design follows [`DESIGN.md`](../DESIGN.md) — paper, ink, cloth, red pen.
 Zilla Slab for display, Public Sans for text, square corners, hairline rules,
 tabular numerals on every figure.
 
-## Deploying
+## Publishing
+
+The marketing site has its own Pages-only deploy:
 
 ```bash
 cd src/web
-pnpm exec vitest run
-pnpm run lint
-pnpm run build
-pnpm run deploy      # gh-pages -d dist --nojekyll
+pnpm deploy:site
 ```
 
-**`--nojekyll` is not optional.** GitHub Pages builds the `gh-pages` branch
-with Jekyll, and Jekyll drops a top-level directory named `site` from the
-output. Without the flag the deploy succeeds, the "pages build and deployment"
-run reports success, and every `/site/` URL returns 404. The flag adds a
-`.nojekyll` file so Pages serves the branch as it is.
+It stages `public/site/` into `dist-site/site/` and publishes that with
+`gh-pages -d dist-site --nojekyll`. It is separate from the app: `pnpm build`
+and `pnpm build:library` build the `/library/` app served by Express; they do
+not produce or publish the site. `deploy:site` publishes only the marketing
+files.
 
-Publishing also removes the stale dotfiles that used to sit on the branch
-(`.env.example`, `.gitignore`, a copy of `.github/workflows/deploy.yml`).
-Those are gone; keep it that way, `.env.example` is a template and the rest
-is noise.
+`--nojekyll` is required. Pages otherwise runs Jekyll over the branch, Jekyll
+drops a top-level directory named `site`, the deploy reports success, and every
+`/site/` URL returns 404.
 
 ## Assets
 
@@ -101,7 +101,7 @@ The site quotes real counts, so they must match the source:
 | Figure | Value |
 | --- | --- |
 | Commands advertised | 9 (`/start /help /attendance /midmarks /bunk /register /leaderboard /report /library`) |
-| Mini apps | 4 (`leaderboard, register, report, library`) |
+| Mini apps | 1 (`/library/`, with four sections) |
 | Subjects | 11 (CSE, R23, semesters 2-1 to 3-2) |
 | Documents | 51 (Software Engineering is Unit I only) |
 | Pages | 1,248 |

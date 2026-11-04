@@ -38,18 +38,32 @@ beforeAll(async () => {
       )`,
       `INSERT INTO studentsnew VALUES ('26KB5A0218', 'BILLE PRANTH', '-', '2', '21')`,
       `INSERT INTO studentsnew VALUES ('26KB5A0219', 'TEST NEIGHBOUR', '-', '2', '21')`,
+      // /api/me reads ranks; the profile suite only needs the two rolls above
+      `CREATE TABLE student_stats (
+        roll_no TEXT PRIMARY KEY,
+        attendance_percentage REAL,
+        mid_marks_avg REAL,
+        last_updated TEXT
+      )`,
+      `INSERT INTO student_stats VALUES ('26KB5A0218', 91.5, 24.0, datetime('now'))`,
+      `INSERT INTO student_stats VALUES ('26KB5A0219', 77.0, 18.5, datetime('now'))`,
       `CREATE TABLE tgusers (userId TEXT PRIMARY KEY, rollNo TEXT)`,
       `INSERT INTO tgusers VALUES ('111222333', '26KB5A0219')`,
+      `INSERT INTO tgusers VALUES ('555666777', '26KB5A0218')`,
     ],
     "write",
   );
 });
 
 const { app } = await import("../../src/api/server.js");
-const { upsertRegistration, getRegistration } =
-  await import("../../src/db/registration.model.js");
+const {
+  upsertRegistration,
+  getRegistration,
+  getRegistrationByRoll,
+  RollAlreadyRegisteredError,
+} = await import("../../src/db/registration.model.js");
 
-// test env keeps the dev userId shortcut available (ENV !== production)
+// test env keeps the dev userId shortcut available (ENV=test opt-in)
 const ME = "444555666";
 
 describe("registration model", () => {
@@ -74,11 +88,30 @@ describe("registration model", () => {
     expect(second?.roll_no).toBe("26KB5A0219");
     expect(second?.display_name).toBeNull();
     expect(second?.registered_at).toBe(first?.registered_at);
-    expect(second?.updated_at >= first!.updated_at).toBe(true);
+    if (!second || !first) throw new Error("registration disappeared");
+    expect(second.updated_at >= first.updated_at).toBe(true);
   });
 
   it("returns null for unknown users", async () => {
     expect(await getRegistration("000999888777")).toBeNull();
+  });
+
+  it("finds a registration by roll and refuses a second account", async () => {
+    await upsertRegistration("888999000", "26kb5a0217", "Owner");
+
+    const byRoll = await getRegistrationByRoll("26KB5A0217");
+    expect(byRoll?.userId).toBe("888999000");
+    expect(byRoll?.display_name).toBe("Owner");
+
+    await expect(
+      upsertRegistration("999000111", "26KB5A0217", null),
+    ).rejects.toBeInstanceOf(RollAlreadyRegisteredError);
+
+    // the owner can still edit their own registration
+    await upsertRegistration("888999000", "26KB5A0217", "Owner Two");
+    expect((await getRegistration("888999000"))?.display_name).toBe(
+      "Owner Two",
+    );
   });
 });
 
@@ -140,9 +173,70 @@ describe("profile endpoints", () => {
     expect(get.body.student).toMatchObject({ section: "-", branch: "2" });
   });
 
+  it("POST /api/register refuses a roll held by another account with 409", async () => {
+    // ME owns 26KB5A0218 (the previous test registered it)
+    await upsertRegistration(ME, "26KB5A0218", "Prasanth");
+
+    const res = await request(app)
+      .post("/api/register")
+      .send({ userId: "777000111", rollNo: "26KB5A0218" });
+
+    expect(res.status).toBe(409);
+    expect(res.body.code).toBe("ROLL_ALREADY_REGISTERED");
+    expect(res.body.error).toMatch(/another Telegram account/i);
+    // nothing was written for the second account
+    expect(await getRegistration("777000111")).toBeNull();
+    // and the owner's registration is untouched
+    expect((await getRegistration(ME))?.roll_no).toBe("26KB5A0218");
+  });
+
+  it("POST /api/register lets the owner edit the same roll", async () => {
+    const res = await request(app)
+      .post("/api/register")
+      .send({ userId: ME, rollNo: "26KB5A0218", displayName: "Prasanth R" });
+
+    expect(res.status).toBe(200);
+    expect((await getRegistration(ME))?.display_name).toBe("Prasanth R");
+  });
+
   it("there is no delete endpoint", async () => {
     const res = await request(app).delete(`/api/register`).send({ userId: ME });
 
     expect(res.status).toBe(404);
+  });
+});
+
+describe("/api/me identity preference", () => {
+  it("prefers the explicit registration roll over the last lookup", async () => {
+    // tgusers says 0218 (last lookup); the registration pins 0219
+    await upsertRegistration("555666777", "26KB5A0219", "Preference");
+
+    const res = await request(app).get("/api/me?userId=555666777");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      found: true,
+      source: "registered",
+      roll_no: "26KB5A0219",
+    });
+    expect(res.body.attendance).toBeTruthy();
+  });
+
+  it("falls back to the last lookup when there is no registration", async () => {
+    const res = await request(app).get("/api/me?userId=111222333");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      found: true,
+      source: "lookup",
+      roll_no: "26KB5A0219",
+    });
+  });
+
+  it("reports found:false when neither registration nor lookup has a roll", async () => {
+    const res = await request(app).get("/api/me?userId=424242424");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ found: false });
   });
 });

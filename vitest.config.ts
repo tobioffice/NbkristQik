@@ -15,12 +15,14 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      // floor below the current baseline; raise as coverage improves
+      // floor ~2 points below the measured total (2026-11-04:
+      // statements 72.22, branches 76.85, functions 84.02, lines 72.22),
+      // so ordinary test churn does not flip CI; raise as coverage improves
       thresholds: {
-        statements: 25,
-        branches: 55,
-        functions: 40,
-        lines: 25,
+        statements: 70,
+        branches: 75,
+        functions: 82,
+        lines: 70,
       },
       exclude: [
         'node_modules/',

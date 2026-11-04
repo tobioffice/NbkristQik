@@ -8,7 +8,8 @@ bot.onText(/^\/start/, (msg) => {
   trackMessage(msg, "command:start");
 
   // the channel's "Open the library" button is a deep link with this
-  // payload: the student lands on the same one-tap library entry
+  // payload: the student lands on the same one-tap library entry. Any other
+  // payload (the retired `unlocked` included) falls through to the welcome.
   if (startPayload(msg.text ?? "")?.toLowerCase() === "library") {
     sendLibraryEntry(msg);
     return;

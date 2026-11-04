@@ -46,17 +46,40 @@ export const parseCookies = (
 export const tokenHash = (token: string, password: string): string =>
   crypto.createHmac("sha256", password).update(token).digest("hex");
 
-export const tooManyAttempts = (ip: string): boolean => {
+/**
+ * Read-only lockout check. Call this BEFORE comparing the password so a
+ * correct password is never counted as a failure and a locked-out attacker
+ * does not extend their own lockout by hammering the route.
+ */
+export const isLoginLocked = (ip: string): boolean => {
+  const now = Date.now();
+  pruneLoginAttempts(now);
+  const entry = loginAttempts.get(ip);
+  if (!entry || now > entry.resetAt) return false;
+  return entry.count >= MAX_LOGIN_ATTEMPTS;
+};
+
+/**
+ * Records one failed password check. Only failures increment the counter;
+ * a successful login clears it (see clearLoginAttempts).
+ */
+export const recordLoginFailure = (ip: string): void => {
   const now = Date.now();
   pruneLoginAttempts(now);
   const entry = loginAttempts.get(ip);
   if (!entry || now > entry.resetAt) {
     loginAttempts.set(ip, { count: 1, resetAt: now + LOGIN_WINDOW_MS });
-    return false;
+    return;
   }
   entry.count++;
-  return entry.count > MAX_LOGIN_ATTEMPTS;
 };
+
+/**
+ * @deprecated Kept for callers that predate the split; this used to both
+ * check and increment, which counted successful logins as failures. Prefer
+ * isLoginLocked() + recordLoginFailure().
+ */
+export const tooManyAttempts = (ip: string): boolean => isLoginLocked(ip);
 
 export const clearLoginAttempts = (ip: string): void => {
   loginAttempts.delete(ip);

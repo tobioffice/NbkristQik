@@ -3,7 +3,7 @@
 A reading room inside the bot. Students open their subjects in a Telegram
 mini app, read the material on the phone, and never get a file they can keep.
 
-Status: plan of record. Phases 1 to 4 are built and tested; the rest are
+Status: plan of record. Phases 1 to 5 are built and tested; the rest are
 still to do. Supersedes the viewer and storage sections of
 `docs/DOCUMENTS.md`; the content model in that file still stands.
 
@@ -14,7 +14,7 @@ still to do. Supersedes the viewer and storage sections of
 | 3 | ingest CLI, document builder, one subject | **done** — `dist/tools/ingestLibrary.js`, the HTML builds, one unit tested |
 | 4 | the reader: page window, saved place, zoom | **done** — `DocumentReader.tsx`, `usePageWindow.ts` |
 | 4a | the reader's zoom: pinch, double tap, controls | **done** — `zoom.ts`, `DocumentReader.tsx` |
-| 5 | bot entry points | **done** — `/library` command and the chat menu button |
+| 5 | bot entry points | **done** — `/library` command and the app's Library section (admin-first) |
 | 6 | abuse detection, admin flags, search | partly — the five-minute document counter is in; the admin panel and search are not |
 | 7 | the rest of the corpus, assignments, announcements | to do |
 
@@ -22,12 +22,13 @@ still to do. Supersedes the viewer and storage sections of
 
 One Telegram mini app, "NbkristQik Library":
 
-- A student taps **Library** in the bot (menu button or `/library`).
+- The bot's menu button opens the app index. The **Library** section appears there only when `/api/config` reports the shelf open (admin-first); `/library` remains the same entry for the admin while the shelf is closed.
 - The app lists **their** subjects for the running semester, taken from their
   registered roll number.
 - Tapping a subject opens the material as pages, rendered on the phone.
 - The source PDF never reaches the device. Pages arrive as vector SVG — the
-  PDF's own page layout, with the reader's Telegram user id drawn into them.
+  PDF's own page layout, with an opaque per-reader watermark token drawn into
+  them.
 
 The library holds what `NbkristQik-docs` produces: the re-typeset, syllabus-exact
 study documents, one PDF per subject unit.
@@ -45,7 +46,7 @@ study documents, one PDF per subject unit.
 4. **Only the pages on screen are resident.** Pages are fetched as the reader
    scrolls and dropped as they scroll away.
 5. **Every page is attributable.** Each delivered page carries the reader's
-   Telegram user id, drawn into it on our side.
+   opaque watermark token, drawn into it on our side.
 6. **A leak points at one person, and we can act.** Bulk pulls are counted and
    flagged.
 
@@ -76,7 +77,8 @@ leaves the server.
 
 ## 3. Access: Telegram-only, registered-only
 
-Four gates, in order. The first two are convenience; the last two are the wall.
+Five gates, in order. The first two are convenience; registration and
+entitlement are the wall; the last keeps an unfinished shelf to the admin.
 
 **Gate 1 — client (telegram-only).** The app reads
 `window.Telegram.WebApp.initData`. If the Telegram SDK is missing or
@@ -116,10 +118,10 @@ students. Same origin, same-site cookie, no ITP.
 holds only a unit or two, `LIBRARY_ACCESS` is `admin` (the default). Then:
 
 - `/library` stays out of the public command list.
-- The chat menu button opens the app either way — the register, the roll and
-  the issue desk are useful whatever the shelf holds — and while the gate is
-  shut it opens the shelf section itself, which is the page the admin is
-  working on.
+- The global menu button always opens the app index — the register, the roll
+  and the issue desk are useful whatever the shelf holds. The library tab and
+  index row appear only when `/api/config` says `libraryOpen`; a deep link to
+  the closed shelf returns to the index. The admin sees the shelf in preview.
 - The admin's chat gets the command in its scoped list as well.
 - `POST /api/library/session` refuses any other Telegram account with
   `403 The library is not open yet.`, and `requireSession` re-checks the
@@ -133,9 +135,11 @@ Opening it later is `LIBRARY_ACCESS=all` in the unit's environment and a
 restart. The flag is read per request, so the gate and the bot menus agree
 without a rebuild.
 
-**Cost.** The library SPA is a second web app. The current one (leaderboard,
-register, report) stays on GitHub Pages where it is; the library moves to
+**Cost.** The app is one shipped SPA at
 `https://checker.tobioffice.dev/library/`, served by Express as static files.
+The leaderboard, register and report surfaces are sections of it, not separate
+apps. The old GitHub Pages app entry points are retired; the marketing site
+remains a separate static surface under `src/web/public/site/`.
 
 ## 4. Which subjects a student gets
 
@@ -283,10 +287,11 @@ Every page is stamped with the reader's mark before it is sent:
 - A diagonal repeat down the page at 5% opacity: a deterrent, not the
   identifier. A person reading the page does not notice it.
 - A footer line at 42% opacity carrying the reader's **token**, an opaque code
-  like `NBK-362C-88C3`. It is derived from the Telegram user id and a server
-  secret, so it says nothing to the student about what is being tracked, and
-  it is recorded with every page read, so a page that turns up in the wrong
-  hands is resolved to one account.
+  like `NBK-7F3A-2C19-8B44-D106` (four groups of four hex characters, 64 bits).
+  It is derived from the Telegram user id and a server secret, so it says
+  nothing to the student about what is being tracked, and it is recorded with
+  every page read, so a page that turns up in the wrong hands is resolved to
+  one account.
 
 The reader's Telegram id and roll number are **not** on the page. A roll
 number in a shared photo is a name in the college's records; the token is
@@ -306,7 +311,7 @@ the overlay is per request and is a string insertion.
 To resolve a token back to a student:
 
 ```
-node dist/tools/resolveWatermark.js NBK-362C-88C3     # a token off a page
+node dist/tools/resolveWatermark.js NBK-7F3A-2C19-8B44-D106  # a token off a page
 node dist/tools/resolveWatermark.js --user 123456789  # a user's token
 ```
 
@@ -332,8 +337,8 @@ back up costs one request.
 | Select or copy the text | impossible: the page is vector outlines, there is no text layer |
 | "Save image as" from the browser | the page is shown from a blob URL, and the saved copy carries their token |
 | Save the page as PDF | impossible: no PDF reaches the device |
-| Open the network tab and copy the SVG | they can, and the copy carries their user id |
-| Screenshot or photograph the screen | they can, and it carries their user id |
+| Open the network tab and copy the SVG | they can, and the copy carries their token |
+| Screenshot or photograph the screen | they can, and it carries their token |
 | Read the whole subject in one burst | counted, throttled, and logged |
 
 ## 6. Data model
@@ -406,8 +411,9 @@ panel.
 
 The app is one Vite entry in `src/web`: `app.html` → `src/web/src/app-main.tsx`,
 built with `base: "/library/"` and served by Express from `$DIR/public/library`.
-It holds every surface, not only the shelf — see §8a — and the older
-single-purpose pages stay deployed, unused by the bot.
+It holds every surface, not only the shelf — see §8a. The old standalone
+GitHub Pages entry points are retired; only this app and the static marketing
+site remain.
 
 Structure:
 
@@ -606,7 +612,8 @@ case.
 - **Config**: `LIBRARY_DATA_DIR` moves the data tree, `LIBRARY_WEB_DIR` moves
   the built bundle (both default to the working directory),
   `LIBRARY_WATERMARK_SECRET` is the secret behind the watermark tokens (it
-  falls back to the bot token).
+  falls back to the bot token). With neither configured, page requests answer
+  `503` rather than printing a token anyone could forge from the repository.
 - **Preview**: `scripts/preview-library.mjs` serves the built library and
   fakes the API and Telegram, so the app can be looked at in a plain browser
   without a deploy. It stamps the pages with the same code the server uses.
@@ -652,9 +659,10 @@ one where a student sees a page.
    material with a note, or nothing until we cut their regulation?
 4. **Past semesters.** Do students see the previous semester's subjects too,
    or only the running one? (v1: running semester only.)
-5. **Watermark text.** Telegram user id alone, or id plus roll number? (Roll
-   number is public data and helps a student confirm which copy is theirs; the
-   Telegram id is what we can ban.)
-6. **Hosting.** The library moves to `checker.tobioffice.dev/library/`, off
-   GitHub Pages, for first-party cookies. Confirm we are happy to serve the
-   app from the API host.
+5. **Watermark text (resolved).** The page carries an opaque token derived
+   from the Telegram user id and a server secret, not the id or roll itself;
+   resolving the token server-side points at one account without printing
+   identity data on the page.
+6. **Hosting (resolved).** The app is served from
+   `checker.tobioffice.dev/library/` on the API host, off GitHub Pages, so its
+   session cookie is first-party.

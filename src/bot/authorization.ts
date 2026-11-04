@@ -6,16 +6,15 @@ import { ADMIN_ID } from "../config/environmentals.js";
 import { logger } from "../config/logger.js";
 import { PROTECTED_CHAT_ID } from "../constants/index.js";
 import { CHANNEL_USERNAME } from "../constants/telegram.js";
-import { isDailyUnlocked, getCheckInLink } from "./dailyCheckIn.js";
-import { CHECK_IN_PROMPT, JOIN_CHANNEL } from "./replies.js";
+import { JOIN_CHANNEL } from "./replies.js";
 
 /**
  * The gate in front of every answer.
  *
- * Three questions, in order: is this the admin, is this person in the channel,
- * and have they checked in today. Every entry point — a typed roll number, a
- * tapped button, a registered command — asks the same questions through this
- * one function, so no path can answer with a gate missing.
+ * Two questions, in order: is this the admin, and is this person in the
+ * channel. Every entry point — a typed roll number, a tapped button, a
+ * registered command — asks the same questions through this one function, so
+ * no path can answer with a gate missing.
  */
 
 /** The membership flag the join check writes, read back cheaply. */
@@ -30,7 +29,7 @@ const getCachedMembership = async (userId: number): Promise<boolean> => {
   }
 };
 
-/** The card that asks a student to join the channel first. */
+/** A student who has not joined the channel gets this card instead. */
 const sendJoinChannelMsg = async (chatId: number): Promise<void> => {
   const channel = CHANNEL_USERNAME;
   await bot.sendMessage(chatId, JOIN_CHANNEL, {
@@ -42,29 +41,10 @@ const sendJoinChannelMsg = async (chatId: number): Promise<void> => {
   });
 };
 
-/** A student who has not checked in today gets the pinned post instead. */
-const sendCheckInPrompt = async (
-  chatId: number,
-  replyToMessageId?: number,
-): Promise<void> => {
-  await bot.sendMessage(chatId, CHECK_IN_PROMPT, {
-    parse_mode: "HTML",
-    // as a reply to the student's own message, so it is clearly for them
-    ...(replyToMessageId ? { reply_to_message_id: replyToMessageId } : {}),
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "👇 I'm not a robot", url: await getCheckInLink() }],
-      ],
-    },
-  });
-};
-
 export interface AuthorizationRequest {
   userId: number;
   /** The chat the student asked from. */
   chatId: number;
-  /** The message the answer should hang off, when there is one. */
-  replyToMessageId?: number;
   /**
    * Where the "join the channel" card goes. Defaults to the chat that asked;
    * the roll-number flow sends it privately instead, so a group never sees a
@@ -77,10 +57,9 @@ export interface AuthorizationRequest {
 export const isAuthorizedUser = async ({
   userId,
   chatId,
-  replyToMessageId,
   joinPromptChatId = chatId,
 }: AuthorizationRequest): Promise<boolean> => {
-  // the admin is never gated: no membership check, no check-in
+  // the admin is never gated: no membership check
   if (userId === ADMIN_ID) return true;
 
   let isMember = await getCachedMembership(userId);
@@ -90,19 +69,13 @@ export const isAuthorizedUser = async ({
     } catch (e) {
       logger.warn("[auth] membership check failed:", e);
       // cannot verify membership right now — let the request through rather
-      // than locking out members (the daily gate still applies below)
+      // than locking out members on a bad minute
       isMember = true;
     }
   }
 
   if (!isMember && chatId !== PROTECTED_CHAT_ID) {
     await sendJoinChannelMsg(joinPromptChatId);
-    return false;
-  }
-
-  // dormant until /postcheckin creates the post
-  if (!(await isDailyUnlocked(userId))) {
-    await sendCheckInPrompt(chatId, replyToMessageId);
     return false;
   }
 

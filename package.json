@@ -12,6 +12,8 @@
         "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
         "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
         "typecheck": "tsc --noEmit",
+        "typecheck:tests": "tsc -p tsconfig.test.json",
+        "verify": "pnpm run typecheck && pnpm run typecheck:tests && pnpm run lint && pnpm exec vitest run",
         "test": "vitest",
         "test:ui": "vitest --ui",
         "test:coverage": "vitest --coverage"
@@ -21,7 +23,7 @@
     "license": "MIT",
     "description": "",
     "engines": {
-        "node": ">=20"
+        "node": ">=22"
     },
     "dependencies": {
         "@libsql/client": "^0.18.0",

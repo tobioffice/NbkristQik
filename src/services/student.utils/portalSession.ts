@@ -23,6 +23,21 @@ export const makeSessionToken = (): string => {
 export const getSessionCookie = (): string => sessionCookie;
 
 /**
+ * The portal login body, form-encoded.
+ *
+ * Credentials are user-configured secrets: a password containing `&`, `=`,
+ * `+`, `%` or a space would otherwise split or corrupt the urlencoded body
+ * and the login would fail with what looks like a bad password. URLSearchParams
+ * encodes the same way a browser form submit does (`+` for spaces). syncdb.ts
+ * performs its own login and shares this builder so the two can't drift.
+ */
+export const buildLoginPayload = (
+  username: string = N_USERNAME,
+  password: string = N_PASSWORD,
+): string =>
+  new URLSearchParams({ username, password, captcha: "" }).toString();
+
+/**
  * Validates if current session cookie is still valid
  */
 export const isSessionValid = async (): Promise<boolean> => {
@@ -54,7 +69,7 @@ export const renewSession = async (): Promise<void> => {
   headers.Cookie = `PHPSESSID=${sessionToken}`;
   headers.Referer = `${BASE_URL}/attendance/attendanceLogin.php`;
 
-  const payload = `username=${N_USERNAME}&password=${N_PASSWORD}&captcha=`;
+  const payload = buildLoginPayload();
 
   try {
     await axios.post(LOGIN_URL, payload, {

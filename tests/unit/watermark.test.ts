@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { mkdirSync, rmSync, writeFileSync } from "fs";
 import os from "os";
 import path from "path";
@@ -10,8 +10,14 @@ import {
 describe("the watermark token", () => {
   it("looks like a code, not an identity", () => {
     expect(watermarkToken("123456789")).toMatch(
-      /^NBK-[0-9A-F]{4}-[0-9A-F]{4}$/,
+      /^NBK-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}$/,
     );
+  });
+
+  it("carries 16 hex characters, not 8", () => {
+    const hex = watermarkToken("123456789").replace(/-/g, "");
+    expect(hex).toHaveLength(19); // "NBK" + 16 hex
+    expect(hex.slice(3)).toHaveLength(16);
   });
 
   it("is the same for the same reader", () => {
@@ -22,10 +28,20 @@ describe("the watermark token", () => {
     expect(watermarkToken("123456789")).not.toBe(watermarkToken("987654321"));
   });
 
-  it("does not carry the reader's id or roll number", () => {
-    const token = watermarkToken("123456789");
-    expect(token).not.toContain("123456789");
-    expect(token).not.toContain("23CS1042");
+  it("refuses to mint a token when no secret is configured", async () => {
+    vi.resetModules();
+    vi.stubEnv("TELEGRAM_BOT_TOKEN", "");
+    vi.stubEnv("TELEGRAM_BOT_TOKEN_DEV", "");
+    vi.stubEnv("LIBRARY_WATERMARK_SECRET", "");
+    try {
+      const fresh = await import("../../src/services/library/watermark.js");
+      expect(() => fresh.watermarkToken("123456789")).toThrow(
+        /LIBRARY_WATERMARK_SECRET/,
+      );
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
   });
 });
 

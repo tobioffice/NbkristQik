@@ -3,6 +3,7 @@ import { resolveUserId } from "./resolveUser.js";
 import {
   getRegistration,
   upsertRegistration,
+  RollAlreadyRegisteredError,
 } from "../db/registration.model.js";
 import { getTgUserRoll } from "../db/student.model.js";
 import {
@@ -111,6 +112,17 @@ profileRouter.post("/register", async (req: Request, res: Response) => {
       registered: { roll_no: student.roll_no, name: student.name },
     });
   } catch (e) {
+    if (e instanceof RollAlreadyRegisteredError) {
+      // 409 Conflict, not 500: the request was valid, but the roll is taken.
+      // Never reveal which account holds it.
+      res.status(409).json({
+        code: "ROLL_ALREADY_REGISTERED",
+        error:
+          "This roll number is already saved to another Telegram account. " +
+          "If it's yours, open the app from that account or ask the admin for help.",
+      });
+      return;
+    }
     logger.error("[profile] register failed:", e);
     res.status(500).json({ error: "Internal Server Error" });
   }

@@ -40,8 +40,39 @@ describe("admin routes", () => {
     expect(shell.status).toBe(200);
     expect(shell.text).toContain("Qik");
 
+    // frame/referrer/nosniff hardening on the panel document
+    expect(shell.headers["x-frame-options"]).toBe("DENY");
+    expect(shell.headers["referrer-policy"]).toBe("no-referrer");
+    expect(shell.headers["x-content-type-options"]).toBe("nosniff");
+
+    // a per-request nonce authorises exactly this document's inline tags
+    const nonce = /<script nonce="([a-f0-9]+)">/.exec(shell.text)?.[1];
+    expect(nonce).toBeTruthy();
+    expect(shell.text).toContain(`<style nonce="${nonce}">`);
+    const csp = shell.headers["content-security-policy"] ?? "";
+    expect(csp).toContain(`script-src 'nonce-${nonce}'`);
+    expect(csp).toContain(
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    );
+    expect(csp).toContain("font-src 'self' https://fonts.gstatic.com");
+    expect(csp).toContain("connect-src 'self'");
+    expect(csp).toContain("frame-ancestors 'none'");
+    expect(csp).toContain("base-uri 'none'");
+    expect(csp).toContain("form-action 'self'");
+
     const overview = await request(app).get(`${BASE}/api/overview`);
     expect(overview.status).toBe(401);
+  });
+
+  it("mints a different nonce for every panel request", async () => {
+    const first = await request(app).get(BASE);
+    const second = await request(app).get(BASE);
+    const nonceOf = (text: string) =>
+      /<script nonce="([a-f0-9]+)">/.exec(text)?.[1];
+
+    expect(nonceOf(first.text)).toBeTruthy();
+    expect(nonceOf(second.text)).toBeTruthy();
+    expect(nonceOf(first.text)).not.toBe(nonceOf(second.text));
   });
 
   it("rejects wrong passwords and accepts the right one", async () => {
@@ -55,6 +86,35 @@ describe("admin routes", () => {
       .send({ password: PASSWORD });
     expect(ok.status).toBe(200);
     expect(ok.headers["set-cookie"]?.[0]).toContain("qik_admin=");
+  });
+
+  it("accepts the right password after earlier failures (only failures count)", async () => {
+    for (let i = 0; i < 4; i++) {
+      const wrong = await request(app)
+        .post(`${BASE}/login`)
+        .send({ password: `nope-${i}` });
+      expect(wrong.status).toBe(401);
+    }
+
+    const ok = await request(app)
+      .post(`${BASE}/login`)
+      .send({ password: PASSWORD });
+    expect(ok.status).toBe(200);
+  });
+
+  it("locks a flood out before the password check, and 429s a correct guess", async () => {
+    for (let i = 0; i < 5; i++) {
+      const wrong = await request(app)
+        .post(`${BASE}/login`)
+        .send({ password: `flood-${i}` });
+      expect(wrong.status).toBe(401);
+    }
+
+    // the lock is checked before the password: even the right one is refused
+    const locked = await request(app)
+      .post(`${BASE}/login`)
+      .send({ password: PASSWORD });
+    expect(locked.status).toBe(429);
   });
 
   it("accepts a session cookie with an unexpired stored hash", async () => {

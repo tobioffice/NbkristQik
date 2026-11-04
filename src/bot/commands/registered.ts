@@ -18,6 +18,7 @@ import { trackMessage } from "../../services/tracker.js";
 import { isAuthorizedUser } from "../authorization.js";
 import { TOO_FAST, SOMETHING_BROKE } from "../replies.js";
 import { REGISTER_WEBAPP_URL } from "../../constants/webapp.js";
+import { appPageButton } from "./register.js";
 
 /** A lookup the student can ask for by command. */
 type Lookup = "att" | "mid" | "bunk";
@@ -28,26 +29,34 @@ const LOOKUP_TRACKED_AS: Record<Lookup, string> = {
   bunk: "command:bunk",
 };
 
-const REGISTER_BUTTON = {
-  parse_mode: "HTML" as const,
-  reply_markup: {
-    inline_keyboard: [
-      [
-        {
-          text: "👤 Register your roll",
-          web_app: { url: REGISTER_WEBAPP_URL },
+/**
+ * Ask the student to save their roll. `isPrivate` keeps the button a
+ * `web_app` in a DM and a plain link in a group, where Telegram rejects
+ * `web_app` buttons.
+ */
+const promptRegister = (chatId: number, isPrivate: boolean): void => {
+  bot
+    .sendMessage(
+      chatId,
+      `Save your roll number first, then this command answers instantly.`,
+      {
+        parse_mode: "HTML",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              appPageButton(
+                "👤 Register your roll",
+                REGISTER_WEBAPP_URL,
+                isPrivate,
+              ),
+            ],
+          ],
         },
-      ],
-    ],
-  },
-};
-
-const promptRegister = (chatId: number): void => {
-  bot.sendMessage(
-    chatId,
-    `Save your roll number first, then this command answers instantly.`,
-    REGISTER_BUTTON,
-  );
+      },
+    )
+    .catch((e: Error) =>
+      logger.warn("[registered] register prompt failed:", e?.message ?? e),
+    );
 };
 
 /**
@@ -57,10 +66,11 @@ const promptRegister = (chatId: number): void => {
 export const resolveRegisteredRoll = async (
   userId: number,
   chatId: number,
+  isPrivate: boolean,
 ): Promise<string | null> => {
   const registration = await getRegistration(String(userId));
   if (!registration) {
-    promptRegister(chatId);
+    promptRegister(chatId, isPrivate);
     return null;
   }
 
@@ -72,12 +82,32 @@ export const resolveRegisteredRoll = async (
   } catch (e) {
     if (e instanceof StudentNotFoundError) {
       // registered roll left studentsnew (semester sync) — ask for an update
-      bot.sendMessage(
-        chatId,
-        `Your saved roll <code>${registration.roll_no}</code> isn't in the college records anymore.\n\n` +
-          `If the semester changed, save your new roll and this command works again.`,
-        REGISTER_BUTTON,
-      );
+      bot
+        .sendMessage(
+          chatId,
+          `Your saved roll <code>${registration.roll_no}</code> isn't in the college records anymore.\n\n` +
+            `If the semester changed, save your new roll and this command works again.`,
+          {
+            parse_mode: "HTML",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  appPageButton(
+                    "👤 Register your roll",
+                    REGISTER_WEBAPP_URL,
+                    isPrivate,
+                  ),
+                ],
+              ],
+            },
+          },
+        )
+        .catch((sendError: Error) =>
+          logger.warn(
+            "[registered] stale-roll prompt failed:",
+            sendError?.message ?? sendError,
+          ),
+        );
       return null;
     }
 
@@ -111,16 +141,17 @@ const handleLookup = async (msg: Message, lookup: Lookup): Promise<void> => {
     return;
   }
 
+  const isPrivate = chat.type === "private";
+
   const authorized = await isAuthorizedUser({
     userId: from.id,
     chatId: chat.id,
-    replyToMessageId: msg.message_id,
   });
   if (!authorized) return;
 
   trackMessage(msg, LOOKUP_TRACKED_AS[lookup]);
 
-  const rollNo = await resolveRegisteredRoll(from.id, chat.id);
+  const rollNo = await resolveRegisteredRoll(from.id, chat.id, isPrivate);
   if (!rollNo) return;
 
   if (lookup === "bunk") {

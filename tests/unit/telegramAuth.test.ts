@@ -75,6 +75,38 @@ describe("verifyInitData", () => {
     expect(verifyInitData(initData)).toBeNull();
   });
 
+  it("rejects auth_date more than 5 minutes in the future", () => {
+    const future = String(Math.floor(Date.now() / 1000) + 10 * 60);
+    const initData = signInitData({
+      auth_date: future,
+      user: JSON.stringify({ id: 12345 }),
+    });
+
+    expect(verifyInitData(initData)).toBeNull();
+  });
+
+  it("tolerates a small clock skew", () => {
+    const soon = String(Math.floor(Date.now() / 1000) + 60);
+    const initData = signInitData({
+      auth_date: soon,
+      user: JSON.stringify({ id: 12345 }),
+    });
+
+    expect(verifyInitData(initData)?.id).toBe(12345);
+  });
+
+  it("compares hashes safely even when the supplied hash has a wrong length", () => {
+    const initData = signInitData({
+      auth_date: freshAuthDate(),
+      user: JSON.stringify({ id: 12345 }),
+    });
+    const shortHash = initData.replace(/hash=[0-9a-f]+/, "hash=abc");
+
+    // length check first: no throw from timingSafeEqual, just a rejection
+    expect(() => verifyInitData(shortHash)).not.toThrow();
+    expect(verifyInitData(shortHash)).toBeNull();
+  });
+
   it("rejects missing hash, missing auth_date, and malformed input", () => {
     expect(verifyInitData("user=%7B%22id%22%3A1%7D")).toBeNull();
     expect(

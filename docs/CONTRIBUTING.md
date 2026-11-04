@@ -70,7 +70,7 @@ Report violations to: **@tobioffice** on Telegram
 
 Before you begin, ensure you have:
 
-- **Node.js** v20.x or higher
+- **Node.js** 22 or 24 (Node 20 is EOL; `.nvmrc` pins 24)
 - **pnpm** (preferred) or npm
 - **Git**
 - **Code editor** (VS Code recommended)
@@ -117,13 +117,23 @@ cp .env.example .env
 3. **Configure environment variables:**
 ```bash
 # Required for local development
-TELEGRAM_BOT_TOKEN=your_test_bot_token
+ENV=development
+TELEGRAM_BOT_TOKEN_DEV=your_test_bot_token
 TURSO_DATABASE_URL=your_test_db_url
 TURSO_AUTH_TOKEN=your_test_auth_token
 N_USERNAME=test_username
 N_PASSWORD=test_password
 ADMIN_ID=your_telegram_user_id
+
+# Optional: allow the unsigned numeric userId shortcut in development.
+# ENV alone is not enough for this shortcut, and it must never be set in
+# production.
+ALLOW_DEV_IDENTITY=1
 ```
+
+`ENV` defaults to `production` when unset; a development checkout must set
+`ENV=development` explicitly. The dev token is
+`TELEGRAM_BOT_TOKEN_DEV`; production reads `TELEGRAM_BOT_TOKEN`.
 
 **⚠️ Important:** Use a **test bot** and **test database** for development, not production credentials!
 
@@ -183,10 +193,13 @@ chore/update-dependencies
 
 2. **Test locally:**
 ```bash
-pnpm test
-pnpm lint
+pnpm run verify
 pnpm build
 ```
+
+`pnpm run verify` runs the TypeScript typecheck, the test typecheck, ESLint and
+the test suite once (`pnpm exec vitest run`). Bare `pnpm test` starts Vitest in
+watch mode, which never exits in a script.
 
 3. **Commit your changes:**
 ```bash
@@ -300,6 +313,20 @@ pnpm lint
 pnpm lint:fix
 ```
 
+### API identity and CORS
+
+The shipped web client sends signed Telegram `initData` in the
+`X-Telegram-Init-Data` header. The server still accepts the legacy `initData`
+query parameter and JSON body field for compatibility, but new client code
+should use the header: a URL can end up in nginx logs, browser history and
+`Referer` headers. A presented but invalid identity is rejected with `401`; it
+is never treated as anonymous.
+
+API CORS is an allowlist from `CORS_ORIGINS` (comma-separated, default
+`https://checker.tobioffice.dev`). The Vite dev server proxies `/api` to the
+local backend, so local development needs no extra origin. If you serve a
+separate frontend origin, add it to `CORS_ORIGINS` and restart the API.
+
 ---
 
 ## Commit Guidelines
@@ -396,8 +423,7 @@ git rebase upstream/main
 
 2. **Run all checks:**
 ```bash
-pnpm lint
-pnpm test
+pnpm run verify
 pnpm build
 ```
 
@@ -467,6 +493,7 @@ Relates to #456
 
 1. **Automated checks** will run:
    - Linting
+   - Type-check (source and tests)
    - Tests
    - Build
 
@@ -526,7 +553,7 @@ If applicable
 
 **Environment:**
 - OS: [e.g., Ubuntu 22.04]
-- Node.js version: [e.g., 20.11.0]
+- Node.js version: [e.g., 24.10.0]
 - Bot version: [e.g., 1.2.0]
 
 **Additional context**
@@ -569,18 +596,26 @@ We use labels to categorize issues:
 ### Running Tests
 
 ```bash
-# Run all tests
+# Run all tests once
+pnpm exec vitest run
+
+# Run one test file once
+pnpm exec vitest run tests/unit/academic.test.ts
+
+# Watch mode while developing (never use this in CI or a script)
 pnpm test
-
-# Run specific test file
-pnpm test tests/unit/academic.test.ts
-
-# Run tests in watch mode
-pnpm test:watch
 
 # Generate coverage report
 pnpm test:coverage
+
+# Type-check the tests without emitting
+pnpm run typecheck:tests
+
+# The full pre-PR gate: typecheck + test typecheck + lint + tests once
+pnpm run verify
 ```
+
+Node 22 or 24 is required (`.nvmrc` pins 24); CI runs the root suite on both.
 
 ### Writing Tests
 
@@ -695,4 +730,4 @@ Your contributions make NbkristQik better for everyone. We appreciate your time 
 
 ---
 
-*Last Updated: February 1, 2026*
+*Last Updated: November 4, 2026*

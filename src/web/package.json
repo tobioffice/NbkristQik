@@ -4,14 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "vite --config vite.library.config.ts",
+    "build": "tsc -b && vite build --config vite.library.config.ts",
     "build:library": "tsc -b && vite build --config vite.library.config.ts",
     "lint": "eslint .",
     "test": "vitest run",
-    "preview": "vite preview",
-    "predeploy": "pnpm run build",
-    "deploy": "gh-pages -d dist --nojekyll"
+    "preview": "vite preview --config vite.library.config.ts",
+    "deploy:site": "rm -rf dist-site && mkdir -p dist-site/site && cp -R public/site/. dist-site/site/ && gh-pages -d dist-site --nojekyll"
   },
   "dependencies": {
     "react": "^19.3.1",

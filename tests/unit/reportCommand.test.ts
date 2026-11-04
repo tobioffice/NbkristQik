@@ -1,9 +1,15 @@
 import { describe, it, expect, vi } from "vitest";
+import {
+  createOnTextMock,
+  createSendMessageMock,
+  registeredTextHandler,
+  sentMessage,
+} from "../mocks/telegram.mock.js";
 
 // capture the handlers the command module registers instead of talking to
 // Telegram, and the replies it sends
-const onText = vi.fn();
-const sendMessage = vi.fn(async () => ({ message_id: 1 }));
+const onText = createOnTextMock();
+const sendMessage = createSendMessageMock();
 
 vi.mock("../../src/bot/bot.js", () => ({ bot: { onText, sendMessage } }));
 vi.mock("../../src/db/db.js", () => ({ turso: { execute: vi.fn() } }));
@@ -20,14 +26,15 @@ const { REPORT_LIST_WEBAPP_URL, REPORT_WEBAPP_URL } =
   await import("../../src/constants/webapp.js");
 
 /** The bare "/report" handler (the other one requires a message). */
-const bareReport = onText.mock.calls.find(([pattern]: [RegExp]) =>
-  pattern.test("/report"),
-)?.[1] as (msg: unknown) => void;
+const bareReport = registeredTextHandler<(msg: unknown) => void>(
+  onText,
+  "/report",
+);
 
 const keyboardFor = (chatType: string) => {
   sendMessage.mockClear();
   bareReport({ chat: { id: 42, type: chatType }, from: { id: 42 } });
-  return JSON.stringify(sendMessage.mock.calls[0][2]);
+  return JSON.stringify(sentMessage(sendMessage)[2]);
 };
 
 describe("/report form message", () => {

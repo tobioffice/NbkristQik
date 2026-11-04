@@ -3,7 +3,8 @@ import {
   tokenHash,
   safeEqual,
   parseCookies,
-  tooManyAttempts,
+  isLoginLocked,
+  recordLoginFailure,
   clearLoginAttempts,
   SESSION_COOKIE,
 } from "../../src/api/admin/auth.js";
@@ -36,16 +37,35 @@ describe("admin auth primitives", () => {
     expect(parseCookies(undefined)).toEqual({});
   });
 
-  it("allows 5 attempts per IP then blocks within the window", () => {
+  it("locks an IP after 5 recorded failures, not after a check alone", () => {
     const ip = `test-ip-${Math.random()}`;
-    for (let i = 0; i < 5; i++) {
-      expect(tooManyAttempts(ip)).toBe(false);
+
+    // checking the lock is read-only: it must not count as an attempt
+    for (let i = 0; i < 10; i++) {
+      expect(isLoginLocked(ip)).toBe(false);
     }
-    expect(tooManyAttempts(ip)).toBe(true);
+
+    for (let i = 0; i < 5; i++) {
+      expect(isLoginLocked(ip)).toBe(false);
+      recordLoginFailure(ip);
+    }
+    expect(isLoginLocked(ip)).toBe(true);
+
     // an attacker's block does not affect other IPs
-    expect(tooManyAttempts(`${ip}-other`)).toBe(false);
-    // successful login clears the counter
-    clearLoginAttempts(`${ip}-other`);
-    expect(tooManyAttempts(`${ip}-other`)).toBe(false);
+    expect(isLoginLocked(`${ip}-other`)).toBe(false);
+  });
+
+  it("clears the counter after a successful login", () => {
+    const ip = `test-ip-${Math.random()}`;
+    recordLoginFailure(ip);
+    recordLoginFailure(ip);
+    expect(isLoginLocked(ip)).toBe(false);
+
+    clearLoginAttempts(ip);
+    expect(isLoginLocked(ip)).toBe(false);
+
+    // and the next failure starts a new, single-count window
+    recordLoginFailure(ip);
+    expect(isLoginLocked(ip)).toBe(false);
   });
 });

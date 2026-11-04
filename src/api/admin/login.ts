@@ -10,7 +10,8 @@ import {
   safeEqual,
   parseCookies,
   tokenHash,
-  tooManyAttempts,
+  isLoginLocked,
+  recordLoginFailure,
   clearLoginAttempts,
   type RequireAdmin,
 } from "./auth.js";
@@ -39,7 +40,10 @@ export const registerLoginRoutes = (
     async (req: Request, res: Response) => {
       try {
         const ip = req.ip || "unknown";
-        if (tooManyAttempts(ip)) {
+        // Check the lock BEFORE touching the password: a correct password
+        // after earlier failures must still work, and a locked address must
+        // not burn a password comparison.
+        if (isLoginLocked(ip)) {
           res
             .status(429)
             .json({ error: "Too many attempts — try again later" });
@@ -48,6 +52,8 @@ export const registerLoginRoutes = (
         const given =
           typeof req.body?.password === "string" ? req.body.password : "";
         if (!given || !safeEqual(given, password)) {
+          // only failures count; a success below clears the counter
+          recordLoginFailure(ip);
           res.status(401).json({ error: "Wrong password" });
           return;
         }

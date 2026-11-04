@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { AcademicTG } from "../../src/services/student.utils/AcademicTG";
-import { Academic } from "../../src/services/student.utils/Academic";
-import { mockAttendance, mockMidmarks } from "../mocks/academic.mock";
+import { AcademicTG } from "../../src/services/student.utils/AcademicTG.js";
+import { Academic } from "../../src/services/student.utils/Academic.js";
+import { mockAttendance, mockMidmarks } from "../mocks/academic.mock.js";
 
 // Mock external dependencies
 vi.mock("axios");

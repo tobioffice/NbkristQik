@@ -8,7 +8,9 @@
  *     - valid yearSem values (only semesters that exist in the dropdown)
  *  3. Scrapes every year x branch x section combo via attendanceTillTodayReport.php
  *  4. Extracts roll numbers per section, fetches each student's name
- *  5. Upserts studentsnew (roll_no PK) — new sections, new 1st-years, re-sectioned students
+ *  5. Upserts studentsnew (roll_no PK) in one transaction — new sections, new
+ *     1st-years, re-sectioned students. Fail-closed: if any section request
+ *     failed or no students were found, aborts before writing or flushing.
  *  6. Flushes stale student/attendance/midmarks caches so the bot serves fresh data
  *
  * Admin flow: /setsem 1         -> set current semester type (1st sems: 11/21/31/41)
@@ -19,9 +21,12 @@
  *             /syncdb 1 2025-26 -> both
  */
 import { bot } from "./bot.js";
-import { ADMIN_ID, N_USERNAME, N_PASSWORD } from "../config/environmentals.js";
+import { ADMIN_ID } from "../config/environmentals.js";
 import { BASE_URL, BRANCHES } from "../constants/index.js";
-import { makeSessionToken } from "../services/student.utils/portalSession.js";
+import {
+  makeSessionToken,
+  buildLoginPayload,
+} from "../services/student.utils/portalSession.js";
 import { getClient } from "../services/redis/getRedisClient.js";
 import { redisKeys, cacheFlushPatterns } from "../services/redis/keys.js";
 import { turso } from "../db/db.js";
@@ -49,6 +54,8 @@ interface SyncProgress {
   lines: string[];
   updated: number;
   upsertFailed: number;
+  /** Section requests that errored during the scrape (not "no class here"). */
+  failed: number;
   inserted: number;
   total: number;
 }
@@ -112,22 +119,18 @@ async function reportProgress(ctx: SyncContext): Promise<void> {
 // ---------- phase 1: login ----------
 async function loginToPortal(): Promise<string> {
   const sessionToken = makeSessionToken();
-  await axios.post(
-    LOGIN_URL,
-    `username=${N_USERNAME}&password=${N_PASSWORD}&captcha=`,
-    {
-      headers: {
-        "content-type": "application/x-www-form-urlencoded",
-        cookie: `PHPSESSID=${sessionToken}`,
-        referer: `${BASE_URL}/attendance/attendanceLogin.php`,
-        "user-agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/131.0.0.0",
-      },
-      maxRedirects: 0,
-      timeout: 15000,
-      validateStatus: (s) => s >= 200 && s < 303,
+  await axios.post(LOGIN_URL, buildLoginPayload(), {
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      cookie: `PHPSESSID=${sessionToken}`,
+      referer: `${BASE_URL}/attendance/attendanceLogin.php`,
+      "user-agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/131.0.0.0",
     },
-  );
+    maxRedirects: 0,
+    timeout: 15000,
+    validateStatus: (s) => s >= 200 && s < 303,
+  });
   return sessionToken;
 }
 
@@ -291,6 +294,9 @@ async function scrapeCombos(ctx: SyncContext): Promise<void> {
     );
   }
 
+  // surface the scrape outcome to the fail-closed guard in runSyncDb
+  p.failed = failed;
+
   p.lines.push(
     `🔍 Scanned ${done}/${combos.length}, ${valid} classes, ${failed} skipped, ${students.size} students`,
   );
@@ -328,42 +334,75 @@ async function fetchStudentNames(ctx: SyncContext): Promise<void> {
   await reportProgress(ctx);
 }
 
-// ---------- phase 5: upsert studentsnew ----------
+// ---------- phase 5: fail-closed guard + atomic upsert ----------
+
+/**
+ * Refuse to touch studentsnew or flush caches when the scrape did not come
+ * back whole. A partial run would replace working sections/names with a
+ * half-directory, so abort and let the admin retry instead.
+ */
+const assertSyncUsable = (ctx: SyncContext): void => {
+  const problems: string[] = [];
+  if (ctx.students.size === 0) problems.push("no students were found");
+  if (ctx.p.failed > 0) {
+    problems.push(`${ctx.p.failed} section request(s) failed`);
+  }
+  if (problems.length === 0) return;
+
+  throw new Error(
+    `Sync aborted: ${problems.join(" and ")}. The student directory was NOT ` +
+      `changed and caches were NOT flushed. Retry /syncdb.`,
+  );
+};
+
+// One batch = one write transaction. ~400 students fit comfortably in a
+// single transaction; chunking only exists for a pathologically large
+// directory, and each chunk is still all-or-nothing.
+const UPSERT_CHUNK_SIZE = 500;
+
 async function upsertStudents(ctx: SyncContext): Promise<void> {
   const { students, p } = ctx;
   const rows = [...students.values()];
-  for (let i = 0; i < rows.length; i += 50) {
-    const batch = rows.slice(i, i + 50);
-    await Promise.all(
-      batch.map((row) =>
-        turso
-          .execute({
-            sql: `INSERT INTO studentsnew (roll_no, name, section, branch, year)
-                  VALUES (?, ?, ?, ?, ?)
-                  ON CONFLICT(roll_no) DO UPDATE SET
-                    section = excluded.section,
-                    branch = excluded.branch,
-                    year = excluded.year,
-                    name = COALESCE(excluded.name, studentsnew.name)`,
-            args: [row.roll_no, row.name, row.section, row.branch, row.year],
-          })
-          .then(() => {
-            p.updated++;
-          })
-          .catch((e) => {
-            p.upsertFailed++;
-            logger.error(`[syncdb] upsert failed for ${row.roll_no}:`, e);
-          }),
-      ),
-    );
+
+  for (let i = 0; i < rows.length; i += UPSERT_CHUNK_SIZE) {
+    const chunk = rows.slice(i, i + UPSERT_CHUNK_SIZE);
+    const statements = chunk.map((row) => ({
+      sql: `INSERT INTO studentsnew (roll_no, name, section, branch, year)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(roll_no) DO UPDATE SET
+              section = excluded.section,
+              branch = excluded.branch,
+              year = excluded.year,
+              name = COALESCE(excluded.name, studentsnew.name)`,
+      args: [row.roll_no, row.name, row.section, row.branch, row.year],
+    }));
+
+    try {
+      // atomic: either the whole chunk applies or none of it does
+      await turso.batch(statements, "write");
+      p.updated += chunk.length;
+    } catch (e) {
+      p.upsertFailed += chunk.length;
+      logger.error(
+        `[syncdb] studentsnew batch failed (${chunk.length} rows, first ${chunk[0]?.roll_no}):`,
+        e,
+      );
+    }
   }
 
   p.lines.push(
     p.upsertFailed > 0
-      ? `💾 Upserted ${p.updated}/${rows.length} students, ${p.upsertFailed} FAILED (rerun /syncdb)`
+      ? `❌ Upsert failed for ${p.upsertFailed}/${rows.length} students (batch rolled back)`
       : `💾 Upserted ${rows.length} students (sections + year updated)`,
   );
   await reportProgress(ctx);
+
+  if (p.upsertFailed > 0) {
+    throw new Error(
+      `studentsnew upsert failed for ${p.upsertFailed} student(s); the failed ` +
+        `batch was rolled back and caches were NOT flushed. Retry /syncdb.`,
+    );
+  }
 }
 
 // ---------- phase 6: flush stale caches ----------
@@ -389,6 +428,10 @@ async function flushCaches(ctx: SyncContext): Promise<void> {
  * Run a full semester sync: log in, detect the sessions, scrape every
  * year x branch x section, fetch names, upsert `studentsnew`, flush caches.
  *
+ * Fail-closed: if the scrape lost any section request or found no students,
+ * it throws before writing studentsnew and before flushing caches, so the
+ * directory the bot is serving is never replaced by a partial one.
+ *
  * Shared by the /syncdb command and the CLI (dist/bot/syncdbCli.js) so both
  * paths behave identically — the bot can be re-synced without Telegram.
  */
@@ -399,6 +442,7 @@ export async function runSyncDb(
     lines: [],
     updated: 0,
     upsertFailed: 0,
+    failed: 0,
     inserted: 0,
     total: 0,
   };
@@ -436,6 +480,8 @@ export async function runSyncDb(
 
   await scrapeCombos(ctx);
   await fetchStudentNames(ctx);
+  // fail closed: no upsert, no cache flush on an incomplete scrape
+  assertSyncUsable(ctx);
   await upsertStudents(ctx);
   await flushCaches(ctx);
 
@@ -524,6 +570,7 @@ export const registerSyncDbCommand = () => {
       lines: [],
       updated: 0,
       upsertFailed: 0,
+      failed: 0,
       inserted: 0,
       total: 0,
     };

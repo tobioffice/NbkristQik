@@ -6,13 +6,83 @@
 > disagrees with the code, the code wins.
 
 The API is served by the Express app in `src/api/server.ts`, started in-process
-by the bot entry point. Base URL is `http://localhost:3000` in development.
+by the bot entry point. It binds `HOST` (default `127.0.0.1`) on `PORT`
+(default `3000`); production is reached through nginx at
+`https://checker.tobioffice.dev`. The app trusts one proxy hop (`trust proxy`
+= 1) so `req.ip` and the rate limits see the real client address.
 
-CORS allows the origins in `CORS_ORIGINS` (default
-`https://tobioffice.github.io`). All public routes pass through a security
-middleware stack: suspicious-request logging, body sanitization, and an IP rate
-limit of 600 requests / 15 minutes. The app trusts one proxy hop (`trust proxy`
-= 1) for nginx.
+CORS allows the origins in `CORS_ORIGINS` (comma-separated, default
+`https://checker.tobioffice.dev`). The shipped app and status page are
+same-origin, so they need no CORS entry; add another origin only for a
+separate frontend. Public routes pass through a security middleware stack:
+suspicious-request logging, body sanitization, and an IP rate limit of 600
+requests / 15 minutes.
+
+## Authentication and identity
+
+Routes that need a caller identity accept signed Telegram WebApp `initData`
+in the **`X-Telegram-Init-Data`** header. This is the preferred form: a header
+does not land in URLs, nginx access logs, browser history or `Referer`.
+
+For compatibility, the server still reads the first present source in this
+order:
+
+1. `X-Telegram-Init-Data` header
+2. `initData` query parameter (legacy)
+3. `initData` in a JSON body (legacy POST shape)
+
+Only the first source that is present is used. A bad header is a bad identity
+even when a valid query string is also attached. `initData` longer than 4096
+characters is rejected.
+
+`POST /api/library/session` is the one exception to the header preference: it
+reads `initData` from its JSON body only, because its job is to mint the
+library session cookie. Every later library call uses that cookie instead of
+`initData`.
+
+A **presented but invalid** identity is never downgraded to anonymous: the
+request fails with `401` on `/api/leaderboard`, `/api/config`, `/api/me` and
+the other identity routes. Anonymous callers are allowed only where the route
+is explicitly public. Signed `initData` is checked against the bot token with
+HMAC-SHA256, a 24-hour `auth_date` replay window and a 5-minute future-skew
+allowance.
+
+The unsigned numeric `userId` query/body shortcut is a development convenience
+only. It requires `ALLOW_DEV_IDENTITY=1` (or `ENV=test` for the test suite);
+`ENV=development` alone is not enough. `ENV` defaults to `production`, so a
+deployment that forgets to set it does not inherit the shortcut.
+
+| Route | Anonymous | Verified Telegram identity |
+|---|---|---|
+| `GET /api/leaderboard` | allowed; `name` is `null`, search matches rolls only | names; search matches rolls and names |
+| `GET /api/config` | allowed; both flags `false` | flags reflect the caller |
+| `GET /api/me` | `401` | allowed |
+| `/api/profile`, `/api/register`, `/api/report`, `/api/thread/*` | `401` | allowed |
+| `POST /api/library/session` | `401` without signed `initData` in the body | sets the `nbq_lib` session cookie |
+| other `/api/library/*` | `401` without that cookie | cookie from the session exchange |
+
+## Rate limits
+
+All limits are per client IP unless stated otherwise. They are transport-level
+abuse guards; identity-scoped pacing (the report 60-second gate, the library
+read-burst check) lives in the service that knows the caller.
+
+| Scope | Limit |
+|---|---|
+| Global API middleware | 600 requests / 15 min |
+| `POST /api/register` | 20 / 15 min (on top of the global limit) |
+| `POST /api/report` | 5 / 15 min, plus a 60 s per-user gate in the service |
+| `/api/thread/*` | 120 / 15 min, plus a 3 s per-user gate on follow-ups |
+| `POST /api/library/session` | 20 / hour (other library calls use the global limit) |
+| `/internal/*` | 120 / 15 min (on top of the global limit) |
+| Admin `POST {base}/login` | 20 requests / 10 min burst, plus a 5-failure / 10 min lockout |
+
+`/health` has no dedicated limiter but is mounted after the global API
+middleware, so it shares the 600 / 15 min limit. `/api/status` also uses the
+global limit. The static `/status` page and the `/library/` bundle are mounted
+before the API middleware and are not rate-limited.
+
+The rate-limit response is `429 { "success": false, "error": "...", "retryAfter": <seconds> }`.
 
 ## Public endpoints
 
@@ -28,14 +98,34 @@ Paginated, filterable leaderboard rows.
 | `year` | string | `all` | digits or `all` |
 | `branch` | string | `all` | digits or `all` |
 | `section` | string | `all` | single letter or `all` |
-| `search` | string | — | 2–20 chars: letters, digits, spaces, dashes |
+| `search` | string | — | 2–20 chars: letters, digits, underscores, spaces or dashes |
 
-Responses are cached in Redis for 60 s per unique query. Invalid parameters
-return `400 { "success": false, "error": "Validation failed", "details": [...] }`.
+Invalid parameters return
+`400 { "success": false, "error": "Validation failed", "details": [...] }`.
 
-Page 1 also carries the sync freshness and the sections that exist for the
-chosen year/branch. Later pages return `null` for both (the client already has
-them, and each extra query costs Turso reads).
+The response is identity-aware:
+
+- **Anonymous** callers get `name: null` on every row, and `search` matches
+  roll numbers only. This keeps a public page from harvesting a name for every
+  roll.
+- **Verified Telegram identity** callers get the leaderboard name and can
+  search by name as well as roll. A non-empty `display_name` saved in
+  `registrations` overrides the college name for that roll.
+
+Rows and total always come from the same filtered set. `updated_at` is the
+newest `student_stats.last_updated` (UTC, SQLite `datetime('now')` format), for
+the client's "Synced 2 hours ago" line. Page 1 also carries the sections that
+exist for the chosen year/branch; later pages return `null` for both
+`updated_at` and `facets` (the client already has them, and each extra query
+costs a database read).
+
+The payload is cached in Redis for 60 seconds per unique query. Cache keys are
+segregated by identity mode (`names` vs `anon`), so a cached identified page
+can never be served to an anonymous caller, or the reverse. HTTP caching is
+`Cache-Control: public, max-age=30` for anonymous responses and
+`Cache-Control: private, max-age=30` for identified ones. The two default
+anonymous views are refreshed every 50 seconds so the first student after a
+quiet minute does not pay a cold query.
 
 ```json
 {
@@ -48,7 +138,7 @@ them, and each extra query costs Turso reads).
   "data": [
     {
       "roll_no": "21B81A05E9",
-      "name": "JOHN DOE",
+      "name": null,
       "attendance_percentage": 95.5,
       "mid_marks_avg": 18.75,
       "rank": 1
@@ -57,51 +147,170 @@ them, and each extra query costs Turso reads).
 }
 ```
 
-`updated_at` is the newest `student_stats.last_updated` (UTC, SQLite
-`datetime('now')` format), for the client's "Synced 2 hours ago" line.
+A verified caller receives the same envelope with the resolved name in place
+of `null` and `Cache-Control: private, max-age=30`. Ranks are computed over the
+full filtered set, with the rounded score the register prints (2 decimal
+places for attendance, 1 for mid marks).
+
+### `GET /api/config`
+
+Public, identity-aware feature flags. No identity is required; a provided but
+invalid one is `401`, so a broken Telegram client does not silently look
+anonymous.
+
+```json
+{ "libraryOpen": true, "admin": false }
+```
+
+- `libraryOpen` is `true` for the admin while `LIBRARY_ACCESS=admin` (the
+  default), and for every caller once `LIBRARY_ACCESS=all`.
+- `admin` is `true` only for the admin while the library is still admin-only
+  (the preview affordance). It is `false` for everyone once the library is
+  open to all.
+- Anonymous callers get `{ "libraryOpen": false, "admin": false }`.
+
+The response is `Cache-Control: no-store` because it depends on the caller.
+The web shell treats the library as closed until this route answers, and hides
+the library tab and route when `libraryOpen` is `false`.
 
 ### `GET /api/me`
 
 Returns the caller's roll number and global ranks, each with the rounded score
-the register prints (`value`) so the personal strip and the row agree.
+the register prints (`value`) so the personal strip and the row agree. A
+verified identity is required; an anonymous request or an invalid one is
+`401 { "found": false, "error": "..." }`.
 
-- In production, sends Telegram WebApp `initData` (HMAC-verified, 24 h replay
-  window). Inputs longer than 4096 chars are rejected.
-- Outside production only, a numeric `userId` query parameter is accepted.
+`source` says how the roll was resolved:
+
+- `"registered"` — the caller has a saved registration. This wins over the
+  last roll they happened to look up, because `tgusers` is auto-upserted by
+  every lookup, including a friend's.
+- `"lookup"` — no registration; the roll comes from the `tgusers` last-lookup
+  mapping.
 
 ```json
 {
   "found": true,
+  "source": "registered",
   "roll_no": "21B81A05E9",
   "attendance": { "rank": 12, "total": 245, "value": 95.5 },
   "midmarks": { "rank": 30, "total": 245, "value": 18.8 }
 }
 ```
 
-`401 { "found": false, "error": "..." }` when identity cannot be verified, and
-`{ "found": false }` when the user has no roll mapping yet.
+`{ "found": false }` when the user has no roll mapping yet (a verified
+identity with no registration and no past lookup). Ranks are global over all
+students in the register, not over the current filters.
 
 ### `GET /health`
 
-Unrate-limited liveness probe: `{ "status": "ok", "timestamp", "uptime", "version" }`.
+Liveness probe with no dedicated limiter (it still passes the global API
+limit):
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2026-11-04T12:00:00.000Z",
+  "uptime": 12345.6,
+  "version": "1.0.0"
+}
+```
 
 ### `GET /api/status`
 
-90-day uptime summary per component with daily buckets. A component is `up`
-when its last ping is under 15 minutes old. The assembled payload is cached
-in memory for 5 minutes.
+90-day uptime summary per component with daily buckets. A component is
+`current: "up"` only when its newest heartbeat says `up` and is under 15
+minutes old. `stale: true` means the monitor has not reported recently, which
+is different from a recorded outage. The assembled payload is cached in memory
+for 5 minutes.
+
+Each component carries `component`, `uptimePct`, `pings`, `lastPing`,
+`lastPingAgeSec`, `avgLatencyMs`, `current`, `stale` and `buckets`, where each
+bucket is `{ day, pings, ups, avgLatencyMs }` in IST calendar days.
+
+### `GET /status`
+
+The public status page itself, served by Express from
+`public/status/index.html` (the deploy copies `src/status` there). It is a
+single static HTML file with no external font or script request; it fetches
+`/api/status` for its data. `Cache-Control: no-store`. If the file is missing,
+the route answers `404 { "success": false, "error": "Not Found" }` instead of
+crashing the API. `STATUS_PAGE_PATH` can point the route at another file for
+development.
+
+## Library endpoints
+
+The library uses a session cookie, not the API identity header. Exchange
+signed `initData` once, then send the `nbq_lib` cookie on every later call. The
+session is HttpOnly, SameSite=Strict, `Secure` in production, and lasts 12
+hours; the session exchange is additionally limited to 20 requests / hour per
+IP.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/api/library/session` | Verify `{initData}` in the body, set the cookie, return `{ok, registered, student}`; `401` on a bad signature, `403` while `LIBRARY_ACCESS=admin` and the caller is not the admin |
+| `DELETE` | `/api/library/session` | Drop the session and clear the cookie |
+| `GET` | `/api/library/me` | The session's user and student summary (`registered` is false without a saved roll) |
+| `GET` | `/api/library/subjects` | The student's own subjects for the running semester, with units and live status; while the shelf is admin-only, the admin may use `?view=all` for the whole shelf, `?view=roll` for exactly the registered roll's view |
+| `GET` | `/api/library/document/:id` | One document's metadata: id, code, title, unit, pages, version; `404` if missing or not live, `403` if not the reader's |
+| `GET` | `/api/library/page/:id/:page` | One watermarked SVG page (`Cache-Control: no-store, private`, `Content-Disposition: inline`, no text layer). `400`/`404` for a bad page, `503` when no watermark secret is configured |
+
+## Private monitor endpoints
+
+Registered only when `UPTIME_INGEST_SECRET` is set **and** at least 32
+characters long; otherwise both routes are absent and answer `404`. They are
+additionally restricted at nginx to the monitor host. Both require
+`Authorization: Bearer <UPTIME_INGEST_SECRET>`; a missing or wrong secret is
+`401 { "success": false, "error": "Unauthorized" }`. The secret is compared in
+constant time.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/internal/health` | Deep check of the database (`SELECT 1`) and Redis (`PING`) for the external monitor |
+| `POST` | `/internal/uptime` | Store 1–200 heartbeat rows from the monitor |
+
+`GET /internal/health` answers `200` with the dependency results even when one
+is down; each probe has a 3-second timeout.
+
+```json
+{
+  "success": true,
+  "components": [
+    { "component": "database", "status": "up", "latencyMs": 3 },
+    { "component": "redis", "status": "up", "latencyMs": 1 }
+  ]
+}
+```
+
+`POST /internal/uptime` takes `{ "rows": [ ... ] }`, with 1–200 rows shaped
+`{ "component": "api|portal|database|redis", "status": "up|down", "latencyMs": <int|null>, "at": "YYYY-MM-DD HH:MM:SS" }`.
+`at` is UTC in SQLite's timestamp format, no older than 95 days and no more
+than 10 minutes in the future. Duplicate `(component, at)` rows are ignored,
+so replaying a spooled batch after an outage is safe. Success is
+`{ "success": true, "stored": <rows.length> }`; bad rows are `400`, and a write
+failure is `500`.
 
 ## Admin endpoints
 
 Mounted under the secret `ADMIN_PANEL_PATH` and disabled unless both
-`ADMIN_PANEL_PATH` and `ADMIN_PANEL_PASSWORD` are set. Sign in with
+`ADMIN_PANEL_PATH` and `ADMIN_PANEL_PASSWORD` are set. In production the panel
+refuses to mount at all when the password is shorter than 16 characters (tests
+run under `ENV=test`).
+
+The panel document is sent with a fresh per-request nonce CSP,
+`X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`,
+`X-Content-Type-Options: nosniff` and `Cache-Control: no-store`. Sign in with
 `POST {base}/login`; the session cookie `qik_admin` is HttpOnly,
-SameSite=Strict, and lasts 24 h. Data endpoints require it and are short-TTL
-cached in memory.
+SameSite=Strict, `Secure` in production, and lasts 24 h. Data endpoints require
+it and are short-TTL cached in memory.
+
+Login has two layers: a 20-request / 10-minute burst limiter, and a
+5-failure / 10-minute per-IP lockout. Only wrong passwords count as failures;
+checking the lock is read-only, and a successful login clears the counter.
 
 | Method | Path | Purpose |
 |---|---|---|
-| `POST` | `{base}/login` | Password sign-in (5 attempts / 10 min / IP) |
+| `POST` | `{base}/login` | Password sign-in |
 | `POST` | `{base}/logout` | End session |
 | `GET` | `{base}` | Panel UI |
 | `GET` | `{base}/api/overview` | Totals, 30-day and 30-hour series, surfaces, top actions |
@@ -116,25 +325,44 @@ Day and hour groupings use IST (`+330 minutes`); storage stays UTC.
 
 Optional registration lets students pin their default roll (Telegram Web App
 form via `/register`); `/attendance`, `/midmarks`, and `/bunk` resolve it.
-Identity rules match `/api/me` (signed initData; dev `userId` shortcut).
-`POST /api/register` is additionally limited to 20 requests / 15 min / IP.
+Identity rules match `/api/me` (signed `X-Telegram-Init-Data`, with the gated
+dev `userId` shortcut). `POST /api/register` is additionally limited to 20
+requests / 15 min / IP.
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/api/profile` | `{found:true, registration:{roll_no, display_name,...}, student}` or `{found:false, suggestion}` (roll from past lookups) |
+| `GET` | `/api/profile` | `{found:true, registration:{roll_no, display_name,...}, student}`; `{found:true, stale:true, registration, student:null}` when the saved roll left the college master table; or `{found:false, suggestion}` (roll from past lookups) |
 | `POST` | `/api/register` | Validate + upsert `{rollNo, displayName?}`; 400 on bad format, 404 + `suggestions` on a roll missing from college records |
 
-There is no delete endpoint by design; registering again overwrites.
+A successful registration answers
+`{ "ok": true, "registered": { "roll_no": "21B81A05E9", "name": "..." } }`.
+A non-empty `displayName` (trimmed, max 40 chars) is the name the leaderboard
+shows for that roll.
+
+One roll belongs to one Telegram account. A second account claiming a roll
+gets `409`:
+
+```json
+{
+  "code": "ROLL_ALREADY_REGISTERED",
+  "error": "This roll number is already saved to another Telegram account. ..."
+}
+```
+
+The API never says which account holds it. A unique index on
+`registrations.roll_no` backs the application guard, and boot-time dedupe
+keeps the newest claim per roll. There is no delete endpoint by design;
+registering again overwrites the caller's own registration.
 
 ## Issue report endpoints
 
-Reports moved to the web form (`report.html` mini app, opened by `/report`).
-Every report gets an issue id formatted as `QIK-0007`, and every report is a
-**thread**: the opening message plus every follow-up from either side, oldest
-first. The admin answers from the panel or `/reply`; the reporter answers on
-the thread page (`report.html?issue=QIK-0007`). Both directions notify the
-other side in Telegram, and each side carries an unread stamp until the
-thread is opened.
+Reports moved to the web form (`#/issues` in the app; `/report` opens it and
+`/report <message>` still files directly). Every report gets an issue id
+formatted as `QIK-0007`, and every report is a **thread**: the opening message
+plus every follow-up from either side, oldest first. The admin answers from
+the panel or `/reply`; the reporter answers on the thread page. Both directions
+notify the other side in Telegram, and each side carries an unread stamp until
+the thread is opened.
 
 | Method | Path | Purpose |
 |---|---|---|

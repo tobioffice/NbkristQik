@@ -18,9 +18,9 @@ const renameToIndex = {
   },
 };
 
-// It is built separately from the GitHub Pages pages in the same package: it
-// is served by our own host (so the library's session cookie is first-party)
-// and it is the only surface that talks to /api/library.
+// The one app in this package. It is served by our own host at /library/ (so
+// the library's session cookie is first-party), and it is the only surface
+// that talks to /api/library.
 export default defineConfig({
   plugins: [react(), renameToIndex],
   base: "/library/",

@@ -90,24 +90,31 @@ const componentProbes: Record<string, () => Promise<ProbeResult>> = {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Record one result and fire any transition alert. */
-const notifyAdmin = async (result: ProbeResult): Promise<void> => {
-  if (!ADMIN_ID) return;
+const notifyAdmin = async (result: ProbeResult): Promise<boolean> => {
+  if (!ADMIN_ID) return true;
   const previous = previousStatus.get(result.component);
-  const wentDown = previous === "up" && result.status === "down";
+  // First probe of a down component is an alert too: a restart during an
+  // outage must not stay silent and then announce a recovery that was never
+  // reported as an outage. Only a known-down component is deduplicated.
+  const wentDown = result.status === "down" && previous !== "down";
   const recovered = previous === "down" && result.status === "up";
-  if (!wentDown && !recovered) return;
+  if (!wentDown && !recovered) return true;
 
   const { bot } = await import("../bot/bot.js");
   const icon = wentDown ? "🔴" : "🟢";
   const verb = wentDown ? "DOWN" : "back UP";
-  await bot
-    .sendMessage(
+  try {
+    await bot.sendMessage(
       ADMIN_ID,
       `${icon} <b>${result.component}</b> is ${verb}\n` +
         `Probe latency: ${result.latencyMs ?? "timeout"}${result.latencyMs ? "ms" : ""}`,
       { parse_mode: "HTML", disable_notification: !wentDown },
-    )
-    .catch((e) => logger.warn("[uptime] admin alert failed:", e));
+    );
+    return true;
+  } catch (e) {
+    logger.warn("[uptime] admin alert failed:", e);
+    return false;
+  }
 };
 
 const recordAndNotify = async (result: ProbeResult): Promise<void> => {
@@ -116,8 +123,11 @@ const recordAndNotify = async (result: ProbeResult): Promise<void> => {
   } catch (e) {
     logger.warn(`[uptime] heartbeat write failed for ${result.component}:`, e);
   }
-  await notifyAdmin(result);
-  previousStatus.set(result.component, result.status);
+  const notified = await notifyAdmin(result);
+  // If Telegram rejected the alert, keep the previous state so the next cycle
+  // retries it instead of silently marking the outage as announced.
+  if (notified) previousStatus.set(result.component, result.status);
+  else logger.warn("[uptime] alert not delivered; will retry next cycle");
   logger.debug(
     `[uptime] ${result.component}: ${result.status} (${result.latencyMs ?? "timeout"}ms)`,
   );

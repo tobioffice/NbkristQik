@@ -78,13 +78,39 @@ export const registerHealthRoute = (
               uptimePct: s.uptimePct,
               pings: s.pings,
               lastPing: s.lastPing,
+              lastStatus: s.lastStatus,
               avgLatencyMs: s.avgLatencyMs,
               buckets: await getUptimeDailyBuckets(s.component, 90),
             })),
           );
           return { components };
         });
-        res.json(data);
+
+        // Same 15-minute stale rule as the public /api/status payload in
+        // src/api/server.ts: a heartbeat older than 15 minutes means the
+        // monitor stopped reporting, not that the component recovered. Age is
+        // recomputed per request because the summary itself is cached.
+        const components = data.components.map((c) => {
+          const lastPingAgeSec = Math.floor(
+            (Date.now() - new Date(c.lastPing + "Z").getTime()) / 1000,
+          );
+          const stale = lastPingAgeSec >= 15 * 60;
+          const current: "up" | "down" =
+            c.lastStatus === "up" && !stale ? "up" : "down";
+          return {
+            component: c.component,
+            uptimePct: c.uptimePct,
+            pings: c.pings,
+            lastPing: c.lastPing,
+            lastPingAgeSec,
+            current,
+            stale,
+            avgLatencyMs: c.avgLatencyMs,
+            buckets: c.buckets,
+          };
+        });
+
+        res.json({ components });
       } catch (e) {
         logger.error("[admin] health failed:", e);
         res.status(500).json({ error: "Internal Server Error" });

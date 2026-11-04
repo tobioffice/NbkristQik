@@ -11,10 +11,10 @@ import { escapeHtml } from "../text.js";
  * a photo of the screen or a copy pulled out of the network all point at one
  * person.
  *
- * The mark is a token, not the identity: "NBK-7F3A-2C19" says nothing to the
- * student about what is being tracked, and the token is what we resolve
- * server side when a page turns up somewhere it should not. The reader's
- * Telegram id and roll number never appear on the page.
+ * The mark is a token, not the identity: "NBK-7F3A-2C19-8B44-D106" says
+ * nothing to the student about what is being tracked, and the token is what
+ * we resolve server side when a page turns up somewhere it should not. The
+ * reader's Telegram id and roll number never appear on the page.
  *
  * The mark is faint on purpose: a student should barely notice it while
  * reading, and a machine should still find it in a photograph.
@@ -47,13 +47,23 @@ export interface WatermarkIdentity {
  * `node dist/tools/resolveWatermark.js <token>`.
  */
 export const watermarkToken = (userId: string): string => {
+  if (!LIBRARY_WATERMARK_SECRET) {
+    // A hard-coded fallback would make every mark forgeable from the repo
+    // alone. Refuse to stamp rather than hand out a worthless token.
+    throw new Error(
+      "watermark secret is not configured: set LIBRARY_WATERMARK_SECRET or TELEGRAM_BOT_TOKEN",
+    );
+  }
+
+  // 64 bits of HMAC (16 hex chars => 4 groups of 4). The previous 32-bit
+  // mark collides too easily across readers to be a reliable trace.
   const digest = crypto
     .createHmac("sha256", LIBRARY_WATERMARK_SECRET)
     .update(`nbk-library:${userId}`)
     .digest("hex")
-    .slice(0, 8)
+    .slice(0, 16)
     .toUpperCase();
-  return `NBK-${digest.slice(0, 4)}-${digest.slice(4, 8)}`;
+  return `NBK-${digest.slice(0, 4)}-${digest.slice(4, 8)}-${digest.slice(8, 12)}-${digest.slice(12, 16)}`;
 };
 
 /**

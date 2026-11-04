@@ -1,9 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  createOnTextMock,
+  createSendMessageMock,
+  registeredTextHandler,
+  replyKeyboard,
+  sentMessage,
+} from "../mocks/telegram.mock.js";
 
 // capture the handler the command module registers instead of talking to
 // Telegram, and the messages it sends
-const onText = vi.fn();
-const sendMessage = vi.fn(async () => ({ message_id: 3 }));
+const onText = createOnTextMock();
+const sendMessage = createSendMessageMock(3);
 
 vi.mock("../../src/bot/bot.js", () => ({ bot: { onText, sendMessage } }));
 vi.mock("../../src/services/tracker.js", () => ({ trackMessage: vi.fn() }));
@@ -16,9 +23,10 @@ const { POSTOPEN_TEXT, POSTOPEN_BUTTON_TEXT } =
   await import("../../src/bot/commands/postopen.js");
 
 /** The /postopen handler (admin-only, no arguments). */
-const postopen = onText.mock.calls.find(([pattern]: [RegExp]) =>
-  pattern.test("/postopen"),
-)?.[1] as (msg: unknown) => Promise<void>;
+const postopen = registeredTextHandler<(msg: unknown) => Promise<void>>(
+  onText,
+  "/postopen",
+);
 
 const adminMsg = { chat: { id: 777 }, from: { id: 777 } };
 
@@ -37,10 +45,10 @@ describe("/postopen", () => {
     await postopen(adminMsg);
 
     expect(sendMessage).toHaveBeenCalledTimes(2);
-    const [chatId, text, opts] = sendMessage.mock.calls[0];
+    const [chatId, text, opts] = sentMessage(sendMessage);
     expect(chatId).toBe("-100123");
     expect(text).toBe(POSTOPEN_TEXT);
-    expect(opts.reply_markup.inline_keyboard[0][0]).toEqual({
+    expect(replyKeyboard(opts).inline_keyboard[0][0]).toEqual({
       text: POSTOPEN_BUTTON_TEXT,
       url: "https://t.me/NbkristQik_bot",
     });

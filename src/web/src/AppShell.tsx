@@ -3,6 +3,7 @@ import Band from "./components/Band";
 import BandStampProvider from "./BandStampProvider";
 import type { BandStamp } from "./bandStamp";
 import { useBackHandler } from "./backButton";
+import { useAppConfig } from "./useAppConfig";
 import { useTelegramIdentity } from "./useTelegramIdentity";
 import { useTelegramUser } from "./useTelegramUser";
 import { haptic } from "./telegram";
@@ -126,7 +127,18 @@ export default function AppShell() {
   const [route, setRoute] = useState<Route>(parseRoute);
   const [stamp, setStamp] = useState<BandStamp | null>(null);
   const [immersive, setImmersive] = useState(false);
-  const { initData } = useTelegramIdentity();
+  const { tgUser, initData } = useTelegramIdentity();
+  const appConfig = useAppConfig(tgUser ?? undefined, initData);
+  const libraryOpen = appConfig.libraryOpen;
+
+  // The shelf is admin-first for now. Its index row and tab exist only when
+  // the server has said this caller may open it; while the config is loading
+  // the safe default is "no", so the shell never offers a shut door.
+  const visibleSections = useMemo(
+    () =>
+      SECTIONS.filter((entry) => entry.section !== "library" || libraryOpen),
+    [libraryOpen],
+  );
 
   const go = useCallback((next: Route) => {
     haptic.select();
@@ -152,6 +164,22 @@ export default function AppShell() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [route.section, route.issue, route.mine]);
+
+  // a deep link into a closed shelf (or a tab left open from before the
+  // library shut) puts the reader back on the index. replaceState keeps the
+  // shuttered page out of the back trail.
+  useEffect(() => {
+    if (appConfig.loading || route.section !== "library" || libraryOpen) {
+      return;
+    }
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${window.location.search}#/`,
+    );
+    setRoute(INDEX_ROUTE);
+    setImmersive(false);
+  }, [appConfig.loading, libraryOpen, route.section]);
 
   // the Telegram arrow walks back out of a section; inside a conversation it
   // goes to the list first, the same trail the buttons walk
@@ -190,11 +218,13 @@ export default function AppShell() {
           <main className="shell-body">
             {route.section === "index" && (
               <IndexPage
+                sections={visibleSections}
                 onOpen={(section) => go({ section, issue: null, mine: false })}
               />
             )}
             {route.section === "rank" && <Leaderboard showBand={false} />}
             {route.section === "library" &&
+              libraryOpen &&
               (initData ? (
                 <LibraryView
                   initData={initData}
@@ -234,7 +264,7 @@ export default function AppShell() {
               active={route.section === "index"}
               onClick={goHome}
             />
-            {SECTIONS.map((entry) => (
+            {visibleSections.map((entry) => (
               <Tab
                 key={entry.section}
                 label={entry.tab}
@@ -294,12 +324,24 @@ const Tab = ({
  * way an index is printed — no cards, no boxes.
  */
 const IndexPage = ({
+  sections,
   onOpen,
 }: {
+  sections: SectionEntry[];
   onOpen: (section: Exclude<Section, "index">) => void;
 }) => {
   const { myRoll, myRank } = useTelegramUser();
-  const rank = myRank?.attendance?.rank ?? myRank?.midmarks?.rank ?? null;
+  const attendanceRank = myRank?.attendance?.rank ?? null;
+  const midmarksRank = myRank?.midmarks?.rank ?? null;
+  const rank = attendanceRank ?? midmarksRank;
+  // if attendance has not been ranked yet the figure beside the roll is the
+  // mid-marks rank; print the measure that is actually shown
+  const rankMeasure =
+    attendanceRank != null
+      ? "attendance"
+      : midmarksRank != null
+        ? "mid-marks"
+        : null;
 
   return (
     <div className="cover">
@@ -318,13 +360,13 @@ const IndexPage = ({
         {myRoll && rank != null ? (
           <span className="cover__viewer-rank">
             #{rank}
-            <small>attendance</small>
+            <small>{rankMeasure}</small>
           </span>
         ) : null}
       </div>
 
       <div className="index-list">
-        {SECTIONS.map((entry) => (
+        {sections.map((entry) => (
           <button
             key={entry.section}
             className="index-row"

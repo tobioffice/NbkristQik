@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": ["tests/**/*.ts", "vitest.config.ts"],
+  "exclude": ["node_modules", "dist", "src/web"]
+}

@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import type { SortBy } from "./api";
 import { AUTO_LOAD_LIMIT, useLeaderboard } from "./useLeaderboard";
 import { useTelegramUser } from "./useTelegramUser";
+import { useTelegramIdentity } from "./useTelegramIdentity";
 import { formatGap, formatSyncedAt } from "./format";
 import { haptic } from "./telegram";
 import Band from "./components/Band";
@@ -35,6 +36,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
   const [filterSection, setFilterSection] = useState("all");
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const { initData } = useTelegramIdentity();
 
   // stable identity so the fetch effect only fires on real filter changes
   const filters = useMemo(
@@ -62,7 +64,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
     retryMore,
     loadMore,
     lastElementRef,
-  } = useLeaderboard(sortBy, filters, search);
+  } = useLeaderboard(sortBy, filters, search, initData);
   const { myRoll, myRank } = useTelegramUser();
 
   const myRankInfo = myRoll
@@ -213,7 +215,11 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
         />
 
         <div className="controls">
-          <SearchBar value={searchInput} onChange={setSearchInput} />
+          <SearchBar
+            value={searchInput}
+            onChange={setSearchInput}
+            identified={Boolean(initData)}
+          />
           <FilterBar
             filters={filters}
             sections={sections}

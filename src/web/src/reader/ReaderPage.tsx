@@ -36,11 +36,21 @@ const ReaderPage = ({
     data-page={page}
     ref={(element) => onBox(page, element)}
     style={{ aspectRatio: `1 / ${PAGE_RATIO}` }}
-    onClick={failed ? () => onRetry(page) : undefined}
   >
     <div className="reader__skeleton">
       <b>{page}</b>
-      <span>{failed ? "Did not load · tap to try again" : "Loading"}</span>
+      {failed ? (
+        <button
+          type="button"
+          className="reader__retry"
+          onClick={() => onRetry(page)}
+          aria-label={`Page ${page} did not load. Try again.`}
+        >
+          Did not load · try again
+        </button>
+      ) : (
+        <span>Loading</span>
+      )}
     </div>
     <img
       className="reader__canvas"

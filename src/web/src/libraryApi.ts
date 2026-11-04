@@ -1,4 +1,5 @@
-import { readJson } from "./http";
+import { authHeaders } from "./api";
+import { fetchWithTimeout, readJson } from "./http";
 
 // The library talks to the API on its own origin: the mini app is served by
 // the same host as /api, so the session cookie is first-party and rides
@@ -58,7 +59,7 @@ export const openLibrarySession = async (
   initData: string,
 ): Promise<SessionResponse> =>
   readJson<SessionResponse>(
-    await fetch("/api/library/session", {
+    await fetchWithTimeout("/api/library/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ initData }),
@@ -73,7 +74,7 @@ export const fetchLibrarySubjects = async (
   view: "all" | "roll" = "all",
 ): Promise<SubjectsResponse> =>
   readJson<SubjectsResponse>(
-    await fetch(`/api/library/subjects?view=${view}`),
+    await fetchWithTimeout(`/api/library/subjects?view=${view}`),
   );
 
 /** Saves a roll number, the same way the registration page does. */
@@ -82,9 +83,12 @@ export const registerLibraryRoll = async (
   rollNo: string,
 ): Promise<RegisterResponse> =>
   readJson<RegisterResponse>(
-    await fetch("/api/register", {
+    await fetchWithTimeout("/api/register", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(initData),
+      },
       body: JSON.stringify({ initData, rollNo }),
     }),
   );

@@ -49,9 +49,31 @@ const REQUEST_TIMEOUT = 5000; // Increased timeout for reliability
 const MAX_RETRY_ATTEMPTS = 2;
 
 export class Academic implements IAcademic {
+  /**
+   * When the data did not come from a fresh portal request, this says so.
+   * The Telegram layer prints it above the card, because a stale attendance
+   * figure is worse than a visible delay: a student may skip a class on it.
+   */
+  private dataNotice: string | null = null;
+
   constructor(public rollnumber: string) {
     // Normalize roll number to uppercase
     this.rollnumber = rollnumber.toUpperCase().trim();
+  }
+
+  /** Why the current result is not fresh, or null when it is. */
+  getDataNotice(): string | null {
+    return this.dataNotice;
+  }
+
+  private markCached(
+    scope: "recent" | "fallback",
+    recentWindow = "last hour",
+  ): void {
+    this.dataNotice =
+      scope === "recent"
+        ? `Saved copy from the ${recentWindow}; the college portal was not checked just now.`
+        : "The college portal could not be reached. This is the last saved copy and may be out of date.";
   }
 
   /**
@@ -231,6 +253,7 @@ export class Academic implements IAcademic {
     const cachedResponse = await this.getFallbackResponse(command);
     if (cachedResponse) {
       logger.debug("[Academic] Using cached response");
+      this.markCached("fallback");
       return cachedResponse;
     }
 
@@ -267,12 +290,15 @@ export class Academic implements IAcademic {
    * Gets attendance data as JSON with Redis caching
    */
   async getAttendanceJSON(): Promise<Attendance> {
+    this.dataNotice = null;
+
     // Try Redis cache first
     const cached = await this.getCachedJson<Attendance>(
       redisKeys.attendance(this.rollnumber),
     );
     if (cached) {
       logger.debug("[Academic] Returning cached attendance");
+      this.markCached("recent");
       return cached;
     }
 
@@ -296,12 +322,16 @@ export class Academic implements IAcademic {
    * Gets mid-term marks as JSON with Redis caching
    */
   async getMidmarksJSON(): Promise<Midmarks> {
+    this.dataNotice = null;
+
     // Try Redis cache first
     const cached = await this.getCachedJson<Midmarks>(
       redisKeys.midmarks(this.rollnumber),
     );
     if (cached) {
       logger.debug("[Academic] Returning cached midmarks");
+      // mid-mark cache TTL is two hours (CACHE_TTL_MIDMARKS_S = 7200)
+      this.markCached("recent", "last two hours");
       return cached;
     }
 

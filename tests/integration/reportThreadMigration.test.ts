@@ -4,7 +4,12 @@ import { createClient } from "@libsql/client";
 // A database that predates report threads: reports carry the opening message
 // and at most one admin_reply; report_messages/report_reads do not exist yet.
 const client = createClient({ url: "file::memory:" });
-vi.mock("../../src/db/db.js", () => ({ turso: client }));
+vi.mock("../../src/db/db.js", () => ({
+  turso: client,
+  // initDatabase() configures the connection before creating tables; this
+  // test only cares about the reports schema, so the pragmas are a no-op.
+  configureDatabase: vi.fn(async () => undefined),
+}));
 
 await client.batch(
   [

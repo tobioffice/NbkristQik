@@ -59,13 +59,13 @@ import {
   BlockedReportError,
   NoDataFoundError,
   getAcadYearForDate,
-} from "../../src/services/student.utils/Academic";
+} from "../../src/services/student.utils/Academic.js";
 import {
   mockAttendance,
   mockMidmarks,
   mockAttendanceHTML,
   mockMidmarksHTML,
-} from "../mocks/academic.mock";
+} from "../mocks/academic.mock.js";
 import axios from "axios";
 
 describe("Academic Module", () => {
@@ -225,6 +225,19 @@ describe("Academic Module", () => {
       expect(result.percentage).toBe(85.5);
       expect(result.totalClasses.attended).toBe(450);
       expect(result.totalClasses.conducted).toBe(526);
+      // a fixture that yields zero subjects would make the parser test
+      // vacuous, so assert the actual subject table this time
+      expect(result.subjects).toHaveLength(2);
+      expect(result.subjects[0]).toMatchObject({
+        subject: "Data Structures",
+        attended: 45,
+        conducted: 50,
+      });
+      expect(result.subjects[1]).toMatchObject({
+        subject: "Operating Systems",
+        attended: 40,
+        conducted: 45,
+      });
     });
 
     it("should throw NoDataFoundError when student not found", async () => {
@@ -245,7 +258,28 @@ describe("Academic Module", () => {
 
       expect(result.rollno).toBe("21B81A05E9");
       expect(result.year_branch_section).toBe("3_CSE_A");
-      expect(result.subjects).toBeDefined();
+      expect(result.subjects).toHaveLength(3);
+      expect(result.subjects[0]).toMatchObject({
+        subject: "Data Structures",
+        M1: 23,
+        M2: 25,
+        average: 24,
+        type: "Subject",
+      });
+      expect(result.subjects[1]).toMatchObject({
+        subject: "Operating Systems",
+        M1: 22,
+        M2: 24,
+        average: 23,
+        type: "Subject",
+      });
+      expect(result.subjects[2]).toMatchObject({
+        subject: "DS Lab",
+        M1: 25,
+        M2: 0,
+        average: 0,
+        type: "Lab",
+      });
     });
 
     it("should throw NoDataFoundError when student not found", async () => {
@@ -270,6 +304,7 @@ describe("Academic Module", () => {
 
       expect(result).toEqual(mockAttendance);
       expect(mockClient.get).toHaveBeenCalledWith("attendance:21B81A05E9");
+      expect(academic.getDataNotice()).toContain("last hour");
     });
 
     it("should fetch fresh data when cache misses", async () => {
@@ -295,6 +330,8 @@ describe("Academic Module", () => {
 
       expect(result).toEqual(mockMidmarks);
       expect(mockClient.get).toHaveBeenCalledWith("midmarks:21B81A05E9");
+      // mid-mark cache TTL is two hours, not one
+      expect(academic.getDataNotice()).toContain("last two hours");
     });
 
     it("should fetch fresh data when cache misses", async () => {

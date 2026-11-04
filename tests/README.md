@@ -1,177 +1,178 @@
 # NbkristQik Tests
 
-Comprehensive test suite for the NbkristQik Telegram bot.
+Test suite for the NbkristQik Telegram bot and its Express surfaces.
 
 ## Setup
 
-Install dependencies (pnpm is the package manager):
+pnpm is the package manager:
+
 ```bash
 pnpm install
 ```
 
-## Running Tests
+Tests need no network access, no Redis server, and no real database. The
+global setup in `tests/setup.ts` pins the environment for every suite.
 
-### Run all tests
+## Running tests
+
+Run the suite once:
+
 ```bash
-npm test
+pnpm exec vitest run
 ```
 
-### Run with UI
+Run one file:
+
 ```bash
-npm run test:ui
+pnpm exec vitest run tests/unit/academic.test.ts
 ```
 
-### Run with coverage
+Watch mode (bare `pnpm test` is watch mode, not a one-shot run):
+
 ```bash
-npm run test:coverage
+pnpm test
 ```
 
-### Watch mode
+Coverage:
+
 ```bash
-npm test -- --watch
+pnpm exec vitest run --coverage
 ```
 
-## Test Structure
+## Typechecking and verification
+
+The app and the tests have separate TypeScript projects:
+
+```bash
+pnpm run typecheck        # src/**/*.ts
+pnpm run typecheck:tests  # tests/**/*.ts + vitest.config.ts (tsconfig.test.json)
+pnpm run verify           # both typechecks, lint, then the full suite
+```
+
+`tsconfig.test.json` inherits the root strict settings. Because module
+resolution is `nodenext`, every relative import in a test carries an explicit
+`.js` extension, including mocks:
+
+```ts
+import { turso } from "../../src/db/db.js";
+vi.mock("../../src/bot/bot.js", () => ({ bot: { sendMessage } }));
+```
+
+Vitest resolves those `.js` specifiers to the TypeScript sources.
+
+## Test layout
+
+The suite currently has **55 test files (46 unit, 9 integration) and 386
+tests**. The tree below names the recurring categories, not every file:
 
 ```
 tests/
-├── setup.ts                           # Global test setup
-├── mocks/                             # Mock data and utilities
-│   └── academic.mock.ts               # Academic module mocks
-├── unit/                              # Unit tests
-│   ├── academic.test.ts               # Academic module tests
-│   ├── academicTG.test.ts             # AcademicTG formatting tests
-│   ├── student_stats.test.ts          # Leaderboard/rank SQL tests
-│   ├── syncdb.test.ts                 # syncdb helpers
-│   ├── security.test.ts               # Security middleware tests
-│   └── constants.test.ts              # Constants validation
-└── integration/                       # Integration tests
-    └── academic.integration.test.ts   # End-to-end flow tests
+├── setup.ts                     # environment pinning + global mock resets
+├── mocks/
+│   ├── academic.mock.ts         # attendance/midmarks fixtures
+│   └── telegram.mock.ts         # typed sendMessage/onText/on mocks
+├── unit/                        # 45 files: modules tested in isolation
+│   ├── academic*.test.ts        # portal parsing/orchestration
+│   ├── adminPanel*.test.ts      # panel CSP/nonce + embedded JS/CSS syntax
+│   ├── dailyCheckIn.test.ts     # check-in handler and callback
+│   ├── student_stats.test.ts    # leaderboard/uptime SQL against libSQL
+│   ├── syncdb.test.ts           # scrape/sync orchestration
+│   └── ...                      # bot commands, auth, middleware, library,
+│                                #   maintenance, monitor, registration, ...
+└── integration/                 # 9 files: Express routes via supertest
+    ├── adminRoutes.test.ts
+    ├── apiRoutes.test.ts
+    ├── libraryRoutes.test.ts
+    ├── profileRoutes.test.ts
+    ├── reportRoutes.test.ts
+    ├── staticRoutes.test.ts
+    └── ...
 ```
 
-## Test Coverage
+## What the layers cover
 
-The test suite covers:
+**Unit tests** exercise one module at a time: bot command and callback
+handlers, message formatting and parsing, validation, authorization,
+middleware, and SQL helpers. External boundaries are replaced: the Telegram
+bot module (`src/bot/bot.js`), the Redis client, `axios` calls to the college
+portal, and analytics/tracker calls.
 
-### Academic Module (`academic.test.ts`)
-- ✅ Roll number normalization (uppercase, trim)
-- ✅ Custom error classes (AcademicError, ServerDownError, etc.)
-- ✅ HTTP request handling with retry logic
-- ✅ Session management and renewal
-- ✅ Cache integration (Redis)
-- ✅ Fallback to database on network failure
-- ✅ HTML parsing for attendance
-- ✅ HTML parsing for midmarks
-- ✅ Error handling and recovery
+**Integration tests** drive the Express app through `supertest` (routing,
+auth, cookies, status codes, CSP headers). Most create a real in-memory
+libSQL database with `file::memory:` and create the tables they query, so the
+SQL and route wiring are exercised end to end. A few replace DB model modules
+with mocks when only route behavior is under test.
 
-### AcademicTG Module (`academicTG.test.ts`)
-- ✅ Telegram message formatting
-- ✅ Progress bar generation
-- ✅ Status emoji selection
-- ✅ Subject name truncation
-- ✅ Date formatting
-- ✅ Error message formatting
-- ✅ Attendance table layout
-- ✅ Midmarks table layout
+**Mocked external boundaries** are explicit in the file that needs them:
+Telegram sends and handler registration, Redis reads/writes, portal HTTP
+requests, and admin membership checks. Tests must not make live Telegram,
+Redis, portal, or network calls; if a new dependency escapes a mock, add the
+mock at the module boundary instead of reaching for the network.
 
-### Integration Tests (`academic.integration.test.ts`)
-- ✅ Full attendance fetch → format flow
-- ✅ Full midmarks fetch → format flow
-- ✅ Error recovery with fallback
-- ✅ Session expiry and auto-renewal
-- ✅ Redis caching flow
+## Writing new tests
 
-## Writing New Tests
+- Add unit tests under `tests/unit/` and route-level tests under
+  `tests/integration/`.
+- Use the shared typed Telegram helpers rather than loose `vi.fn()` casts:
 
-### Unit Test Template
+  ```ts
+  import {
+    createOnTextMock,
+    createSendMessageMock,
+    registeredTextHandler,
+    sentMessage,
+  } from "../mocks/telegram.mock.js";
 
-```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+  const onText = createOnTextMock();
+  const sendMessage = createSendMessageMock();
+  const handler = registeredTextHandler<(msg: unknown) => void>(onText, "/cmd");
+  // ...
+  const [, text, options] = sentMessage(sendMessage);
+  ```
 
-describe('YourModule', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+- Mock modules before dynamically importing the code under test; `vi.mock`
+  calls are hoisted, so a `vi.hoisted` block is the place for shared state.
+- Clean up database state in `beforeEach`/`beforeAll` when a suite uses the
+  real in-memory libSQL client.
+- Keep assertions behavior-focused. Do not loosen an assertion only to make a
+  test typecheck; fix the mock's type instead.
 
-  it('should do something', () => {
-    // Arrange
-    const input = 'test';
-    
-    // Act
-    const result = yourFunction(input);
-    
-    // Assert
-    expect(result).toBe('expected');
-  });
-});
-```
+## Coverage
 
-### Mocking External Dependencies
+`vitest.config.ts` enforces a V8 coverage floor:
 
-```typescript
-vi.mock('../../src/services/redis/getRedisClient.js', () => ({
-  getClient: vi.fn().mockResolvedValue({
-    get: vi.fn(),
-    set: vi.fn(),
-  }),
-}));
-```
+| Metric     | Threshold | Measured (2026-11-04) |
+| ---------- | --------- | --------------------- |
+| Statements | 70        | 72.28                 |
+| Branches   | 75        | 76.79                 |
+| Functions  | 82        | 83.84                 |
+| Lines      | 70        | 72.28                 |
 
-## CI/CD Integration
+The thresholds sit about two points below the measured totals so ordinary
+test churn does not flip CI. Raise them when coverage improves. Coverage
+excludes tests, `src/web/` (the web app has its own package and config),
+scripts, config files, and build output.
 
-Tests can be integrated into GitHub Actions:
+## CI
 
-```yaml
-name: Tests
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - run: npm install
-      - run: npm test
-      - run: npm run test:coverage
-```
+`.github/workflows/test.yml` runs on Node 22.x and 24.x: install, lint,
+`typecheck`, `typecheck:tests`, a production dependency audit, then the test
+suite with coverage. The separate `web` job runs the web app's own lint,
+tests, and builds.
 
 ## Troubleshooting
 
-### Tests timing out
-Increase timeout in `vitest.config.ts`:
-```typescript
-export default defineConfig({
-  test: {
-    testTimeout: 10000,
-  },
-});
-```
+**Tests timing out.** The default timeout is generous; a hang usually means a
+real network or Redis connection escaped its mock. Run the single file to
+isolate it.
 
-### Mock not working
-Ensure mock is defined before import:
-```typescript
-vi.mock('./module'); // Must be before import
-import { something } from './module';
-```
+**Redis connection errors.** The root suite mocks the Redis client. A stack
+trace mentioning Redis is expected in suites that deliberately test an
+outage; otherwise check `vi.mock` paths and the `.js` extension.
 
-### Redis connection errors
-Tests use mocked Redis client. If you see connection errors, check that mocks are properly set up in `tests/setup.ts`.
+**`ERR_MODULE_NOT_FOUND` or a missing `.js` typecheck error.** Add the
+explicit `.js` extension to the relative specifier in the test.
 
-## Best Practices
-
-1. **Isolate tests**: Each test should be independent
-2. **Clear mocks**: Use `vi.clearAllMocks()` in `beforeEach`
-3. **Mock external services**: Don't make real HTTP/Redis calls
-4. **Test edge cases**: Empty data, errors, timeouts
-5. **Use descriptive names**: Test names should explain what they test
-6. **Keep tests fast**: Unit tests should run in milliseconds
-
-## Future Improvements
-
-- [ ] Add E2E tests with real Telegram bot interaction
-- [ ] Add performance benchmarks
-- [ ] Add mutation testing
-- [ ] Add visual regression tests for formatted messages
-- [ ] Add load testing for concurrent requests
+**Admin panel tests do nothing.** `tests/setup.ts` leaves
+`ADMIN_PANEL_PATH`/`ADMIN_PANEL_PASSWORD` empty so the panel stays unmounted;
+the admin suites opt in by setting them before importing the router.

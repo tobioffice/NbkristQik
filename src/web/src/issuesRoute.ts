@@ -1,9 +1,8 @@
 /**
  * The issue desk's routes.
  *
- * The screens are pure — the caller decides which one is open — so the same
- * three screens serve the standalone report page (query-string routes) and the
- * app's Issues tab (hash routes).
+ * The screens are pure — the caller decides which one is open. The app's
+ * Issues tab maps its hash routes onto these.
  */
 export type IssuesView = "form" | "history" | "thread";
 

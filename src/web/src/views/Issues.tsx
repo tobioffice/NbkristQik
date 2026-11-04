@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { submitReport, fetchMyReports, type MyReport } from "../api";
+import { clearDraft, readDraft, reportDraftKey, writeDraft } from "../drafts";
 import { useClosingConfirmation } from "../telegram";
 import { FORM_ROUTE, HISTORY_ROUTE, type IssuesRoute } from "../issuesRoute";
 import ReportThreadView from "./ReportThread";
@@ -11,8 +12,8 @@ import ReportThreadView from "./ReportThread";
  * arrives here and in Telegram, and either side can add to it.
  *
  * This view is pure: the route in and the route out come from the caller, so
- * the same screens work as the standalone report page (query-string routes)
- * and as the app's Issues tab (hash routes).
+ * the app's Issues tab owns navigation and these screens only render the
+ * screen that is open.
  */
 
 interface IssuesProps {
@@ -35,7 +36,8 @@ export default function Issues({
   onOpenCount,
   showTitle = true,
 }: IssuesProps) {
-  const [message, setMessage] = useState("");
+  const draftKey = reportDraftKey(identity.userId, "form");
+  const [message, setMessage] = useState(() => readDraft(draftKey));
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ticket, setTicket] = useState<string | null>(null);
@@ -45,6 +47,21 @@ export default function Issues({
 
   // a half-written report is worth more than a fast exit
   useClosingConfirmation(message.trim().length > 0 && !ticket);
+
+  // keep the draft across tab switches, back navigation and a reload
+  useEffect(() => {
+    writeDraft(draftKey, message);
+  }, [draftKey, message]);
+
+  // Leaving the form ends the receipt's life: a later "New report" must open
+  // an empty form, not the ticket from the report sent earlier in this visit.
+  const previousView = useRef(route.view);
+  useEffect(() => {
+    if (previousView.current === "form" && route.view !== "form") {
+      setTicket(null);
+    }
+    previousView.current = route.view;
+  }, [route.view]);
 
   const loadReports = () => {
     if (!identity.userId) return;
@@ -80,6 +97,7 @@ export default function Issues({
       const { issueId } = await submitReport(identity, clean);
       setTicket(issueId);
       setMessage("");
+      clearDraft(draftKey);
       setReports(null); // the list refetches on its next visit
     } catch (e) {
       setError((e as Error).message || "Could not send the report.");
@@ -91,11 +109,15 @@ export default function Issues({
   if (route.view === "thread" && route.issue) {
     return (
       <ReportThreadView
+        key={route.issue}
         identity={identity}
         issueId={route.issue}
         seed={reports?.find((row) => row.issueId === route.issue) ?? null}
         onBack={() => onNavigate(HISTORY_ROUTE)}
-        onNewReport={() => onNavigate(FORM_ROUTE)}
+        onNewReport={() => {
+          setTicket(null);
+          onNavigate(FORM_ROUTE);
+        }}
       />
     );
   }
@@ -107,7 +129,10 @@ export default function Issues({
           <div className="head-row">
             <h2 className="form-title">My reports</h2>
             <button
-              onClick={() => onNavigate(FORM_ROUTE)}
+              onClick={() => {
+                setTicket(null);
+                onNavigate(FORM_ROUTE);
+              }}
               className="btn-outline btn-sm"
             >
               New report

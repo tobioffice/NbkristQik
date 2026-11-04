@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import { fetchWithTimeout } from "./http";
 
 /**
  * The page window.
@@ -172,7 +173,9 @@ export const usePageWindow = (
 
       const fetchPage = async (): Promise<boolean> => {
         try {
-          const res = await fetch(`/api/library/page/${docId}/${page}`);
+          const res = await fetchWithTimeout(
+            `/api/library/page/${docId}/${page}`,
+          );
           if (!res.ok) throw new Error(`page ${page} failed`);
           const blob = await res.blob();
 

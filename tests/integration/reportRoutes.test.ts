@@ -65,8 +65,14 @@ beforeAll(async () => {
         seen_at TEXT NOT NULL DEFAULT (datetime('now')),
         PRIMARY KEY (report_id, reader)
       )`,
-      `CREATE TABLE botusers (user_id INTEGER PRIMARY KEY, username TEXT, first_name TEXT)`,
-      `INSERT INTO botusers VALUES (6407457375, 'prasanth', 'PRASANTH')`,
+      `CREATE TABLE botusers (user_id INTEGER PRIMARY KEY, username TEXT, first_name TEXT,
+         first_seen TEXT, last_seen TEXT, private_actions INTEGER DEFAULT 0,
+         channel_actions INTEGER DEFAULT 0, group_actions INTEGER DEFAULT 0,
+         total_actions INTEGER DEFAULT 0)`,
+      `INSERT INTO botusers (user_id, username, first_name) VALUES (6407457375, 'prasanth', 'PRASANTH')`,
+      `CREATE TABLE activity_log (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL,
+         chat_type TEXT NOT NULL, action TEXT NOT NULL, detail TEXT,
+         created_at TEXT NOT NULL DEFAULT (datetime('now')))`,
     ],
     "write",
   );

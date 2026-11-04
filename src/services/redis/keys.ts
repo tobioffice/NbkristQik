@@ -25,7 +25,7 @@ export const redisKeys = {
   reportThreadGate: (userId: number | string) => `report:thread:${userId}`,
   /** Pinned channel check-in post id: checkin:post:msgId */
   checkinPostMsgId: "checkin:post:msgId",
-  /** Per-user daily "I'm not a robot" unlock (TTL to next IST midnight) */
+  /** Per-user daily check-in record (TTL to next IST midnight), not a gate */
   dailyUnlocked: (userId: number | string) => `dailyUnlocked:${userId}`,
   /** Library web app session: lib:sess:{token} */
   librarySession: (token: string) => `lib:sess:${token}`,

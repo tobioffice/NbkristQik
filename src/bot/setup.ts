@@ -1,7 +1,7 @@
 import TelegramBot from "node-telegram-bot-api";
 import { ADMIN_ID } from "../config/environmentals.js";
 import { logger } from "../config/logger.js";
-import { APP_WEBAPP_URL, LIBRARY_WEBAPP_URL } from "../constants/webapp.js";
+import { APP_WEBAPP_URL } from "../constants/webapp.js";
 import { libraryOpenToAll } from "../services/library/access.js";
 
 // Telegram expects command names WITHOUT the leading slash.
@@ -23,14 +23,14 @@ const LIBRARY_COMMAND = {
 
 /**
  * The one-tap way in: the app opens on its index page, where every surface
- * lives. While the library is still the admin's, the button opens the shelf
- * itself, because that is the only page the admin is working on.
+ * lives. The library's state never changes where this goes — a student must
+ * always be able to reach the register, the roll and the issue desk.
  */
-const menuButtonFor = (openToAll: boolean) => ({
+const MENU_BUTTON = {
   type: "web_app" as const,
   text: "Open app",
-  web_app: { url: openToAll ? APP_WEBAPP_URL : LIBRARY_WEBAPP_URL },
-});
+  web_app: { url: APP_WEBAPP_URL },
+};
 
 /**
  * The Bot API wants `menu_button` as a JSON object. node-telegram-bot-api
@@ -64,7 +64,7 @@ export async function setupBot(bot: TelegramBot): Promise<void> {
   // admin's own button.
   await bot
     .setChatMenuButton({
-      menu_button: encodeMenuButton(menuButtonFor(openToAll)),
+      menu_button: encodeMenuButton(MENU_BUTTON),
     })
     .catch((e) => warn("setChatMenuButton", e));
 

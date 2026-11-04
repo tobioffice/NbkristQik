@@ -16,23 +16,41 @@
  *                              AUTOINCREMENT sequence, so the old QIK-####
  *                              ids would collide with newly created reports
  *                              if we merged after new ones existed. If the
- *                              table is no longer empty the script refuses
- *                              and prints what to do instead.
+ *                              table is no longer empty the script reports it
+ *                              and exits nonzero.
  *   report_reads               INSERT OR IGNORE on (report_id, reader).
  *   registrations              INSERT OR IGNORE on userId — a local row
  *                              (newer) always wins.
  *   tgusers                    INSERT OR IGNORE on userId.
  *   botusers                   INSERT OR IGNORE on user_id.
+ *   studentsnew                INSERT OR IGNORE on roll_no — the local master
+ *                              (refreshed by /syncdb after cutover) wins, and
+ *                              missing students are filled in from the export.
+ *   student_stats              INSERT OR IGNORE on roll_no — locally rebuilt
+ *                              stats win. Old Turso copies may still carry the
+ *                              bogus "D…" rolls; the leaderboard's INNER JOIN
+ *                              on studentsnew keeps them off the board.
+ *   library_documents          INSERT OR IGNORE on id — local edits win.
+ *   library_reads              copied verbatim, but ONLY while the local table
+ *                              is empty: ids are AUTOINCREMENT, so importing
+ *                              after new reads exist would collide. On a
+ *                              repeated run the local watermark/takedown trail
+ *                              is kept and the table is skipped (not a failure).
  *   uptime_log                 rows whose (component, created_at) already
  *                              exist are skipped; ids are reassigned.
- *   student_stats, admin_sessions, activity_log
- *                              deliberately NOT merged: stats are rebuilt
- *                              locally as students use the bot (the Turso
- *                              copy may still carry the old bogus "D…"
- *                              roll numbers), sessions are ephemeral, and
- *                              the activity log is the bulk of the export.
+ *   admin_sessions, activity_log
+ *                              deliberately NOT merged: sessions are
+ *                              ephemeral and the activity log is the bulk of
+ *                              the export (the external monitor writes its own).
  *
- * Safe to re-run: every statement is idempotent.
+ * A table that is absent from the source export (e.g. an old export made
+ * before the library tables existed) is skipped with a message; it does not
+ * fail the whole import.
+ *
+ * Every statement is idempotent. Tables whose ids are an AUTOINCREMENT
+ * sequence (reports, report_messages, library_reads) are copied only while
+ * locally empty: a later run reports them instead of renumbering. For
+ * library_reads the newer local trail wins, so that skip is not a failure.
  */
 import { createClient } from "@libsql/client";
 
@@ -59,6 +77,15 @@ const count = async (client, table) =>
 const columnsOf = async (client, table) =>
   (await rows(client, `PRAGMA table_info(${table})`)).map((c) => c.name);
 
+const tableExists = async (client, table) =>
+  (
+    await rows(
+      client,
+      `SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?`,
+      [table],
+    )
+  ).length > 0;
+
 const PLAN = [
   { table: "reports", mode: "onlyIfEmpty" },
   { table: "report_messages", mode: "onlyIfEmpty" },
@@ -66,6 +93,13 @@ const PLAN = [
   { table: "registrations", mode: "ignore" },
   { table: "tgusers", mode: "ignore" },
   { table: "botusers", mode: "ignore" },
+  // student master + leaderboard stats: local rows are newer after cutover
+  { table: "studentsnew", mode: "ignore" },
+  { table: "student_stats", mode: "ignore" },
+  // library registry survives by id; reads are an append-only audit trail and
+  // may only be imported before the local table starts collecting new reads
+  { table: "library_documents", mode: "ignore" },
+  { table: "library_reads", mode: "onlyIfEmpty", optional: true },
   { table: "uptime_log", mode: "naturalKey", key: ["component", "created_at"] },
 ];
 
@@ -108,13 +142,29 @@ const copyNaturalKey = async (table, key) => {
 };
 
 let failures = 0;
+let skipped = 0;
 for (const step of PLAN) {
   const { table } = step;
   try {
+    if (!(await tableExists(source, table))) {
+      skipped++;
+      console.log(
+        `SKIP  ${table.padEnd(17)} not present in the source export — continuing.`,
+      );
+      continue;
+    }
+
     const srcCount = await count(source, table);
     const before = await count(local, table);
 
     if (step.mode === "onlyIfEmpty" && before > 0) {
+      if (step.optional) {
+        skipped++;
+        console.log(
+          `SKIP  ${table.padEnd(17)} local already has ${before} rows — keeping the local trail (import ids would collide).`,
+        );
+        continue;
+      }
       console.log(
         `SKIP  ${table.padEnd(17)} local already has ${before} rows — merging now would collide ids.`,
       );
@@ -142,9 +192,11 @@ for (const step of PLAN) {
   }
 }
 
+const skippedNote =
+  skipped > 0 ? ` (${skipped} table(s) skipped, see above)` : "";
 console.log(
   failures === 0
-    ? "\nMerge complete."
-    : `\nMerge finished with ${failures} table(s) skipped or failed.`,
+    ? `\nMerge complete${skippedNote}.`
+    : `\nMerge finished with ${failures} table(s) skipped or failed${skippedNote}.`,
 );
 process.exit(failures === 0 ? 0 : 1);

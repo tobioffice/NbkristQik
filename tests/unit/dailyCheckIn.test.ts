@@ -1,15 +1,65 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  createOnMock,
+  createOnTextMock,
+  createSendMessageMock,
+  registeredEventHandler,
+  registeredTextHandler,
+  replyKeyboard,
+  sentMessage,
+} from "../mocks/telegram.mock.js";
+
+// Capture the handlers the module registers and the messages it sends instead
+// of talking to Telegram.
+const onText = createOnTextMock();
+const on = createOnMock();
+const sendMessage = createSendMessageMock(99);
+const deleteMessage = vi.fn(async () => true);
+const pinChatMessage = vi.fn(async () => true);
+const answerCallbackQuery = vi.fn<
+  (id: string, options?: { text?: string }) => Promise<boolean>
+>(async () => true);
+
+vi.mock("../../src/bot/bot.js", () => ({
+  bot: {
+    onText,
+    on,
+    sendMessage,
+    deleteMessage,
+    pinChatMessage,
+    answerCallbackQuery,
+  },
+}));
 
 const redisGet = vi.fn();
+const redisSet = vi.fn(async () => "OK");
+const redisSAdd = vi.fn(async () => 1);
 vi.mock("../../src/services/redis/getRedisClient.js", () => ({
-  getClient: vi.fn(async () => ({ get: redisGet })),
+  getClient: vi.fn(async () => ({
+    get: redisGet,
+    set: redisSet,
+    sAdd: redisSAdd,
+  })),
 }));
 vi.mock("../../src/services/tracker.js", () => ({
   trackActivity: vi.fn(),
 }));
 
-const { secondsUntilMidnightIST, isDailyUnlocked, getCheckInLink } =
+const { secondsUntilMidnightIST } =
   await import("../../src/bot/dailyCheckIn.js");
+const { CHECK_IN_PROMPT } = await import("../../src/bot/replies.js");
+
+/** The /postcheckin handler and the "dailycheck" callback handler. */
+const postcheckin = registeredTextHandler<(msg: unknown) => Promise<void>>(
+  onText,
+  "/postcheckin",
+);
+const dailycheck = registeredEventHandler<(query: unknown) => Promise<void>>(
+  on,
+  "callback_query",
+);
+
+const adminMsg = { chat: { id: 123456789 }, from: { id: 123456789 } };
 
 describe("secondsUntilMidnightIST", () => {
   it("returns the seconds from a UTC morning to the next IST midnight", () => {
@@ -34,56 +84,73 @@ describe("secondsUntilMidnightIST", () => {
   });
 });
 
-describe("isDailyUnlocked", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("is dormant (unlocked) when no check-in post exists", async () => {
-    redisGet.mockResolvedValue(null); // no checkin:post:msgId
-
-    await expect(isDailyUnlocked(1)).resolves.toBe(true);
+describe("/postcheckin", () => {
+  beforeEach(() => {
+    redisGet.mockResolvedValue(null);
+    sendMessage.mockResolvedValue({ message_id: 99 });
   });
 
-  it("requires the per-user unlock key once a post exists", async () => {
-    redisGet.mockImplementation(async (key: string) =>
-      key === "checkin:post:msgId" ? "123" : null,
-    );
+  it("ignores non-admin callers", async () => {
+    await postcheckin({ chat: { id: 5 }, from: { id: 5 } });
 
-    await expect(isDailyUnlocked(1)).resolves.toBe(false);
+    expect(sendMessage).not.toHaveBeenCalled();
   });
 
-  it("unlocks with the per-user key set", async () => {
-    redisGet.mockImplementation(async (key: string) =>
-      key === "checkin:post:msgId"
-        ? "123"
-        : key === "dailyUnlocked:1"
-          ? "1"
-          : null,
-    );
+  it("posts and pins a daily check-in, not a CAPTCHA", async () => {
+    await postcheckin(adminMsg);
 
-    await expect(isDailyUnlocked(1)).resolves.toBe(true);
-  });
-
-  it("fails open when Redis is unavailable", async () => {
-    redisGet.mockRejectedValue(new Error("redis down"));
-
-    await expect(isDailyUnlocked(1)).resolves.toBe(true);
+    const [chatId, text, options] = sentMessage(sendMessage);
+    expect(chatId).toBe("@test_channel");
+    expect(text).toBe(CHECK_IN_PROMPT);
+    expect(text.toLowerCase()).not.toContain("robot");
+    expect(text.toLowerCase()).not.toContain("captcha");
+    expect(replyKeyboard(options).inline_keyboard[0][0]).toEqual({
+      text: "✅ Check in",
+      callback_data: "dailycheck",
+    });
+    expect(pinChatMessage).toHaveBeenCalledWith("@test_channel", 99, {
+      disable_notification: true,
+    });
+    // the admin's confirmation must not claim a gate is active
+    const [, confirmation] = sentMessage(sendMessage, 1);
+    expect(confirmation).toContain("Daily check-in");
+    expect(confirmation).not.toContain("Gate");
   });
 });
 
-describe("getCheckInLink", () => {
-  beforeEach(() => vi.clearAllMocks());
+describe("the dailycheck callback", () => {
+  beforeEach(() => {
+    redisSet.mockClear();
+    answerCallbackQuery.mockClear();
+  });
 
-  it("deep-links to the pinned post when known", async () => {
-    redisGet.mockResolvedValue("456");
+  it("answers 'all set' without promising an unlock link", async () => {
+    await dailycheck({
+      id: "cb-1",
+      data: "dailycheck",
+      from: { id: 77, first_name: "Student", username: "student" },
+      message: { chat: { type: "channel" } },
+    });
 
-    await expect(getCheckInLink()).resolves.toBe(
-      "https://t.me/test_channel/456",
+    expect(answerCallbackQuery).toHaveBeenCalledWith("cb-1", {
+      text: "✅ You're all set!",
+    });
+    expect(JSON.stringify(answerCallbackQuery.mock.calls[0][1])).not.toContain(
+      "t.me",
     );
   });
 
-  it("falls back to the channel root without a message id", async () => {
-    redisGet.mockResolvedValue(null);
+  it("records the day in Redis and keeps the broadcast list", async () => {
+    await dailycheck({
+      id: "cb-2",
+      data: "dailycheck",
+      from: { id: 78, first_name: "Student" },
+      message: { chat: { type: "channel" } },
+    });
 
-    await expect(getCheckInLink()).resolves.toBe("https://t.me/test_channel");
+    expect(redisSet).toHaveBeenCalledWith("dailyUnlocked:78", "1", {
+      EX: expect.any(Number),
+    });
+    expect(redisSAdd).toHaveBeenCalledWith("qik:users", "78");
   });
 });

@@ -9,6 +9,17 @@ import { logger } from "../config/logger.js";
 import { ROLL_REGEX } from "../constants/index.js";
 
 // Rate limiting configurations
+//
+// NOTE ON KEYS: every limiter below keys on req.ip (the express-rate-limit
+// default, which handles IPv6 correctly). The API now binds to loopback
+// (HOST defaults to 127.0.0.1) and runs behind exactly one trusted nginx hop,
+// so req.ip is the real client address rather than the proxy. That makes
+// these limits per client network address, not per Telegram account;
+// account-scoped pacing lives inside the services that know the identity
+// (the report 60 s gate, the library read-burst check). An authenticated
+// per-user key generator was considered here, but deriving it would repeat
+// the initData HMAC on every request and custom keys must not be raw IPs;
+// keep this layer about transport-level abuse only.
 export const createRateLimit = (
   windowMs: number,
   max: number,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { plural } from "../format";
 import {
   registerLibraryRoll,
@@ -37,16 +37,31 @@ export default function LibraryView({
   const { status, retry, setView } = useLibrary(initData);
   const [subject, setSubject] = useState<LibrarySubject | null>(null);
   const [unit, setUnit] = useState<OpenUnit | null>(null);
+  // the shelf's place, kept while the reader takes the sheet
+  const shelfScroll = useRef(0);
+  const restoreShelfScroll = useRef<number | null>(null);
 
   const closeUnit = () => {
+    restoreShelfScroll.current = shelfScroll.current;
     setUnit(null);
     onImmersiveChange?.(false);
   };
 
   const openUnit = (open: OpenUnit) => {
+    shelfScroll.current = window.scrollY;
     setUnit(open);
     onImmersiveChange?.(true);
   };
+
+  // closing the reader lands the student back on the shelf where they left it
+  useEffect(() => {
+    if (unit !== null) return;
+    const y = restoreShelfScroll.current;
+    if (y == null) return;
+    restoreShelfScroll.current = null;
+    const frame = requestAnimationFrame(() => window.scrollTo(0, y));
+    return () => cancelAnimationFrame(frame);
+  }, [unit]);
 
   if (unit) {
     return (
@@ -87,10 +102,9 @@ export default function LibraryView({
       <div className="page">
         <div className="page-head">
           <p className="eyebrow">Shelf</p>
-          <h2 className="page-title">The library opens soon</h2>
+          <h2 className="page-title">The library isn&rsquo;t open yet</h2>
           <p className="page-note">
-            I'm filling the shelf with your semester's units. I'll tell you in
-            the bot the moment it's ready, and this page will open on its own.
+            The shelf isn&rsquo;t open yet. Check again in a little while.
           </p>
         </div>
         <div className="page-body">
@@ -200,8 +214,7 @@ function Shelf({
         {subjects.length === 0 ? (
           <div className="form-block">
             <p className="form-note">
-              Nothing for your semester yet. I'll message you in the bot when
-              it's ready.
+              Nothing for your semester yet. Check back in a little while.
             </p>
           </div>
         ) : (

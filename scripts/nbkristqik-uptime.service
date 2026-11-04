@@ -1,0 +1,49 @@
+[Unit]
+Description=NbkristQik external uptime monitor
+Documentation=https://github.com/tobioffice/NbkristQik/blob/main/docs/DEPLOYMENT.md
+After=network-online.target time-sync.target
+Wants=network-online.target time-sync.target
+
+[Service]
+Type=simple
+User=qik-uptime
+Group=qik-uptime
+WorkingDirectory=/opt/nbkristqik-uptime
+Environment=NODE_ENV=production
+EnvironmentFile=/etc/nbkristqik-uptime.env
+ExecStart=/usr/bin/node /opt/nbkristqik-uptime/monitor.mjs
+Restart=always
+RestartSec=30
+TimeoutStopSec=15
+UMask=0077
+
+# The monitor only needs its own state directory. Hiding /home keeps the
+# password manager and every other user file on oracle2 out of its view.
+ProtectHome=true
+ProtectSystem=strict
+StateDirectory=nbkristqik-uptime
+StateDirectoryMode=0700
+PrivateTmp=true
+PrivateDevices=true
+NoNewPrivileges=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+RestrictNamespaces=true
+LockPersonality=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RemoveIPC=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+MemoryMax=128M
+CPUQuota=20%
+TasksMax=32
+
+[Install]
+WantedBy=multi-user.target

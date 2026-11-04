@@ -781,10 +781,27 @@ export const panelJs = `(function () {
           }
           bars += '<i class="' + cls + '" style="height:' + (bucket ? h : 4) + 'px"><title>' + key + (bucket ? ": " + bucket.ups + "/" + bucket.pings + " up" : ": no data") + "</title></i>";
         }
+        // "Operational" / "Down" / "No data" mirrors the public status page:
+        // a stale heartbeat means the monitor stopped reporting, not that the
+        // component recovered, so stale wins over the last recorded status.
+        var stateWord = c.stale ? "No data" : c.current === "up" ? "Operational" : "Down";
+        var stateColor = c.current === "up" ? "#3f6457" : c.stale ? "#8a6a12" : "#a62f22";
+        var ageSec =
+          typeof c.lastPingAgeSec === "number" && isFinite(c.lastPingAgeSec)
+            ? Math.max(0, c.lastPingAgeSec)
+            : null;
+        var probeAge =
+          ageSec == null ? "no probe yet" :
+          ageSec < 90 ? "probed just now" :
+          ageSec < 3600 ? "probed " + Math.floor(ageSec / 60) + "m ago" :
+          ageSec < 86400 ? "probed " + Math.floor(ageSec / 3600) + "h ago" :
+          "probed " + Math.floor(ageSec / 86400) + "d ago";
         html += '<div class="hrow"><div class="hname">' + esc(c.component) + "</div>" +
           '<div class="ubars">' + bars + "</div>" +
-          '<div class="hstat"><div class="pct">' + c.uptimePct.toFixed(2) + '% up</div>' +
-          '<div class="lat">' + (c.avgLatencyMs != null ? c.avgLatencyMs + "ms avg" : "no latency") + "</div></div></div>";
+          '<div class="hstat"><div class="pct" style="color:' + stateColor + '">' + stateWord + "</div>" +
+          '<div class="lat">' + esc(probeAge) + "</div>" +
+          '<div class="lat" style="font-variant-numeric:tabular-nums">' + c.uptimePct.toFixed(2) + "% up" +
+          (c.avgLatencyMs != null ? " · " + c.avgLatencyMs + "ms avg" : "") + "</div></div></div>";
       }
       $("healthrows").innerHTML = html || '<div class="empty">No probes recorded yet.</div>';
     }).catch(function () {});

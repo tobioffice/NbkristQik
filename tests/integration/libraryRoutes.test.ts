@@ -238,6 +238,11 @@ describe("reading the library", () => {
     await client.execute(
       `INSERT OR REPLACE INTO studentsnew VALUES ('24CS1042', 'SECOND YEAR', 'A', '5', '21')`,
     );
+    // a distinct third-year roll: one roll belongs to one Telegram account,
+    // so 333444555 cannot claim REGISTERED's 23CS1042
+    await client.execute(
+      `INSERT OR REPLACE INTO studentsnew VALUES ('23CS1043', 'THIRD YEAR B', 'A', '5', '31')`,
+    );
     const secondYear = await openAs(222333444, "24CS1042");
     const theirs = await request(app)
       .get("/api/library/subjects")
@@ -246,7 +251,7 @@ describe("reading the library", () => {
       "23CS21T1",
     ]);
 
-    const thirdYear = await openAs(333444555, "23CS1042");
+    const thirdYear = await openAs(333444555, "23CS1043");
     const ours = await request(app)
       .get("/api/library/subjects")
       .set("Cookie", thirdYear);
@@ -311,7 +316,7 @@ describe("reading a page", () => {
     const page = res.body.toString("utf8");
     expect(page).toContain("<svg");
     expect(page.trimEnd().endsWith("</svg>")).toBe(true);
-    expect(page).toMatch(/NBK-[0-9A-F]{4}-[0-9A-F]{4}/);
+    expect(page).toMatch(/NBK-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}/);
     expect(page).toContain("<text");
   });
 
@@ -329,9 +334,12 @@ describe("reading a page", () => {
       args: ["23CS31T2-u2"],
     });
     expect(rows.rows.length).toBeGreaterThan(0);
-    const row = rows.rows[0] as { user_id: string; token: string };
+    const row = rows.rows[0];
+    if (!row) throw new Error("expected a recorded library read");
     expect(String(row.user_id)).toBe(String(REGISTERED));
-    expect(String(row.token)).toMatch(/^NBK-[0-9A-F]{4}-[0-9A-F]{4}$/);
+    expect(String(row.token)).toMatch(
+      /^NBK-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}$/,
+    );
   });
 
   it("refuses a page that is not in the document", async () => {
@@ -424,8 +432,12 @@ describe("while the library is closed", () => {
   });
   it("shows the admin the whole shelf, whatever semester they are in", async () => {
     // the admin is a first-year in the college table, and the live document
-    // is a third-year subject: the preview must still open it
-    await upsertRegistration("123456789", "23CS1001", "Admin");
+    // is a third-year subject: the preview must still open it. Use a distinct
+    // first-year roll: 23CS1001 already belongs to FIRST_YEAR.
+    await client.execute(
+      `INSERT OR REPLACE INTO studentsnew VALUES ('23CS1002', 'ADMIN FIRST YEAR', 'A', '5', '11')`,
+    );
+    await upsertRegistration("123456789", "23CS1002", "Admin");
 
     const open = await request(app)
       .post("/api/library/session")

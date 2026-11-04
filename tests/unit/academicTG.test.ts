@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { AcademicTG } from "../../src/services/student.utils/AcademicTG";
-import { mockAttendance, mockMidmarks } from "../mocks/academic.mock";
+import { AcademicTG } from "../../src/services/student.utils/AcademicTG.js";
+import { mockAttendance, mockMidmarks } from "../mocks/academic.mock.js";
 
 describe("AcademicTG Module", () => {
   let academicTG: AcademicTG;
@@ -42,6 +42,22 @@ describe("AcademicTG Module", () => {
       expect(message).toMatch(/[🟩🟨🟥⬜]/u);
     });
 
+    it("should mark cached figures with a freshness warning above the card", async () => {
+      vi.spyOn(academicTG, "getAttendanceJSON").mockResolvedValue(
+        mockAttendance,
+      );
+      vi.spyOn(academicTG, "getDataNotice").mockReturnValue(
+        "The college portal could not be reached. This is the last saved copy and may be out of date.",
+      );
+
+      const message = await academicTG.getAttendanceMessage();
+
+      expect(message).toContain("last saved copy");
+      expect(message.indexOf("last saved copy")).toBeLessThan(
+        message.indexOf("85.50%"),
+      );
+    });
+
     it("should show one bar block per ten percent", async () => {
       vi.spyOn(academicTG, "getAttendanceJSON").mockResolvedValue(
         mockAttendance,
@@ -66,7 +82,7 @@ describe("AcademicTG Module", () => {
 
     it("should handle AcademicError specially", async () => {
       const { AcademicError } =
-        await import("../../src/services/student.utils/Academic");
+        await import("../../src/services/student.utils/Academic.js");
       vi.spyOn(academicTG, "getAttendanceJSON").mockRejectedValue(
         new AcademicError("Custom error", "TEST"),
       );

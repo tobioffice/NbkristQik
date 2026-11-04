@@ -1,17 +1,27 @@
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
+  /** Anonymous callers may search rolls only; the server hides names. */
+  identified?: boolean;
 }
 
-export default function SearchBar({ value, onChange }: SearchBarProps) {
+export default function SearchBar({
+  value,
+  onChange,
+  identified = false,
+}: SearchBarProps) {
+  const label = identified
+    ? "Search students by name or roll number"
+    : "Search students by roll number";
+  const placeholder = identified ? "Name or roll number" : "Roll number";
   return (
     <div className="search-field">
       <input
         type="text"
-        aria-label="Search students by name or roll number"
+        aria-label={label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Name or roll number"
+        placeholder={placeholder}
       />
       <span aria-hidden="true" className="search-icon">
         <svg

@@ -156,6 +156,13 @@ export default function DocumentReader({
     };
   }, [pageAtMiddle]);
 
+  // a document opens at its head, not wherever the shelf was left. The saved
+  // page restore below may then jump forward, but the sheet never starts
+  // halfway down page one.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // open where the student stopped last time
   useEffect(() => {
     const saved = Number(sessionStorage.getItem(stopKey(docId)) ?? "0");

@@ -17,10 +17,7 @@ export const sendLibraryEntry = (msg: Message): void => {
   const from = msg.from?.id;
   if (!from || !canOpenLibrary(from)) {
     if (msg.chat.type === "private") {
-      bot.sendMessage(
-        msg.chat.id,
-        "The library opens soon. I'll tell you here when it does.",
-      );
+      bot.sendMessage(msg.chat.id, "The library isn't open yet.");
     }
     return;
   }

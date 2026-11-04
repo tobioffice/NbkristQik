@@ -102,8 +102,6 @@ const handleRollNumberMessage = async (msg: Message): Promise<void> => {
   const rollNumber = normalizeRollNumber(rawRoll);
   const corrected = rollNumber !== rawRoll;
 
-  persistRollMapping(userId, rollNumber);
-
   if (!(await botSecurityHandler(userId, "roll_number"))) {
     await bot.sendMessage(chatId, TOO_FAST);
     return;
@@ -117,12 +115,15 @@ const handleRollNumberMessage = async (msg: Message): Promise<void> => {
   const authorized = await isAuthorizedUser({
     userId,
     chatId,
-    replyToMessageId: msg.message_id,
     // a group never sees this card: it only makes sense to one reader
     joinPromptChatId: userId,
   });
   if (!authorized) return;
   await rememberStudent(userId);
+
+  // only an authorized lookup may say who "you" are: a blocked or invalid
+  // roll must not move the leaderboard identity
+  persistRollMapping(userId, rollNumber);
 
   trackActivity({
     userId,
@@ -246,7 +247,6 @@ const handleCallbackQuery = async (
   const authorized = await isAuthorizedUser({
     userId,
     chatId: msg.chat.id,
-    replyToMessageId: msg.message_id,
   });
   if (!authorized) {
     await bot.answerCallbackQuery(callbackQuery.id, {

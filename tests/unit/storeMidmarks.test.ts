@@ -37,7 +37,7 @@ vi.mock("../../src/db/student_stats.model.js", () => ({
   updateMidMarkStat: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { storeMidMarksToRedis } from "../../src/services/redis/storeAttOrMidToRedis";
+import { storeMidMarksToRedis } from "../../src/services/redis/storeAttOrMidToRedis.js";
 import { getClient } from "../../src/services/redis/getRedisClient.js";
 import { updateMidMarkStat } from "../../src/db/student_stats.model.js";
 

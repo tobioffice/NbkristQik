@@ -52,6 +52,20 @@ export interface LeaderboardFilters {
   search?: string;
 }
 
+export interface LeaderboardOptions {
+  /**
+   * Include student names. Public/anonymous callers pass false so the page
+   * cannot harvest a name for every roll; the SQL then returns NULL names.
+   * Defaults to true to keep internal callers (bot, warm cache) unchanged.
+   */
+  includeNames?: boolean;
+  /**
+   * Let the search filter match names as well as rolls. Defaults to
+   * includeNames, so an anonymous search is a roll lookup only.
+   */
+  searchNames?: boolean;
+}
+
 interface LeaderboardWhere {
   whereClause: string;
   args: (string | number)[];
@@ -60,6 +74,7 @@ interface LeaderboardWhere {
 const buildLeaderboardWhere = (
   column: string,
   filters: LeaderboardFilters,
+  searchNames: boolean,
 ): LeaderboardWhere => {
   const conditions: string[] = [`st.${column} IS NOT NULL`];
   const args: (string | number)[] = [];
@@ -80,12 +95,20 @@ const buildLeaderboardWhere = (
   }
 
   if (filters.search) {
-    // match roll number (case-insensitive) or name
-    conditions.push(
-      `(UPPER(st.roll_no) LIKE ? OR UPPER(COALESCE(s.name, '')) LIKE ?)`,
-    );
     const pattern = `%${filters.search.toUpperCase()}%`;
-    args.push(pattern, pattern);
+    if (searchNames) {
+      // Match roll number or the SAME display name the row prints. If a
+      // student set a pseudonym, searching their real name must not reveal
+      // them; searching the pseudonym must find them.
+      conditions.push(
+        `(UPPER(st.roll_no) LIKE ? OR UPPER(${registrationAwareName()}) LIKE ?)`,
+      );
+      args.push(pattern, pattern);
+    } else {
+      // anonymous callers may search rolls only — names are not in the payload
+      conditions.push(`UPPER(st.roll_no) LIKE ?`);
+      args.push(pattern);
+    }
   }
 
   return {
@@ -110,14 +133,34 @@ const buildLeaderboardWhere = (
  * rows in the web leaderboard. Use an INNER JOIN so only students who exist
  * in the master table rank.
  */
-const rankedSubQuery = (scoreExpr: string, whereClause: string): string => `
-      SELECT s.roll_no, s.name, st.attendance_percentage, st.mid_marks_avg,
+const rankedSubQuery = (
+  scoreExpr: string,
+  nameExpr: string,
+  whereClause: string,
+): string => `
+      SELECT s.roll_no, ${nameExpr} AS name, st.attendance_percentage, st.mid_marks_avg,
               RANK() OVER (ORDER BY ${scoreExpr} DESC) as rank,
               COUNT(*) OVER() as total
       FROM student_stats st
       JOIN studentsnew s ON st.roll_no = s.roll_no
       ${whereClause}
   `;
+
+/*
+ * The name shown on the leaderboard.
+ *
+ * An explicit registration's display_name wins over the master-table name,
+ * per roll. It must be a scalar subquery, not a JOIN: registrations can hold
+ * more than one row for the same roll (before the unique index, or after a
+ * manual fix), and a JOIN would duplicate every leaderboard row. ORDER BY
+ * updated_at DESC makes the newest claim win deterministically.
+ */
+const registrationAwareName = (): string =>
+  `COALESCE((SELECT r.display_name
+             FROM registrations r
+             WHERE r.roll_no = s.roll_no AND r.display_name IS NOT NULL
+             ORDER BY r.updated_at DESC
+             LIMIT 1), s.name)`;
 
 // Page beyond the end: rows are empty so COUNT(*) OVER() is gone with them.
 // Fall back to a plain COUNT so the UI keeps its "N students" banner.
@@ -174,9 +217,13 @@ export const getLeaderboard = async (
   limit: number,
   offset: number,
   filters: LeaderboardFilters = {},
+  options: LeaderboardOptions = {},
 ) => {
   const column =
     sortBy === "attendance" ? "attendance_percentage" : "mid_marks_avg";
+
+  const includeNames = options.includeNames ?? true;
+  const searchNames = includeNames && (options.searchNames ?? true);
 
   // rank on the ROUNDED score that's actually displayed (2dp attendance, 1dp mid)
   const scoreExpr =
@@ -184,12 +231,18 @@ export const getLeaderboard = async (
       ? "ROUND(st.attendance_percentage, 2)"
       : "ROUND(st.mid_marks_avg, 1)";
 
-  const { whereClause, args } = buildLeaderboardWhere(column, filters);
+  const nameExpr = includeNames ? registrationAwareName() : "NULL";
+
+  const { whereClause, args } = buildLeaderboardWhere(
+    column,
+    filters,
+    searchNames,
+  );
 
   const result = await turso.execute({
     sql: `
       SELECT roll_no, name, attendance_percentage, mid_marks_avg, rank, total
-      FROM (${rankedSubQuery(scoreExpr, whereClause)})
+      FROM (${rankedSubQuery(scoreExpr, nameExpr, whereClause)})
       ORDER BY rank ASC, roll_no ASC
       LIMIT ? OFFSET ?
     `,
@@ -309,10 +362,58 @@ export const recordHeartbeat = async (
   status: "up" | "down",
   latencyMs: number | null,
 ) => {
+  // Millisecond precision keeps two probes in the same wall-clock second
+  // distinct under the (component, created_at) unique key; the old 5-minute
+  // probe never needed it, but a restart or a manual probe can collide.
   await turso.execute({
-    sql: `INSERT INTO uptime_log (component, status, latency_ms) VALUES (?, ?, ?)`,
+    sql: `INSERT OR IGNORE INTO uptime_log (component, status, latency_ms, created_at)
+          VALUES (?, ?, ?, strftime('%Y-%m-%d %H:%M:%f', 'now'))`,
     args: [component, status, latencyMs],
   });
+};
+
+/**
+ * Records a heartbeat captured by the external monitor, with the timestamp
+ * from the moment of the probe. Retries after an outage replay old rows, so
+ * the same (component, created_at) is only inserted once.
+ */
+export const recordHeartbeatAt = async (
+  component: string,
+  status: "up" | "down",
+  latencyMs: number | null,
+  at: string,
+) => {
+  await turso.execute({
+    sql: `INSERT OR IGNORE INTO uptime_log
+            (component, status, latency_ms, created_at)
+          VALUES (?, ?, ?, ?)`,
+    args: [component, status, latencyMs, at],
+  });
+};
+
+/**
+ * Replays a batch of monitor rows in one write transaction. Each row is
+ * idempotent by the (component, created_at) unique key, so a spool flush can
+ * be retried safely and no longer costs one round trip per row.
+ */
+export const recordHeartbeatsAt = async (
+  rows: {
+    component: string;
+    status: "up" | "down";
+    latencyMs: number | null;
+    at: string;
+  }[],
+): Promise<void> => {
+  if (rows.length === 0) return;
+  await turso.batch(
+    rows.map((row) => ({
+      sql: `INSERT OR IGNORE INTO uptime_log
+              (component, status, latency_ms, created_at)
+            VALUES (?, ?, ?, ?)`,
+      args: [row.component, row.status, row.latencyMs, row.at],
+    })),
+    "write",
+  );
 };
 
 export const initUptimeTable = async () => {
@@ -335,6 +436,19 @@ export const initUptimeTable = async () => {
   await turso.execute(
     `UPDATE uptime_log SET component = 'database' WHERE component = 'turso'`,
   );
+  // One heartbeat per component per timestamp. Older check-then-insert rows
+  // can contain duplicates; keep the first and add the unique backstop so a
+  // replay is idempotent by construction, not by a race-prone query.
+  await turso.execute(`
+    DELETE FROM uptime_log
+    WHERE id NOT IN (
+      SELECT MIN(id) FROM uptime_log GROUP BY component, created_at
+    )
+  `);
+  await turso.execute(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_uptime_component_at
+    ON uptime_log (component, created_at)
+  `);
 };
 
 /**

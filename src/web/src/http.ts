@@ -25,6 +25,49 @@ interface ErrorBody {
   suggestions?: string[];
 }
 
+/** How long any API request may take before it is abandoned. */
+export const REQUEST_TIMEOUT_MS = 15_000;
+
+/**
+ * The one fetch the app uses.
+ *
+ * A phone on a weak line can sit on a request for minutes; the screen then
+ * waits on a spinner that will never resolve. Every call gets the same 15s
+ * ceiling, and an abort from the caller (a superseded leaderboard page, for
+ * example) still passes through untouched.
+ */
+export const fetchWithTimeout = async (
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+): Promise<Response> => {
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, REQUEST_TIMEOUT_MS);
+
+  const external = init.signal;
+  const forwardAbort = () => controller.abort();
+  if (external) {
+    if (external.aborted) controller.abort();
+    else external.addEventListener("abort", forwardAbort, { once: true });
+  }
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (error) {
+    // a caller's own abort is not a timeout: let the caller classify it
+    if (timedOut && !external?.aborted) {
+      throw new RequestError("The request took too long. Try again.", 0);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    external?.removeEventListener("abort", forwardAbort);
+  }
+};
+
 /** Reads a response as JSON, throwing the server's error when it failed. */
 export const readJson = async <T>(res: Response): Promise<T> => {
   const body = (await res.json().catch(() => ({}))) as T & ErrorBody;

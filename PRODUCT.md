@@ -24,20 +24,23 @@ The product lives entirely inside Telegram â€” no install, no separate account â
 - Used one-handed on phones inside the Telegram webview; light/dark surroundings vary.
 - Students reason in roll numbers, sections, branches, and percentages; "how much can I bunk?" is the recurring question.
 - The leaderboard is filtered by year, branch, and section, searchable by roll, and ranked by attendance or mid-marks; it shows the viewer's own rank when identity is known.
-- Registration is optional and editable at any time; registered users unlock `/attendance`, `/midmarks`, `/bunk` instant commands.
+- The public leaderboard is anonymized: signed-out visitors get `name: null` rows and roll-only search. A verified Telegram identity gets names and name search; a saved registration's `display_name` overrides the college name for that roll.
+- Registration is optional and editable at any time; registered users unlock `/attendance`, `/midmarks`, `/bunk` instant commands and are the only students who can open the library.
+- The library is admin-first: the shelf and its tab stay hidden from students until `LIBRARY_ACCESS=all`, and the web shell trusts `/api/config` for that decision. Once open, only registered students see their own subjects.
+- Channel membership is the bot gate. The daily check-in channel post records the day for engagement; it no longer unlocks anything.
 - Reports get an issue id; the admin replies from the admin panel (or `/reply`), and the reply reaches the student on the report page and in Telegram.
 - All wall-clock times shown anywhere are IST (Asia/Kolkata), 12-hour AM/PM, regardless of the UTC storage.
 - Admin panel views: login, Overview (30-day activity pulse, surface split, top actions), Students (searchable table + drill-down), Live (10 s feed), Health (90-day uptime for API, database, Redis, college portal), Reports.
-- Deployment: the Mini Apps are built with Vite and served from GitHub Pages; the status page and admin panel are served by the Express backend; the bot runs as a systemd service.
+- Deployment: one React app is built with Vite and served by Express at `/library/` on the same origin as the API, so the library's session cookie is first-party. The status page at `/status` and the admin panel are also served by Express; the bot runs as a systemd service behind nginx. The marketing site remains a separate static surface on GitHub Pages.
 
 ## Capabilities and Constraints
 
-- **Capabilities (web surface):** leaderboard with podium, search, infinite scroll, personal-rank banner; profile/register page; issue report form with history and admin replies; public status page (live health, 90-day uptime); password-protected admin panel with the five views above.
+- **Capabilities (web surface):** one Telegram Mini App at `/library/` with the leaderboard and podium, search, infinite scroll and personal-rank banner; profile/register page; issue report form with history and admin replies; the library shelf and reader; public status page (live health, 90-day uptime); password-protected admin panel with the five views above. The legacy GitHub Pages mini-app entry points are retired; the marketing site remains separate.
 - **Constraints:**
-  - The three Mini Apps run inside the Telegram WebApp SDK; identity comes from signed `initData` (a dev `userId` shortcut exists outside Telegram).
-  - The admin panel is served as server-rendered vanilla HTML/CSS/JS from the Express backend; the Mini Apps are React 19 + Vite + Tailwind; the status page is a single static HTML file. The redesign must fit each surface's existing delivery mechanism.
+  - The app runs inside the Telegram WebApp SDK; identity comes from signed `initData`, sent in the `X-Telegram-Init-Data` header by the shipped client. Query/body `initData` is accepted for compatibility. The unsigned `userId` development shortcut requires `ALLOW_DEV_IDENTITY=1` or `ENV=test`.
+  - The admin panel is served as server-rendered vanilla HTML/CSS/JS from the Express backend; the app is React 19 + Vite + Tailwind; the status page is a single static HTML file. The redesign must fit each surface's existing delivery mechanism.
   - The college portal is plain HTTP and unreliable; data can be missing or stale.
-  - The admin panel path and password come from env vars; if unset the panel is disabled.
+  - The admin panel path and password come from env vars; if unset, or if the password is shorter than 16 characters in production, the panel is disabled.
 - **Undecided / open:** none recorded.
 
 ## Brand Commitments

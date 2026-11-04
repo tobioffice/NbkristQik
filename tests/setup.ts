@@ -21,6 +21,19 @@ process.env.TEST_CHANNEL = "@test_channel";
 process.env.PROD_CHANNEL = "@test_channel";
 process.env.PORTAL_BASE_URL = "http://127.0.0.1:9";
 process.env.PORT = "3001";
+// The unsigned userId identity shortcut is a dev/test convenience only. The
+// test suite opts in explicitly (ENV=test also allows it) so a suite that
+// flips ENV can still exercise the gate deliberately.
+process.env.ALLOW_DEV_IDENTITY = "1";
+// Keep the loopback bind and CORS default deterministic, whatever a
+// developer's .env says.
+process.env.HOST = "";
+process.env.CORS_ORIGINS = "";
+// The private uptime routes stay registered in tests so their auth gate can
+// be exercised; the value is never used against a real host.
+process.env.UPTIME_INGEST_SECRET =
+  "test_uptime_secret_0123456789abcdef0123456789abcdef";
+process.env.MONITOR_TELEGRAM_BOT_TOKEN = "123456789:test_monitor_token";
 
 // Keep the admin panel disabled in tests unless a suite opts in. Set to
 // empty (not delete) because dotenv would re-fill a deleted var from .env.

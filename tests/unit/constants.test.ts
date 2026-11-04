@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { BRANCHES } from "../../src/constants/index";
+import { BRANCHES } from "../../src/constants/index.js";
 
 describe("Constants", () => {
   describe("BRANCHES", () => {

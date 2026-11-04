@@ -58,11 +58,29 @@ export const mockMidmarks = {
   ],
 };
 
+// The parser reads fixed rows: row 1 = subject names, row 2 = last-updated,
+// row 3 = conducted counts, then the student row selected by id. A fixture
+// with only a header and a student row makes every subject test vacuous
+// (conducted.length === 0), so this fixture carries the full shape.
 export const mockAttendanceHTML = `
 <html>
 <body>
 <table>
-  <tr><td>Subject</td><td>Attended</td><td>Conducted</td></tr>
+  <tr><td>Student</td><td>Report</td></tr>
+  <tr>
+    <td>Data Structures</td>
+    <td>Operating Systems</td>
+  </tr>
+  <tr>
+    <td>Last updated</td>
+    <td>01-02-2026</td>
+    <td>01-02-2026</td>
+  </tr>
+  <tr>
+    <td>%AGE</td>
+    <td>50</td>
+    <td>45</td>
+  </tr>
   <tr id="21B81A05E9">
     <td>21B81A05E9</td>
     <td>Test Student</td>
@@ -75,10 +93,13 @@ export const mockAttendanceHTML = `
 </html>
 `;
 
+// `$("tr").eq(1)` is the subject row; the student row is selected by id.
+// The first row is a report banner, matching the real page's layout.
 export const mockMidmarksHTML = `
 <html>
 <body>
 <table>
+  <tr><td>Student</td><td>Report</td></tr>
   <tr>
     <td><a>Data Structures</a></td>
     <td><a>Operating Systems</a></td>

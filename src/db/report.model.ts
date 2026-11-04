@@ -151,16 +151,35 @@ export const createReport = async (
   userId: number,
   message: string,
 ): Promise<number> => {
-  const result = await turso.execute({
-    sql: `INSERT INTO reports (user_id, message) VALUES (?, ?)`,
-    args: [userId, message],
-  });
-  const id = Number(result.lastInsertRowid);
-  // the opening message is the first entry of the conversation, and its
-  // author has obviously already read it
-  const messageId = await addReportMessage(id, "user", message);
-  await markReportRead(id, "user", messageId);
-  return id;
+  // One transaction: a crash between the reports row and its opening thread
+  // entry must not leave a report that looks empty. The boot backfill repairs
+  // old data, but a new report should never need repairing.
+  const tx = await turso.transaction("write");
+  try {
+    const result = await tx.execute({
+      sql: `INSERT INTO reports (user_id, message) VALUES (?, ?)`,
+      args: [userId, message],
+    });
+    const id = Number(result.lastInsertRowid);
+    const opening = await tx.execute({
+      sql: `INSERT INTO report_messages (report_id, author, body) VALUES (?, 'user', ?)`,
+      args: [id, message],
+    });
+    const messageId = Number(opening.lastInsertRowid);
+    await tx.execute({
+      sql: `INSERT INTO report_reads (report_id, reader, last_seen_id, seen_at)
+            VALUES (?, 'user', ?, datetime('now'))
+            ON CONFLICT(report_id, reader) DO UPDATE SET
+              last_seen_id = MAX(report_reads.last_seen_id, excluded.last_seen_id),
+              seen_at = excluded.seen_at`,
+      args: [id, messageId],
+    });
+    await tx.commit();
+    return id;
+  } catch (e) {
+    await tx.rollback().catch(() => undefined);
+    throw e;
+  }
 };
 
 export const getReport = async (id: number): Promise<ReportRow | null> => {

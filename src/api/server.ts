@@ -11,9 +11,14 @@ import {
   getUptimeDailyBuckets,
 } from "../db/student_stats.model.js";
 import { getTgUserRoll } from "../db/student.model.js";
+import { getRegistration } from "../db/registration.model.js";
 import { getClient } from "../services/redis/getRedisClient.js";
 import { redisKeys } from "../services/redis/keys.js";
-import { resolveUserId } from "./resolveUser.js";
+import { resolveOptionalIdentity } from "./resolveUser.js";
+import {
+  canOpenLibrary,
+  canPreviewEverything,
+} from "../services/library/access.js";
 import { trackActivity } from "../services/tracker.js";
 import {
   leaderboardSecurityMiddlewares,
@@ -21,12 +26,13 @@ import {
   securityLogger,
   createRateLimit,
 } from "../middleware/security.js";
-import { PORT, CORS_ORIGINS } from "../config/environmentals.js";
+import { PORT, HOST, CORS_ORIGINS } from "../config/environmentals.js";
 import { logger } from "../config/logger.js";
 import { registerAdminRoutes } from "./admin/index.js";
 import { profileRouter } from "./profile.js";
 import { reportRouter } from "./report.js";
 import { libraryRouter } from "./library.js";
+import { registerInternalRoutes } from "./internal.js";
 
 export const app = express();
 
@@ -58,10 +64,31 @@ if (existsSync(libraryWebDir)) {
     "/library",
     express.static(libraryWebDir, {
       index: "index.html",
-      maxAge: "1h",
-      setHeaders: (res) => {
+      setHeaders: (res, filePath) => {
         res.setHeader("X-Content-Type-Options", "nosniff");
         res.setHeader("Referrer-Policy", "no-referrer");
+
+        // The mini app's HTML references hashed bundles, so the HTML itself
+        // must be revalidated (a deploy would otherwise pin the old bundle
+        // for an hour); the hashed /assets/* files may be cached forever.
+        // Inside the static handler Express has already stripped the mount
+        // path from req.path, so check both the request and the disk path.
+        const requestPath = res.req?.path ?? "";
+        const isAsset =
+          requestPath.startsWith("/library/assets/") ||
+          requestPath.startsWith("/assets/") ||
+          filePath.includes(`${path.sep}assets${path.sep}`);
+        if (isAsset) {
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        } else if (
+          requestPath.endsWith("/") ||
+          requestPath.endsWith("/index.html") ||
+          filePath.endsWith(".html")
+        ) {
+          res.setHeader("Cache-Control", "no-cache");
+        } else {
+          res.setHeader("Cache-Control", "public, max-age=3600");
+        }
       },
     }),
   );
@@ -71,8 +98,44 @@ if (existsSync(libraryWebDir)) {
   );
 }
 
+/**
+ * Static status page. The deploy workflow copies src/status to
+ * public/status; until that happens (or on a dev box) answer a clean 404
+ * instead of crashing the API.
+ *
+ * Path is read per request so tests can point STATUS_PAGE_PATH at a fixture.
+ */
+const defaultStatusPage = path.resolve(
+  process.cwd(),
+  "public",
+  "status",
+  "index.html",
+);
+
+app.get("/status", (_req: Request, res: Response) => {
+  const statusPage = process.env.STATUS_PAGE_PATH?.trim() || defaultStatusPage;
+  res.setHeader("Cache-Control", "no-store");
+  res.sendFile(
+    statusPage,
+    {
+      cacheControl: false,
+      headers: { "Cache-Control": "no-store" },
+    },
+    (error) => {
+      if (!error) return;
+      if (!res.headersSent) {
+        res.status(404).json({ success: false, error: "Not Found" });
+      }
+    },
+  );
+});
+
 // Apply security middleware to all routes
 app.use(apiSecurityMiddlewares);
+
+// Private endpoints for the external uptime monitor on oracle2. Hidden
+// unless UPTIME_INGEST_SECRET is configured.
+registerInternalRoutes(app);
 
 // Profile/registration endpoints: identity-authenticated, writes rate-limited
 // harder than the global limit (bot-side flows are the intended entry).
@@ -146,9 +209,18 @@ const parseLeaderboardQuery = (req: Request): LeaderboardQuery => {
   return { page, limit, sortBy, filters };
 };
 
-const leaderboardCacheKey = (q: LeaderboardQuery): string =>
+/**
+ * Cache key. The `names`/`anon` segment is security-critical: a cached
+ * identified page carries names and must never be served to an anonymous
+ * caller (or vice versa: an empty anonymous page must not hide names from a
+ * signed-in student on the next request).
+ */
+const leaderboardCacheKey = (
+  q: LeaderboardQuery,
+  includeNames: boolean,
+): string =>
   redisKeys.leaderboard(
-    `${q.sortBy}:${q.page}:${q.limit}:${q.filters.year || "all"}:${q.filters.branch || "all"}:${q.filters.section || "all"}:${q.filters.search || ""}`,
+    `${includeNames ? "names" : "anon"}:${q.sortBy}:${q.page}:${q.limit}:${q.filters.year || "all"}:${q.filters.branch || "all"}:${q.filters.section || "all"}:${q.filters.search || ""}`,
   );
 
 // 60s Redis cache per unique query — protects Turso read quota (best-effort)
@@ -173,12 +245,18 @@ const cacheLeaderboard = async (cacheKey: string, payload: object) => {
   }
 };
 
-const buildLeaderboardPayload = async (query: LeaderboardQuery) => {
+const buildLeaderboardPayload = async (
+  query: LeaderboardQuery,
+  includeNames: boolean,
+) => {
   const { rows, total } = await getLeaderboard(
     query.sortBy,
     query.limit,
     (query.page - 1) * query.limit,
     query.filters,
+    // Names (and name search) only for a verified Telegram identity. The DB
+    // nulls the column and restricts search for anonymous callers.
+    { includeNames, searchNames: includeNames },
   );
 
   // Freshness and the live section list belong to the first page only;
@@ -191,12 +269,19 @@ const buildLeaderboardPayload = async (query: LeaderboardQuery) => {
         ])
       : null;
 
+  // Defence in depth: the SQL already selects NULL for anonymous callers,
+  // but never serialize a name just because a stale/other-layer row carried
+  // one. The public cache must be name-free at the point it is written.
+  const data = includeNames
+    ? rows
+    : rows.map((row) => ({ ...row, name: null }));
+
   return {
     success: true,
     page: query.page,
     limit: query.limit,
     total,
-    data: rows,
+    data,
     updated_at: asOf ? asOf[0] : null,
     facets: asOf ? { sections: asOf[1] } : null,
   };
@@ -208,13 +293,24 @@ app.get(
   leaderboardSecurityMiddlewares,
   async (req: Request, res: Response) => {
     try {
-      const query = parseLeaderboardQuery(req);
-      const cacheKey = leaderboardCacheKey(query);
+      const identity = resolveOptionalIdentity(req);
+      if (identity.status === "invalid") {
+        // A presented-but-bad signature is never downgraded to anonymous:
+        // that would let a broken client silently change what it sees.
+        res.status(401).json({ success: false, error: identity.error });
+        return;
+      }
 
-      // same payload for everyone, and the source data is refreshed by
-      // /syncdb anyway — let the webview serve repeat opens from its own
-      // cache instead of the network (both the warm and the cold path)
-      res.set("Cache-Control", "public, max-age=30");
+      const identified = identity.status === "authenticated";
+      const query = parseLeaderboardQuery(req);
+      const cacheKey = leaderboardCacheKey(query, identified);
+
+      // Identified payloads carry names, so they go to one browser only;
+      // anonymous payloads are identical for everyone and may be shared.
+      res.set(
+        "Cache-Control",
+        identified ? "private, max-age=30" : "public, max-age=30",
+      );
 
       const cached = await getCachedLeaderboard(cacheKey);
       if (cached) {
@@ -222,7 +318,7 @@ app.get(
         return;
       }
 
-      const payload = await buildLeaderboardPayload(query);
+      const payload = await buildLeaderboardPayload(query, identified);
       await cacheLeaderboard(cacheKey, payload);
 
       res.json(payload);
@@ -233,32 +329,74 @@ app.get(
   },
 );
 
+/**
+ * Public, identity-aware feature flags. The frontend uses this to hide the
+ * library when it is closed (the admin can still open it) and to show admin
+ * affordances. No identity is required; a provided-but-invalid one is 401 so
+ * a broken Telegram client does not silently look anonymous.
+ */
+app.get("/api/config", async (req: Request, res: Response) => {
+  try {
+    const identity = resolveOptionalIdentity(req);
+    if (identity.status === "invalid") {
+      res.status(401).json({
+        libraryOpen: false,
+        admin: false,
+        error: identity.error,
+      });
+      return;
+    }
+
+    const userId = identity.status === "authenticated" ? identity.userId : null;
+
+    res.set("Cache-Control", "no-store");
+    res.json({
+      libraryOpen: userId ? canOpenLibrary(userId) : false,
+      admin: userId ? canPreviewEverything(userId) : false,
+    });
+  } catch (error) {
+    logger.error("Error fetching /api/config:", error);
+    res.status(500).json({
+      libraryOpen: false,
+      admin: false,
+      error: "Internal Server Error",
+    });
+  }
+});
+
 app.get(
   "/api/me",
   leaderboardSecurityMiddlewares,
   async (req: Request, res: Response) => {
     try {
-      const resolved = resolveUserId(req);
-      if (!resolved) {
+      const identity = resolveOptionalIdentity(req);
+      if (identity.status === "anonymous") {
         res
           .status(401)
           .json({ found: false, error: "Telegram initData required" });
         return;
       }
-      if (resolved.error) {
-        res.status(401).json({ found: false, error: resolved.error });
+      if (identity.status === "invalid") {
+        res.status(401).json({ found: false, error: identity.error });
         return;
       }
 
       // a verified initData call means the student opened the leaderboard
       // web app — worth counting even if they have no roll mapped yet
       trackActivity({
-        userId: Number(resolved.userId),
+        userId: Number(identity.userId),
         chatType: "unknown",
         action: "leaderboard_webapp",
       });
 
-      const rollNo = await getTgUserRoll(resolved.userId);
+      // An explicit registration is the student's stated roll and beats the
+      // last roll they happened to look up (tgusers is auto-upserted by every
+      // /attendance-style lookup, including a friend's).
+      const registration = await getRegistration(identity.userId).catch(
+        () => null,
+      );
+      const rollNo =
+        registration?.roll_no ?? (await getTgUserRoll(identity.userId));
       if (!rollNo) {
         res.json({ found: false });
         return;
@@ -271,6 +409,7 @@ app.get(
 
       res.json({
         found: true,
+        source: registration ? "registered" : "lookup",
         roll_no: rollNo,
         attendance: attendance
           ? {
@@ -294,7 +433,8 @@ app.get(
   },
 );
 
-// Health check endpoint (no rate limiting)
+// Liveness check. It is mounted after the global API limiter, so it shares
+// that 600/15min budget rather than being an unrated bypass.
 app.get("/health", securityLogger, (_req: Request, res: Response) => {
   res.json({
     status: "ok",
@@ -320,9 +460,10 @@ const warmLeaderboardCache = async () => {
   await Promise.all(
     WARM_LEADERBOARD_QUERIES.map(async (query) => {
       try {
+        // warm the anonymous payload only: names stay behind identity
         await cacheLeaderboard(
-          leaderboardCacheKey(query),
-          await buildLeaderboardPayload(query),
+          leaderboardCacheKey(query, false),
+          await buildLeaderboardPayload(query, false),
         );
       } catch (e) {
         logger.debug("[API] leaderboard warm refresh failed:", e);
@@ -335,46 +476,80 @@ const warmLeaderboardCache = async () => {
 // The underlying data only changes on the 5-min probe, so the assembled
 // payload is cached in-memory for 5 minutes instead of rebuilt per request.
 const STATUS_TTL_MS = 5 * 60 * 1000;
-let statusCache: { at: number; payload: string } | null = null;
 
-const computeStatusComponents = async () => {
+interface StatusComponentBase {
+  component: string;
+  uptimePct: number;
+  pings: number;
+  lastPing: string;
+  lastStatus: string;
+  avgLatencyMs: number | null;
+  buckets: Awaited<ReturnType<typeof getUptimeDailyBuckets>>;
+}
+
+let statusCache: { at: number; components: StatusComponentBase[] } | null =
+  null;
+
+const computeStatusComponents = async (): Promise<StatusComponentBase[]> => {
   const summary = await getUptimeSummary();
   return Promise.all(
-    summary.map(async (s) => {
-      const lastPingAgeSec = Math.floor(
-        (Date.now() - new Date(s.lastPing + "Z").getTime()) / 1000,
-      );
-      // up = the newest heartbeat said up, and it is recent. A down probe
-      // also writes a heartbeat, so age alone would report an outage as "up".
-      const current: "up" | "down" =
-        s.lastStatus === "up" && lastPingAgeSec < 15 * 60 ? "up" : "down";
-      return {
-        component: s.component,
-        uptimePct: s.uptimePct,
-        pings: s.pings,
-        lastPing: s.lastPing,
-        lastPingAgeSec,
-        avgLatencyMs: s.avgLatencyMs,
-        current,
-        buckets: await getUptimeDailyBuckets(s.component, 90),
-      };
-    }),
+    summary.map(async (s) => ({
+      component: s.component,
+      uptimePct: s.uptimePct,
+      pings: s.pings,
+      lastPing: s.lastPing,
+      lastStatus: s.lastStatus,
+      avgLatencyMs: s.avgLatencyMs,
+      buckets: await getUptimeDailyBuckets(s.component, 90),
+    })),
   );
 };
 
+/**
+ * Derives "current"/"stale" at read time. The summary and 90-day buckets are
+ * cacheable for five minutes, but a heartbeat crossing the 15-minute stale
+ * line must not keep showing "Operational" until that cache expires.
+ */
+const withStatusFreshness = (components: StatusComponentBase[]) =>
+  components.map((c) => {
+    const lastPingAgeSec = Math.floor(
+      (Date.now() - new Date(c.lastPing + "Z").getTime()) / 1000,
+    );
+    // up = the newest heartbeat said up, and it is recent. A down probe also
+    // writes a heartbeat, so age alone would report an outage as "up". stale
+    // separates "the service is down" from "the monitor stopped reporting".
+    const stale = lastPingAgeSec >= 15 * 60;
+    const current: "up" | "down" =
+      c.lastStatus === "up" && !stale ? "up" : "down";
+    return {
+      component: c.component,
+      uptimePct: c.uptimePct,
+      pings: c.pings,
+      lastPing: c.lastPing,
+      lastPingAgeSec,
+      avgLatencyMs: c.avgLatencyMs,
+      current,
+      stale,
+      buckets: c.buckets,
+    };
+  });
+
 app.get("/api/status", securityLogger, async (_req: Request, res: Response) => {
   try {
+    let components: StatusComponentBase[];
     if (statusCache && Date.now() - statusCache.at < STATUS_TTL_MS) {
-      res.type("json").send(statusCache.payload);
-      return;
+      components = statusCache.components;
+    } else {
+      components = await computeStatusComponents();
+      statusCache = { at: Date.now(), components };
     }
 
-    const components = await computeStatusComponents();
-    statusCache = {
-      at: Date.now(),
-      payload: JSON.stringify({ success: true, components }),
-    };
-    res.type("json").send(statusCache.payload);
+    res.type("json").send(
+      JSON.stringify({
+        success: true,
+        components: withStatusFreshness(components),
+      }),
+    );
   } catch (error) {
     logger.error("Error in /api/status:", error);
     res.status(500).json({ success: false, error: "Internal Server Error" });
@@ -382,8 +557,13 @@ app.get("/api/status", securityLogger, async (_req: Request, res: Response) => {
 });
 
 export const startServer = () => {
-  const server = app.listen(PORT, () => {
-    logger.info(`🚀 API Server running on port ${PORT} with security enabled`);
+  // Bind loopback by default: nginx owns the public interface and proxies to
+  // this process, so the API itself must not be reachable directly.
+  const port = Number(PORT) || 3000;
+  const server = app.listen(port, HOST, () => {
+    logger.info(
+      `🚀 API Server listening on ${HOST}:${port} with security enabled`,
+    );
   });
   server.on("error", (e) => {
     logger.error("[API] server error:", e);

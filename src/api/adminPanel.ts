@@ -5,11 +5,30 @@
  * with system fallback.
  * Served by the API at the secret ADMIN_PANEL_PATH; all data endpoints
  * require the session cookie.
+ *
+ * Every inline <style>/<script> carries a fresh per-request nonce. The route
+ * sends the matching CSP; `unsafe-inline` in style-src keeps the panel's
+ * inline style="" attributes working without punching a hole in script-src.
  */
+import crypto from "crypto";
 import { panelCss } from "./admin/panel.css.js";
 import { panelJs } from "./admin/panel.js.js";
 
-export const adminPanelHtml = (): string => `<!doctype html>
+/** The Content-Security-Policy for one panel document. */
+export const adminPanelCsp = (nonce: string): string =>
+  [
+    "default-src 'self'",
+    `script-src 'nonce-${nonce}'`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "connect-src 'self'",
+    "img-src 'self' data:",
+    "frame-ancestors 'none'",
+    "base-uri 'none'",
+    "form-action 'self'",
+  ].join("; ");
+
+const panelDocument = (nonce: string): string => `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -19,7 +38,7 @@ export const adminPanelHtml = (): string => `<!doctype html>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Zilla+Slab:wght@600&display=swap" rel="stylesheet">
-<style>
+<style nonce="${nonce}">
 ${panelCss}
 </style>
 </head>
@@ -154,8 +173,25 @@ ${panelCss}
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" aria-hidden="true"></aside>
 
-<script>
+<script nonce="${nonce}">
 ${panelJs}
 </script>
 </body>
 </html>`;
+
+/**
+ * Builds the panel document and the nonce its CSP must allow.
+ * The nonce is generated per request, so a cached copy of another response's
+ * policy can never authorise this one.
+ */
+export const createAdminPanelDocument = (): { html: string; nonce: string } => {
+  const nonce = crypto.randomBytes(16).toString("hex");
+  return { html: panelDocument(nonce), nonce };
+};
+
+/**
+ * Backwards-compatible HTML-only helper. The document it returns carries a
+ * nonce, but the caller cannot build the matching CSP from it; route handlers
+ * that send a CSP must use `createAdminPanelDocument` instead.
+ */
+export const adminPanelHtml = (): string => createAdminPanelDocument().html;

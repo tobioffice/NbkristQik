@@ -136,9 +136,10 @@ const formatLastUpdated = (value: string): string => {
   const trimmed = value.trim();
 
   // the portal sends DD-MM-YYYY, often with a "(2 days ago)" tail that the
-  // parser already cut; the day and month are enough on a chat line
+  // parser already cut. Keep a short year: without it, "05-11" is ambiguous
+  // between semesters and a stale figure can look current.
   if (/^\d{2}-\d{2}-\d{4}$/.test(trimmed)) {
-    return trimmed.slice(0, 5);
+    return trimmed.slice(0, 8); // DD-MM-YY
   }
 
   return trimmed || "N/A";

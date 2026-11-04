@@ -269,7 +269,19 @@ libraryRouter.get("/page/:id/:page", async (req: Request, res: Response) => {
   // The page carries an opaque token, not the reader's id or roll number:
   // the student sees a code they cannot read, and we resolve it server side
   // if the page ever turns up somewhere it should not.
-  const token = watermarkToken(ctx.userId);
+  let token: string;
+  try {
+    token = watermarkToken(ctx.userId);
+  } catch (e) {
+    // no server secret means no trustworthy mark: serving an unstamped page
+    // would be worse than a short outage, and a 503 says "try later" clearly
+    logger.error(
+      "[library] watermark unavailable:",
+      e instanceof Error ? e.message : e,
+    );
+    refuse(res, 503, "Library pages are temporarily unavailable.");
+    return;
+  }
   const stamped = await stampPage(file, {
     token,
     label: `${doc.title}${doc.unit ? ` · Unit ${doc.unit}` : ""} · p${page}`,
