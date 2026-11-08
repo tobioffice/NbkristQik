@@ -63,7 +63,7 @@ const MAX_RETRY_ATTEMPTS = 2;
  */
 const sectionFlights = new Map<string, Promise<string>>();
 
-/** "4 hours ago" etc. for a SQLite UTC datetime string. */
+/** Compact age for the one-line freshness stamp: "4h", "2d", "<1m". */
 const formatAge = (updatedAt?: string | null): string | null => {
   if (!updatedAt) return null;
 
@@ -74,16 +74,15 @@ const formatAge = (updatedAt?: string | null): string | null => {
   if (!Number.isFinite(at)) return null;
 
   const seconds = Math.max(0, Math.floor((Date.now() - at) / 1000));
-  if (seconds < 60) return "less than a minute ago";
+  if (seconds < 60) return "<1m";
 
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  if (minutes < 60) return `${minutes}m`;
 
   const hours = Math.floor(minutes / 60);
-  if (hours < 48) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  if (hours < 48) return `${hours}h`;
 
-  const days = Math.floor(hours / 24);
-  return `${days} day${days === 1 ? "" : "s"} ago`;
+  return `${Math.floor(hours / 24)}d`;
 };
 
 // A report row can exist in truncated HTML while carrying no usable numbers.
@@ -116,18 +115,18 @@ export class Academic implements IAcademic {
 
   private markCached(
     scope: "recent" | "fallback",
-    recentWindow = "last hour",
+    recentWindow = "1h",
     fallbackUpdatedAt?: string | null,
   ): void {
     if (scope === "recent") {
-      this.dataNotice = `Saved copy from the ${recentWindow}; the college portal was not checked just now.`;
+      // One short stamp: the card is already dense, and a full sentence above
+      // every cached answer pushes the numbers off a phone screen.
+      this.dataNotice = `🕘 Cached ≤${recentWindow}`;
       return;
     }
 
     const age = formatAge(fallbackUpdatedAt);
-    this.dataNotice = age
-      ? `The college portal could not be reached. This is the last saved copy from ${age}; it may be out of date.`
-      : "The college portal could not be reached. This is the last saved copy and may be out of date.";
+    this.dataNotice = age ? `⚠️ Offline copy · ${age} old` : "⚠️ Offline copy";
   }
 
   /**
@@ -344,7 +343,7 @@ export class Academic implements IAcademic {
     const cachedResponse = await this.getFallbackResponse(command);
     if (cachedResponse) {
       logger.debug("[Academic] Using cached response");
-      this.markCached("fallback", "last hour", cachedResponse.updatedAt);
+      this.markCached("fallback", "1h", cachedResponse.updatedAt);
       return cachedResponse.content;
     }
 
@@ -442,7 +441,7 @@ export class Academic implements IAcademic {
     if (cached) {
       logger.debug("[Academic] Returning cached midmarks");
       // mid-mark cache TTL is two hours (CACHE_TTL_MIDMARKS_S = 7200)
-      this.markCached("recent", "last two hours");
+      this.markCached("recent", "2h");
       return cached;
     }
 

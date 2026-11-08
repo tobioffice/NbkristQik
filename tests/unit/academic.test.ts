@@ -348,7 +348,7 @@ describe("Academic Module", () => {
 
       expect(result).toEqual(mockAttendance);
       expect(mockClient.get).toHaveBeenCalledWith("attendance:21B81A05E9");
-      expect(academic.getDataNotice()).toContain("last hour");
+      expect(academic.getDataNotice()).toContain("Cached ≤1h");
     });
 
     it("should fetch fresh data when cache misses", async () => {
@@ -400,8 +400,8 @@ describe("Academic Module", () => {
       const result = await academic.getAttendanceJSON();
 
       expect(result.rollno).toBe("21B81A05E9");
-      expect(academic.getDataNotice()).toContain("4 hours ago");
-      expect(academic.getDataNotice()).toContain("last saved copy");
+      expect(academic.getDataNotice()).toContain("4h old");
+      expect(academic.getDataNotice()).toContain("Offline copy");
       // a fallback must not refresh its own timestamp
       expect(storeResponse).not.toHaveBeenCalled();
     });
@@ -419,7 +419,7 @@ describe("Academic Module", () => {
       expect(result).toEqual(mockMidmarks);
       expect(mockClient.get).toHaveBeenCalledWith("midmarks:21B81A05E9");
       // mid-mark cache TTL is two hours, not one
-      expect(academic.getDataNotice()).toContain("last two hours");
+      expect(academic.getDataNotice()).toContain("Cached ≤2h");
     });
 
     it("should fetch fresh data when cache misses", async () => {

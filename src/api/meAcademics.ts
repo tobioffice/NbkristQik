@@ -36,7 +36,7 @@ const freshnessSource = (
   notice: string | null,
 ): "live" | "cached" | "fallback" => {
   if (!notice) return "live";
-  return /could not be reached|last saved/i.test(notice)
+  return /could not be reached|last saved|offline/i.test(notice)
     ? "fallback"
     : "cached";
 };

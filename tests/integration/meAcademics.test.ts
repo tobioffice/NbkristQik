@@ -196,8 +196,7 @@ describe("GET /api/me/academics", () => {
 
   it("labels a recent Redis copy as cached", async () => {
     state.registration = "23KB1A0599";
-    state.notice =
-      "Saved copy from the last hour; the college portal was not checked just now.";
+    state.notice = "🕘 Cached ≤1h";
 
     const res = await academics("?userId=101");
 
@@ -210,8 +209,7 @@ describe("GET /api/me/academics", () => {
 
   it("labels the saved section copy as fallback", async () => {
     state.registration = "23KB1A0599";
-    state.notice =
-      "The college portal could not be reached. This is the last saved copy from 4 hours ago; it may be out of date.";
+    state.notice = "⚠️ Offline copy · 4h old";
 
     const res = await academics("?userId=101");
 

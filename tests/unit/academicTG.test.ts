@@ -47,13 +47,13 @@ describe("AcademicTG Module", () => {
         mockAttendance,
       );
       vi.spyOn(academicTG, "getDataNotice").mockReturnValue(
-        "The college portal could not be reached. This is the last saved copy and may be out of date.",
+        "⚠️ Offline copy · 4h old",
       );
 
       const message = await academicTG.getAttendanceMessage();
 
-      expect(message).toContain("last saved copy");
-      expect(message.indexOf("last saved copy")).toBeLessThan(
+      expect(message).toContain("Offline copy");
+      expect(message.indexOf("Offline copy")).toBeLessThan(
         message.indexOf("85.50%"),
       );
     });

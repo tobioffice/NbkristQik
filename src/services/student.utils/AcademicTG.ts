@@ -33,7 +33,9 @@ export class AcademicTG extends Academic {
    */
   private withFreshnessNotice(body: string): string {
     const notice = this.getDataNotice();
-    return notice ? `<i>⚠️ ${notice}</i>\n\n${body}` : body;
+    // The notice carries its own compact marker (🕘 cached / ⚠️ offline), so
+    // a cached answer is not framed as a warning.
+    return notice ? `<i>${notice}</i>\n\n${body}` : body;
   }
 
   /**
