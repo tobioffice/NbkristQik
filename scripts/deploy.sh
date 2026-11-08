@@ -94,7 +94,7 @@ ssh "$HOST" "set -e;
     if [ -d '$DIR/dist.old' ]; then mv '$DIR/dist.old' '$DIR/dist'; fi;
     exit 1;
   fi"
-rsync -az package.json pnpm-lock.yaml "$HOST:$DIR/"
+rsync -az package.json pnpm-lock.yaml pnpm-workspace.yaml "$HOST:$DIR/"
 # Ops scripts must exist on the host, not only in the git checkout: the cron
 # backup and the manual restore are part of the release contract.
 rsync -az scripts/backup-db.sh scripts/restore-db.sh \
