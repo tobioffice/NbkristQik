@@ -105,29 +105,25 @@ export const closeLibrarySession = async (): Promise<void> => {
   await fetchWithTimeout("/api/library/session", { method: "DELETE" });
 };
 
-export interface DownloadLink {
+export interface SendResult {
   ok: boolean;
-  /** Short-lived URL that proves this reader may have this document. */
-  url: string;
   fileName: string;
   error?: string;
 }
 
-/** The endpoint that mints one download link for a document. */
-export const documentDownloadPath = (id: string): string =>
-  `/api/library/document/${encodeURIComponent(id)}/download`;
+/** The endpoint that sends one document to the reader's chat. */
+export const documentSendPath = (id: string): string =>
+  `/api/library/document/${encodeURIComponent(id)}/send`;
 
 /**
- * A download link the Telegram client can fetch on its own.
+ * Ask the bot to send one document to the reader's own chat.
  *
- * The client's downloader has no cookie jar, so the API mints a URL carrying
- * its own short-lived proof instead of relying on the session cookie.
+ * A mini app cannot download a file, so the file arrives as a Telegram
+ * document instead; the server stamps it with the reader's mark first.
  */
-export const requestDocumentDownload = async (
-  id: string,
-): Promise<DownloadLink> =>
-  readJson<DownloadLink>(
-    await fetchWithTimeout(documentDownloadPath(id), { method: "POST" }),
+export const requestDocumentSend = async (id: string): Promise<SendResult> =>
+  readJson<SendResult>(
+    await fetchWithTimeout(documentSendPath(id), { method: "POST" }),
   );
 
 /**

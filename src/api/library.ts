@@ -45,10 +45,8 @@ import {
   notePageRead,
   watchForBurst,
 } from "../services/library/reads.js";
-import {
-  mintDownloadToken,
-  verifyDownloadToken,
-} from "../services/library/download.js";
+import { chargeDocumentSend } from "../services/library/sends.js";
+import { bot } from "../bot/bot.js";
 
 /**
  * The library API.
@@ -159,40 +157,6 @@ const requireStudent = (
     return null;
   }
   return ctx;
-};
-
-/**
- * A session for a document request.
- *
- * The reader's browser proves itself with the session cookie. The Telegram
- * client's own downloader cannot: it fetches the URL itself, with no cookie
- * jar. So a download may carry a short-lived token minted for that reader and
- * that document instead — nothing else uses this path.
- */
-const requireDocumentSession = async (
-  req: Request,
-  res: Response,
-  documentId: string,
-): Promise<AuthedSession | null> => {
-  const downloadToken =
-    typeof req.query.d === "string" ? req.query.d : undefined;
-
-  if (downloadToken) {
-    const userId = verifyDownloadToken(downloadToken, documentId);
-    if (!userId) {
-      refuse(res, 401, "This download link has expired. Open the PDF again.");
-      return null;
-    }
-    if (!canOpenLibrary(userId)) {
-      refuse(res, 403, "The library is not open yet.");
-      return null;
-    }
-    // the token itself is only a cache key here; the reader is what matters
-    const ctx = await resolveStudentContextCached(downloadToken, userId);
-    return { userId, token: downloadToken, kind: "telegram", ctx };
-  }
-
-  return requireSession(req, res);
 };
 
 /**
@@ -405,10 +369,18 @@ const downloadFileName = (doc: LibraryDocument): string => {
   return `${stem}.pdf`;
 };
 
-// POST /api/library/document/:id/download — a link the Telegram client can
-// fetch itself, since its downloader sends no cookie.
+/**
+ * POST /api/library/document/:id/send — the bot sends the stamped PDF to the
+ * reader's own chat.
+ *
+ * A mini app cannot download: the webview opens a PDF in place, `download` is
+ * ignored, and an iOS WKWebView has no downloads at all. A document in the
+ * chat works on every client, and the file still carries the reader's mark.
+ * Sends are rate limited per reader, and the audit row is the same one a
+ * download writes.
+ */
 libraryRouter.post(
-  "/document/:id/download",
+  "/document/:id/send",
   async (req: Request, res: Response) => {
     const auth = await requireSession(req, res);
     if (!auth) return;
@@ -419,24 +391,90 @@ libraryRouter.post(
     const doc = await requireReadableDocument(res, ctx, req.params.id);
     if (!doc) return;
 
-    const token = mintDownloadToken(auth.userId, doc.id);
-    if (!token) {
-      refuse(res, 503, "Downloads are not configured on this server.");
+    const charge = await chargeDocumentSend(auth.userId);
+    if (!charge.allowed) {
+      res.setHeader("Retry-After", String(charge.retryAfter));
+      refuse(
+        res,
+        429,
+        `You have sent a lot of PDFs this hour. Try again in ${Math.ceil(
+          charge.retryAfter / 60,
+        )} min.`,
+      );
       return;
     }
 
-    res.json({
-      ok: true,
-      fileName: downloadFileName(doc),
-      url: `/api/library/document/${encodeURIComponent(doc.id)}/pdf?d=${encodeURIComponent(token)}`,
-    });
+    let token: string;
+    try {
+      token = watermarkToken(auth.userId);
+    } catch (e) {
+      logger.error(
+        "[library] watermark unavailable:",
+        e instanceof Error ? e.message : e,
+      );
+      refuse(res, 503, "Library pages are temporarily unavailable.");
+      return;
+    }
+
+    let file: string;
+    try {
+      file = await ensureWatermarkedPdf(doc, token);
+    } catch (e) {
+      if (e instanceof PdfBusyError) {
+        res.setHeader("Retry-After", "10");
+        refuse(
+          res,
+          503,
+          "The library is preparing a lot of downloads. Try again in a moment.",
+        );
+        return;
+      }
+      if (e instanceof PdfTooLargeError) {
+        refuse(res, 413, e.message);
+        return;
+      }
+      logger.error(
+        "[library] could not prepare a send:",
+        e instanceof Error ? e.message : e,
+      );
+      refuse(res, 500, "Could not prepare this document.");
+      return;
+    }
+
+    const fileName = downloadFileName(doc);
+    const unit = doc.unit ? ` · Unit ${doc.unit}` : "";
+
+    try {
+      await bot.sendDocument(
+        auth.userId,
+        file,
+        { caption: `${doc.title}${unit}\nSent from your library.` },
+        { filename: fileName, contentType: "application/pdf" },
+      );
+    } catch (e) {
+      logger.warn(
+        "[library] Telegram would not take the file:",
+        e instanceof Error ? e.message : e,
+      );
+      refuse(
+        res,
+        502,
+        "Telegram would not take the file. Open the bot, press Start, then try again.",
+      );
+      return;
+    }
+
+    noteDownload(auth.userId, doc.id, token);
+    void watchForBurst(auth.userId, Math.max(1, doc.page_count));
+
+    res.json({ ok: true, fileName });
   },
 );
 
 // GET /api/library/document/:id/pdf — the whole document, stamped for this
 // reader. Registered before `/document/:id` so the two can never be confused.
 libraryRouter.get("/document/:id/pdf", async (req: Request, res: Response) => {
-  const auth = await requireDocumentSession(req, res, String(req.params.id));
+  const auth = await requireSession(req, res);
   if (!auth) return;
 
   const ctx = requireStudent(res, auth.ctx);

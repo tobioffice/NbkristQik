@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { documentDownloadPath } from "../src/libraryApi";
+import { documentSendPath } from "../src/libraryApi";
 import { addressWithoutPcToken, sessionCredential } from "../src/useLibrary";
 
-describe("the PDF link", () => {
-  it("asks the API to mint a download link for a document", () => {
-    expect(documentDownloadPath("dbms-u1")).toBe(
-      "/api/library/document/dbms-u1/download",
+describe("the PDF action", () => {
+  it("asks the API to send a document to the reader's chat", () => {
+    expect(documentSendPath("dbms-u1")).toBe(
+      "/api/library/document/dbms-u1/send",
     );
   });
 
   it("keeps a document id inside one path segment", () => {
-    expect(documentDownloadPath("a b/c?#")).toBe(
-      "/api/library/document/a%20b%2Fc%3F%23/download",
+    expect(documentSendPath("a b/c?#")).toBe(
+      "/api/library/document/a%20b%2Fc%3F%23/send",
     );
   });
 });

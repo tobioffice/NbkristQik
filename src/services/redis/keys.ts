@@ -29,6 +29,8 @@ export const redisKeys = {
   libraryPcLogin: (token: string) => `lib:pc:${token}`,
   /** Pages pulled by one student in the last five minutes: lib:reads:{userId} */
   libraryReads: (userId: number | string) => `lib:reads:${userId}`,
+  /** Documents the bot sent to one student in the hour: lib:send:{userId} */
+  librarySend: (userId: number | string) => `lib:send:${userId}`,
 } as const;
 /** SCAN patterns for the caches flushed after /syncdb */
 export const cacheFlushPatterns = [

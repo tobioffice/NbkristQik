@@ -10,6 +10,19 @@ import { createClient } from "@libsql/client";
 const client = createClient({ url: "file::memory:" });
 vi.mock("../../src/db/db.js", () => ({ turso: client }));
 
+// the bot is a network edge: a send records the call here instead
+const { sendDocument } = vi.hoisted(() => ({
+  sendDocument: vi.fn(
+    async (
+      _chatId: number | string,
+      _file: string,
+      _options?: { caption?: string },
+      _fileOptions?: { filename?: string },
+    ) => ({ message_id: 1 }),
+  ),
+}));
+vi.mock("../../src/bot/bot.js", () => ({ bot: { sendDocument } }));
+
 // in-memory session store
 const sessions = new Map<string, string>();
 vi.mock("../../src/services/redis/getRedisClient.js", () => ({
@@ -37,6 +50,7 @@ vi.mock("../../src/services/redis/getRedisClient.js", () => ({
       return value;
     }),
     expire: vi.fn(async () => 1),
+    ttl: vi.fn(async () => 3600),
     incr: vi.fn(async (key: string) => {
       const next = (sessions.get(key) ?? "0").replace(/\D/g, "");
       const count = Number(next || 0) + 1;
@@ -171,8 +185,7 @@ const { invalidateStudentContext } =
   await import("../../src/services/library/entitlement.js");
 const { createPcLoginToken, createSession } =
   await import("../../src/services/library/session.js");
-const { mintDownloadToken } =
-  await import("../../src/services/library/download.js");
+const { SEND_LIMIT } = await import("../../src/services/library/sends.js");
 
 /**
  * Opens a library session from a given address.
@@ -693,46 +706,58 @@ describe("downloading a document", () => {
     );
   });
 
-  it("mints a link the Telegram client can fetch without a cookie", async () => {
-    // a session minted straight in the store: this test is about the link,
-    // and the exchange limiter has a per-account budget the suite shares
+  it("sends the stamped PDF to the reader's own chat", async () => {
+    // a session minted straight in the store: the exchange limiter has a
+    // per-account budget the suite shares
     const cookie = `nbq_lib=${await createSession(String(REGISTERED))}`;
 
-    const minted = await request(app)
-      .post("/api/library/document/23CS31T2-u2/download")
+    const res = await request(app)
+      .post("/api/library/document/23CS31T2-u2/send")
       .set("Cookie", cookie);
 
-    expect(minted.status).toBe(200);
-    expect(minted.body.ok).toBe(true);
-    expect(minted.body.fileName).toBe("NbkristQik-23CS31T2-uII.pdf");
-    expect(minted.body.url).toContain(
-      "/api/library/document/23CS31T2-u2/pdf?d=",
-    );
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(res.body.fileName).toBe("NbkristQik-23CS31T2-uII.pdf");
 
-    // the client's downloader has no cookie jar: the link is the credential
-    const file = await request(app).get(minted.body.url);
-    expect(file.status).toBe(200);
-    expect(file.headers["content-type"]).toContain("application/pdf");
-    expect(file.headers["content-disposition"]).toContain("attachment");
+    expect(sendDocument).toHaveBeenCalledTimes(1);
+    const [chatId, file, options, fileOptions] = sendDocument.mock.calls[0];
+    expect(String(chatId)).toBe(String(REGISTERED));
+    expect(file).toBe(downloadFixture);
+    expect(options?.caption).toContain("Computer Networks");
+    expect(fileOptions?.filename).toBe("NbkristQik-23CS31T2-uII.pdf");
   });
 
-  it("refuses a download link that is not a live token", async () => {
-    const res = await request(app).get(
-      "/api/library/document/23CS31T2-u2/pdf?d=not-a-token",
-    );
+  it("refuses another semester's document before sending", async () => {
+    const cookie = `nbq_lib=${await createSession(String(FIRST_YEAR))}`;
+    sendDocument.mockClear();
 
-    expect(res.status).toBe(401);
-    expect(res.body.error).toContain("expired");
+    const res = await request(app)
+      .post("/api/library/document/23CS31T2-u2/send")
+      .set("Cookie", cookie);
+
+    expect(res.status).toBe(403);
+    expect(sendDocument).not.toHaveBeenCalled();
   });
 
-  it("will not spend one document's link on another", async () => {
-    const token = mintDownloadToken(String(REGISTERED), "23CS31T2-u2");
+  it("rate limits sends per reader", async () => {
+    const cookie = `nbq_lib=${await createSession(String(REGISTERED))}`;
+    sessions.delete(`lib:send:${REGISTERED}`);
+    sendDocument.mockClear();
 
-    const res = await request(app).get(
-      `/api/library/document/23CS31T2-u3/pdf?d=${encodeURIComponent(token ?? "")}`,
-    );
+    const send = () =>
+      request(app)
+        .post("/api/library/document/23CS31T2-u2/send")
+        .set("Cookie", cookie);
 
-    expect(res.status).toBe(401);
+    for (let i = 0; i < SEND_LIMIT; i += 1) {
+      expect((await send()).status).toBe(200);
+    }
+
+    const over = await send();
+    expect(over.status).toBe(429);
+    expect(over.headers["retry-after"]).toBeDefined();
+    expect(over.body.error).toContain("Try again");
+    expect(sendDocument).toHaveBeenCalledTimes(SEND_LIMIT);
   });
 
   it("records one download row per hour, as page 0", async () => {

@@ -294,12 +294,15 @@ keeps the pages on disk. The source PDF stays on the server.
 
 A link to a PDF does not download inside Telegram: the webview displays the
 file, the HTML `download` attribute is ignored, and iOS WKWebView cannot
-download at all. The app therefore asks `POST /api/library/document/:id/download`
-for a `{ url, fileName }` pair and hands the URL to `WebApp.downloadFile`
-(Bot API 8.0). The client's downloader fetches the URL itself, with no cookie
-jar, so the URL carries an HMAC token scoped to that reader and that document,
-good for five minutes. Clients without `downloadFile` get the link opened in
-the system browser, which downloads it the ordinary way.
+download at all. So the PDF button asks `POST /api/library/document/:id/send`,
+and the bot uploads the stamped copy to the reader's own chat as a document.
+The chat is the one place every client already knows how to save a file, and
+the file still carries the reader's watermark.
+
+A send is the most expensive thing the library does per reader, so it is rate
+limited: six an hour per account (`lib:send:{userId}` in Redis), with `429`
+and `Retry-After` past that. `WebApp.downloadFile` is not used: it is Bot API
+8.0 only, and the chat works on every client.
 
 The clean PDF is not served, ranged, or proxied. The only endpoint that
 returns document bytes is `/api/library/document/:id/pdf`, and it returns a
