@@ -1,7 +1,9 @@
 # NbkristQik Library — plan
 
 A reading room inside the bot. Students open their subjects in a Telegram
-mini app, read the material on the phone, and never get a file they can keep.
+mini app or a one-time PC browser link, read the material on the phone, and
+can download a PDF stamped for their own account. The clean source PDF never
+leaves the server.
 
 Status: plan of record. Phases 1 to 5 are built and tested; the rest are
 still to do. Supersedes the viewer and storage sections of
@@ -26,23 +28,24 @@ One Telegram mini app, "NbkristQik Library":
 - The app lists **their** subjects for the running semester, taken from their
   registered roll number.
 - Tapping a subject opens the material as pages, rendered on the phone.
-- The source PDF never reaches the device. Pages arrive as vector SVG — the
-  PDF's own page layout, with an opaque per-reader watermark token drawn into
-  them.
+- Pages arrive as vector SVG — the PDF's own page layout, with an opaque
+  per-reader watermark token drawn into them. A separate download endpoint
+  returns a PDF stamped with the same token; the clean source is never served.
 
 The library holds what `NbkristQik-docs` produces: the re-typeset, syllabus-exact
 study documents, one PDF per subject unit.
 
 ## 1. Rules we hold ourselves to
 
-1. **Telegram only.** The content is served only to a client that can prove it
-   is inside our bot, by presenting signed `initData`. Nobody can open the URL
-   in a browser and read anything.
+1. **Telegram, or a one-time PC link.** A client must present signed
+   `initData`, or exchange a single-use link minted in the bot's private chat.
+   There is no public browser login and no link that works twice.
 2. **Registered only.** No roll number, no library. The gate is the existing
    `/register` flow.
-3. **No file leaves the building.** The student never receives a PDF, never
-   receives a URL that points at a file, and never receives text they can
-   select.
+3. **A download is per-reader.** The source PDF never leaves the server. A
+   download is a PDF stamped with the reader's opaque token, and it is
+   entitlement-checked like a page. The text in that PDF is selectable; the
+   token, not DRM, is the control.
 4. **Only the pages on screen are resident.** Pages are fetched as the reader
    scrolls and dropped as they scroll away.
 5. **Every page is attributable.** Each delivered page carries the reader's
@@ -75,25 +78,27 @@ Express (oracle3, port 3000, behind nginx)
 Everything the student can reach is behind one auth check. The bot token never
 leaves the server.
 
-## 3. Access: Telegram-only, registered-only
+## 3. Access: Telegram or one-time PC link, registered-only
 
 Five gates, in order. The first two are convenience; registration and
 entitlement are the wall; the last keeps an unfinished shelf to the admin.
 
-**Gate 1 — client (telegram-only).** The app reads
-`window.Telegram.WebApp.initData`. If the Telegram SDK is missing or
-`initData` is empty, the app renders a single line: "Open this from the
-NbkristQik bot." and makes no API call. Outside Telegram there is nothing to
-see, so this is a courtesy, not a defence.
+**Gate 1 — client (Telegram or PC link).** In Telegram the app reads
+`window.Telegram.WebApp.initData`. On a computer the student opens the
+one-time link the bot sends in private (`?pc=...`). A browser with neither
+sees "Open this from Telegram" and makes no library call. This is a
+convenience gate, not the wall.
 
-**Gate 2 — session (telegram-only, enforced).** The app posts `initData` to
-`POST /api/library/session`. The server verifies it with the existing
-`verifyInitData()` (HMAC-SHA256 against the bot token, 24 h replay window) and
-answers with a session cookie:
+**Gate 2 — session (enforced).** The app posts `initData` or the one-time
+`pcToken` to `POST /api/library/session`. The server verifies `initData` with
+the existing `verifyInitData()` (HMAC-SHA256 against the bot token, 24 h
+replay window), or consumes the PC token once, and answers with a session
+cookie:
 
 - `nbq_lib` — random 32-byte token, `HttpOnly`, `Secure`, `SameSite=Strict`,
-  `Path=/`, 12 h expiry, stored in Redis with the Telegram user id, the roll
-  number and the granted scope.
+  `Path=/`, 12 h expiry for Telegram, 1 h for a PC link, stored in Redis with
+  the Telegram user id and session kind. The PC shelf shows a sign-out because
+  a computer may be shared.
 - The cookie is the only credential for every later call. `initData` is never
   put in a query string, so it never lands in nginx access logs, in a
   `Referer` header, or in a shared screenshot of the URL bar.
@@ -248,7 +253,7 @@ subjects, but the shelf only lists material we hold. A semester we have not
 reached yet gets an empty shelf with one line saying so, not a list of
 promises.
 
-## 5. Content delivery: the PDF never reaches the phone
+## 5. Content delivery: vector pages for reading, stamped PDF for download
 
 This is the core of the request. The PDF is rendered once into vector pages,
 each page is watermarked per reader, and pages are served one at a time.
@@ -277,8 +282,10 @@ keeps the pages on disk. The source PDF stays on the server.
 - 30 pages of a unit is about 9 MB of disk. The whole shelf is 443 MB. The
   server has 41 GB free. Fine.
 
-The PDF is not served, not ranged, and not proxied. There is no endpoint that
-returns a document's bytes.
+The clean PDF is not served, ranged, or proxied. The only endpoint that
+returns document bytes is `/api/library/document/:id/pdf`, and it returns a
+per-reader stamped copy, not the source. See `docs/PDF-DELIVERY.md` for the
+cache and efficiency model.
 
 ### 5.2 Watermark per reader
 
@@ -319,11 +326,12 @@ node dist/tools/resolveWatermark.js --user 123456789  # a user's token
 
 `GET /api/library/page/:docId/:page` returns one SVG:
 
-- `Cache-Control: no-store, private` — the browser keeps nothing.
+- `Cache-Control: private, max-age=300` — only the reader's browser may keep
+  a page, and only briefly.
 - `Content-Disposition: inline` with no filename, `X-Content-Type-Options: nosniff`.
 - `Cross-Origin-Resource-Policy: same-origin` — no other site can embed it.
-- No `Accept-Ranges`; no multipart; no bundle endpoint that returns ten pages
-  at once.
+- No multipart or ten-page bundle. A whole-document download is the separate
+  stamped PDF endpoint, not a bundle of SVG pages.
 
 The client keeps the current page and one page either side. Everything else
 is dropped: the object URL is revoked and the bytes are released. Scrolling

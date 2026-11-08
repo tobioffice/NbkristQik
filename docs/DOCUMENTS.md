@@ -1,16 +1,15 @@
 # Academic Documents Plan
 
-Webapp-exclusive library of subject materials and solved assignments.
-Students read inside the Telegram mini app only. Files are never
-forwarded in chat and there is no download button.
+Webapp library of subject materials and solved assignments.
+Students read inside the Telegram mini app, or in a browser opened by a
+one-time link from the bot. Files are not forwarded in chat; a registered
+reader can download a PDF stamped with their opaque token.
 
-> **The plan of record for delivery is `docs/LIBRARY.md`.** It changes how
-> the library is served: the PDF never reaches the phone (pages are rasterised
-> on the server and streamed one at a time, watermarked with the reader's
-> Telegram id), access is Telegram-only and registration-gated, and the
-> subject list is derived from the student's roll number against a snapshot of
-> the college syllabus site. The content model below still stands; the
-> "Storage", "Viewer" and "Serving" sections are superseded by that file.
+> **The plan of record for delivery is `docs/LIBRARY.md`.** Pages are rendered
+> on the server and streamed as SVG, watermarked with the reader's token;
+> access is Telegram-or-one-time-PC-link and registration-gated. The content
+> model below still stands; the "Storage", "Viewer" and "Serving" sections are
+> superseded by that file. See `docs/PDF-DELIVERY.md` for the download cache.
 
 ## Content model
 

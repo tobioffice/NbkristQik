@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * while the burst counter still sees every delivery.
  */
 
-const { store, redisSet, incr, recordLibraryRead } = vi.hoisted(() => {
+const { store, redisSet, incrBy, recordLibraryRead } = vi.hoisted(() => {
   const store = new Map<string, string>();
   const redisSet = vi.fn(
     async (
@@ -18,15 +18,15 @@ const { store, redisSet, incr, recordLibraryRead } = vi.hoisted(() => {
       return "OK";
     },
   );
-  const incr = vi.fn(async (key: string) => {
-    const next = Number(store.get(key) ?? "0") + 1;
+  const incrBy = vi.fn(async (key: string, weight: number) => {
+    const next = Number(store.get(key) ?? "0") + weight;
     store.set(key, String(next));
     return next;
   });
   return {
     store,
     redisSet,
-    incr,
+    incrBy,
     recordLibraryRead: vi.fn(async () => {}),
   };
 });
@@ -38,7 +38,7 @@ vi.mock("../../src/services/redis/getRedisClient.js", () => ({
       store.delete(key);
       return 1;
     }),
-    incr,
+    incrBy,
     expire: vi.fn(async () => 1),
   })),
 }));
@@ -119,7 +119,7 @@ describe("library read dedupe", () => {
     await watchForBurst("u1");
     await settle();
 
-    expect(incr).toHaveBeenCalledTimes(2);
+    expect(incrBy).toHaveBeenCalledTimes(2);
     expect(recordLibraryRead).toHaveBeenCalledTimes(1);
   });
 });

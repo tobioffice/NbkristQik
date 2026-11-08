@@ -86,6 +86,16 @@ const SECTIONS: SectionEntry[] = [
 
 const ATTENDANCE_ROUTE: Route = { section: "attendance", issue: null, mine: false };
 
+/**
+ * The one-time computer-link token, read once at startup. The hook that spends
+ * it removes `pc` from the address bar, but the shell keeps it for this app
+ * session so the shelf stays allowed until the cookie is in place.
+ */
+const readPcToken = (): string | undefined => {
+  if (typeof window === "undefined") return undefined;
+  return new URLSearchParams(window.location.search).get("pc") || undefined;
+};
+
 const parseRoute = (): Route => {
   const parts = (typeof window === "undefined" ? "" : window.location.hash)
     .replace(/^#\/?/, "")
@@ -128,15 +138,31 @@ export default function AppShell() {
   const [immersive, setImmersive] = useState(false);
   const { tgUser, initData } = useTelegramIdentity();
   const appConfig = useAppConfig(tgUser ?? undefined, initData);
+  const [pcToken, setPcToken] = useState(readPcToken);
+  const [pcOpened, setPcOpened] = useState(false);
   const libraryOpen = appConfig.libraryOpen;
 
-  // The shelf is admin-first for now. Its tab exists only when the server has
-  // said this caller may open it; while the config is loading the safe default
-  // is "no", so the shell never offers a shut door.
+  // A successful exchange spends the token but keeps the shelf allowed for
+  // this app session; the cookie is the permission from then on.
+  const onPcConsumed = useCallback(() => {
+    setPcToken(undefined);
+    setPcOpened(true);
+  }, []);
+
+  // A valid session cookie opens the shelf through /api/config. A computer
+  // link opens it before that first request: the cookie does not exist yet,
+  // so the token itself is the permission.
+  const libraryAllowed = libraryOpen || Boolean(pcToken) || pcOpened;
+
+  // The shelf is admin-first for now. Its tab exists only when this caller may
+  // open it; while the config is loading the safe default is "no", so the
+  // shell never offers a shut door.
   const visibleSections = useMemo(
     () =>
-      SECTIONS.filter((entry) => entry.section !== "library" || libraryOpen),
-    [libraryOpen],
+      SECTIONS.filter(
+        (entry) => entry.section !== "library" || libraryAllowed,
+      ),
+    [libraryAllowed],
   );
 
   const go = useCallback((next: Route) => {
@@ -168,7 +194,7 @@ export default function AppShell() {
   // library shut) puts the reader back on the first screen. replaceState keeps
   // the shuttered page out of the back trail.
   useEffect(() => {
-    if (appConfig.loading || route.section !== "library" || libraryOpen) {
+    if (appConfig.loading || route.section !== "library" || libraryAllowed) {
       return;
     }
     window.history.replaceState(
@@ -178,7 +204,7 @@ export default function AppShell() {
     );
     setRoute(ATTENDANCE_ROUTE);
     setImmersive(false);
-  }, [appConfig.loading, libraryOpen, route.section]);
+  }, [appConfig.loading, libraryAllowed, route.section]);
 
   // the Telegram arrow walks back out of a section; inside a conversation it
   // goes to the list first, the same trail the buttons walk
@@ -228,16 +254,14 @@ export default function AppShell() {
                   />
                 )}
                 {route.section === "rank" && <Leaderboard showBand={false} />}
-                {route.section === "library" &&
-                  libraryOpen &&
-                  (initData ? (
-                    <LibraryView
-                      initData={initData}
-                      onImmersiveChange={setImmersive}
-                    />
-                  ) : (
-                    <OutsideTelegram />
-                  ))}
+                {route.section === "library" && libraryAllowed && (
+                  <LibraryView
+                    initData={initData}
+                    pcToken={pcToken}
+                    onPcConsumed={onPcConsumed}
+                    onImmersiveChange={setImmersive}
+                  />
+                )}
                 {route.section === "profile" && (
                   <ProfileSection
                     onReportIssue={() =>
@@ -315,19 +339,6 @@ const Tab = ({
     </svg>
     {label}
   </button>
-);
-
-const OutsideTelegram = () => (
-  <div className="page">
-    <div className="page-head">
-      <p className="eyebrow">Library</p>
-      <h2 className="page-title">Open it from Telegram</h2>
-      <p className="page-note">
-        The library is only for NbkristQik bot users. Open the bot and tap
-        Library, and it will open here.
-      </p>
-    </div>
-  </div>
 );
 
 /**

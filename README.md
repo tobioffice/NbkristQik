@@ -42,8 +42,9 @@ reports and uptime, and a public status page for service health.
 - **Live leaderboard** — the attendance register ranks students by attendance
   or mid-term marks, filtered by year, branch and section.
 - **Library** — read your semester's syllabus units as paged documents,
-  watermarked for the signed-in reader. The shelf is admin-first until
-  `LIBRARY_ACCESS=all`.
+  watermarked for the signed-in reader. Download a watermarked PDF, or open
+  the shelf on a computer with a one-time link from the bot. The shelf is
+  admin-first until `LIBRARY_ACCESS=all`.
 - **Issue reports** — file a report with a trackable id (for example
   `QIK-0007`) and keep the whole conversation with the admin in one thread.
 

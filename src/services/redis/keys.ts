@@ -25,6 +25,8 @@ export const redisKeys = {
   reportThreadGate: (userId: number | string) => `report:thread:${userId}`,
   /** Library web app session: lib:sess:{token} */
   librarySession: (token: string) => `lib:sess:${token}`,
+  /** One-shot link that signs a browser on a PC in: lib:pc:{token} */
+  libraryPcLogin: (token: string) => `lib:pc:${token}`,
   /** Pages pulled by one student in the last five minutes: lib:reads:{userId} */
   libraryReads: (userId: number | string) => `lib:reads:${userId}`,
 } as const;

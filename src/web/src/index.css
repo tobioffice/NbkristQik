@@ -2331,3 +2331,89 @@ a:focus-visible {
 .att-row--below .att-row__pct {
   color: var(--red-ink);
 }
+
+/* ---------- PDF download controls ---------- */
+/* A unit row is a wrapper now: the open button keeps the register grid and
+   the compact PDF stamp sits in its own narrow column at the ruled edge. */
+.lib-list-head--units {
+  grid-template-columns: 1fr 78px 46px;
+}
+
+.lib-row--pdf {
+  grid-template-columns: 1fr 44px;
+  gap: 8px;
+  padding: 0 10px 0 0;
+}
+
+.lib-row__open {
+  display: grid;
+  grid-template-columns: 1fr 78px;
+  gap: 6px;
+  align-items: center;
+  min-height: 45px;
+  padding: 10px 0 10px 16px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lib-row--pdf:hover,
+.lib-row--pdf:active {
+  background: var(--paper-3);
+}
+
+.lib-pdf {
+  flex: none;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--ink);
+  border-radius: 1px;
+  background: var(--paper-2);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.lib-pdf:hover,
+.lib-pdf:active {
+  background: var(--paper-3);
+}
+
+/* the reader keeps the same stamp in the cloth band, beside the zoom */
+.reader__pdf {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 7px;
+  border: 1px solid rgba(246, 239, 221, 0.42);
+  border-radius: 1px;
+  background: transparent;
+  color: var(--paper-3);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+
+.reader__pdf:active {
+  background: rgba(246, 239, 221, 0.14);
+}

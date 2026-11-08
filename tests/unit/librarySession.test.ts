@@ -2,12 +2,21 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 // an in-memory stand-in for the session store
 const store = new Map<string, string>();
+const ttls = new Map<string, number | undefined>();
 vi.mock("../../src/services/redis/getRedisClient.js", () => ({
   getClient: vi.fn(async () => ({
     get: vi.fn(async (key: string) => store.get(key) ?? null),
-    set: vi.fn(async (key: string, value: string) => {
-      store.set(key, value);
-      return "OK";
+    set: vi.fn(
+      async (key: string, value: string, options?: { EX?: number }) => {
+        store.set(key, value);
+        ttls.set(key, options?.EX);
+        return "OK";
+      },
+    ),
+    getDel: vi.fn(async (key: string) => {
+      const value = store.get(key) ?? null;
+      store.delete(key);
+      return value;
     }),
     del: vi.fn(async (key: string) => {
       store.delete(key);
@@ -21,12 +30,16 @@ const {
   readSession,
   dropSession,
   readCookie,
+  createPcLoginToken,
+  consumePcLoginToken,
   LIBRARY_SESSION_COOKIE,
+  LIBRARY_PC_TOKEN_TTL_SECONDS,
 } = await import("../../src/services/library/session.js");
 
 describe("library sessions", () => {
   beforeEach(() => {
     store.clear();
+    ttls.clear();
   });
 
   it("mints a token that reads back to the same student", async () => {
@@ -52,6 +65,35 @@ describe("library sessions", () => {
     const token = await createSession("7");
     await dropSession(token);
     expect(await readSession(token)).toBeNull();
+  });
+});
+
+describe("PC login tokens", () => {
+  beforeEach(() => {
+    store.clear();
+    ttls.clear();
+  });
+
+  it("mints a token that signs in exactly once", async () => {
+    const token = await createPcLoginToken("424242");
+    expect(token).toMatch(/^[A-Za-z0-9_-]{32,}$/);
+
+    expect(await consumePcLoginToken(token)).toBe("424242");
+    // the link is spent: a forwarded URL cannot sign in a second browser
+    expect(await consumePcLoginToken(token)).toBeNull();
+  });
+
+  it("keeps the token for five minutes", async () => {
+    const token = await createPcLoginToken("7");
+
+    expect(LIBRARY_PC_TOKEN_TTL_SECONDS).toBe(5 * 60);
+    expect(ttls.get(`lib:pc:${token}`)).toBe(LIBRARY_PC_TOKEN_TTL_SECONDS);
+    expect(store.get(`lib:pc:${token}`)).toBe("7");
+  });
+
+  it("returns null for a token it never issued", async () => {
+    expect(await consumePcLoginToken("made-up")).toBeNull();
+    expect(await consumePcLoginToken("")).toBeNull();
   });
 });
 

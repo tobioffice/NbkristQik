@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { libraryDocumentPdfUrl } from "../libraryApi";
 import { useReaderViewport } from "../reader/useReaderViewport";
 import { useReaderGestures } from "../reader/useReaderGestures";
 import { useBackHandler } from "../backButton";
@@ -21,8 +22,9 @@ const stopKey = (docId: string) => `nbk:read:${docId}`;
  *
  * Pages are fetched as the student scrolls and dropped as they scroll away,
  * so only the pages on screen are held in memory. Each page is a vector SVG
- * drawn by the browser: the layout is the PDF's own page, and there is no
- * text layer to select and nothing to save.
+ * drawn by the browser: the layout is the PDF's own page, with no text layer
+ * to select and nothing on a page image to save. The head carries the way out
+ * to a whole watermarked PDF when the student wants one.
  *
  * A page is a vector, so it can be made bigger or smaller without the server
  * sending anything else, and the ink stays sharp at every zoom the reader
@@ -263,6 +265,14 @@ export default function DocumentReader({
             +
           </button>
         </div>
+        <a
+          className="reader__pdf"
+          href={libraryDocumentPdfUrl(docId)}
+          download
+          aria-label={`Download ${title}, ${unitLabel}, PDF`}
+        >
+          PDF
+        </a>
         <span
           className="reader__progress"
           style={{ transform: `scaleX(${progress})` }}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { plural } from "../format";
 import {
+  libraryDocumentPdfUrl,
   registerLibraryRoll,
   type LibraryStudent,
   type LibrarySubject,
@@ -20,7 +21,12 @@ import DocumentReader from "./DocumentReader";
  */
 
 interface LibraryViewProps {
-  initData: string;
+  /** Telegram's signed identity, when the page is open inside the app. */
+  initData?: string;
+  /** The one-time token from a computer link, when one is being opened. */
+  pcToken?: string;
+  /** Clears the spent token in the shell after a successful PC exchange. */
+  onPcConsumed?: () => void;
   /** True while the reader is open: the shell hides its chrome. */
   onImmersiveChange?: (immersive: boolean) => void;
 }
@@ -32,9 +38,14 @@ interface OpenUnit extends LibraryUnit {
 
 export default function LibraryView({
   initData,
+  pcToken,
+  onPcConsumed,
   onImmersiveChange,
 }: LibraryViewProps) {
-  const { status, retry, setView } = useLibrary(initData);
+  const { status, retry, setView, signOut } = useLibrary(
+    { initData, pcToken },
+    { onPcConsumed },
+  );
   const [subject, setSubject] = useState<LibrarySubject | null>(null);
   const [unit, setUnit] = useState<OpenUnit | null>(null);
   // the shelf's place, kept while the reader takes the sheet
@@ -77,6 +88,22 @@ export default function LibraryView({
   }
 
   if (status.state === "loading") return <ShelfLoading />;
+
+  if (status.state === "no-session") {
+    return (
+      <div className="page">
+        <div className="page-head">
+          <p className="eyebrow">Shelf</p>
+          <h2 className="page-title">Open this from Telegram</h2>
+          <p className="page-note">
+            The shelf is tied to your Telegram account. Open the bot and tap
+            Library. The bot can also send a link that opens the shelf on this
+            computer.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (status.state === "error") {
     return (
@@ -125,13 +152,20 @@ export default function LibraryView({
           <p className="eyebrow">Shelf</p>
           <h2 className="page-title">Save your roll number</h2>
           <p className="page-note">
-            The library shows the subjects of your year and branch. Save your
-            roll number once and it opens straight away.
+            {initData
+              ? "The library shows the subjects of your year and branch. Save your roll number once and it opens straight away."
+              : "The library shows the subjects of your year and branch. Save your roll number in Telegram once, then reopen this computer link."}
           </p>
         </div>
         <div className="page-body">
           <div className="form-block">
-            <RollForm initData={initData} onSaved={retry} />
+            {initData ? (
+              <RollForm initData={initData} onSaved={retry} />
+            ) : (
+              <p className="form-note">
+                Open the bot and tap Library to save your roll number.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -153,6 +187,8 @@ export default function LibraryView({
       student={status.student}
       subjects={status.subjects}
       preview={status.preview}
+      pcSession={status.kind === "pc"}
+      onSignOut={signOut}
       onOpenSubject={setSubject}
       onSwitchView={
         status.admin
@@ -180,6 +216,9 @@ interface ShelfProps {
   subjects: LibrarySubject[];
   /** True when the list is the whole shelf, not the roll's semester */
   preview: boolean;
+  /** A browser opened by a computer link, not a Telegram webview. */
+  pcSession: boolean;
+  onSignOut: () => Promise<void>;
   onOpenSubject: (subject: LibrarySubject) => void;
   /** Only the admin has a second view to switch to. */
   onSwitchView?: () => void;
@@ -190,9 +229,12 @@ function Shelf({
   student,
   subjects,
   preview,
+  pcSession,
+  onSignOut,
   onOpenSubject,
   onSwitchView,
 }: ShelfProps) {
+  const [signingOut, setSigningOut] = useState(false);
   const ready = subjects.filter((subject) => subject.live).length;
   useBandStamp({ value: String(ready), label: "ready to read" });
 
@@ -208,6 +250,22 @@ function Shelf({
             student.yearSem[0]
           }, semester ${student.yearSem[1]}`}
         </p>
+        {pcSession ? (
+          <p className="hint-line">
+            Signed in on this computer.{" "}
+            <button
+              type="button"
+              className="link-btn"
+              disabled={signingOut}
+              onClick={() => {
+                setSigningOut(true);
+                void onSignOut().finally(() => setSigningOut(false));
+              }}
+            >
+              {signingOut ? "Signing out..." : "Not you? Sign out"}
+            </button>
+          </p>
+        ) : null}
       </div>
 
       <div className="page-body">
@@ -290,6 +348,9 @@ const SubjectRow = ({
   );
 };
 
+const unitLabel = (unit: LibraryUnit): string =>
+  unit.unit ? `Unit ${unit.unit}` : "Full subject";
+
 /** One subject: the units we hold of it. */
 function UnitList({
   subject,
@@ -312,21 +373,33 @@ function UnitList({
         <div className="list-head lib-list-head lib-list-head--units">
           <span>Unit</span>
           <span>Pages</span>
+          <span aria-hidden="true" />
         </div>
-        {subject.units.map((unit) => (
-          <button
-            className="lib-row lib-row--open lib-row--units"
-            key={unit.id}
-            onClick={() => onOpen(unit)}
-          >
-            <span className="lib-row__name">
-              {unit.unit ? `Unit ${unit.unit}` : "Full subject"}
-            </span>
-            <span className="lib-row__state lib-row__state--live">
-              {plural(unit.pages, "page")}
-            </span>
-          </button>
-        ))}
+        {subject.units.map((unit) => {
+          const label = unitLabel(unit);
+          return (
+            <div className="lib-row lib-row--pdf" key={unit.id}>
+              <button className="lib-row__open" onClick={() => onOpen(unit)}>
+                <span className="lib-row__name">{label}</span>
+                <span className="lib-row__state lib-row__state--live">
+                  {plural(unit.pages, "page")}
+                </span>
+              </button>
+              <a
+                className="lib-pdf"
+                href={libraryDocumentPdfUrl(unit.id)}
+                download
+                aria-label={
+                  unit.unit
+                    ? `Download Unit ${unit.unit} PDF`
+                    : "Download the full subject PDF"
+                }
+              >
+                PDF
+              </a>
+            </div>
+          );
+        })}
 
         <div className="form-block">
           <button className="btn-outline w-full mt-5" onClick={onBack}>

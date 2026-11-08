@@ -10,7 +10,7 @@ import {
 // Telegram.
 const onText = createOnTextMock();
 const sendMessage = createSendMessageMock();
-const sendLibraryEntry = vi.fn();
+const sendLibraryEntry = vi.fn(async () => undefined);
 const trackMessage = vi.fn();
 const rememberStudent = vi.fn(async () => undefined);
 

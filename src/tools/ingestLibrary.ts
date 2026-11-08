@@ -14,13 +14,17 @@
  *      pdftocairo), one vector page per PDF page;
  *   4. records the document in the registry.
  *
- * The PDF is never served. Students read the rendered pages.
+ * The PDF itself is never served: students read the rendered pages, and a
+ * download is a per-reader watermarked copy generated from this file.
  */
 import { copyFileSync, existsSync, mkdirSync, statSync } from "fs";
 import path from "path";
 import { logger } from "../config/logger.js";
 import { initDatabase } from "../db/init.js";
-import { upsertLibraryDocument } from "../db/library.model.js";
+import {
+  upsertLibraryDocument,
+  getLibraryDocument,
+} from "../db/library.model.js";
 import { getSubjectsFor } from "../services/library/catalog.js";
 import { documentPagesDir, libraryDocsDir } from "../services/library/paths.js";
 import { hasVectoriser, vectorisePdf } from "../services/library/vector.js";
@@ -120,6 +124,12 @@ const main = async () => {
   // the registry tables must exist before a row can be written
   await initDatabase();
 
+  // A re-ingest keeps the same id but must not serve the previous bytes from
+  // the download cache: the version is part of the cached file name. There is
+  // no previous row on the first ingest, so the first version is 1.
+  const previous = await getLibraryDocument(id);
+  const version = previous ? previous.version + 1 : 1;
+
   mkdirSync(libraryDocsDir(), { recursive: true });
   const sourcePath = path.join(libraryDocsDir(), `${id}.pdf`);
   copyFileSync(args.file, sourcePath);
@@ -141,7 +151,7 @@ const main = async () => {
     page_count: pages.pages,
     bytes,
     status: "live",
-    version: 1,
+    version,
   });
 
   logger.info(

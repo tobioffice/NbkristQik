@@ -33,9 +33,15 @@ const READ_DEDUPE_SECONDS = 60 * 60;
  * namespace is read by `cacheFlushPatterns` and by ops tooling, and a
  * per-delivery key with a one-hour life is not a cache to flush with the
  * student data. The prefix is greppable all the same.
+ *
+ * A whole-PDF download is recorded as page 0 and deduped under the suffix
+ * `pdf`, so a download and a page view never suppress each other.
  */
-const firstReadKey = (userId: string, docId: string, page: number): string =>
-  `lib:read:${userId}:${docId}:${page}`;
+const firstReadKey = (
+  userId: string,
+  docId: string,
+  page: number | "pdf",
+): string => `lib:read:${userId}:${docId}:${page}`;
 
 /**
  * Claims the right to write this hour's audit row.
@@ -47,7 +53,7 @@ const firstReadKey = (userId: string, docId: string, page: number): string =>
 const claimFirstRead = async (
   userId: string,
   docId: string,
-  page: number,
+  page: number | "pdf",
 ): Promise<boolean> => {
   try {
     const client = await getClient();
@@ -73,7 +79,7 @@ const claimFirstRead = async (
 const releaseFirstRead = async (
   userId: string,
   docId: string,
-  page: number,
+  page: number | "pdf",
 ): Promise<void> => {
   const client = await getClient();
   await client.del(firstReadKey(userId, docId, page));
@@ -99,18 +105,47 @@ export const notePageRead = (
 };
 
 /**
+ * Records that this student downloaded the whole document. Fire and forget.
+ *
+ * A download is the same audit fact as a page view, so it lands in the same
+ * table as page 0 and carries the same token. It is deduped per reader and
+ * document for an hour, separately from any page view.
+ */
+export const noteDownload = (
+  userId: string,
+  docId: string,
+  token: string,
+): void => {
+  void (async () => {
+    if (!(await claimFirstRead(userId, docId, "pdf"))) return;
+    try {
+      await recordLibraryRead(userId, docId, 0, token);
+    } catch (e) {
+      // a claim without a row is a lost audit entry: give it back
+      await releaseFirstRead(userId, docId, "pdf").catch(() => {});
+      throw e;
+    }
+  })().catch((e) => logger.warn("[library] could not record a download:", e));
+};
+
+/**
  * Counts pages per student over the burst window and complains when one
  * reader stands out. Best effort: if Redis is down the reading still works.
  *
  * This counts every delivery, even one whose audit row was deduped: a script
  * walking a unit still trips it.
  */
-export const watchForBurst = async (userId: string): Promise<void> => {
+export const watchForBurst = async (
+  userId: string,
+  weight = 1,
+): Promise<void> => {
   try {
     const client = await getClient();
     const key = redisKeys.libraryReads(userId);
-    const count = await client.incr(key);
-    if (count === 1) await client.expire(key, BURST_WINDOW_SECONDS);
+    const count = await client.incrBy(key, Math.max(1, weight));
+    if (count === Math.max(1, weight)) {
+      await client.expire(key, BURST_WINDOW_SECONDS);
+    }
     if (count > BURST_LIMIT) {
       logger.warn(
         `[library] user ${userId} pulled ${count} pages in five minutes`,

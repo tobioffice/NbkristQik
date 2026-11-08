@@ -82,7 +82,9 @@ bot.onText(/^\/start/, (msg) => {
   // payload: the student lands on the same one-tap library entry. Any other
   // payload falls through to the welcome.
   if (payload?.toLowerCase() === "library") {
-    sendLibraryEntry(msg);
+    void sendLibraryEntry(msg).catch((e) =>
+      logger.error("[start] library entry failed:", e),
+    );
     return;
   }
 

@@ -28,6 +28,7 @@ import {
   securityLogger,
   createRateLimit,
   identityRateLimitKey,
+  librarySessionRateLimitKey,
 } from "../middleware/security.js";
 import { PORT, HOST, CORS_ORIGINS } from "../config/environmentals.js";
 import { logger } from "../config/logger.js";
@@ -36,6 +37,11 @@ import { registerAdminRoutes } from "./admin/index.js";
 import { profileRouter } from "./profile.js";
 import { reportRouter } from "./report.js";
 import { libraryRouter } from "./library.js";
+import {
+  LIBRARY_SESSION_COOKIE,
+  readCookie,
+  readSession,
+} from "../services/library/session.js";
 import { registerInternalRoutes } from "./internal.js";
 import { meAcademicsRouter } from "./meAcademics.js";
 
@@ -202,7 +208,7 @@ const librarySessionLimit = createRateLimit(
   60 * 60 * 1000,
   20,
   "Too many library sessions, please try again later.",
-  identityRateLimitKey,
+  librarySessionRateLimitKey,
 );
 app.use("/api/library/session", librarySessionLimit);
 app.use("/api/library", libraryRouter);
@@ -535,10 +541,22 @@ app.get("/api/config", async (req: Request, res: Response) => {
 
     const userId = identity.status === "authenticated" ? identity.userId : null;
 
+    // A PC browser has the library cookie but no Telegram identity. The
+    // session is what proves who it is, so the Library tab survives a reload.
+    let sessionUserId: string | null = userId;
+    if (!sessionUserId) {
+      const sessionToken = readCookie(
+        req.headers.cookie,
+        LIBRARY_SESSION_COOKIE,
+      );
+      const session = await readSession(sessionToken);
+      sessionUserId = session?.userId ?? null;
+    }
+
     res.set("Cache-Control", "no-store");
     res.json({
-      libraryOpen: userId ? canOpenLibrary(userId) : false,
-      admin: userId ? canPreviewEverything(userId) : false,
+      libraryOpen: sessionUserId ? canOpenLibrary(sessionUserId) : false,
+      admin: sessionUserId ? canPreviewEverything(sessionUserId) : false,
     });
   } catch (error) {
     logger.error("Error fetching /api/config:", error);

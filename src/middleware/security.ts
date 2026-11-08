@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import {
@@ -53,6 +54,47 @@ export const identityRateLimitKey = (req: Request, res: Response): string => {
   const identity = res.locals?.identity as Identity | undefined;
   if (identity?.status === "authenticated" && identity.userId) {
     return `u:${identity.userId}`;
+  }
+
+  // A PC browser has no Telegram identity. Keying it by IP puts every student
+  // behind one campus NAT on one budget; the library cookie is a stable
+  // per-browser value, so hash it for the limiter only. It is never logged.
+  const cookie = /(?:^|;\s*)nbq_lib=([^;]+)/.exec(req.headers?.cookie ?? "");
+  if (cookie?.[1]) {
+    const digest = crypto
+      .createHash("sha256")
+      .update(cookie[1])
+      .digest("hex")
+      .slice(0, 24);
+    return `s:${digest}`;
+  }
+
+  return `ip:${clientIpKey(req)}`;
+};
+
+/**
+ * The session exchange runs before a cookie exists. Key a PC exchange by the
+ * one-time token (hashed), so the 20/hour limit is per hand-off, not per
+ * campus NAT address. A bad/absent token falls back to the normal identity
+ * key and then the IP backstop.
+ */
+export const librarySessionRateLimitKey = (
+  req: Request,
+  res: Response,
+): string => {
+  const identity = res.locals?.identity as Identity | undefined;
+  if (identity?.status === "authenticated" && identity.userId) {
+    return `u:${identity.userId}`;
+  }
+  const pcToken =
+    typeof req.body?.pcToken === "string" ? req.body.pcToken.trim() : "";
+  if (pcToken) {
+    const digest = crypto
+      .createHash("sha256")
+      .update(pcToken)
+      .digest("hex")
+      .slice(0, 24);
+    return `pc:${digest}`;
   }
   return `ip:${clientIpKey(req)}`;
 };

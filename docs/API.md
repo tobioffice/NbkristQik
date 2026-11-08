@@ -187,7 +187,10 @@ anonymous.
 - `admin` is `true` only for the admin while the library is still admin-only
   (the preview affordance). It is `false` for everyone once the library is
   open to all.
-- Anonymous callers get `{ "libraryOpen": false, "admin": false }`.
+- A caller with no Telegram identity but a live `nbq_lib` session cookie gets
+  the session user's flags; this keeps a PC-opened library available after a
+  reload. With neither identity nor session, the answer is
+  `{ "libraryOpen": false, "admin": false }`.
 
 The response is `Cache-Control: no-store` because it depends on the caller.
 The web shell treats the library as closed until this route answers, and hides
@@ -298,17 +301,22 @@ development.
 The library uses a session cookie, not the API identity header. Exchange
 signed `initData` once, then send the `nbq_lib` cookie on every later call. The
 session is HttpOnly, SameSite=Strict, `Secure` in production, and lasts 12
-hours; the session exchange is additionally limited to 20 requests / hour per
-IP.
+hours for Telegram or 1 hour for a PC link; the session exchange is
+additionally limited to 20 requests / hour per account or PC token.
+
+A computer gets in through a one-time `pcToken` minted by the bot in private
+for five minutes. It is consumed by `POST /api/library/session`; it cannot be
+reused, and a bad token is a `401` with no fallback to `initData`.
 
 | Method | Path | Purpose |
 |---|---|---|
-| `POST` | `/api/library/session` | Verify `{initData}` in the body, set the cookie, return `{ok, registered, student}`; `401` on a bad signature, `403` while `LIBRARY_ACCESS=admin` and the caller is not the admin |
+| `POST` | `/api/library/session` | Verify `{initData}` or `{pcToken}` in the body, set the cookie, return `{ok, registered, student}`; `401` on a bad signature/expired link, `403` while `LIBRARY_ACCESS=admin` and the caller is not the admin |
 | `DELETE` | `/api/library/session` | Drop the session and clear the cookie |
 | `GET` | `/api/library/me` | The session's user and student summary (`registered` is false without a saved roll) |
 | `GET` | `/api/library/subjects` | The student's own subjects for the running semester, with units and live status; while the shelf is admin-only, the admin may use `?view=all` for the whole shelf, `?view=roll` for exactly the registered roll's view |
 | `GET` | `/api/library/document/:id` | One document's metadata: id, code, title, unit, pages, version; `404` if missing or not live, `403` if not the reader's |
-| `GET` | `/api/library/page/:id/:page` | One watermarked SVG page (`Cache-Control: no-store, private`, `Content-Disposition: inline`, no text layer). `400`/`404` for a bad page, `503` when no watermark secret is configured |
+| `GET` | `/api/library/page/:id/:page` | One watermarked SVG page (`Cache-Control: private, max-age=300`, `Content-Disposition: inline`, no text layer). `400`/`404` for a bad page, `503` when no watermark secret is configured |
+| `GET` | `/api/library/document/:id/pdf` | A whole PDF stamped with the reader's token (`application/pdf`, attachment, `private, max-age=3600`). Same session/registration/entitlement checks as a page; `503` if the watermark secret is missing or the generation queue is full |
 
 ## Private monitor endpoints
 

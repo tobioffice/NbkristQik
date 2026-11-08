@@ -18,21 +18,46 @@ import { logger } from "../../config/logger.js";
 
 export const LIBRARY_SESSION_COOKIE = "nbq_lib";
 export const LIBRARY_SESSION_TTL_SECONDS = 12 * 60 * 60;
+/** A browser opened by a one-time link is a shorter, shared-machine session. */
+export const LIBRARY_PC_SESSION_TTL_SECONDS = 60 * 60;
+
+/**
+ * A one-shot link that signs a browser on a PC in. The bot mints it in the
+ * chat, so it is short-lived: it exists to cross from Telegram to a desktop
+ * browser and is spent on the first exchange.
+ */
+export const LIBRARY_PC_TOKEN_TTL_SECONDS = 5 * 60;
+
+export type LibrarySessionKind = "telegram" | "pc";
 
 export interface LibrarySession {
   userId: string;
   createdAt: number;
+  kind?: LibrarySessionKind;
 }
 
-/** Mints a session for a verified Telegram user. */
-export const createSession = async (userId: string): Promise<string> => {
+export interface CreateSessionOptions {
+  kind?: LibrarySessionKind;
+  ttlSeconds?: number;
+}
+
+/** Mints a session for a verified Telegram user or a PC link. */
+export const createSession = async (
+  userId: string,
+  options: CreateSessionOptions = {},
+): Promise<string> => {
   const token = crypto.randomBytes(32).toString("base64url");
-  const session: LibrarySession = { userId, createdAt: Date.now() };
+  const ttlSeconds = options.ttlSeconds ?? LIBRARY_SESSION_TTL_SECONDS;
+  const session: LibrarySession = {
+    userId,
+    createdAt: Date.now(),
+    kind: options.kind ?? "telegram",
+  };
 
   try {
     const client = await getClient();
     await client.set(redisKeys.librarySession(token), JSON.stringify(session), {
-      EX: LIBRARY_SESSION_TTL_SECONDS,
+      EX: ttlSeconds,
     });
   } catch (e) {
     logger.error("[library] could not start a session:", e);
@@ -68,6 +93,40 @@ export const dropSession = async (token: string): Promise<void> => {
   }
 };
 
+/**
+ * Mints a one-shot PC login token for a verified Telegram user.
+ *
+ * The token travels in a URL the bot sends in the private chat. It maps to the
+ * user id server side, so the link itself carries no identity and goes stale
+ * in five minutes.
+ */
+export const createPcLoginToken = async (userId: string): Promise<string> => {
+  const token = crypto.randomBytes(32).toString("base64url");
+  const client = await getClient();
+  await client.set(redisKeys.libraryPcLogin(token), userId, {
+    EX: LIBRARY_PC_TOKEN_TTL_SECONDS,
+  });
+  return token;
+};
+
+/**
+ * Spends a PC login token and returns the user it was minted for. A second
+ * exchange returns null: getDel reads and removes the key atomically, so two
+ * browsers cannot spend the same link.
+ */
+export const consumePcLoginToken = async (
+  token: string,
+): Promise<string | null> => {
+  if (!token) return null;
+  try {
+    const client = await getClient();
+    return await client.getDel(redisKeys.libraryPcLogin(token));
+  } catch (e) {
+    logger.warn("[library] PC login token read failed:", e);
+    return null;
+  }
+};
+
 /** Reads one cookie out of a request's Cookie header. */
 export const readCookie = (
   header: string | undefined,
@@ -76,7 +135,14 @@ export const readCookie = (
   if (!header) return undefined;
   for (const part of header.split(";")) {
     const [key, ...rest] = part.trim().split("=");
-    if (key === name) return decodeURIComponent(rest.join("="));
+    if (key === name) {
+      try {
+        return decodeURIComponent(rest.join("="));
+      } catch {
+        // A malformed cookie is absent, not a 500 on every library route.
+        return undefined;
+      }
+    }
   }
   return undefined;
 };

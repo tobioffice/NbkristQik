@@ -10,12 +10,15 @@ import { trackActivity } from "../services/tracker.js";
 import { logger } from "../config/logger.js";
 import { ENV } from "../config/environmentals.js";
 import {
+  consumePcLoginToken,
   createSession,
   dropSession,
+  LIBRARY_PC_SESSION_TTL_SECONDS,
   LIBRARY_SESSION_COOKIE,
   LIBRARY_SESSION_TTL_SECONDS,
   readCookie,
   readSession,
+  type LibrarySessionKind,
 } from "../services/library/session.js";
 import {
   listAllLiveSubjects,
@@ -31,15 +34,24 @@ import {
 } from "../db/library.model.js";
 import { documentPagesDir, pageFileName } from "../services/library/paths.js";
 import { stampPage, watermarkToken } from "../services/library/watermark.js";
-import { notePageRead, watchForBurst } from "../services/library/reads.js";
+import {
+  ensureWatermarkedPdf,
+  PdfBusyError,
+  PdfTooLargeError,
+} from "../services/library/pdf.js";
+import {
+  noteDownload,
+  notePageRead,
+  watchForBurst,
+} from "../services/library/reads.js";
 
 /**
  * The library API.
  *
  * Two rules hold for every route here:
- *   - the caller must be inside Telegram. A signed initData blob is the only
- *     thing that can open a session, and only the Telegram client can produce
- *     one. Opening the URL in a browser gets nothing.
+ *   - the caller must have a session: signed Telegram initData, or a single-use
+ *     PC link minted in the bot's private chat. A public browser URL opens
+ *     nothing.
  *   - the caller must be registered. A session without a roll number sees no
  *     subjects, and the app asks for the roll instead.
  *
@@ -54,14 +66,26 @@ import { notePageRead, watchForBurst } from "../services/library/reads.js";
 
 export const libraryRouter = Router();
 
+// Every library JSON response is per-reader. The page/PDF routes override the
+// cache policy with their own short private cache; the default is no-store.
+libraryRouter.use((_req, res, next) => {
+  res.set("Cache-Control", "private, no-store");
+  res.vary("Cookie");
+  next();
+});
+
 const secureCookie = ENV === "production";
 
-const setSessionCookie = (res: Response, token: string): void => {
+const setSessionCookie = (
+  res: Response,
+  token: string,
+  ttlSeconds = LIBRARY_SESSION_TTL_SECONDS,
+): void => {
   res.cookie(LIBRARY_SESSION_COOKIE, token, {
     httpOnly: true,
     secure: secureCookie,
     sameSite: "strict",
-    maxAge: LIBRARY_SESSION_TTL_SECONDS * 1000,
+    maxAge: ttlSeconds * 1000,
     path: "/",
   });
 };
@@ -79,6 +103,7 @@ const refuse = (res: Response, status: number, error: string): null => {
 interface AuthedSession {
   userId: string;
   token: string;
+  kind: LibrarySessionKind;
   /** The reader, resolved once per session per minute; null = unregistered. */
   ctx: StudentContext | null;
 }
@@ -107,7 +132,12 @@ const requireSession = async (
   }
 
   const ctx = await resolveStudentContextCached(token, session.userId);
-  return { userId: session.userId, token, ctx };
+  return {
+    userId: session.userId,
+    token,
+    kind: session.kind ?? "telegram",
+    ctx,
+  };
 };
 
 /** Resolves the reader, or answers 403 and returns null. */
@@ -186,47 +216,94 @@ const requireReadableDocument = async (
   return doc;
 };
 
-// POST /api/library/session — swap Telegram's signed initData for a cookie
+// POST /api/library/session — swap Telegram's signed initData (or a one-shot
+// PC token minted by the bot) for a cookie
 libraryRouter.post("/session", async (req: Request, res: Response) => {
   try {
-    const initData =
-      typeof req.body?.initData === "string" ? req.body.initData : "";
-    const user = verifyInitData(initData);
-    if (!user) {
-      refuse(res, 401, "This page only works inside the NbkristQik bot.");
-      return;
+    // A link the bot minted for a PC browser. It is presented *instead of*
+    // initData: if it is bad, fail here rather than falling back to a blob
+    // that may belong to a different account. A non-string/empty value is a
+    // bad link, not "no link".
+    const hasPcToken = Object.prototype.hasOwnProperty.call(
+      req.body ?? {},
+      "pcToken",
+    );
+    const pcToken =
+      typeof req.body?.pcToken === "string" ? req.body.pcToken.trim() : "";
+
+    let userId: string;
+    let kind: LibrarySessionKind = "telegram";
+    let ttlSeconds = LIBRARY_SESSION_TTL_SECONDS;
+
+    if (hasPcToken) {
+      if (!pcToken) {
+        refuse(
+          res,
+          401,
+          "This computer link has expired. Ask the bot for a new one.",
+        );
+        return;
+      }
+      const consumed = await consumePcLoginToken(pcToken);
+      if (!consumed) {
+        refuse(
+          res,
+          401,
+          "This computer link has expired. Ask the bot for a new one.",
+        );
+        return;
+      }
+      userId = consumed;
+      kind = "pc";
+      // A shared computer gets a shorter session than a personal Telegram
+      // client, and the library UI offers a sign-out.
+      ttlSeconds = LIBRARY_PC_SESSION_TTL_SECONDS;
+    } else {
+      const initData =
+        typeof req.body?.initData === "string" ? req.body.initData : "";
+      const user = verifyInitData(initData);
+      if (!user) {
+        refuse(res, 401, "This page only works inside the NbkristQik bot.");
+        return;
+      }
+      userId = String(user.id);
     }
 
     // the library is the admin's until the shelf is filled
-    if (!canOpenLibrary(user.id)) {
+    if (!canOpenLibrary(userId)) {
       refuse(res, 403, "The library is not open yet.");
       return;
     }
 
     // Tab visits re-POST here. Keep the session the cookie already carries
-    // when it still belongs to this account: a new token on every mount left
-    // a trail of live keys nothing would ever read again.
+    // when it still belongs to this account and this session kind: a new
+    // token on every mount left a trail of live keys nothing would read
+    // again. A PC exchange always mints its own short session.
     const existingToken = readCookie(
       req.headers.cookie,
       LIBRARY_SESSION_COOKIE,
     );
     const existing = await readSession(existingToken);
     const token =
-      existingToken && existing?.userId === String(user.id)
+      kind === "telegram" &&
+      existingToken &&
+      existing?.userId === userId &&
+      (existing.kind ?? "telegram") === "telegram"
         ? existingToken
-        : await createSession(String(user.id));
+        : await createSession(userId, { kind, ttlSeconds });
 
-    setSessionCookie(res, token);
+    setSessionCookie(res, token, ttlSeconds);
 
-    const ctx = await resolveStudentContextCached(token, String(user.id));
+    const ctx = await resolveStudentContextCached(token, userId);
     trackActivity({
-      userId: user.id,
+      userId: Number(userId),
       chatType: "unknown",
       action: "library_open",
     });
 
     res.json({
       ok: true,
+      kind,
       registered: Boolean(ctx),
       student: ctx ? studentView(ctx) : null,
     });
@@ -251,6 +328,7 @@ libraryRouter.get("/me", async (req: Request, res: Response) => {
 
   res.json({
     ok: true,
+    kind: auth.kind,
     registered: Boolean(auth.ctx),
     student: auth.ctx ? studentView(auth.ctx) : null,
   });
@@ -279,6 +357,97 @@ libraryRouter.get("/subjects", async (req: Request, res: Response) => {
     student: studentView(ctx),
     subjects,
   });
+});
+
+/** A download name the browser and the filesystem both accept. */
+const downloadFileName = (doc: LibraryDocument): string => {
+  const stem =
+    `NbkristQik-${doc.code}${doc.unit ? `-u${doc.unit}` : ""}`.replace(
+      /[^A-Za-z0-9_-]/g,
+      "_",
+    );
+  return `${stem}.pdf`;
+};
+
+// GET /api/library/document/:id/pdf — the whole document, stamped for this
+// reader. Registered before `/document/:id` so the two can never be confused.
+libraryRouter.get("/document/:id/pdf", async (req: Request, res: Response) => {
+  const auth = await requireSession(req, res);
+  if (!auth) return;
+
+  const ctx = requireStudent(res, auth.ctx);
+  if (!ctx) return;
+
+  const doc = await requireReadableDocument(res, ctx, req.params.id);
+  if (!doc) return;
+
+  // Same rule as a page: no server secret means no trustworthy mark, and an
+  // unstamped copy must never leave the box.
+  let token: string;
+  try {
+    token = watermarkToken(auth.userId);
+  } catch (e) {
+    logger.error(
+      "[library] watermark unavailable:",
+      e instanceof Error ? e.message : e,
+    );
+    refuse(res, 503, "Library pages are temporarily unavailable.");
+    return;
+  }
+
+  let file: string;
+  try {
+    file = await ensureWatermarkedPdf(doc, token);
+  } catch (e) {
+    if (e instanceof PdfBusyError) {
+      res.setHeader("Retry-After", "10");
+      refuse(
+        res,
+        503,
+        "The library is preparing a lot of downloads. Try again in a moment.",
+      );
+      return;
+    }
+    if (e instanceof PdfTooLargeError) {
+      refuse(res, 413, e.message);
+      return;
+    }
+    logger.error(
+      "[library] could not prepare a download:",
+      e instanceof Error ? e.message : e,
+    );
+    refuse(res, 500, "Could not prepare this document.");
+    return;
+  }
+
+  res.download(
+    file,
+    downloadFileName(doc),
+    {
+      headers: {
+        "Content-Type": "application/pdf",
+        // The bytes are the reader's own copy, so only a private cache may
+        // keep them. `Vary: Cookie` keeps two accounts on one browser apart.
+        "Cache-Control": "private, max-age=3600",
+        Vary: "Cookie",
+        "X-Content-Type-Options": "nosniff",
+        "Cross-Origin-Resource-Policy": "same-origin",
+      },
+    },
+    (error) => {
+      if (!error) return;
+      logger.warn("[library] download failed:", error.message);
+      if (!res.headersSent) refuse(res, 500, "Could not send this document.");
+    },
+  );
+
+  // one audit row per reader, document and hour, carrying the same token as
+  // the pages; the file is already on its way
+  noteDownload(auth.userId, doc.id, token);
+  // A download delivers the whole unit at once, so count its pages in the
+  // same five-minute burst window as page views. The audit row is deduped;
+  // this counter is not.
+  void watchForBurst(auth.userId, Math.max(1, doc.page_count));
 });
 
 // GET /api/library/document/:id — what is in a document, and may I read it

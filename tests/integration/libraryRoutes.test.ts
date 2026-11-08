@@ -31,10 +31,21 @@ vi.mock("../../src/services/redis/getRedisClient.js", () => ({
       sessions.delete(key);
       return 1;
     }),
+    getDel: vi.fn(async (key: string) => {
+      const value = sessions.get(key) ?? null;
+      sessions.delete(key);
+      return value;
+    }),
     expire: vi.fn(async () => 1),
     incr: vi.fn(async (key: string) => {
       const next = (sessions.get(key) ?? "0").replace(/\D/g, "");
       const count = Number(next || 0) + 1;
+      sessions.set(key, String(count));
+      return count;
+    }),
+    incrBy: vi.fn(async (key: string, weight: number) => {
+      const next = (sessions.get(key) ?? "0").replace(/\D/g, "");
+      const count = Number(next || 0) + weight;
       sessions.set(key, String(count));
       return count;
     }),
@@ -45,6 +56,26 @@ vi.mock("../../src/services/tracker.js", () => ({
   trackActivity: vi.fn(),
   trackMessage: vi.fn(),
 }));
+
+/**
+ * The PDF route is exercised against a fixed file instead of running pdf-lib:
+ * stamping is covered by tests/unit/libraryPdf.test.ts, and a real multi-page
+ * PDF per request would only make this suite slower.
+ */
+const downloadFixture = path.join(
+  os.tmpdir(),
+  "nbq-library-pdf-route",
+  "stamped.pdf",
+);
+vi.mock("../../src/services/library/pdf.js", () => {
+  class PdfBusyError extends Error {}
+  class PdfTooLargeError extends Error {}
+  return {
+    ensureWatermarkedPdf: vi.fn(async () => downloadFixture),
+    PdfBusyError,
+    PdfTooLargeError,
+  };
+});
 
 /**
  * Build a signed initData blob the way Telegram does, so the test exercises
@@ -74,6 +105,9 @@ const makeInitData = (userId: number, token = "test_bot_token"): string => {
 };
 
 beforeAll(async () => {
+  mkdirSync(path.dirname(downloadFixture), { recursive: true });
+  writeFileSync(downloadFixture, "%PDF-1.4\n% stamped fixture\n%%EOF\n");
+
   await client.batch(
     [
       `CREATE TABLE registrations (
@@ -135,6 +169,8 @@ const { upsertRegistration } =
   await import("../../src/db/registration.model.js");
 const { invalidateStudentContext } =
   await import("../../src/services/library/entitlement.js");
+const { createPcLoginToken } =
+  await import("../../src/services/library/session.js");
 
 /**
  * Opens a library session from a given address.
@@ -260,6 +296,52 @@ describe("opening the library", () => {
       .send({ initData: "auth_date=1&user=%7B%22id%22%3A1%7D" });
 
     expect(res.status).toBe(401);
+  });
+});
+
+describe("opening the library on a PC", () => {
+  it("swaps a one-shot bot link for a session cookie", async () => {
+    await upsertRegistration(String(REGISTERED), "23CS1042", "Test Student");
+    const pcToken = await createPcLoginToken(String(REGISTERED));
+
+    const res = await request(app)
+      .post("/api/library/session")
+      .set("X-Forwarded-For", "198.51.100.30")
+      .send({ pcToken });
+
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(res.body.registered).toBe(true);
+    expect(res.body.student.rollNo).toBe("23CS1042");
+
+    const cookie = res.headers["set-cookie"]?.[0]?.split(";")[0] ?? "";
+    expect(cookie).toContain("nbq_lib=");
+
+    // a PC browser has no Telegram identity: the cookie alone must be enough
+    // for the app to keep showing the Library tab after a reload
+    const config = await request(app).get("/api/config").set("Cookie", cookie);
+    expect(config.status).toBe(200);
+    expect(config.body.libraryOpen).toBe(true);
+
+    // the link is spent: a forwarded URL cannot sign in a second browser
+    const again = await request(app)
+      .post("/api/library/session")
+      .set("X-Forwarded-For", "198.51.100.31")
+      .send({ pcToken });
+
+    expect(again.status).toBe(401);
+    expect(again.body.error).toContain("expired");
+  });
+
+  it("does not fall back to initData when the pcToken is bad", async () => {
+    const res = await request(app)
+      .post("/api/library/session")
+      .set("X-Forwarded-For", "198.51.100.32")
+      .send({ pcToken: "never-issued", initData: makeInitData(REGISTERED) });
+
+    expect(res.status).toBe(401);
+    expect(res.body.ok).toBe(false);
+    expect(res.body.error).toContain("expired");
   });
 });
 
@@ -544,6 +626,80 @@ describe("reading a page", () => {
   it("needs a session", async () => {
     const res = await request(app).get("/api/library/page/23CS31T2-u2/1");
     expect(res.status).toBe(401);
+  });
+});
+
+describe("downloading a document", () => {
+  const openSession = async (userId: number, ip: string): Promise<string> => {
+    const open = await request(app)
+      .post("/api/library/session")
+      .set("X-Forwarded-For", ip)
+      .send({ initData: makeInitData(userId) });
+    return open.headers["set-cookie"]?.[0]?.split(";")[0] ?? "";
+  };
+
+  it("needs a session", async () => {
+    const res = await request(app).get("/api/library/document/23CS31T2-u2/pdf");
+    expect(res.status).toBe(401);
+  });
+
+  it("refuses another semester's document", async () => {
+    await upsertRegistration(String(FIRST_YEAR), "23CS1001", "First Year");
+    const cookie = await openSession(FIRST_YEAR, "198.51.100.40");
+
+    const res = await request(app)
+      .get("/api/library/document/23CS31T2-u2/pdf")
+      .set("Cookie", cookie);
+    expect(res.status).toBe(403);
+  });
+
+  it("sends the stamped PDF as an attachment, privately cached", async () => {
+    const cookie = await openSession(REGISTERED, "198.51.100.41");
+
+    const res = await request(app)
+      .get("/api/library/document/23CS31T2-u2/pdf")
+      .set("Cookie", cookie);
+
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toContain("application/pdf");
+    expect(res.headers["content-disposition"]).toContain("attachment");
+    expect(res.headers["content-disposition"]).toContain(
+      "NbkristQik-23CS31T2-uII.pdf",
+    );
+    expect(res.headers["cache-control"]).toContain("private");
+    expect(res.headers["cache-control"]).toContain("max-age=3600");
+    expect(res.headers["x-content-type-options"]).toBe("nosniff");
+    expect(res.headers["cross-origin-resource-policy"]).toBe("same-origin");
+    expect(Buffer.from(res.body).subarray(0, 5).toString("latin1")).toBe(
+      "%PDF-",
+    );
+  });
+
+  it("records one download row per hour, as page 0", async () => {
+    const cookie = await openSession(REGISTERED, "198.51.100.42");
+
+    // let the previous test's fire-and-forget claim land, then reset both the
+    // dedupe key and the audit table
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    sessions.delete(`lib:read:${REGISTERED}:23CS31T2-u2:pdf`);
+    await client.execute({
+      sql: `DELETE FROM library_reads WHERE doc_id = ? AND page = 0`,
+      args: ["23CS31T2-u2"],
+    });
+
+    await request(app)
+      .get("/api/library/document/23CS31T2-u2/pdf")
+      .set("Cookie", cookie);
+    await request(app)
+      .get("/api/library/document/23CS31T2-u2/pdf")
+      .set("Cookie", cookie);
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
+    const rows = await client.execute({
+      sql: `SELECT COUNT(*) AS n FROM library_reads WHERE doc_id = ? AND page = 0`,
+      args: ["23CS31T2-u2"],
+    });
+    expect(Number(rows.rows[0]?.n ?? 0)).toBe(1);
   });
 });
 

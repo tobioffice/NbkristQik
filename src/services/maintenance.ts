@@ -1,5 +1,6 @@
 import { turso } from "../db/db.js";
 import { logger } from "../config/logger.js";
+import { pruneDownloadCache } from "./library/pdf.js";
 
 /**
  * Daily housekeeping for the local database. The probes themselves now run
@@ -47,6 +48,14 @@ export const prune = async (): Promise<void> => {
     "library_reads",
     `DELETE FROM library_reads WHERE at < datetime('now', '-${RETENTION_DAYS} days')`,
   );
+
+  // Stamped PDFs expire on their own seven-day clock and a disk budget; this
+  // is housekeeping, not retention evidence, so a failure stays a warning.
+  try {
+    await pruneDownloadCache();
+  } catch (e) {
+    logger.warn("[maintenance] prune download cache failed:", e);
+  }
 };
 
 export const startMaintenance = (): void => {
