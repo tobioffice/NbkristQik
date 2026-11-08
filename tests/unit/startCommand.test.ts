@@ -10,6 +10,9 @@ import {
 // Telegram.
 const onText = createOnTextMock();
 const sendMessage = createSendMessageMock();
+const deleteMessage = vi.fn<
+  (chatId: number | string, messageId: number) => Promise<boolean>
+>(async () => true);
 const sendLibraryEntry = vi.fn(async () => undefined);
 const trackMessage = vi.fn();
 const rememberStudent = vi.fn(async () => undefined);
@@ -36,7 +39,9 @@ const isAuthorizedUser = vi.fn<
   }) => Promise<boolean>
 >(async () => true);
 
-vi.mock("../../src/bot/bot.js", () => ({ bot: { onText, sendMessage } }));
+vi.mock("../../src/bot/bot.js", () => ({
+  bot: { onText, sendMessage, deleteMessage },
+}));
 vi.mock("../../src/services/tracker.js", () => ({ trackMessage }));
 vi.mock("../../src/bot/commands/library.js", () => ({ sendLibraryEntry }));
 vi.mock("../../src/bot/academics/studentActions.js", () => ({
@@ -51,6 +56,9 @@ vi.mock("../../src/middleware/security.js", async (importOriginal) => {
     await importOriginal<typeof import("../../src/middleware/security.js")>();
   return { ...actual, botSecurityHandler: vi.fn(async () => true) };
 });
+
+const { rememberGroupPrompt } =
+  await import("../../src/bot/academics/groupPrompt.js");
 
 await import("../../src/bot/commands/start.js");
 
@@ -146,6 +154,43 @@ describe("/start att_<roll>", () => {
     const [, roll, , options] = sendAttendanceOrMidMarks.mock.calls[0];
     expect(roll).toBe("25KB1A050R");
     expect(options.notice).toContain("read that O as 0");
+  });
+
+  it("clears the group prompt once the student is in the bot", async () => {
+    rememberGroupPrompt(42, "25KB1A05AR", { chatId: -100200, messageId: 77 });
+
+    await start(message("/start att_25KB1A05AR"));
+
+    await vi.waitFor(() =>
+      expect(deleteMessage).toHaveBeenCalledWith(-100200, 77),
+    );
+    // the prompt is gone, the lookup still happens
+    expect(sendAttendanceOrMidMarks).toHaveBeenCalledTimes(1);
+  });
+
+  it("clears the prompt only once when the link is opened twice", async () => {
+    rememberGroupPrompt(42, "25KB1A05AR", { chatId: -100201, messageId: 78 });
+
+    await start(message("/start att_25KB1A05AR"));
+    await vi.waitFor(() =>
+      expect(deleteMessage).toHaveBeenCalledWith(-100201, 78),
+    );
+
+    await start(message("/start att_25KB1A05AR"));
+    expect(deleteMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it("still answers when the prompt is already gone", async () => {
+    deleteMessage.mockRejectedValueOnce(
+      new Error("message to delete not found"),
+    );
+    rememberGroupPrompt(42, "25KB1A05AR", { chatId: -100202, messageId: 79 });
+
+    await start(message("/start att_25KB1A05AR"));
+
+    await vi.waitFor(() => expect(deleteMessage).toHaveBeenCalledTimes(1));
+    expect(sendAttendanceOrMidMarks).toHaveBeenCalledTimes(1);
+    expect(sendMessage).not.toHaveBeenCalled();
   });
 
   it("falls through to the welcome for a malformed roll", async () => {

@@ -95,6 +95,8 @@ const { trackActivity } = await import("../../src/services/tracker.js");
 const { upsertTgUser } = await import("../../src/db/student.model.js");
 const { getStudentCached } = await import("../../src/services/redis/utils.js");
 const { WEBAPP_URL } = await import("../../src/constants/webapp.js");
+const { takeGroupPrompts } =
+  await import("../../src/bot/academics/groupPrompt.js");
 
 const rollHandler = onText.mock.calls[0][1] as (msg: unknown) => void;
 const callbackHandler = on.mock.calls.find(
@@ -234,8 +236,21 @@ describe("attendance card", () => {
       expect(trackActivity).not.toHaveBeenCalled();
       expect(getStudentCached).not.toHaveBeenCalled();
       expect(upsertTgUser).not.toHaveBeenCalled();
+
+      // the prompt is parked so the private /start can clear it from the room
+      expect(takeGroupPrompts(203, "25KB1A05AR")).toEqual([
+        { chatId: 203, messageId: 1 },
+      ]);
     },
   );
+
+  it("parks no prompt for a private lookup", async () => {
+    sendRoll(218);
+
+    await vi.waitFor(() => expect(editMessageText).toHaveBeenCalled());
+
+    expect(takeGroupPrompts(218, "25KB1A05AR")).toEqual([]);
+  });
 
   it("keeps a plain leaderboard link when an old group card is tapped", async () => {
     await tap(210, "att_25KB1A05AR", 9, "group");

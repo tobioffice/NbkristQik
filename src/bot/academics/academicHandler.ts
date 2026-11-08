@@ -3,6 +3,7 @@ import type { CallbackQuery, Message } from "node-telegram-bot-api";
 
 import { sendAttendanceOrMidMarks, sendBunkPlan } from "./studentActions.js";
 import { cardMarkup } from "./cardMarkup.js";
+import { rememberGroupPrompt } from "./groupPrompt.js";
 import { getStudentCached } from "../../services/redis/utils.js";
 import { upsertTgUser } from "../../db/student.model.js";
 import {
@@ -112,7 +113,7 @@ const sendPrivateAttendanceLink = async (
   msg: Message,
   rollNumber: string,
 ): Promise<void> => {
-  await bot.sendMessage(msg.chat.id, ATTENDANCE_IS_PRIVATE, {
+  const prompt = await bot.sendMessage(msg.chat.id, ATTENDANCE_IS_PRIVATE, {
     reply_to_message_id: msg.message_id,
     reply_markup: {
       inline_keyboard: [
@@ -120,6 +121,15 @@ const sendPrivateAttendanceLink = async (
       ],
     },
   });
+
+  // the prompt exists only to carry the student into the bot; park its
+  // coordinates so the private `/start` can clear it from the room
+  if (msg.from && typeof prompt?.message_id === "number") {
+    rememberGroupPrompt(msg.from.id, rollNumber, {
+      chatId: msg.chat.id,
+      messageId: prompt.message_id,
+    });
+  }
 };
 
 const handleRollNumberMessage = async (msg: Message): Promise<void> => {

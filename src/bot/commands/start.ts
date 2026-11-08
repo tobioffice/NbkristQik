@@ -5,6 +5,7 @@ import { sendLibraryEntry } from "./library.js";
 import { attendanceRoll, startPayload } from "./startPayload.js";
 import { escapeHtml } from "../../services/text.js";
 import { sendAttendanceOrMidMarks } from "../academics/studentActions.js";
+import { takeGroupPrompts } from "../academics/groupPrompt.js";
 import { isAuthorizedUser, rememberStudent } from "../authorization.js";
 import {
   botSecurityHandler,
@@ -26,6 +27,25 @@ const sendWelcome = async (msg: Message): Promise<void> => {
     `Save yours once with /register and /attendance answers in one tap. /help covers the rest.`;
 
   await bot.sendMessage(msg.chat.id, message, { parse_mode: "HTML" });
+};
+
+/**
+ * The group prompt that led here is spent: the student is in the bot now.
+ * Telegram only deletes its own messages, so the student's roll message in
+ * the group is left alone.
+ *
+ * Deliberately not awaited: a slow delete must never hold the card back, and
+ * every failure (already gone, no permission, stale id) is just noise.
+ */
+const clearGroupPrompts = (userId: number, rollNumber: string): void => {
+  for (const { chatId, messageId } of takeGroupPrompts(userId, rollNumber)) {
+    void bot.deleteMessage(chatId, messageId).catch((e: unknown) => {
+      logger.debug(
+        "[start] group prompt could not be deleted:",
+        e instanceof Error ? e.message : e,
+      );
+    });
+  }
 };
 
 /**
@@ -52,6 +72,10 @@ const answerDeepLinkRoll = async (
     await sendWelcome(msg);
     return;
   }
+
+  // the student acted on the group's button, so clean the room up first: the
+  // prompt should not linger whatever this lookup then answers
+  clearGroupPrompts(userId, rollNumber);
 
   if (!(await botSecurityHandler(userId, "start_attendance"))) {
     await bot.sendMessage(msg.chat.id, TOO_FAST);
