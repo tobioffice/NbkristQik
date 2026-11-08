@@ -1,4 +1,4 @@
-import type { SortBy } from "../api";
+import type { LeaderboardCoverage, SortBy } from "../api";
 
 export const SkeletonRows = () => (
   <>
@@ -13,7 +13,14 @@ export const SkeletonRows = () => (
   </>
 );
 
-export const ErrorState = ({ onRetry }: { onRetry: () => void }) => (
+export const ErrorState = ({
+  onRetry,
+  message,
+}: {
+  onRetry: () => void;
+  /** The server's own sentence, when it gave one. */
+  message?: string | null;
+}) => (
   <div className="state-block">
     <svg
       aria-hidden="true"
@@ -32,8 +39,10 @@ export const ErrorState = ({ onRetry }: { onRetry: () => void }) => (
       <path d="M5 5a10 10 0 0 1 14 0" />
       <line x1="12" x2="12.01" y1="2" y2="2" />
     </svg>
-    <p className="title">The register didn&rsquo;t open</p>
-    <p className="sub">It couldn&rsquo;t be fetched just now.</p>
+    <p className="title">
+      {message ? "That didn’t go through" : "The register didn’t open"}
+    </p>
+    <p className="sub">{message ?? "It couldn’t be fetched just now."}</p>
     <p style={{ marginTop: 18 }}>
       <button onClick={onRetry} className="btn-ink">
         Try again
@@ -48,9 +57,39 @@ export const LoadingSpinner = () => (
   </div>
 );
 
-export const EndNote = ({ filtered }: { filtered: boolean }) => (
+/**
+ * The end of the register. Completeness is only provable when the directory
+ * count is a real denominator and every one of those students has a figure;
+ * otherwise say how far the partial register has filled.
+ */
+// the copy rule is the testable heart of EndNote; splitting it out would hide
+// that, so the module keeps both under a scoped fast-refresh exception
+// eslint-disable-next-line react-refresh/only-export-components
+export const endNoteMessage = (
+  filtered: boolean,
+  coverage: LeaderboardCoverage | null,
+): string => {
+  const ranked = coverage?.ranked ?? 0;
+  const known = coverage?.known ?? 0;
+  if (known > 0 && ranked >= known) return "That’s everyone in this view";
+  if (ranked > 0) {
+    return `${ranked.toLocaleString()} ranked so far. The register fills as students check.`;
+  }
+  return filtered
+    ? "That’s everyone in this view"
+    : "The register fills as students check.";
+};
+
+export const EndNote = ({
+  filtered,
+  coverage,
+}: {
+  filtered: boolean;
+  /** Ranked vs. known students for this view; null when unknown. */
+  coverage: LeaderboardCoverage | null;
+}) => (
   <div className="end-note">
-    <p>{filtered ? "That’s everyone in this view" : "That’s everyone"}</p>
+    <p>{endNoteMessage(filtered, coverage)}</p>
   </div>
 );
 
@@ -96,12 +135,15 @@ export const EmptyState = ({
   search,
   sortBy,
   filtered,
+  identified,
   onClearFilters,
 }: {
   search: string;
   sortBy: SortBy;
   /** A year/branch/section choice is narrowing the register. */
   filtered: boolean;
+  /** Anonymous callers can search rolls only; names stay hidden. */
+  identified: boolean;
   onClearFilters: () => void;
 }) => (
   <div className="state-block">
@@ -109,7 +151,11 @@ export const EmptyState = ({
     {search ? (
       <>
         <p>No results for &ldquo;{search}&rdquo;</p>
-        <p className="sub">Try a roll number or part of a name</p>
+        <p className="sub">
+          {identified
+            ? "Try a roll number or part of a name"
+            : "Try a roll number"}
+        </p>
       </>
     ) : filtered ? (
       <>
@@ -124,18 +170,14 @@ export const EmptyState = ({
           </button>
         </p>
       </>
-    ) : sortBy === "midmarks" ? (
-      <>
-        <p>No mid-marks recorded yet.</p>
-        <p className="sub">
-          They show up once the faculty publishes them. Attendance is ready in
-          the meantime.
-        </p>
-      </>
     ) : (
       <>
-        <p>No records yet.</p>
-        <p className="sub">Check back after the next sync.</p>
+        <p>No one is ranked here yet.</p>
+        <p className="sub">
+          {sortBy === "midmarks"
+            ? "Mid-marks show up once the faculty publishes them. The register fills as students check."
+            : "The register fills as students check."}
+        </p>
       </>
     )}
   </div>

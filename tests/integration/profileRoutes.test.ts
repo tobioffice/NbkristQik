@@ -43,10 +43,13 @@ beforeAll(async () => {
         roll_no TEXT PRIMARY KEY,
         attendance_percentage REAL,
         mid_marks_avg REAL,
-        last_updated TEXT
+        last_updated TEXT,
+        attendance_updated_at TEXT,
+        midmarks_updated_at TEXT,
+        year_sem TEXT
       )`,
-      `INSERT INTO student_stats VALUES ('26KB5A0218', 91.5, 24.0, datetime('now'))`,
-      `INSERT INTO student_stats VALUES ('26KB5A0219', 77.0, 18.5, datetime('now'))`,
+      `INSERT INTO student_stats VALUES ('26KB5A0218', 91.5, 24.0, datetime('now'), datetime('now'), datetime('now'), '21')`,
+      `INSERT INTO student_stats VALUES ('26KB5A0219', 77.0, 18.5, datetime('now'), datetime('now'), datetime('now'), '21')`,
       `CREATE TABLE tgusers (userId TEXT PRIMARY KEY, rollNo TEXT)`,
       `INSERT INTO tgusers VALUES ('111222333', '26KB5A0219')`,
       `INSERT INTO tgusers VALUES ('555666777', '26KB5A0218')`,
@@ -127,7 +130,12 @@ describe("profile endpoints", () => {
     const res = await request(app).get("/api/profile?userId=111222333");
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ found: false, suggestion: "26KB5A0219" });
+    expect(res.body).toEqual({
+      found: false,
+      lastLookup: "26KB5A0219",
+      suggestion: "26KB5A0219",
+    });
+    expect(res.headers["cache-control"]).toBe("private, no-store");
   });
 
   it("POST /api/register validates the roll format", async () => {
@@ -222,14 +230,13 @@ describe("/api/me identity preference", () => {
     expect(res.body.attendance).toBeTruthy();
   });
 
-  it("falls back to the last lookup when there is no registration", async () => {
+  it("does not treat the last lookup as identity", async () => {
     const res = await request(app).get("/api/me?userId=111222333");
 
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({
-      found: true,
-      source: "lookup",
-      roll_no: "26KB5A0219",
+    expect(res.body).toEqual({
+      found: false,
+      lastLookup: "26KB5A0219",
     });
   });
 
@@ -237,6 +244,27 @@ describe("/api/me identity preference", () => {
     const res = await request(app).get("/api/me?userId=424242424");
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ found: false });
+    expect(res.body).toEqual({ found: false, lastLookup: null });
+  });
+
+  it("DELETE /api/me/last-lookup forgets the caller's lookup", async () => {
+    const before = await request(app).get("/api/me?userId=111222333");
+    expect(before.body.lastLookup).toBe("26KB5A0219");
+
+    const res = await request(app).delete(
+      "/api/me/last-lookup?userId=111222333",
+    );
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ ok: true });
+
+    const after = await request(app).get("/api/me?userId=111222333");
+    expect(after.body).toEqual({ found: false, lastLookup: null });
+
+    const profile = await request(app).get("/api/profile?userId=111222333");
+    expect(profile.body).toEqual({
+      found: false,
+      lastLookup: null,
+      suggestion: null,
+    });
   });
 });

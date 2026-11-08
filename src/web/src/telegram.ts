@@ -28,16 +28,84 @@ export interface TelegramWebApp {
   initDataUnsafe?: { user?: { id?: number } };
   BackButton?: BackButton;
   HapticFeedback?: HapticFeedback;
+  ready?: () => void;
   expand?: () => void;
+  setHeaderColor?: (color: string) => void;
+  setBackgroundColor?: (color: string) => void;
   disableVerticalSwipes?: () => void;
   enableClosingConfirmation?: () => void;
   disableClosingConfirmation?: () => void;
 }
 
 /** The SDK, when the page is running inside Telegram. */
-export const telegramWebApp = (): TelegramWebApp | undefined =>
-  (window as unknown as { Telegram?: { WebApp?: TelegramWebApp } }).Telegram
-    ?.WebApp;
+export const telegramWebApp = (): TelegramWebApp | undefined => {
+  if (typeof window === "undefined") return undefined;
+  return (window as unknown as { Telegram?: { WebApp?: TelegramWebApp } })
+    .Telegram?.WebApp;
+};
+
+/** The cloth band and the paper, in the client's own chrome. */
+const HEADER_COLOR = "#3f6457";
+const PAPER_COLOR = "#e7dcc3";
+
+/** Apply the chrome once the SDK is there; true when it had a client to ask. */
+const applyTelegramChrome = (): boolean => {
+  const app = telegramWebApp();
+  if (!app) return false;
+
+  try {
+    app.setHeaderColor?.(HEADER_COLOR);
+  } catch {
+    // an older client may not know a call; the page still reads
+  }
+  try {
+    app.setBackgroundColor?.(PAPER_COLOR);
+  } catch {
+    // ignore
+  }
+  try {
+    app.ready?.();
+  } catch {
+    // ignore
+  }
+  try {
+    app.expand?.();
+  } catch {
+    // ignore
+  }
+  try {
+    // the register scrolls vertically: a swipe must scroll it, not shrink
+    // the mini app back to its compact height
+    app.disableVerticalSwipes?.();
+  } catch {
+    // ignore
+  }
+
+  return true;
+};
+
+/**
+ * Set the client's chrome and tell it the sheet is ready.
+ *
+ * The SDK is deferred, so the page no longer waits for it before painting.
+ * If the module happens to run before the deferred script, this runs again
+ * at the end of parsing — which is always after every deferred script.
+ * Outside Telegram, or on a client that refuses a call, it does nothing
+ * harmful: each step is best-effort.
+ */
+export const bootstrapTelegram = (): void => {
+  if (applyTelegramChrome()) return;
+  if (typeof document === "undefined") return;
+  if (document.readyState === "complete") return;
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+      applyTelegramChrome();
+    },
+    { once: true },
+  );
+};
 
 /**
  * The sheet fills the webview. Called after mount as well as in the page

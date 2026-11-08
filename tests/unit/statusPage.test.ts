@@ -48,4 +48,9 @@ describe("status page", () => {
     expect(html).toContain("c.stale");
     expect(html).toContain('fetch("/api/status")');
   });
+
+  it("labels the synthetic lookup component as Answers", () => {
+    expect(html).toContain('COMPONENT_LABELS = { lookup: "Answers" }');
+    expect(html).toContain("COMPONENT_LABELS[c.component]");
+  });
 });

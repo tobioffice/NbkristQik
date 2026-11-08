@@ -2109,3 +2109,225 @@ a:focus-visible {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ---------- my attendance (the first screen) ---------- */
+
+.att-id {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 16px 14px;
+  padding: 9px 0 8px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 12px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.att-id b {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+.att-id__rank {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.att-id__rank small {
+  margin-left: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.att-summary {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 0 16px 12px;
+  padding: 4px 0 14px;
+  border-bottom: 1.5px solid var(--ink);
+}
+
+.att-summary__big {
+  min-width: 0;
+}
+
+.att-summary__label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.att-summary__percent {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(40px, 12vw, 52px);
+  font-weight: 600;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.att-summary__percent small {
+  margin-left: 1px;
+  font-size: 0.42em;
+  color: var(--ink-2);
+}
+
+.att-summary__gap {
+  display: block;
+  margin-top: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.att-summary__gap.is-below {
+  color: var(--red-ink);
+}
+
+.att-summary__facts {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 5px 14px;
+  margin: 0 0 3px;
+  text-align: right;
+}
+
+.att-summary__facts div {
+  display: contents;
+}
+
+.att-summary__facts dt {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  text-align: left;
+}
+
+.att-summary__facts dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.att-fresh {
+  margin: 0 16px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.att-fresh--warn {
+  font-weight: 600;
+  color: var(--amber-text);
+}
+
+.att-bunk {
+  margin: 0 16px 16px;
+  padding: 11px 0 12px;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.att-bunk p {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.att-bunk.is-below p {
+  color: var(--red-ink);
+}
+
+.att-bunk span {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.att-table__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 62px 40px 58px;
+  gap: 6px;
+  padding: 7px 16px 6px;
+  border-top: 1.5px solid var(--ink);
+  border-bottom: 1.5px solid var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.att-table__head span:not(:first-child) {
+  text-align: right;
+}
+
+.att-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 62px 40px 58px;
+  gap: 6px;
+  align-items: baseline;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.att-row__name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ink);
+}
+
+.att-row__count,
+.att-row__pct,
+.att-row__last {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.att-row__count {
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.att-row__pct {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.att-row__last {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.att-row--below .att-row__pct {
+  color: var(--red-ink);
+}

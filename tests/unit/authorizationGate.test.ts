@@ -5,9 +5,8 @@ import {
   sentMessage,
 } from "../mocks/telegram.mock.js";
 
-// The gate talks to Telegram and to the channel-membership services; both are
-// captured here. Redis is shared by the membership cache and, before the fix,
-// by the daily check-in gate.
+// The gate talks to Telegram and to the channel-membership service; both are
+// captured here. Redis only holds the membership cache.
 const sendMessage = createSendMessageMock();
 vi.mock("../../src/bot/bot.js", () => ({ bot: { sendMessage } }));
 
@@ -29,16 +28,10 @@ beforeEach(() => {
   checkMembership.mockResolvedValue(true);
 });
 
-describe("authorization after the check-in gate was retired", () => {
-  it("answers a channel member even when a pinned check-in post exists", async () => {
-    // a post exists, and this student never tapped it: the old gate would
-    // have stopped here
+describe("authorization gate", () => {
+  it("answers a channel member", async () => {
     redisGet.mockImplementation(async (key: string) =>
-      key === "checkin:post:msgId"
-        ? "999"
-        : key === "isMember:42"
-          ? "true"
-          : null,
+      key === "isMember:42" ? "true" : null,
     );
 
     await expect(isAuthorizedUser({ userId: 42, chatId: 42 })).resolves.toBe(

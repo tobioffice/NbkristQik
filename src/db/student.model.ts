@@ -35,6 +35,18 @@ export const getTgUserRoll = async (userId: string): Promise<string | null> => {
   return result.rows[0] ? String(result.rows[0].rollNo) : null;
 };
 
+/**
+ * Removes the caller's last-lookup row. tgusers is "the last roll this
+ * account looked at" (possibly a friend's), not an identity; a student can
+ * clear it so a stale lookup is not offered as a suggestion again.
+ */
+export const deleteTgUser = async (userId: string): Promise<void> => {
+  await turso.execute({
+    sql: `DELETE FROM tgusers WHERE userId = ?`,
+    args: [userId],
+  });
+};
+
 export const getStudent = async (rollno: string) => {
   rollno = rollno.toUpperCase();
 

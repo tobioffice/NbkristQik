@@ -23,10 +23,6 @@ export const redisKeys = {
   reportGate: (userId: number | string) => `report:gate:${userId}`,
   /** Per-user report thread reply throttle (SET NX, 3 s) */
   reportThreadGate: (userId: number | string) => `report:thread:${userId}`,
-  /** Pinned channel check-in post id: checkin:post:msgId */
-  checkinPostMsgId: "checkin:post:msgId",
-  /** Per-user daily check-in record (TTL to next IST midnight), not a gate */
-  dailyUnlocked: (userId: number | string) => `dailyUnlocked:${userId}`,
   /** Library web app session: lib:sess:{token} */
   librarySession: (token: string) => `lib:sess:${token}`,
   /** Pages pulled by one student in the last five minutes: lib:reads:{userId} */

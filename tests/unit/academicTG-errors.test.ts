@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AcademicTG } from "../../src/services/student.utils/AcademicTG.js";
 import { AcademicError } from "../../src/services/student.utils/Academic.js";
+import { StudentNotFoundError } from "../../src/services/redis/utils.js";
 import type { Attendance, Midmarks } from "../../src/types/index.js";
 
 describe("AcademicTG - Error Handling", () => {
@@ -132,6 +133,34 @@ describe("AcademicTG - Error Handling", () => {
       expect(result).toContain("Mid marks for");
       expect(result).toContain("21B81A05E9");
       expect(result).toContain("3_CSE_A");
+    });
+  });
+
+  describe("Suggested rolls", () => {
+    it("returns tappable suggestions alongside the text", async () => {
+      vi.spyOn(academicTG, "getAttendanceJSON").mockRejectedValue(
+        new StudentNotFoundError("25KB1A05AX", ["25KB1A05AR", "25KB1A05AS"]),
+      );
+
+      const result = await academicTG.getAttendanceResult();
+
+      expect(result.text).toContain("isn't in the college records yet");
+      expect(result.text).toContain("tap one");
+      expect(result.markup?.inline_keyboard).toEqual([
+        [{ text: "25KB1A05AR", callback_data: "att_25KB1A05AR" }],
+        [{ text: "25KB1A05AS", callback_data: "att_25KB1A05AS" }],
+      ]);
+    });
+
+    it("keeps the text-only method returning a string", async () => {
+      vi.spyOn(academicTG, "getAttendanceJSON").mockRejectedValue(
+        new StudentNotFoundError("25KB1A05AX", ["25KB1A05AR"]),
+      );
+
+      const message = await academicTG.getAttendanceMessage();
+
+      expect(typeof message).toBe("string");
+      expect(message).toContain("tap one");
     });
   });
 

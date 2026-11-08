@@ -11,11 +11,73 @@ import { recordLibraryRead } from "../../db/library.model.js";
  * whole unit pulled in a minute is a copy, not a read). Neither is allowed to
  * stand between the student and the page: a failed write is logged, not
  * thrown.
+ *
+ * The audit row is deduped per reader, document and page for an hour. Before
+ * this, every re-render of a page wrote a row, so a reader who scrolled up
+ * and down buried real traffic in their own noise and the table grew per
+ * view. The row we keep still carries the watermark token, so a leaked page
+ * still resolves to the reader it was served to. The burst counter below is
+ * *not* deduped: it counts deliveries, which is exactly what a bulk pull
+ * looks like.
  */
 
 /** Pages one reader may pull in five minutes before it is worth a look. */
 const BURST_LIMIT = 300;
 const BURST_WINDOW_SECONDS = 300;
+
+/** One audit row per reader, document and page in this window. */
+const READ_DEDUPE_SECONDS = 60 * 60;
+
+/**
+ * The dedupe key lives here rather than in `redisKeys` on purpose: the
+ * namespace is read by `cacheFlushPatterns` and by ops tooling, and a
+ * per-delivery key with a one-hour life is not a cache to flush with the
+ * student data. The prefix is greppable all the same.
+ */
+const firstReadKey = (userId: string, docId: string, page: number): string =>
+  `lib:read:${userId}:${docId}:${page}`;
+
+/**
+ * Claims the right to write this hour's audit row.
+ *
+ * `SET NX` makes the claim atomic across API workers. If Redis is down every
+ * delivery is recorded: a duplicate row is cheaper than a missing one, and
+ * the page must never fail because bookkeeping did.
+ */
+const claimFirstRead = async (
+  userId: string,
+  docId: string,
+  page: number,
+): Promise<boolean> => {
+  try {
+    const client = await getClient();
+    const claimed = await client.set(firstReadKey(userId, docId, page), "1", {
+      NX: true,
+      EX: READ_DEDUPE_SECONDS,
+    });
+    return claimed === "OK";
+  } catch (e) {
+    logger.warn(
+      "[library] read dedupe unavailable, recording every delivery:",
+      e,
+    );
+    return true;
+  }
+};
+
+/**
+ * Drops a claim whose audit row could not be written, so the next delivery
+ * inside the window can try again. Best effort: if Redis is also down, the
+ * next read simply writes its own row once Redis returns.
+ */
+const releaseFirstRead = async (
+  userId: string,
+  docId: string,
+  page: number,
+): Promise<void> => {
+  const client = await getClient();
+  await client.del(firstReadKey(userId, docId, page));
+};
 
 /** Records that this student was served this page. Fire and forget. */
 export const notePageRead = (
@@ -24,14 +86,24 @@ export const notePageRead = (
   page: number,
   token: string,
 ): void => {
-  void recordLibraryRead(userId, docId, page, token).catch((e) =>
-    logger.warn("[library] could not record a read:", e),
-  );
+  void (async () => {
+    if (!(await claimFirstRead(userId, docId, page))) return;
+    try {
+      await recordLibraryRead(userId, docId, page, token);
+    } catch (e) {
+      // a claim without a row is a lost audit entry: give it back
+      await releaseFirstRead(userId, docId, page).catch(() => {});
+      throw e;
+    }
+  })().catch((e) => logger.warn("[library] could not record a read:", e));
 };
 
 /**
  * Counts pages per student over the burst window and complains when one
  * reader stands out. Best effort: if Redis is down the reading still works.
+ *
+ * This counts every delivery, even one whose audit row was deduped: a script
+ * walking a unit still trips it.
  */
 export const watchForBurst = async (userId: string): Promise<void> => {
   try {

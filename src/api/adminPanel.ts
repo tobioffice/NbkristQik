@@ -81,7 +81,7 @@ ${panelCss}
             <button aria-selected="true" data-range="30d">30 days</button>
             <button aria-selected="false" data-range="24h">Today</button>
           </div>
-          <span class="legend"><b>&mdash;</b> actions &nbsp;&nbsp;<b style="color:var(--amber)">&mdash;</b> check-ins &nbsp;&nbsp; distinct students</span>
+          <span class="legend"><b>&mdash;</b> actions &nbsp;&nbsp; hover for students</span>
         </div>
         <svg id="pulse" viewBox="0 0 640 120" width="100%" height="120" preserveAspectRatio="none" aria-label="Activity chart"></svg>
       </div>
@@ -92,7 +92,6 @@ ${panelCss}
       <div class="stat"><div class="n" id="ov-active7">&ndash;</div><div class="l">active this week</div></div>
       <div class="stat"><div class="n" id="ov-active30">&ndash;</div><div class="l">active this month</div></div>
       <div class="stat"><div class="n" id="ov-actions">&ndash;</div><div class="l">actions all time</div></div>
-      <div class="stat"><div class="n" style="color:var(--amber)" id="ov-checkins">&ndash;</div><div class="l">check-ins today</div></div>
     </div>
 
     <div class="section reveal d2">

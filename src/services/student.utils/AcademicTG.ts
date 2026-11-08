@@ -19,6 +19,7 @@ import {
   buildBlockedReportMessage,
   buildGenericErrorMessage,
   buildUnknownErrorMessage,
+  type LookupResult,
 } from "./errorMessages.js";
 
 /**
@@ -36,15 +37,22 @@ export class AcademicTG extends Academic {
   }
 
   /**
-   * Gets attendance data formatted for Telegram message
+   * Gets attendance data formatted for Telegram. Text-only callers keep this
+   * shape; the bot uses `getAttendanceResult` so it can carry the suggestion
+   * buttons on a "roll not found" answer.
    */
   async getAttendanceMessage(): Promise<string> {
+    return (await this.getAttendanceResult()).text;
+  }
+
+  /** Attendance text plus any buttons that belong with it. */
+  async getAttendanceResult(): Promise<LookupResult> {
     try {
       const data = await this.getAttendanceJSON();
-      return this.withFreshnessNotice(formatAttendanceMessage(data));
+      return { text: this.withFreshnessNotice(formatAttendanceMessage(data)) };
     } catch (error) {
       logger.error("[AcademicTG] Attendance error:", error);
-      return this.formatErrorMessage(error, "attendance");
+      return this.formatErrorResult(error, "attendance");
     }
   }
 
@@ -52,35 +60,48 @@ export class AcademicTG extends Academic {
    * Gets bunk plan: how many classes can be skipped / must be attended
    */
   async getBunkPlanMessage(): Promise<string> {
+    return (await this.getBunkPlanResult()).text;
+  }
+
+  /** Bunk plan text plus any buttons that belong with it. */
+  async getBunkPlanResult(): Promise<LookupResult> {
     try {
       const data = await this.getAttendanceJSON();
-      return this.withFreshnessNotice(formatBunkPlanMessage(data));
+      return { text: this.withFreshnessNotice(formatBunkPlanMessage(data)) };
     } catch (error) {
       logger.error("[AcademicTG] Bunk plan error:", error);
-      return this.formatErrorMessage(error, "attendance");
+      return this.formatErrorResult(error, "attendance");
     }
   }
 
   /**
-   * Gets midmarks data formatted for Telegram message
+   * Gets midmarks data formatted for Telegram
    */
   async getMidmarksMessage(): Promise<string> {
+    return (await this.getMidmarksResult()).text;
+  }
+
+  /** Mid marks text plus any buttons that belong with it. */
+  async getMidmarksResult(): Promise<LookupResult> {
     try {
       const data = await this.getMidmarksJSON();
-      return this.withFreshnessNotice(formatMidmarksMessage(data));
+      return { text: this.withFreshnessNotice(formatMidmarksMessage(data)) };
     } catch (error) {
       logger.error("[AcademicTG] Midmarks error:", error);
-      return this.formatErrorMessage(error, "midmarks");
+      return this.formatErrorResult(error, "midmarks");
     }
   }
 
   /**
-   * Formats error messages with helpful guidance and retry options
+   * Formats error messages with helpful guidance and retry options.
+   *
+   * Returns a `LookupResult` because "roll not found" carries tappable
+   * suggestions; every other error is text-only.
    */
-  private formatErrorMessage(
+  private formatErrorResult(
     error: unknown,
     dataType: "attendance" | "midmarks",
-  ): string {
+  ): LookupResult {
     const rollNo = this.rollnumber;
     const timestamp = new Date().toLocaleTimeString("en-US", {
       hour: "2-digit",
@@ -89,11 +110,11 @@ export class AcademicTG extends Academic {
     });
 
     if (error instanceof ServerDownError) {
-      return buildServerDownMessage(dataType, timestamp);
+      return { text: buildServerDownMessage(dataType, timestamp) };
     }
 
     if (error instanceof NoDataFoundError) {
-      return buildNoDataMessage(rollNo, dataType);
+      return { text: buildNoDataMessage(rollNo, dataType) };
     }
 
     if (error instanceof StudentNotFoundError) {
@@ -101,14 +122,16 @@ export class AcademicTG extends Academic {
     }
 
     if (error instanceof BlockedReportError) {
-      return buildBlockedReportMessage();
+      return { text: buildBlockedReportMessage() };
     }
 
     if (error instanceof AcademicError) {
-      return buildGenericErrorMessage(error.message, dataType, timestamp);
+      return {
+        text: buildGenericErrorMessage(error.message, dataType, timestamp),
+      };
     }
 
     // Unknown error
-    return buildUnknownErrorMessage(dataType, timestamp);
+    return { text: buildUnknownErrorMessage(dataType, timestamp) };
   }
 }

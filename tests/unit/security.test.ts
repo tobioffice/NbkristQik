@@ -1,10 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import type { Request, Response } from "express";
 import {
   isValidRollNumber,
   normalizeRollNumber,
   createRateLimit,
   createBotSecurityHandler,
   botSecurityHandler,
+  clientIpKey,
+  identityRateLimitKey,
+  sanitizeInput,
 } from "../../src/middleware/security.js";
 
 describe("Security Middleware", () => {
@@ -85,6 +89,48 @@ describe("Security Middleware", () => {
 
       expect(limiter).toBeDefined();
       expect(typeof limiter).toBe("function");
+    });
+  });
+
+  describe("rate limit keys", () => {
+    const fakeRequest = (ip: string) =>
+      ({ ip, socket: {} }) as unknown as Request;
+
+    it("keys an authenticated caller by account", () => {
+      const res = {
+        locals: { identity: { status: "authenticated", userId: "42" } },
+      } as unknown as Response;
+
+      expect(identityRateLimitKey(fakeRequest("10.0.0.7"), res)).toBe("u:42");
+    });
+
+    it("keys anonymous callers by their normalized address", () => {
+      const res = { locals: {} } as unknown as Response;
+
+      expect(identityRateLimitKey(fakeRequest("10.0.0.7"), res)).toBe(
+        "ip:10.0.0.7",
+      );
+    });
+
+    it("normalizes IPv6 to a subnet instead of a raw address", () => {
+      const key = clientIpKey(fakeRequest("2001:db8::1"));
+
+      expect(key).toMatch(/\/56$/);
+      expect(key).not.toBe("2001:db8::1");
+    });
+  });
+
+  describe("sanitizeInput", () => {
+    it("keeps report text intact so a student can quote HTML", () => {
+      const req = {
+        body: { message: "  the button says <div> and breaks  " },
+      } as unknown as Request;
+      const next = vi.fn();
+
+      sanitizeInput(req, {} as Response, next);
+
+      expect(req.body.message).toBe("the button says <div> and breaks");
+      expect(next).toHaveBeenCalledOnce();
     });
   });
 });

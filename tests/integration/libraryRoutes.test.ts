@@ -15,10 +15,18 @@ const sessions = new Map<string, string>();
 vi.mock("../../src/services/redis/getRedisClient.js", () => ({
   getClient: vi.fn(async () => ({
     get: vi.fn(async (key: string) => sessions.get(key) ?? null),
-    set: vi.fn(async (key: string, value: string) => {
-      sessions.set(key, value);
-      return "OK";
-    }),
+    set: vi.fn(
+      async (
+        key: string,
+        value: string,
+        options?: { NX?: boolean; EX?: number },
+      ) => {
+        // SET NX is how read dedupe claims a page; the session write has EX
+        if (options?.NX && sessions.has(key)) return null;
+        sessions.set(key, value);
+        return "OK";
+      },
+    ),
     del: vi.fn(async (key: string) => {
       sessions.delete(key);
       return 1;
@@ -125,6 +133,24 @@ beforeAll(async () => {
 const { app } = await import("../../src/api/server.js");
 const { upsertRegistration } =
   await import("../../src/db/registration.model.js");
+const { invalidateStudentContext } =
+  await import("../../src/services/library/entitlement.js");
+
+/**
+ * Opens a library session from a given address.
+ *
+ * The session-exchange limiter allows 20 calls an hour per address, and this
+ * file already uses most of that budget. A test that needs its own session
+ * comes from its own address rather than draining the shared one; the app
+ * trusts one proxy hop, so the forwarded header is the client address.
+ */
+const openSessionFrom = async (userId: number, ip: string): Promise<string> => {
+  const open = await request(app)
+    .post("/api/library/session")
+    .set("X-Forwarded-For", ip)
+    .send({ initData: makeInitData(userId) });
+  return open.headers["set-cookie"]?.[0]?.split(";")[0] ?? "";
+};
 
 const REGISTERED = 111222333;
 const UNREGISTERED = 999888777;
@@ -169,6 +195,54 @@ describe("opening the library", () => {
     expect(cookie).toContain("nbq_lib=");
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("SameSite=Strict");
+  });
+
+  it("reuses a valid session instead of minting another", async () => {
+    sessions.clear();
+    const ip = "198.51.100.10";
+
+    const first = await request(app)
+      .post("/api/library/session")
+      .set("X-Forwarded-For", ip)
+      .send({ initData: makeInitData(REGISTERED) });
+    const setCookie = first.headers["set-cookie"]?.[0] ?? "";
+    const cookie = setCookie.split(";")[0] ?? "";
+    expect(cookie).toContain("nbq_lib=");
+
+    // a tab visit re-POSTs with the cookie: same user, same token, no new key
+    const second = await request(app)
+      .post("/api/library/session")
+      .set("X-Forwarded-For", ip)
+      .set("Cookie", cookie)
+      .send({ initData: makeInitData(REGISTERED) });
+
+    expect(second.status).toBe(200);
+    expect(second.body.student.rollNo).toBe("23CS1042");
+    expect(second.headers["set-cookie"]?.[0]).toBe(setCookie);
+
+    const sessionKeys = [...sessions.keys()].filter((key) =>
+      key.startsWith("lib:sess:"),
+    );
+    expect(sessionKeys).toHaveLength(1);
+
+    // logout drops it for good
+    await request(app).delete("/api/library/session").set("Cookie", cookie);
+    expect(
+      [...sessions.keys()].filter((key) => key.startsWith("lib:sess:")),
+    ).toHaveLength(0);
+  });
+
+  it("mints a fresh session when the cookie is stale", async () => {
+    const res = await request(app)
+      .post("/api/library/session")
+      .set("X-Forwarded-For", "198.51.100.11")
+      .set("Cookie", "nbq_lib=made-up-token")
+      .send({ initData: makeInitData(REGISTERED) });
+
+    expect(res.status).toBe(200);
+    const cookie = res.headers["set-cookie"]?.[0] ?? "";
+    expect(cookie).toContain("nbq_lib=");
+    expect(cookie).not.toContain("made-up-token");
   });
 
   it("refuses a blob that was not signed by Telegram", async () => {
@@ -311,7 +385,10 @@ describe("reading a page", () => {
 
     expect(res.status).toBe(200);
     expect(res.headers["content-type"]).toContain("image/svg+xml");
-    expect(res.headers["cache-control"]).toContain("no-store");
+    // a private cache may keep the stamped page: the mark is per reader
+    expect(res.headers["cache-control"]).toContain("private");
+    expect(res.headers["cache-control"]).toContain("max-age=300");
+    expect(res.headers["vary"]).toContain("Cookie");
     // the stamped page is still an svg, with the reader's token drawn in
     const page = res.body.toString("utf8");
     expect(page).toContain("<svg");
@@ -375,6 +452,93 @@ describe("reading a page", () => {
       .get("/api/library/page/23CS31T2-u2/1")
       .set("Cookie", cookie);
     expect(res.status).toBe(403);
+  });
+
+  it("still refuses another semester's document for a cached reader", async () => {
+    // a live document on a semester this reader is not in
+    await client.execute(
+      `INSERT OR REPLACE INTO library_documents
+        (id, code, title, dept, regulation, year_sem, unit, kind, source_path, page_count, status)
+       VALUES ('21CS99T9-u1', '21CS99T9', 'Other Semester Subject',
+               'CSE', 'R23', '21', 'I', 'material', 'data/docs/21CS99T9-u1.pdf', 5, 'live')`,
+    );
+    makePage("23CS31T2-u2", 1);
+
+    const cookie = await openSessionFrom(REGISTERED, "198.51.100.12");
+
+    // this first request resolves and caches the reader and the document row
+    const own = await request(app)
+      .get("/api/library/page/23CS31T2-u2/1")
+      .set("Cookie", cookie);
+    expect(own.status).toBe(200);
+
+    const doc = await request(app)
+      .get("/api/library/document/21CS99T9-u1")
+      .set("Cookie", cookie);
+    expect(doc.status).toBe(403);
+
+    const page = await request(app)
+      .get("/api/library/page/21CS99T9-u1/1")
+      .set("Cookie", cookie);
+    expect(page.status).toBe(403);
+  });
+
+  it("records one audit row for two reads of the same page in an hour", async () => {
+    makePage("23CS31T2-u2", 11);
+    const cookie = await openSessionFrom(REGISTERED, "198.51.100.13");
+    await client.execute({
+      sql: `DELETE FROM library_reads WHERE doc_id = ? AND page = ?`,
+      args: ["23CS31T2-u2", 11],
+    });
+
+    const burstKey = `lib:reads:${REGISTERED}`;
+    const burstBefore = Number(sessions.get(burstKey) ?? "0");
+
+    const first = await request(app)
+      .get("/api/library/page/23CS31T2-u2/11")
+      .set("Cookie", cookie);
+    const second = await request(app)
+      .get("/api/library/page/23CS31T2-u2/11")
+      .set("Cookie", cookie);
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
+    const rows = await client.execute({
+      sql: `SELECT COUNT(*) AS n FROM library_reads WHERE doc_id = ? AND page = ?`,
+      args: ["23CS31T2-u2", 11],
+    });
+    expect(Number(rows.rows[0]?.n ?? 0)).toBe(1);
+
+    // the burst counter is telemetry per delivery, not per audit row
+    expect(Number(sessions.get(burstKey) ?? "0")).toBe(burstBefore + 2);
+  });
+
+  it("sees a changed roll on the next page once the reader cache is invalidated", async () => {
+    await client.execute(
+      `INSERT OR REPLACE INTO studentsnew VALUES ('23CS1044', 'MOVED STUDENT', 'A', '5', '11')`,
+    );
+    makePage("23CS31T2-u2", 1);
+
+    const cookie = await openSessionFrom(REGISTERED, "198.51.100.14");
+    const before = await request(app)
+      .get("/api/library/page/23CS31T2-u2/1")
+      .set("Cookie", cookie);
+    expect(before.status).toBe(200);
+
+    // what profile.ts will do after a successful registration write
+    await upsertRegistration(String(REGISTERED), "23CS1044", "Test Student");
+    invalidateStudentContext(String(REGISTERED));
+
+    const after = await request(app)
+      .get("/api/library/page/23CS31T2-u2/1")
+      .set("Cookie", cookie);
+    expect(after.status).toBe(403);
+
+    // restore the fixture for anything that follows in this file
+    await upsertRegistration(String(REGISTERED), "23CS1042", "Test Student");
+    invalidateStudentContext(String(REGISTERED));
   });
 
   it("needs a session", async () => {

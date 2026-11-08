@@ -6,7 +6,7 @@ export const panelJs = `(function () {
 
   var ACTION_LABELS = {
     "roll_lookup": "Roll lookup", "attendance": "Attendance", "midmarks": "Mid marks",
-    "bunk": "Bunk plan", "daily_checkin": "Daily check-in", "leaderboard_webapp": "Opened leaderboard",
+    "bunk": "Bunk plan", "leaderboard_webapp": "Opened leaderboard",
     "command:start": "/start", "command:help": "/help", "command:leaderboard": "/leaderboard",
     "report": "Report to admin", "report_followup": "Thread follow-up"
   };
@@ -186,7 +186,6 @@ export const panelJs = `(function () {
           label: istTime(istMidnightUtc + h * 3600000) + "–" + istTime(istMidnightUtc + (h + 1) * 3600000),
           actions: rec ? rec.actions : 0,
           users: rec ? rec.users : 0,
-          checkins: rec ? rec.checkins || 0 : 0,
         });
       }
     } else {
@@ -202,7 +201,6 @@ export const panelJs = `(function () {
           label: key,
           actions: rec2 ? rec2.actions : 0,
           users: rec2 ? rec2.users : 0,
-          checkins: rec2 ? rec2.checkins || 0 : 0,
         });
       }
     }
@@ -213,10 +211,9 @@ export const panelJs = `(function () {
     var svg = $("pulse");
     if (!points.length) return;
     var W = 640, H = 120, pad = 4;
-    var max = 1, hasCheckins = false;
+    var max = 1;
     for (var k = 0; k < points.length; k++) {
       max = Math.max(max, points[k].actions);
-      if (points[k].checkins > 0) hasCheckins = true;
     }
     var step = (W - pad * 2) / (points.length - 1);
     var y = function (v) { return H - pad - (v / max) * (H - pad * 2 - 8); };
@@ -232,16 +229,9 @@ export const panelJs = `(function () {
       '<path d="' + area + '" fill="url(#pulsefill)"/>' +
       '<path d="' + line + '" fill="none" stroke="#1e2a38" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
       '<line x1="' + pts[pts.length - 1][0] + '" y1="' + pts[pts.length - 1][1] + '" x2="' + pts[pts.length - 1][0] + '" y2="' + H + '" stroke="#1e2a38" stroke-opacity="0.32" stroke-dasharray="2 3"/>';
-    if (hasCheckins) {
-      var cline = "";
-      for (var c = 0; c < points.length; c++) {
-        cline += (c ? " L" : "M") + (pad + c * step).toFixed(1) + " " + y(points[c].checkins).toFixed(1);
-      }
-      svgHtml += '<path d="' + cline + '" fill="none" stroke="#8a6a12" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
-    }
     for (var r = 0; r < points.length; r += 1) {
       var cx = pad + r * step, cy = y(points[r].actions);
-      svgHtml += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="7" fill="transparent"><title>' + points[r].label + ": " + points[r].actions + " actions, " + points[r].users + " students, " + points[r].checkins + " check-ins</title></circle>";
+      svgHtml += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="7" fill="transparent"><title>' + points[r].label + ": " + points[r].actions + " actions, " + points[r].users + " students</title></circle>";
     }
     svg.innerHTML = svgHtml;
     svg.onmousemove = function (ev) {
@@ -257,7 +247,7 @@ export const panelJs = `(function () {
         tip.style.cssText = "position:fixed;pointer-events:none;font-size:12px;background:#f6efdd;border:1px solid rgba(30,42,56,.45);color:#1e2a38;padding:5px 9px;border-radius:2px;z-index:30;font-family:" + "var(--mono)" + ";white-space:nowrap";
         document.body.appendChild(tip);
       }
-      tip.textContent = lab + (pulseRange === "24h" ? " IST" : "") + " · " + pt.actions + " actions · " + pt.users + " students · " + pt.checkins + " check-ins";
+      tip.textContent = lab + (pulseRange === "24h" ? " IST" : "") + " · " + pt.actions + " actions · " + pt.users + " students";
       tip.style.left = (ev.clientX + 12) + "px";
       tip.style.top = (ev.clientY - 30) + "px";
       tip.style.display = "block";
@@ -348,17 +338,6 @@ export const panelJs = `(function () {
       countUp($("ov-active7"), d.totals.active7d);
       countUp($("ov-active30"), d.totals.active30d);
       countUp($("ov-actions"), d.totals.totalActions);
-      // check-ins today, counted over the IST day from the hourly buckets.
-      //backend keys are IST "YYYY-MM-DD HH", so compare the date part
-      //directly — parsing an hour-precision key as a date yields NaN.
-      var todayIst = istDate(Date.now());
-      var todayCheckins = 0;
-      var hourlyRows = d.hourly || [];
-      for (var hi = 0; hi < hourlyRows.length; hi++) {
-        if (String(hourlyRows[hi].h || "").slice(0, 10) === todayIst)
-          todayCheckins += hourlyRows[hi].checkins || 0;
-      }
-      countUp($("ov-checkins"), todayCheckins);
       drawPulse(buildPulsePoints());
       drawSurfaces(d.surfaces || {});
       drawWeights(d.topActions || []);
@@ -760,6 +739,8 @@ export const panelJs = `(function () {
   }, 30000);
 
   /* ---------- health ---------- */
+  // "lookup" is the synthetic answer check; the operator reads it as Answers.
+  var HEALTH_LABELS = { lookup: "Answers" };
   var loadHealth = function () {
     lastLoad.health = Date.now();
     api("health").then(function (d) {
@@ -796,7 +777,7 @@ export const panelJs = `(function () {
           ageSec < 3600 ? "probed " + Math.floor(ageSec / 60) + "m ago" :
           ageSec < 86400 ? "probed " + Math.floor(ageSec / 3600) + "h ago" :
           "probed " + Math.floor(ageSec / 86400) + "d ago";
-        html += '<div class="hrow"><div class="hname">' + esc(c.component) + "</div>" +
+        html += '<div class="hrow"><div class="hname">' + esc(HEALTH_LABELS[c.component] || c.component) + "</div>" +
           '<div class="ubars">' + bars + "</div>" +
           '<div class="hstat"><div class="pct" style="color:' + stateColor + '">' + stateWord + "</div>" +
           '<div class="lat">' + esc(probeAge) + "</div>" +

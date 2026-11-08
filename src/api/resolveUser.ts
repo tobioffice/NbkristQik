@@ -1,4 +1,4 @@
-import type { Request } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { verifyInitData, type TgInitUser } from "../services/telegramAuth.js";
 import { allowDevIdentity } from "../config/environmentals.js";
 
@@ -88,4 +88,38 @@ export const resolveUserId = (
     return { userId: "", error: identity.error };
   }
   return { userId: identity.userId, user: identity.user };
+};
+
+/**
+ * Resolve the caller once, before the rate limiters, and keep the result on
+ * `res.locals.identity`. Later middleware and routes read the same object
+ * instead of verifying initData again (per-user rate limits need the identity
+ * before a route runs).
+ *
+ * Never throws: a broken resolver must not turn every API call into a 500. An
+ * unexpected failure is treated as anonymous, which is the safe downgrade for
+ * a limiter key (the IP backstop still applies).
+ */
+export const attachIdentity = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
+  try {
+    if (!res.locals.identity) {
+      res.locals.identity = resolveOptionalIdentity(req);
+    }
+  } catch {
+    res.locals.identity = { status: "anonymous" } satisfies Identity;
+  }
+  next();
+};
+
+/**
+ * The identity attached by `attachIdentity`, or a fresh resolution when the
+ * route is mounted without that middleware (tests, one-off routers).
+ */
+export const attachedIdentity = (req: Request, res?: Response): Identity => {
+  const stored = res?.locals?.identity as Identity | undefined;
+  return stored ?? resolveOptionalIdentity(req);
 };

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   createOnTextMock,
   createSendMessageMock,
@@ -11,19 +11,64 @@ import {
 const onText = createOnTextMock();
 const sendMessage = createSendMessageMock();
 const sendLibraryEntry = vi.fn();
+const trackMessage = vi.fn();
+const rememberStudent = vi.fn(async () => undefined);
+
+interface DeepLinkOptions {
+  replyToMessageId?: number;
+  notice?: string;
+}
+
+const sendAttendanceOrMidMarks = vi.fn<
+  (
+    msg: unknown,
+    roll: string,
+    signal: string,
+    options: DeepLinkOptions,
+  ) => Promise<void>
+>(async () => undefined);
+
+const isAuthorizedUser = vi.fn<
+  (request: {
+    userId: number;
+    chatId: number;
+    joinPromptChatId?: number;
+  }) => Promise<boolean>
+>(async () => true);
 
 vi.mock("../../src/bot/bot.js", () => ({ bot: { onText, sendMessage } }));
-vi.mock("../../src/services/tracker.js", () => ({ trackMessage: vi.fn() }));
+vi.mock("../../src/services/tracker.js", () => ({ trackMessage }));
 vi.mock("../../src/bot/commands/library.js", () => ({ sendLibraryEntry }));
+vi.mock("../../src/bot/academics/studentActions.js", () => ({
+  sendAttendanceOrMidMarks,
+}));
+vi.mock("../../src/bot/authorization.js", () => ({
+  isAuthorizedUser,
+  rememberStudent,
+}));
+vi.mock("../../src/middleware/security.js", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("../../src/middleware/security.js")>();
+  return { ...actual, botSecurityHandler: vi.fn(async () => true) };
+});
 
 await import("../../src/bot/commands/start.js");
 
-const start = registeredTextHandler<(msg: unknown) => void>(onText, "/start");
+const start = registeredTextHandler<(msg: unknown) => Promise<unknown> | void>(
+  onText,
+  "/start",
+);
 
-const message = (text: string) => ({
-  chat: { id: 42, type: "private" },
+const message = (text: string, chatType = "private", messageId = 11) => ({
+  chat: { id: 42, type: chatType },
   from: { id: 42, first_name: "Student" },
   text,
+  message_id: messageId,
+});
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  isAuthorizedUser.mockResolvedValue(true);
 });
 
 describe("/start", () => {
@@ -35,13 +80,14 @@ describe("/start", () => {
 
     expect(sendLibraryEntry).toHaveBeenCalledTimes(1);
     expect(sendMessage).not.toHaveBeenCalled();
+    expect(sendAttendanceOrMidMarks).not.toHaveBeenCalled();
   });
 
-  it("treats the retired 'unlocked' payload as a plain welcome", () => {
+  it("treats an unknown payload as a plain welcome", () => {
     sendLibraryEntry.mockClear();
     sendMessage.mockClear();
 
-    start(message("/start unlocked"));
+    start(message("/start campaign"));
 
     expect(sendLibraryEntry).not.toHaveBeenCalled();
     expect(sendMessage).toHaveBeenCalledTimes(1);
@@ -57,5 +103,57 @@ describe("/start", () => {
 
     expect(sendMessage).toHaveBeenCalledTimes(1);
     expect(sendMessage.mock.calls[0][1]).toContain("welcome in");
+  });
+});
+
+describe("/start att_<roll>", () => {
+  it("answers the attendance card here in private", async () => {
+    await start(message("/start att_25KB1A05AR"));
+
+    expect(sendAttendanceOrMidMarks).toHaveBeenCalledTimes(1);
+    const [, roll, signal, options] = sendAttendanceOrMidMarks.mock.calls[0];
+    expect(roll).toBe("25KB1A05AR");
+    expect(signal).toBe("att");
+    expect(options.replyToMessageId).toBe(11);
+    expect(trackMessage).toHaveBeenCalledWith(
+      expect.anything(),
+      "roll_lookup",
+      "25KB1A05AR",
+    );
+    expect(sendMessage).not.toHaveBeenCalled();
+  });
+
+  it("does not answer a blocked student", async () => {
+    isAuthorizedUser.mockResolvedValueOnce(false);
+
+    await start(message("/start att_25KB1A05AR"));
+
+    expect(sendAttendanceOrMidMarks).not.toHaveBeenCalled();
+  });
+
+  it("never answers an attendance link in a group", async () => {
+    await start(message("/start att_25KB1A05AR", "group"));
+
+    expect(sendAttendanceOrMidMarks).not.toHaveBeenCalled();
+    expect(sendMessage).toHaveBeenCalledTimes(1);
+    const [, text] = sentMessage(sendMessage);
+    expect(text).toContain("welcome in");
+  });
+
+  it("reads a payload O as zero, with the notice", async () => {
+    await start(message("/start att_25KB1A05OR"));
+
+    const [, roll, , options] = sendAttendanceOrMidMarks.mock.calls[0];
+    expect(roll).toBe("25KB1A050R");
+    expect(options.notice).toContain("read that O as 0");
+  });
+
+  it("falls through to the welcome for a malformed roll", async () => {
+    await start(message("/start att_not-a-roll"));
+
+    expect(sendAttendanceOrMidMarks).not.toHaveBeenCalled();
+    expect(sendMessage).toHaveBeenCalledTimes(1);
+    const [, text] = sentMessage(sendMessage);
+    expect(text).toContain("welcome in");
   });
 });

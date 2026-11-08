@@ -1,55 +1,31 @@
-import { useEffect, useState } from "react";
-import { getMe, type MyRank, type RankInfo } from "./api";
-import { useTelegramIdentity } from "./useTelegramIdentity";
+import type { MyRank } from "./api";
+import { useIdentity } from "./identity";
 
 interface TelegramUser {
   myRoll: string | null;
   myRank: MyRank | null;
-  /** How the server resolved this caller: a saved roll or a past lookup. */
-  source: "registered" | "lookup" | null;
+  /** How the server resolved this caller: a saved roll only. */
+  source: "registered" | null;
+  /** True while the shell is still checking the roll. */
+  loading: boolean;
+  error: string | null;
 }
 
-const rankInfo = (raw: unknown): RankInfo | null => {
-  if (!raw || typeof raw !== "object") return null;
-  const info = raw as Partial<RankInfo>;
-  if (typeof info.rank !== "number") return null;
-  return {
-    rank: info.rank,
-    total: typeof info.total === "number" ? info.total : 0,
-    value: typeof info.value === "number" ? info.value : null,
-  };
-};
-
 /**
- * "You are #N" — resolves the Telegram user to their roll + global ranks.
- * The signed initData travels in the identity header; without it the server
- * rejects the call in production. The dev userId fallback is only used when
- * no real initData is present, and only in development.
+ * "You are #N" for the rank strip.
+ *
+ * The real fetch lives in `IdentityProvider`; this is the thin shape the
+ * leaderboard already consumes. One app open asks `/api/me` once, no matter
+ * how many views read the answer.
  */
 export const useTelegramUser = (): TelegramUser => {
-  const { tgUser, initData } = useTelegramIdentity();
-  const [myRoll, setMyRoll] = useState<string | null>(null);
-  const [myRank, setMyRank] = useState<MyRank | null>(null);
-  const [source, setSource] = useState<"registered" | "lookup" | null>(null);
+  const { roll, ranks, source, status, error } = useIdentity();
 
-  useEffect(() => {
-    if (!tgUser) return;
-    setSource(null);
-
-    getMe({ userId: tgUser, initData })
-      .then((d) => {
-        if (!d.found) return;
-        setMyRoll(d.roll_no ?? null);
-        setMyRank({
-          attendance: rankInfo(d.attendance),
-          midmarks: rankInfo(d.midmarks),
-        });
-        setSource(
-          d.source === "registered" || d.source === "lookup" ? d.source : null,
-        );
-      })
-      .catch((e) => console.warn("You-are-#N lookup failed:", e));
-  }, [tgUser, initData]);
-
-  return { myRoll, myRank, source };
+  return {
+    myRoll: roll,
+    myRank: ranks,
+    source,
+    loading: status === "loading",
+    error: status === "error" ? error : null,
+  };
 };

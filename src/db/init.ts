@@ -27,8 +27,11 @@ import { logger } from "../config/logger.js";
  * Turso endpoint may not: reading there is logged and skipped rather than
  * turned into a boot failure, since the guard is a safety net, not a
  * connection requirement.
+ *
+ * Version 2 adds per-metric timestamps and a semester key to student_stats,
+ * and updated_at to fallbackResponses. See migrateToV2().
  */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 /** Reads the database's user_version, treating a missing row as 0. */
 const readSchemaVersion = async (): Promise<number> => {
@@ -67,7 +70,8 @@ export const initDatabase = async () => {
   await turso.execute(`
     CREATE TABLE IF NOT EXISTS fallbackResponses (
         id TEXT PRIMARY KEY CHECK(LENGTH(id) <= 50),
-        content TEXT
+        content TEXT,
+        updated_at TEXT
     );
   `);
   await turso.execute(`
@@ -193,10 +197,17 @@ export const initDatabase = async () => {
   await initLibraryTables();
   await backfillReportThreads();
 
-  // Stamp a fresh/pre-versioning database only after every table exists, so a
-  // crash mid-init leaves version 0 and the next boot retries the whole
-  // (idempotent) schema instead of claiming a version it never finished.
-  if (schemaVersion === 0) {
+  // Additive v2 columns. Guarded by the version and by PRAGMA table_info, so
+  // a database that already has a column (or a crashed half-migration) is
+  // safe to run through again.
+  if (schemaVersion < 2) {
+    await migrateToV2();
+  }
+
+  // Stamp after every table exists, so a crash mid-init leaves the old version
+  // and the next boot retries the whole (idempotent) schema instead of
+  // claiming a version it never finished.
+  if (schemaVersion < SCHEMA_VERSION) {
     try {
       await turso.execute(`PRAGMA user_version = ${SCHEMA_VERSION}`);
       logger.debug(`[db] schema version stamped at ${SCHEMA_VERSION}`);
@@ -204,6 +215,80 @@ export const initDatabase = async () => {
       logger.warn("[db] could not stamp PRAGMA user_version:", e);
     }
   }
+};
+
+/** Column names currently on a table (empty for a missing table). */
+const tableColumns = async (table: string): Promise<Set<string>> => {
+  const result = await turso.execute(`PRAGMA table_info(${table})`);
+  return new Set(result.rows.map((row) => String(row.name)));
+};
+
+/** `ALTER TABLE ... ADD COLUMN` only when the column is actually missing. */
+const ensureColumn = async (
+  table: string,
+  column: string,
+  definition: string,
+): Promise<void> => {
+  const columns = await tableColumns(table);
+  if (columns.has(column)) return;
+
+  await turso.execute(
+    `ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`,
+  );
+  logger.info(`[db] added ${table}.${column}`);
+};
+
+/**
+ * Schema v2: per-metric timestamps and the semester key.
+ *
+ * Backfill is deliberately conservative and idempotent (only null columns):
+ *  - attendance_updated_at <- last_updated where an attendance value exists
+ *  - midmarks_updated_at   <- last_updated where a mid-mark value exists
+ *  - year_sem              <- studentsnew.year for the roll
+ *
+ * A row whose roll is not in studentsnew keeps a null year_sem and is
+ * excluded from the leaderboard until a lookup refreshes it. Count is logged
+ * once per boot so the state is visible.
+ */
+const migrateToV2 = async (): Promise<void> => {
+  await ensureColumn("student_stats", "attendance_updated_at", "TEXT");
+  await ensureColumn("student_stats", "midmarks_updated_at", "TEXT");
+  await ensureColumn("student_stats", "year_sem", "TEXT");
+  await ensureColumn("fallbackResponses", "updated_at", "TEXT");
+
+  await turso.execute(`
+    UPDATE student_stats
+    SET attendance_updated_at = last_updated
+    WHERE attendance_updated_at IS NULL
+      AND attendance_percentage IS NOT NULL
+      AND last_updated IS NOT NULL
+  `);
+  await turso.execute(`
+    UPDATE student_stats
+    SET midmarks_updated_at = last_updated
+    WHERE midmarks_updated_at IS NULL
+      AND mid_marks_avg IS NOT NULL
+      AND last_updated IS NOT NULL
+  `);
+  await turso.execute(`
+    UPDATE student_stats
+    SET year_sem = (
+      SELECT s.year FROM studentsnew s WHERE s.roll_no = student_stats.roll_no
+    )
+    WHERE year_sem IS NULL
+  `);
+
+  const missing = await turso.execute(
+    `SELECT COUNT(*) AS n FROM student_stats WHERE year_sem IS NULL`,
+  );
+  const missingCount = Number(missing.rows[0]?.n ?? 0);
+  if (missingCount > 0) {
+    logger.warn(
+      `[db] ${missingCount} student_stats row(s) have no year_sem (roll not in studentsnew) — excluded from the leaderboard until refreshed`,
+    );
+  }
+
+  logger.info("[db] schema v2 migration complete");
 };
 
 /**

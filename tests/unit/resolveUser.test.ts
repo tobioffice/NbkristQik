@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { Request } from "express";
+import type { Request, Response } from "express";
 
 /**
  * The dev identity gate is env-driven, so each case reloads the module with a
@@ -141,5 +141,71 @@ describe("the dev identity gate", () => {
         fakeRequest({ headers: { "x-telegram-init-data": "bad" } }),
       ),
     ).toEqual({ status: "invalid", error: "Invalid Telegram signature" });
+  });
+});
+
+describe("attachIdentity", () => {
+  const attach = async (parts: Parameters<typeof fakeRequest>[0]) => {
+    const { attachIdentity } = await loadResolver({
+      env: "test",
+      allowDevIdentity: true,
+    });
+    const locals: Record<string, unknown> = {};
+    const res = { locals } as unknown as Response;
+    let nextCalls = 0;
+    attachIdentity(fakeRequest(parts), res, () => {
+      nextCalls += 1;
+    });
+    return { locals, nextCalls };
+  };
+
+  it("stores a verified identity on res.locals and calls next", async () => {
+    const { locals, nextCalls } = await attach({ query: { userId: "12345" } });
+
+    expect(nextCalls).toBe(1);
+    expect(locals.identity).toEqual({
+      status: "authenticated",
+      userId: "12345",
+    });
+  });
+
+  it("stores anonymous when nothing was presented", async () => {
+    const { locals, nextCalls } = await attach({});
+
+    expect(nextCalls).toBe(1);
+    expect(locals.identity).toEqual({ status: "anonymous" });
+  });
+
+  it("stores invalid rather than downgrading a bad signature", async () => {
+    const { locals } = await attach({
+      headers: { "x-telegram-init-data": "not-a-signature" },
+    });
+
+    expect(locals.identity).toEqual({
+      status: "invalid",
+      error: "Invalid Telegram signature",
+    });
+  });
+
+  it("keeps the identity an earlier chain already attached", async () => {
+    const { attachIdentity } = await loadResolver({
+      env: "test",
+      allowDevIdentity: true,
+    });
+    const locals: Record<string, unknown> = {
+      identity: { status: "authenticated", userId: "777" },
+    };
+    const res = { locals } as unknown as Response;
+
+    attachIdentity(
+      fakeRequest({ query: { userId: "12345" } }),
+      res,
+      () => undefined,
+    );
+
+    expect(locals.identity).toEqual({
+      status: "authenticated",
+      userId: "777",
+    });
   });
 });

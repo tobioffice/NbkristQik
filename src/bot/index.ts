@@ -64,7 +64,6 @@ async function startBot() {
       import("./commands/library.js"),
       import("./commands/postopen.js"),
       import("./academics/academicHandler.js"),
-      import("./dailyCheckIn.js"),
       import("./syncdb.js"),
       import("../services/uptime.js"),
       import("../api/server.js"),

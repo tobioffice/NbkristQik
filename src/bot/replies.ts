@@ -17,10 +17,6 @@ export const SOMETHING_BROKE =
 export const BAD_ROLL =
   "That roll number doesn't look right. Check it and send it again.";
 
-/** The daily check-in post in the channel, and the reminder it points at. */
-export const CHECK_IN_PROMPT =
-  "📋 <b>Daily check-in</b>\n\nTap <b>Check in</b> below so I know you're around today.";
-
 /** The channel the bot asks students to join, before it answers. */
 export const JOIN_CHANNEL =
   "I need you in the channel first, then I can help you here.";

@@ -59,10 +59,46 @@ export interface StudentStat {
   rank: number;
 }
 
+/**
+ * The portal stores `yearSem` (11..42), but the register filters on the year
+ * digit only; semester 2 (12, 22, ...) must answer to the same year.
+ */
+export type YearFilter = "all" | "1" | "2" | "3" | "4";
+
 export interface LeaderboardFilters {
-  year: string;
+  year: YearFilter;
   branch: string;
   section: string;
+}
+
+/**
+ * Which slice the register shows. `me` asks the server to resolve the
+ * caller's saved registration to a year/branch/section; `all` is a
+ * deliberate whole-register view. Explicit filters override both.
+ */
+export type LeaderboardScope = "me" | "all";
+
+/** The section context the server actually applied to the page. */
+export interface LeaderboardScopeInfo {
+  year: string | null;
+  branch: string | null;
+  section: string | null;
+}
+
+/**
+ * `ranked` is the number of students with a figure in this view; `known` is
+ * the (possibly stale) directory count for the same filters. It is a partial
+ * register, never the whole college.
+ */
+export interface LeaderboardCoverage {
+  ranked: number;
+  known: number;
+}
+
+/** The newest and oldest write behind the figures on page 1. */
+export interface LeaderboardFreshness {
+  newest: string | null;
+  oldest: string | null;
 }
 
 export interface MyRank {
@@ -81,22 +117,33 @@ export interface RankInfo {
 export interface LeaderboardMeta {
   updated_at: string | null;
   facets: { sections: string[] } | null;
+  scope: LeaderboardScopeInfo | null;
+  coverage: LeaderboardCoverage | null;
+  freshness: LeaderboardFreshness | null;
 }
 
+/**
+ * The leaderboard URL. `scope` decides what an unfiltered page means:
+ * `me` lets the server resolve the caller's own section, `all` is the whole
+ * register. Dimensions set to `all` are omitted entirely — sending
+ * `year=all` would be an explicit filter and would suppress `scope=me`.
+ */
 export const buildLeaderboardUrl = (
   page: number,
   sort: SortBy,
   filters: LeaderboardFilters,
   search: string,
+  scope: LeaderboardScope = "me",
 ): string => {
   const queryParams = new URLSearchParams({
     page: page.toString(),
     limit: "20",
     sort: sort,
-    year: filters.year,
-    branch: filters.branch,
-    section: filters.section,
+    scope,
   });
+  if (filters.year !== "all") queryParams.set("year", filters.year);
+  if (filters.branch !== "all") queryParams.set("branch", filters.branch);
+  if (filters.section !== "all") queryParams.set("section", filters.section);
   if (search) queryParams.set("search", search);
   return `${API_BASE}/api/leaderboard?${queryParams.toString()}`;
 };
@@ -114,11 +161,64 @@ export const buildMeUrl = (userId: string, initData?: string): string => {
 export interface MeResponse {
   found: boolean;
   roll_no?: string;
-  attendance?: unknown;
-  midmarks?: unknown;
-  /** How the caller was resolved: a saved registration or a past lookup. */
-  source?: "registered" | "lookup";
+  attendance?: RankInfo | null;
+  midmarks?: RankInfo | null;
+  /**
+   * The last roll this account looked up. It is a suggestion for an
+   * unregistered user, never their identity.
+   */
+  lastLookup?: string | null;
+  /** A found caller is always a saved registration. */
+  source?: "registered";
 }
+
+/** The verified caller, after `/api/me` has been mapped to a screen state. */
+export interface MeState {
+  status: "ready" | "no-roll";
+  roll: string | null;
+  ranks: MyRank | null;
+  source: "registered" | null;
+  /** Kept apart from `roll` so a friend's lookup is never read as identity. */
+  lastLookup: string | null;
+}
+
+const rankInfo = (raw: unknown): RankInfo | null => {
+  if (!raw || typeof raw !== "object") return null;
+  const info = raw as Partial<RankInfo>;
+  if (typeof info.rank !== "number") return null;
+  return {
+    rank: info.rank,
+    total: typeof info.total === "number" ? info.total : 0,
+    value: typeof info.value === "number" ? info.value : null,
+  };
+};
+
+/**
+ * `/api/me` is the registration, nothing else. `lastLookup` is returned as a
+ * separate suggestion and is deliberately not allowed to fill `roll`.
+ */
+export const mapMe = (me: MeResponse): MeState => {
+  if (!me.found || !me.roll_no) {
+    return {
+      status: "no-roll",
+      roll: null,
+      ranks: null,
+      source: null,
+      lastLookup: me.lastLookup ?? null,
+    };
+  }
+
+  return {
+    status: "ready",
+    roll: me.roll_no,
+    ranks: {
+      attendance: rankInfo(me.attendance),
+      midmarks: rankInfo(me.midmarks),
+    },
+    source: "registered",
+    lastLookup: null,
+  };
+};
 
 /** The caller's roll and global ranks, resolved through their identity. */
 export const getMe = async (identity: ApiIdentity): Promise<MeResponse> => {
@@ -129,7 +229,148 @@ export const getMe = async (identity: ApiIdentity): Promise<MeResponse> => {
   return readJson<MeResponse>(res);
 };
 
+/** Forget the last roll this account looked up; the registration is untouched. */
+export const deleteLastLookup = async (
+  identity: ApiIdentity,
+): Promise<void> => {
+  const res = await fetchWithTimeout(
+    withQuery("/api/me/last-lookup", devIdentityParams(identity)),
+    {
+      method: "DELETE",
+      headers: authHeaders(identity.initData),
+    },
+  );
+  await readJson(res);
+};
+
 export const PAGE_SIZE = 20;
+
+// ---------- my academics (the first screen) ----------
+
+export type AcademicType = "attendance" | "midmarks";
+
+export interface AttendanceSubject {
+  subject: string;
+  attended: number;
+  conducted: number;
+  /** The portal's own stamp, usually DD-MM-YYYY, or "N/A". */
+  lastUpdated: string;
+}
+
+export interface AttendanceData {
+  rollno: string;
+  year_branch_section: string;
+  percentage: number;
+  totalClasses: { attended: number; conducted: number };
+  subjects: AttendanceSubject[];
+}
+
+export interface MidmarksSubject {
+  subject: string;
+  type: string;
+  M1: number | null;
+  M2: number | null;
+  average: number | null;
+}
+
+export interface MidmarksData {
+  rollno: string;
+  year_branch_section: string;
+  subjects: MidmarksSubject[];
+}
+
+/** How the figures were obtained, in the server's own words. */
+export interface AcademicFreshness {
+  notice: string | null;
+  source: "live" | "cached" | "fallback";
+}
+
+export type MyAcademicsResponse<T extends AcademicType> =
+  | {
+      ok: true;
+      registered: true;
+      type: T;
+      rollNo: string;
+      data: T extends "attendance" ? AttendanceData : MidmarksData;
+      freshness: AcademicFreshness;
+    }
+  | { ok: false; registered: false };
+
+/** A failed academics call, carrying the server's code for a clear message. */
+export class AcademicsRequestError extends Error {
+  readonly status: number;
+  readonly code: string | null;
+  readonly rollNo: string | null;
+
+  constructor(
+    message: string,
+    status: number,
+    code: string | null = null,
+    rollNo: string | null = null,
+  ) {
+    super(message);
+    this.name = "AcademicsRequestError";
+    this.status = status;
+    this.code = code;
+    this.rollNo = rollNo;
+  }
+}
+
+export const buildAcademicsUrl = (
+  type: AcademicType,
+  identity: ApiIdentity,
+): string => {
+  const params = devIdentityParams(identity);
+  params.set("type", type);
+  return withQuery("/api/me/academics", params);
+};
+
+export interface FetchAcademicsOptions {
+  signal?: AbortSignal;
+  /** "no-store" when the student asks for a fresh check, not the warm copy. */
+  cache?: RequestCache;
+}
+
+/**
+ * Structured attendance/mid-marks for the caller's saved roll. Unlike the
+ * Telegram cards, this is JSON a table can render without parsing HTML.
+ */
+export const fetchMyAcademics = async <T extends AcademicType>(
+  identity: ApiIdentity,
+  type: T,
+  options: FetchAcademicsOptions = {},
+): Promise<MyAcademicsResponse<T>> => {
+  const res = await fetchWithTimeout(buildAcademicsUrl(type, identity), {
+    headers: authHeaders(identity.initData),
+    signal: options.signal,
+    cache: options.cache,
+  });
+  const body = (await res.json().catch(() => ({}))) as
+    | MyAcademicsResponse<T>
+    | {
+        ok: false;
+        registered: boolean;
+        error?: string;
+        code?: string;
+        rollNo?: string;
+      };
+
+  if (!res.ok) {
+    const failed = body as {
+      error?: string;
+      code?: string;
+      rollNo?: string;
+    };
+    throw new AcademicsRequestError(
+      failed.error ?? `academics request failed: ${res.status}`,
+      res.status,
+      failed.code ?? null,
+      failed.rollNo ?? null,
+    );
+  }
+
+  return body as MyAcademicsResponse<T>;
+};
 
 // ---------- app config ----------
 
@@ -182,7 +423,12 @@ export type ProfileResponse =
   | { found: true; registration: Registration; student: StudentInfo }
   // registered roll vanished from the college master table (semester sync)
   | { found: true; stale: true; registration: Registration; student: null }
-  | { found: false; suggestion: string | null }
+  // `lastLookup` is a suggestion for the empty form, not the caller's roll
+  | {
+      found: false;
+      lastLookup: string | null;
+      suggestion: string | null;
+    }
   | { found: false; error: string };
 
 export interface RegisterRequest {
@@ -316,11 +562,12 @@ export const cacheThread = (thread: ReportThread): void => {
 export const fetchThread = async (
   identity: { initData?: string; userId?: string },
   issueId: string,
+  signal?: AbortSignal,
 ): Promise<ReportThread> => {
   const params = devIdentityParams(identity);
   const res = await fetchWithTimeout(
     withQuery(`/api/thread/${encodeURIComponent(issueId)}`, params),
-    { headers: authHeaders(identity.initData) },
+    { headers: authHeaders(identity.initData), signal },
   );
   const data = (await res.json().catch(() => ({}))) as {
     ok?: boolean;

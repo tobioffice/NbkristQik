@@ -1,5 +1,5 @@
 import { BRANCHES } from "../constants";
-import type { LeaderboardFilters } from "../api";
+import type { LeaderboardFilters, YearFilter } from "../api";
 
 interface FilterBarProps {
   filters: LeaderboardFilters;
@@ -38,14 +38,14 @@ export default function FilterBar({
       <select
         value={filters.year}
         aria-label="Filter by year"
-        onChange={(e) => onChange({ year: e.target.value })}
+        onChange={(e) => onChange({ year: e.target.value as YearFilter })}
         className="field-select"
       >
         <option value="all">All Years</option>
-        <option value="11">1st Year</option>
-        <option value="21">2nd Year</option>
-        <option value="31">3rd Year</option>
-        <option value="41">4th Year</option>
+        <option value="1">1st Year</option>
+        <option value="2">2nd Year</option>
+        <option value="3">3rd Year</option>
+        <option value="4">4th Year</option>
       </select>
 
       <select

@@ -1,9 +1,14 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
-import type { SortBy } from "./api";
-import { AUTO_LOAD_LIMIT, useLeaderboard } from "./useLeaderboard";
+import type { LeaderboardScope, SortBy, YearFilter } from "./api";
+import {
+  AUTO_LOAD_LIMIT,
+  searchQuery,
+  useLeaderboard,
+} from "./useLeaderboard";
 import { useTelegramUser } from "./useTelegramUser";
 import { useTelegramIdentity } from "./useTelegramIdentity";
-import { formatGap, formatSyncedAt } from "./format";
+import { formatFreshnessRange, formatGap, formatSyncedAt } from "./format";
+import { BRANCHES } from "./constants";
 import { haptic } from "./telegram";
 import Band from "./components/Band";
 import SearchBar from "./components/SearchBar";
@@ -31,12 +36,21 @@ interface LeaderboardProps {
 
 export default function Leaderboard({ showBand = true }: LeaderboardProps) {
   const [sortBy, setSortBy] = useState<SortBy>("attendance");
-  const [filterYear, setFilterYear] = useState("all");
+  const [filterYear, setFilterYear] = useState<YearFilter>("all");
   const [filterBranch, setFilterBranch] = useState("all");
   const [filterSection, setFilterSection] = useState("all");
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const { initData } = useTelegramIdentity();
+  const { myRoll, myRank, loading: identityLoading } = useTelegramUser();
+
+  // null means automatic: the saved roll's section once the identity answers,
+  // otherwise the whole register. A filter change or "All students" pins the
+  // choice to `all`; "My section" pins it back and clears the filters.
+  const [chosenScope, setChosenScope] = useState<LeaderboardScope | null>(
+    null,
+  );
+  const scopeMode: LeaderboardScope = chosenScope ?? (myRoll ? "me" : "all");
 
   // stable identity so the fetch effect only fires on real filter changes
   const filters = useMemo(
@@ -44,9 +58,11 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
     [filterYear, filterBranch, filterSection],
   );
 
-  // debounced search -> triggers refetch via hook deps
+  // Debounced search -> triggers refetch via hook deps. One character is
+  // not a search: it would be rejected, so the register stays unfiltered
+  // until a second character arrives (SearchBar shows the hint).
   useEffect(() => {
-    const t = setTimeout(() => setSearch(searchInput.trim()), 400);
+    const t = setTimeout(() => setSearch(searchQuery(searchInput)), 400);
     return () => clearTimeout(t);
   }, [searchInput]);
 
@@ -54,18 +70,29 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
     stats,
     total,
     updatedAt,
+    coverage,
+    freshness,
+    scope,
     sections,
     loading,
     initialLoading,
+    refreshing,
     error,
+    errorMessage,
     moreError,
     hasMore,
     retry,
     retryMore,
     loadMore,
     lastElementRef,
-  } = useLeaderboard(sortBy, filters, search, initData);
-  const { myRoll, myRank } = useTelegramUser();
+  } = useLeaderboard(
+    sortBy,
+    filters,
+    scopeMode,
+    search,
+    initData,
+    !identityLoading,
+  );
 
   const myRankInfo = myRoll
     ? sortBy === "attendance"
@@ -90,7 +117,34 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
   const podiumVisible = stats.length > 0 && !search;
   const listStats = search ? stats : stats.slice(3);
 
-  const synced = formatSyncedAt(updatedAt);
+  // a wide write range must not read as one fresh sync
+  const synced = freshness
+    ? formatFreshnessRange(freshness.newest, freshness.oldest)
+    : formatSyncedAt(updatedAt);
+  const newestStamp = freshness?.newest ?? updatedAt;
+
+  // coverage is ranked against the directory, never the whole college
+  const coverageLabel = coverage
+    ? coverage.known > 0
+      ? `${coverage.ranked.toLocaleString()} of ${coverage.known.toLocaleString()} known students seen`
+      : `${coverage.ranked.toLocaleString()} ranked so far`
+    : null;
+  const partialCoverage =
+    coverage != null && coverage.known > 0 && coverage.ranked < coverage.known;
+  // the unfiltered empty state already carries the "register fills" sentence;
+  // printing it twice on one screen is noise
+  const showFillNote = partialCoverage && (stats.length > 0 || isFiltered);
+
+  // what `scope=me` actually resolved to, for the button's tooltip
+  const scopeTitle = useMemo(() => {
+    if (!scope) return undefined;
+    const branch = scope.branch
+      ? (BRANCHES[Number(scope.branch)] ?? scope.branch)
+      : null;
+    const year = scope.year ? `Year ${scope.year}` : null;
+    const section = scope.section ? `Section ${scope.section}` : null;
+    return [branch, year, section].filter(Boolean).join(" · ") || undefined;
+  }, [scope]);
 
   // a branch/year change can strand the section filter on a value that no
   // longer exists; drop it once the live section list says so
@@ -103,7 +157,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
   // left the reader
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [sortBy, filters, search]);
+  }, [sortBy, filters, scopeMode, search]);
 
   // where the 75% rule falls: after the last confirmed row when the loaded
   // rows cross the line (attendance only — the minimum is an attendance rule)
@@ -157,6 +211,18 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
     setFilterSection("all");
     setSearchInput("");
     setSearch("");
+  }, []);
+
+  /** Return to the saved roll's own section: no filters, no search. */
+  const showMySection = useCallback(() => {
+    clearFilters();
+    setChosenScope("me");
+  }, [clearFilters]);
+
+  /** Keep the current filters, but open them to the whole register. */
+  const showAllStudents = useCallback(() => {
+    haptic.select();
+    setChosenScope("all");
   }, []);
 
   const stripTotal =
@@ -214,7 +280,39 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
           }}
         />
 
+        {sortBy === "midmarks" && (
+          <p className="hint-line" style={{ margin: "0 16px 10px" }}>
+            Average of M1/M2 across subjects; compare within a section.
+          </p>
+        )}
+
         <div className="controls">
+          {/* the saved roll's own section is the default; "All" is deliberate */}
+          {myRoll && (
+            <div
+              className="sort-tabs"
+              role="group"
+              aria-label="Register scope"
+              style={{ margin: 0 }}
+            >
+              <button
+                type="button"
+                aria-pressed={scopeMode === "me"}
+                title={scopeMode === "me" ? scopeTitle : undefined}
+                onClick={showMySection}
+              >
+                My section
+              </button>
+              <button
+                type="button"
+                aria-pressed={scopeMode === "all"}
+                onClick={showAllStudents}
+              >
+                All students
+              </button>
+            </div>
+          )}
+
           <SearchBar
             value={searchInput}
             onChange={setSearchInput}
@@ -225,6 +323,9 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
             sections={sections}
             onChange={(patch) => {
               haptic.select();
+              // a custom slice of the register is a whole-register view, not
+              // the caller's section with one more filter
+              setChosenScope("all");
               if (patch.year !== undefined) setFilterYear(patch.year);
               if (patch.branch !== undefined) setFilterBranch(patch.branch);
               if (patch.section !== undefined) setFilterSection(patch.section);
@@ -247,7 +348,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
                 <span
                   className="reg-meta__sync"
                   title={
-                    updatedAt ? `Last written ${updatedAt} UTC` : undefined
+                    newestStamp ? `Last written ${newestStamp} UTC` : undefined
                   }
                 >
                   {synced}
@@ -255,57 +356,98 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
               ) : null}
             </div>
           )}
+          {coverageLabel && (
+            <p className="hint-line">
+              {coverageLabel}.
+              {showFillNote
+                ? " This register fills as students check."
+                : null}
+            </p>
+          )}
         </div>
 
-        {podiumVisible && (
-          <Podium
-            stats={stats}
-            sortBy={sortBy}
-            loaded={stats.length}
-            total={total}
-          />
+        {refreshing && (
+          <p
+            className="hint-line"
+            role="status"
+            style={{ padding: "0 16px 8px" }}
+          >
+            Updating the register&hellip;
+          </p>
         )}
 
         {initialLoading && <SkeletonRows />}
 
-        {error && !initialLoading && <ErrorState onRetry={retry} />}
-
-        {!error && listStats.length > 0 && (
-          <>
-            <div className="list-head" aria-hidden="true">
-              <span>Rnk</span>
-              <span>Roll</span>
-              <span>Name</span>
-              <span>{sortBy === "attendance" ? "Att %" : "Mid avg"}</span>
-            </div>
-            <ol
-              className="reg-list"
-              aria-label={`Students ranked by ${
-                sortBy === "attendance" ? "attendance" : "mid-marks"
-              }`}
-            >
-              {lineBeforeFirst && <TheLine />}
-              {listStats.map((stat, index) => (
-                <Fragment key={stat.roll_no}>
-                  <StudentRow
-                    stat={stat}
-                    sortBy={sortBy}
-                    // guard: myRoll is null for unidentified viewers, and a ghost
-                    // row's roll_no is also null — null === null must not mean "me"
-                    isMe={myRoll != null && stat.roll_no === myRoll}
-                    isLast={index === listStats.length - 1}
-                    lastElementRef={lastElementRef}
-                  />
-                  {index === lineAfter && <TheLine />}
-                </Fragment>
-              ))}
-            </ol>
-          </>
+        {error && !initialLoading && stats.length === 0 && (
+          <ErrorState onRetry={retry} message={errorMessage} />
         )}
 
-        {loading && !initialLoading && <LoadingSpinner />}
+        {error && stats.length > 0 && !initialLoading && (
+          <p
+            className="note note--err"
+            role="alert"
+            style={{ margin: "0 16px 14px" }}
+          >
+            {errorMessage ?? "The register couldn’t refresh."}{" "}
+            <button type="button" className="link-btn" onClick={retry}>
+              Try again
+            </button>
+          </p>
+        )}
 
-        {!error && hasMore && !initialLoading && (
+        <div
+          style={
+            refreshing
+              ? { opacity: 0.55, transition: "opacity 0.12s ease" }
+              : undefined
+          }
+        >
+          {podiumVisible && (
+            <Podium
+              stats={stats}
+              sortBy={sortBy}
+              loaded={stats.length}
+              total={total}
+            />
+          )}
+
+          {listStats.length > 0 && (
+            <>
+              <div className="list-head" aria-hidden="true">
+                <span>Rnk</span>
+                <span>Roll</span>
+                <span>Name</span>
+                <span>{sortBy === "attendance" ? "Att %" : "Mid avg"}</span>
+              </div>
+              <ol
+                className="reg-list"
+                aria-label={`Students ranked by ${
+                  sortBy === "attendance" ? "attendance" : "mid-marks"
+                }`}
+              >
+                {lineBeforeFirst && <TheLine />}
+                {listStats.map((stat, index) => (
+                  <Fragment key={stat.roll_no}>
+                    <StudentRow
+                      stat={stat}
+                      sortBy={sortBy}
+                      // guard: myRoll is null for unidentified viewers, and a ghost
+                      // row's roll_no is also null — null === null must not mean "me"
+                      isMe={myRoll != null && stat.roll_no === myRoll}
+                      isLast={index === listStats.length - 1}
+                      lastElementRef={lastElementRef}
+                    />
+                    {index === lineAfter && <TheLine />}
+                  </Fragment>
+                ))}
+              </ol>
+            </>
+          )}
+        </div>
+
+        {loading && !initialLoading && !refreshing && <LoadingSpinner />}
+
+        {!error && hasMore && !initialLoading && !refreshing && (
           <div className="load-more">
             {moreError && (
               <p className="load-more__note" role="alert">
@@ -336,7 +478,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
         )}
 
         {!hasMore && stats.length > 0 && !error && (
-          <EndNote filtered={isFiltered} />
+          <EndNote filtered={isFiltered} coverage={coverage} />
         )}
 
         {stats.length === 0 && !loading && !initialLoading && !error && (
@@ -344,6 +486,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
             search={search}
             sortBy={sortBy}
             filtered={narrowedByFilters}
+            identified={Boolean(initData)}
             onClearFilters={clearFilters}
           />
         )}

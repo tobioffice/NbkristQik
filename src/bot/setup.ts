@@ -77,10 +77,6 @@ export async function setupBot(bot: TelegramBot): Promise<void> {
       [
         ...userCommands.filter((command) => command.command !== "library"),
         LIBRARY_COMMAND,
-        {
-          command: "postcheckin",
-          description: "Post and pin today's check-in",
-        },
       ],
       { scope: { type: "chat", chat_id: ADMIN_ID } },
     )

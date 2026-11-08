@@ -19,25 +19,29 @@ interface ReportThreadViewProps {
 }
 
 /** Wall-clock times read IST, 12-hour AM/PM — same as everywhere else. */
+const IST_TIME = new Intl.DateTimeFormat("en-US", {
+  timeZone: "Asia/Kolkata",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+});
+
+const IST_DAY = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Asia/Kolkata",
+  day: "2-digit",
+  month: "short",
+});
+
 const istTime = (utc: string): string => {
   const t = Date.parse(String(utc).replace(" ", "T") + "Z");
   if (Number.isNaN(t)) return "";
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Kolkata",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  }).format(t);
+  return IST_TIME.format(t);
 };
 
 const istDay = (utc: string): string => {
   const t = Date.parse(String(utc).replace(" ", "T") + "Z");
   if (Number.isNaN(t)) return "";
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Kolkata",
-    day: "2-digit",
-    month: "short",
-  }).format(t);
+  return IST_DAY.format(t);
 };
 
 const STATUS_NOTE: Record<ReportThread["status"], string> = {
@@ -78,6 +82,85 @@ const knownThread = (
 ): ReportThread | null =>
   peekThread(issueId) ?? (seed ? threadFromSeed(seed) : null);
 
+export interface ThreadPollOptions {
+  /** One read of the conversation. The signal aborts when polling stops. */
+  request: (signal: AbortSignal) => Promise<ReportThread>;
+  onThread: (thread: ReportThread) => void;
+  /** A background failure; the open thread stays as it is. */
+  onError?: (error: unknown) => void;
+  /** False stops the clock: a resolved thread cannot change. */
+  canPoll?: () => boolean;
+  /** Hidden tabs do not spend requests. */
+  isVisible?: () => boolean;
+  /** Another read (the opening fetch) is still in flight. */
+  isBusy?: () => boolean;
+  intervalMs?: number;
+}
+
+/**
+ * Poll a thread every few seconds while it can still change. One request at
+ * a time, none from a hidden tab, and none after the conversation is closed.
+ * Stopping aborts the request already in flight.
+ */
+// This helper lives beside the view it drives so the fake-timer test can
+// exercise the real clock instead of a copy of it.
+// eslint-disable-next-line react-refresh/only-export-components
+export const startThreadPoll = ({
+  request,
+  onThread,
+  onError,
+  canPoll = () => true,
+  isVisible = () =>
+    typeof document === "undefined" || document.visibilityState === "visible",
+  isBusy = () => false,
+  intervalMs = 8000,
+}: ThreadPollOptions): (() => void) => {
+  const controller = new AbortController();
+  let inFlight = false;
+  let stopped = false;
+  let settled = false;
+  let id: ReturnType<typeof setInterval> | null = null;
+
+  const stopClock = () => {
+    if (id !== null) {
+      clearInterval(id);
+      id = null;
+    }
+  };
+
+  const tick = async () => {
+    if (stopped || settled || inFlight) return;
+    if (!canPoll()) {
+      settled = true;
+      stopClock();
+      return;
+    }
+    if (!isVisible() || isBusy()) return;
+
+    inFlight = true;
+    try {
+      const thread = await request(controller.signal);
+      if (stopped) return;
+      onThread(thread);
+      if (thread.status === "resolved") {
+        settled = true;
+        stopClock();
+      }
+    } catch (error) {
+      if (!stopped && !controller.signal.aborted) onError?.(error);
+    } finally {
+      inFlight = false;
+    }
+  };
+
+  id = setInterval(tick, intervalMs);
+  return () => {
+    stopped = true;
+    stopClock();
+    controller.abort();
+  };
+};
+
 /**
  * One issue, as a conversation. It paints the moment the row is tapped —
  * from the warm cache, or from the sketch the reports list already holds —
@@ -102,6 +185,9 @@ export default function ReportThreadView({
   const [sending, setSending] = useState(false);
   const bottom = useRef<HTMLDivElement | null>(null);
   const seenCount = useRef(initial?.messageCount ?? 0);
+  const threadRef = useRef(thread);
+  const abortRef = useRef<AbortController | null>(null);
+  const inFlightRef = useRef(false);
 
   useClosingConfirmation(draft.trim().length > 0);
 
@@ -110,21 +196,41 @@ export default function ReportThreadView({
     writeDraft(draftKey, draft);
   }, [draftKey, draft]);
 
-  const load = (silent: boolean) => {
+  useEffect(() => {
+    threadRef.current = thread;
+  }, [thread]);
+
+  const load = (silent: boolean, supersede = false) => {
+    // a slow read must not stack on itself; a visible action (Retry, Send)
+    // is allowed to supersede a request already in flight
+    if (silent && !supersede && inFlightRef.current) return;
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    inFlightRef.current = true;
+
     if (!silent) {
       setLoading(true);
       setError(null);
     }
-    fetchThread(identity, issueId)
+
+    fetchThread(identity, issueId, controller.signal)
       .then((t) => {
+        if (controller.signal.aborted) return;
         setThread(t);
         setError(null);
       })
       .catch((e) => {
+        // an abort is the page moving on, not a failed read
+        if (controller.signal.aborted) return;
         // a failed background poll must not blank a thread already on screen
         if (!silent) setError((e as Error).message || "That didn't load.");
       })
       .finally(() => {
+        if (abortRef.current !== controller) return;
+        abortRef.current = null;
+        inFlightRef.current = false;
         if (!silent) setLoading(false);
       });
   };
@@ -139,14 +245,30 @@ export default function ReportThreadView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [issueId]);
 
-  // light polling so the admin's side of the conversation shows up live
+  // light polling so the admin's side of the conversation shows up live;
+  // the clock stops as soon as the thread is resolved
   useEffect(() => {
-    const id = window.setInterval(() => {
-      if (document.visibilityState === "visible") load(true);
-    }, 8000);
-    return () => window.clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [issueId]);
+    if (thread?.status === "resolved") return;
+    return startThreadPoll({
+      request: (signal) => fetchThread(identity, issueId, signal),
+      onThread: (next) => {
+        setThread(next);
+        setError(null);
+      },
+      canPoll: () => threadRef.current?.status !== "resolved",
+      isBusy: () => inFlightRef.current,
+    });
+  }, [identity, issueId, thread?.status]);
+
+  // navigating away must not leave a request running
+  useEffect(
+    () => () => {
+      abortRef.current?.abort();
+      abortRef.current = null;
+      inFlightRef.current = false;
+    },
+    [],
+  );
 
   // keep the newest message in view as the thread grows
   useEffect(() => {
@@ -170,7 +292,7 @@ export default function ReportThreadView({
       await sendThreadMessage(identity, issueId, clean);
       setDraft("");
       clearDraft(draftKey);
-      load(true);
+      load(true, true);
     } catch (e) {
       setError((e as Error).message || "Could not send that.");
     } finally {

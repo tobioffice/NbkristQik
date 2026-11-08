@@ -61,33 +61,49 @@ export const isSessionValid = async (): Promise<boolean> => {
 };
 
 /**
- * Renews session by logging in again
+ * Renews session by logging in again.
+ *
+ * Concurrent calls share one login. Without this, two requests that both see
+ * the login page mint two session tokens; the portal keeps only the last, so
+ * the first request's cookie is already dead when it retries.
  */
-export const renewSession = async (): Promise<void> => {
-  const sessionToken = makeSessionToken();
-  const headers = header("att");
-  headers.Cookie = `PHPSESSID=${sessionToken}`;
-  headers.Referer = `${BASE_URL}/attendance/attendanceLogin.php`;
+let renewSessionInFlight: Promise<void> | null = null;
 
-  const payload = buildLoginPayload();
+export const renewSession = (): Promise<void> => {
+  if (renewSessionInFlight) return renewSessionInFlight;
 
-  try {
-    await axios.post(LOGIN_URL, payload, {
-      headers,
-      maxRedirects: 0,
-      timeout: REQUEST_TIMEOUT,
-      validateStatus: (status) => status >= 200 && status < 303,
-    });
+  const login = (async (): Promise<void> => {
+    const sessionToken = makeSessionToken();
+    const headers = header("att");
+    headers.Cookie = `PHPSESSID=${sessionToken}`;
+    headers.Referer = `${BASE_URL}/attendance/attendanceLogin.php`;
 
-    sessionCookie = sessionToken;
-    logger.debug("[Academic] Session renewed successfully");
-  } catch (error) {
-    logger.error(
-      "[Academic] Failed to renew session:",
-      error instanceof Error ? error.message : error,
-    );
-    throw new InvalidCredentialsError();
-  }
+    const payload = buildLoginPayload();
+
+    try {
+      await axios.post(LOGIN_URL, payload, {
+        headers,
+        maxRedirects: 0,
+        timeout: REQUEST_TIMEOUT,
+        validateStatus: (status) => status >= 200 && status < 303,
+      });
+
+      sessionCookie = sessionToken;
+      logger.debug("[Academic] Session renewed successfully");
+    } catch (error) {
+      logger.error(
+        "[Academic] Failed to renew session:",
+        error instanceof Error ? error.message : error,
+      );
+      throw new InvalidCredentialsError();
+    }
+  })();
+
+  renewSessionInFlight = login.finally(() => {
+    renewSessionInFlight = null;
+  });
+
+  return renewSessionInFlight;
 };
 
 /** Academic year the portal expects for "today" (IST; year flips in July). */

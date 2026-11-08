@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { formatScore } from "../format";
 import type { SortBy, StudentStat } from "../api";
 
@@ -9,13 +10,13 @@ interface StudentRowProps {
   lastElementRef?: (node: HTMLLIElement) => void;
 }
 
-export default function StudentRow({
+const StudentRow = ({
   stat,
   sortBy,
   isMe,
   isLast,
   lastElementRef,
-}: StudentRowProps) {
+}: StudentRowProps) => {
   const belowMinimum =
     sortBy === "attendance" && stat.attendance_percentage < 75;
 
@@ -38,4 +39,19 @@ export default function StudentRow({
       </span>
     </li>
   );
-}
+};
+
+/**
+ * Appending a page keeps the earlier row objects, so only the rows that
+ * arrived should draw. `lastElementRef` is only read by the last row; a new
+ * callback on every page must not redraw the register above it.
+ */
+export default memo(
+  StudentRow,
+  (prev, next) =>
+    prev.stat === next.stat &&
+    prev.sortBy === next.sortBy &&
+    prev.isMe === next.isMe &&
+    prev.isLast === next.isLast &&
+    (!next.isLast || prev.lastElementRef === next.lastElementRef),
+);

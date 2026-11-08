@@ -1,5 +1,5 @@
-import rateLimit from "express-rate-limit";
-import type { NextFunction, Request, Response } from "express";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 import {
   query,
   validationResult,
@@ -7,24 +7,25 @@ import {
 } from "express-validator";
 import { logger } from "../config/logger.js";
 import { ROLL_REGEX } from "../constants/index.js";
+import { attachIdentity, type Identity } from "../api/resolveUser.js";
 
 // Rate limiting configurations
 //
-// NOTE ON KEYS: every limiter below keys on req.ip (the express-rate-limit
-// default, which handles IPv6 correctly). The API now binds to loopback
-// (HOST defaults to 127.0.0.1) and runs behind exactly one trusted nginx hop,
-// so req.ip is the real client address rather than the proxy. That makes
-// these limits per client network address, not per Telegram account;
-// account-scoped pacing lives inside the services that know the identity
-// (the report 60 s gate, the library read-burst check). An authenticated
-// per-user key generator was considered here, but deriving it would repeat
-// the initData HMAC on every request and custom keys must not be raw IPs;
-// keep this layer about transport-level abuse only.
+// NOTE ON KEYS: the API limiter is per Telegram account when the caller
+// proved an identity (attachIdentity runs first), and per network address for
+// anonymous callers. A campus NAT puts many students behind one address, so a
+// single per-IP budget let a few students scrolling the register lock out the
+// rest. A generous per-IP backstop (10,000 / 15 min) still caps anonymous
+// abuse without becoming the shared budget.
+//
+// IPv6 keys always go through express-rate-limit's `ipKeyGenerator`, which
+// normalizes to a /56 subnet; a raw address would let one client rotate
+// addresses to evade the backstop.
 export const createRateLimit = (
   windowMs: number,
   max: number,
   message: string,
-  keyGenerator?: (req: Request) => string,
+  keyGenerator?: (req: Request, res: Response) => string,
 ) => {
   return rateLimit({
     windowMs,
@@ -36,16 +37,74 @@ export const createRateLimit = (
     },
     standardHeaders: true,
     legacyHeaders: false,
-    // Use default IP-based key generator (handles IPv6 properly)
     keyGenerator,
   });
 };
 
-// API rate limiting - General API protection
-export const apiRateLimit = createRateLimit(
-  15 * 60 * 1000, // 15 minutes
-  600, // 600 requests per window (~40/min, comfortable for infinite scroll)
-  "Too many API requests, please try again later.",
+/** The normalized transport address, never a raw IPv6 string. */
+export const clientIpKey = (req: Request): string =>
+  ipKeyGenerator(req.ip || req.socket?.remoteAddress || "unknown");
+
+/**
+ * Per-account budget when authenticated, per-address otherwise. The identity
+ * is already on `res.locals`, so this never repeats the initData HMAC.
+ */
+export const identityRateLimitKey = (req: Request, res: Response): string => {
+  const identity = res.locals?.identity as Identity | undefined;
+  if (identity?.status === "authenticated" && identity.userId) {
+    return `u:${identity.userId}`;
+  }
+  return `ip:${clientIpKey(req)}`;
+};
+
+const API_WINDOW_MS = 15 * 60 * 1000;
+const API_USER_REQUESTS = 600; // ~40/min, comfortable for infinite scroll
+const API_IP_BACKSTOP_REQUESTS = 10_000;
+
+/**
+ * Run a limiter at most once per request. `/api` and the leaderboard chain
+ * both carry these limiters; without the flag a leaderboard request would
+ * spend two tokens from the same budget and the route would be throttled at
+ * half its documented rate.
+ */
+const chargeOnce = (flag: string, limiter: RequestHandler): RequestHandler => {
+  return (req, res, next) => {
+    const locals = res.locals as Record<string, unknown> | undefined;
+    if (!locals) {
+      limiter(req, res, next);
+      return;
+    }
+    if (locals[flag]) {
+      next();
+      return;
+    }
+    locals[flag] = true;
+    limiter(req, res, next);
+  };
+};
+
+// General API protection: one student's scrolling cannot exhaust another
+// student's budget, even when both sit behind the same campus NAT.
+export const apiRateLimit = chargeOnce(
+  "__apiUserRateLimited",
+  createRateLimit(
+    API_WINDOW_MS,
+    API_USER_REQUESTS,
+    "Too many API requests, please try again later.",
+    identityRateLimitKey,
+  ),
+);
+
+// Transport backstop: anonymous abuse is still capped per address, but high
+// enough that a shared campus address is not a few students' bottleneck.
+export const apiIpBackstop = chargeOnce(
+  "__apiIpRateLimited",
+  createRateLimit(
+    API_WINDOW_MS,
+    API_IP_BACKSTOP_REQUESTS,
+    "Too many requests from this network, please try again later.",
+    (req) => `ip:${clientIpKey(req)}`,
+  ),
 );
 
 // API parameter validation for leaderboard
@@ -80,6 +139,11 @@ export const leaderboardValidation = [
     .matches(/^([A-Z]|all)$/i)
     .withMessage('Section must be a letter or "all"'),
 
+  query("scope")
+    .optional()
+    .isIn(["me", "all"])
+    .withMessage('Scope must be either "me" or "all"'),
+
   query("search")
     .optional()
     .isLength({ min: 2, max: 20 })
@@ -100,10 +164,11 @@ export const sanitizeInput = (
     for (const key in obj) {
       const value = (obj as Record<string, unknown>)[key];
       if (typeof value === "string") {
-        // Remove potential XSS characters by stripping angle brackets
-        (obj as Record<string, unknown>)[key] = value
-          .replace(/[<>]/g, "")
-          .trim();
+        // Store the student's words; every render path escapes on output
+        // (React text nodes, Telegram escapeHtml, admin esc()). Stripping
+        // angle brackets here mangles reports that quote HTML and corrupts a
+        // legacy initData body containing a name with "<".
+        (obj as Record<string, unknown>)[key] = value.trim();
       } else if (typeof value === "object" && value !== null) {
         sanitizeObject(value as object);
       }
@@ -252,17 +317,21 @@ export const createBotSecurityHandler = () => {
 // Export singleton instance
 export const botSecurityHandler = createBotSecurityHandler();
 
-// Export combined middlewares for easy use
+// Export combined middlewares for easy use. Identity runs before the
+// limiters so the limiter can key on the account; the `chargeOnce` wrappers
+// keep a route that carries both chains from spending two tokens.
 export const apiSecurityMiddlewares = [
   securityLogger,
   sanitizeInput,
+  attachIdentity,
   apiRateLimit,
+  apiIpBackstop,
 ];
 
 export const leaderboardSecurityMiddlewares = [
-  securityLogger,
-  sanitizeInput,
+  attachIdentity,
   apiRateLimit,
+  apiIpBackstop,
   ...leaderboardValidation,
   handleValidationErrors,
 ];

@@ -15,9 +15,13 @@ vi.mock("../../src/db/student_stats.model.js", () => ({
     ],
     total: 1,
   })),
+  getLeaderboardCoverage: vi.fn(async () => 100),
   getStudentRank: vi.fn(async () => ({ rank: 3, total: 245, value: 95.5 })),
   getLeaderboardFacets: vi.fn(async () => ["A", "B"]),
-  getLastSyncAt: vi.fn(async () => "2026-10-25 10:00:00"),
+  getLastSyncAt: vi.fn(async () => ({
+    newest: "2026-10-25 10:00:00",
+    oldest: "2026-10-20 10:00:00",
+  })),
   getUptimeSummary: vi.fn(async () => [
     {
       component: "api",
@@ -40,6 +44,15 @@ vi.mock("../../src/db/student.model.js", () => ({
   getTgUserRoll: vi.fn(async (userId: string) =>
     userId === "12345" ? "21B81A05E9" : null,
   ),
+  deleteTgUser: vi.fn(async () => undefined),
+  getStudent: vi.fn(async () => ({
+    roll_no: "21B81A05E9",
+    name: "JOHN",
+    section: "A",
+    branch: "5",
+    year: "31",
+  })),
+  findSimilarRolls: vi.fn(async () => []),
 }));
 
 vi.mock("../../src/services/redis/getRedisClient.js", () => ({
@@ -88,7 +101,8 @@ const signInitData = (userId: number): string => {
 };
 
 const { app } = await import("../../src/api/server.js");
-const { getLeaderboard } = await import("../../src/db/student_stats.model.js");
+const { getLeaderboard, getStudentRank } =
+  await import("../../src/db/student_stats.model.js");
 
 describe("API contracts", () => {
   it("GET /api/leaderboard returns the paginated envelope", async () => {
@@ -103,9 +117,18 @@ describe("API contracts", () => {
       limit: 20,
       total: 1,
       updated_at: "2026-10-25 10:00:00",
+      freshness: {
+        newest: "2026-10-25 10:00:00",
+        oldest: "2026-10-20 10:00:00",
+      },
       facets: { sections: ["A", "B"] },
+      // anonymous callers default to the whole college: no section scope
+      scope: null,
+      coverage: { ranked: 1, known: 100 },
     });
     expect(res.body.data[0]).toMatchObject({ roll_no: "21B81A05E9", rank: 1 });
+    expect(res.headers["vary"]).toContain("X-Telegram-Init-Data");
+    expect(res.headers["cache-control"]).toBe("public, max-age=30");
   });
 
   it("GET /api/leaderboard leaves freshness off later pages", async () => {
@@ -115,7 +138,21 @@ describe("API contracts", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.updated_at).toBeNull();
+    expect(res.body.freshness).toBeNull();
     expect(res.body.facets).toBeNull();
+    expect(res.body.coverage).toBeNull();
+  });
+
+  it("GET /api/leaderboard maps a legacy year-semester code to its year digit", async () => {
+    await request(app).get("/api/leaderboard?page=1&limit=20&year=12");
+
+    expect(vi.mocked(getLeaderboard)).toHaveBeenLastCalledWith(
+      "attendance",
+      20,
+      0,
+      expect.objectContaining({ year: "1" }),
+      expect.any(Object),
+    );
   });
 
   it("GET /api/leaderboard rejects invalid query parameters", async () => {
@@ -133,6 +170,8 @@ describe("API contracts", () => {
 
     expect(res.status).toBe(200);
     expect(res.headers["cache-control"]).toBe("public, max-age=30");
+    // a search is not a coverage view
+    expect(res.body.coverage).toBeNull();
     // the model mock returns a name; the anonymous response must not
     expect(res.body.data[0].name).toBeNull();
     expect(vi.mocked(getLeaderboard)).toHaveBeenLastCalledWith(
@@ -209,17 +248,20 @@ describe("API contracts", () => {
     expect(res.body.found).toBe(false);
   });
 
-  it("GET /api/me returns ranks for the dev userId shortcut (ENV=test opt-in)", async () => {
+  it("GET /api/me returns lastLookup but not identity for a lookup-only user", async () => {
     const res = await request(app).get("/api/me?userId=12345");
 
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({
-      found: true,
-      source: "lookup",
-      roll_no: "21B81A05E9",
-      attendance: { rank: 3, total: 245, value: 95.5 },
-      midmarks: { rank: 3, total: 245, value: 95.5 },
-    });
+    expect(res.body).toEqual({ found: false, lastLookup: "21B81A05E9" });
+    // identity is registration; never run rank queries for a lookup-only user
+    expect(vi.mocked(getStudentRank)).not.toHaveBeenCalled();
+  });
+
+  it("GET /api/me is private and never stored", async () => {
+    const res = await request(app).get("/api/me?userId=12345");
+
+    expect(res.status).toBe(200);
+    expect(res.headers["cache-control"]).toBe("private, no-store");
   });
 
   it("GET /api/me accepts X-Telegram-Init-Data and prefers it over query userId", async () => {
@@ -228,11 +270,7 @@ describe("API contracts", () => {
       .set("X-Telegram-Init-Data", signInitData(12345));
 
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({
-      found: true,
-      source: "lookup",
-      roll_no: "21B81A05E9",
-    });
+    expect(res.body).toEqual({ found: false, lastLookup: "21B81A05E9" });
   });
 
   it("GET /api/me rejects presented-but-invalid initData", async () => {
@@ -248,7 +286,34 @@ describe("API contracts", () => {
     const res = await request(app).get("/api/me?userId=99999");
 
     expect(res.status).toBe(200);
-    expect(res.body.found).toBe(false);
+    expect(res.body).toEqual({ found: false, lastLookup: null });
+  });
+
+  it("DELETE /api/me/last-lookup requires a verified identity", async () => {
+    const res = await request(app).delete("/api/me/last-lookup");
+
+    expect(res.status).toBe(401);
+    expect(res.body.ok).toBe(false);
+  });
+
+  it("DELETE /api/me/last-lookup clears the caller's last lookup", async () => {
+    const { deleteTgUser } = await import("../../src/db/student.model.js");
+
+    const res = await request(app).delete("/api/me/last-lookup?userId=12345");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ ok: true });
+    expect(vi.mocked(deleteTgUser)).toHaveBeenCalledWith("12345");
+  });
+
+  it("GET /api/myreports and /api/thread are never stored", async () => {
+    const reports = await request(app).get("/api/myreports");
+    expect(reports.status).toBe(401);
+    expect(reports.headers["cache-control"]).toBe("private, no-store");
+
+    const thread = await request(app).get("/api/thread/1");
+    expect(thread.status).toBe(401);
+    expect(thread.headers["cache-control"]).toBe("private, no-store");
   });
 
   it("GET /health responds ok without rate limiting", async () => {

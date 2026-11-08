@@ -5,6 +5,7 @@ import {
   upsertRegistration,
   RollAlreadyRegisteredError,
 } from "../db/registration.model.js";
+import { invalidateStudentContext } from "../services/library/entitlement.js";
 import { getTgUserRoll } from "../db/student.model.js";
 import {
   getStudentCached,
@@ -24,6 +25,7 @@ const unauthorized = (res: Response, error: string | undefined) => {
 
 // GET /api/profile — registration + live student info for prefill
 profileRouter.get("/profile", async (req: Request, res: Response) => {
+  res.set("Cache-Control", "private, no-store");
   try {
     const resolved = resolveUserId(req);
     if (!resolved || resolved.error) {
@@ -48,10 +50,12 @@ profileRouter.get("/profile", async (req: Request, res: Response) => {
       return;
     }
 
-    // unregistered users still get their past-lookup roll as a prefill hint
+    // No registration: tgusers holds the last roll this account *looked up*
+    // (possibly a friend's). It is a suggestion, never the caller's identity,
+    // so the form stays empty and the roll only fills on an explicit tap.
     if (!registration) {
-      const suggested = await getTgUserRoll(resolved.userId).catch(() => null);
-      res.json({ found: false, suggestion: suggested });
+      const lastLookup = await getTgUserRoll(resolved.userId).catch(() => null);
+      res.json({ found: false, lastLookup, suggestion: lastLookup });
       return;
     }
 
@@ -100,6 +104,9 @@ profileRouter.post("/register", async (req: Request, res: Response) => {
     }
 
     await upsertRegistration(resolved.userId, rollNo, displayName);
+    // A library session opened before this save must see the new roll on its
+    // next page, not after the 60 s context cache window.
+    invalidateStudentContext(resolved.userId);
     trackActivity({
       userId: Number(resolved.userId),
       chatType: "unknown",

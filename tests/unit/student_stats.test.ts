@@ -2,6 +2,10 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { turso } from "../../src/db/db.js";
 import {
   getLeaderboard,
+  getLeaderboardCoverage,
+  getLeaderboardFacets,
+  getLastSyncAt,
+  getStudentRank,
   initLeaderboardIndexes,
   initUptimeTable,
   getUptimeDailyBuckets,
@@ -15,7 +19,10 @@ beforeAll(async () => {
     roll_no TEXT PRIMARY KEY,
     attendance_percentage REAL,
     mid_marks_avg REAL,
-    last_updated TEXT
+    last_updated TEXT,
+    attendance_updated_at TEXT,
+    midmarks_updated_at TEXT,
+    year_sem TEXT
   )`);
   await turso.execute(`CREATE TABLE studentsnew (
     roll_no TEXT PRIMARY KEY,
@@ -34,20 +41,35 @@ beforeAll(async () => {
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`);
 
+  // Each metric has its own age: attendance refreshed within hours, mid-marks
+  // days ago. The shared last_updated is deliberately not the freshness source.
   const students = [
-    ["AAA00001", "Alice", "A", "5", "31", 90.0, 28.0],
-    ["AAA00002", "Bob", "A", "5", "31", 90.0, 27.0],
-    ["AAA00003", "Cara", "B", "5", "31", 85.5, 29.0],
+    ["AAA00001", "Alice", "A", "5", "31", 90.0, 28.0, "2 hours", "6 days"],
+    ["AAA00002", "Bob", "A", "5", "31", 90.0, 27.0, "1 hour", "5 days"],
+    ["AAA00003", "Cara", "B", "5", "31", 85.5, 29.0, "3 hours", "4 days"],
   ] as const;
 
-  for (const [roll, name, section, branch, year, att, mid] of students) {
+  for (const [
+    roll,
+    name,
+    section,
+    branch,
+    year,
+    att,
+    mid,
+    attAge,
+    midAge,
+  ] of students) {
     await turso.execute({
       sql: "INSERT INTO studentsnew VALUES (?, ?, ?, ?, ?)",
       args: [roll, name, section, branch, year],
     });
     await turso.execute({
-      sql: "INSERT INTO student_stats VALUES (?, ?, ?, ?)",
-      args: [roll, att, mid, new Date().toISOString()],
+      sql: `INSERT INTO student_stats
+              (roll_no, attendance_percentage, mid_marks_avg, last_updated,
+               attendance_updated_at, midmarks_updated_at, year_sem)
+            VALUES (?, ?, ?, datetime('now'), datetime('now', ?), datetime('now', ?), ?)`,
+      args: [roll, att, mid, `-${attAge}`, `-${midAge}`, year],
     });
   }
 });
@@ -68,6 +90,117 @@ describe("getLeaderboard", () => {
     expect(total).toBe(1);
     expect(rows).toHaveLength(1);
     expect(rows[0].roll_no).toBe("AAA00003");
+  });
+
+  it("matches both semester codes for a year digit and keeps facets in step", async () => {
+    await turso.batch(
+      [
+        `INSERT INTO studentsnew VALUES ('BBB00011', 'Year One Sem One', 'A', '5', '11')`,
+        `INSERT INTO studentsnew VALUES ('BBB00012', 'Year One Sem Two', 'A', '5', '12')`,
+        `INSERT INTO student_stats
+           (roll_no, attendance_percentage, attendance_updated_at, year_sem)
+         VALUES ('BBB00011', 70.0, datetime('now'), '11')`,
+        `INSERT INTO student_stats
+           (roll_no, attendance_percentage, attendance_updated_at, year_sem)
+         VALUES ('BBB00012', 71.0, datetime('now'), '12')`,
+      ],
+      "write",
+    );
+
+    try {
+      const { rows, total } = await getLeaderboard("attendance", 10, 0, {
+        year: "1",
+      });
+      expect(total).toBe(2);
+      expect(rows.map((row) => row.roll_no).sort()).toEqual([
+        "BBB00011",
+        "BBB00012",
+      ]);
+
+      const facets = await getLeaderboardFacets({ year: "1" });
+      expect(facets).toContain("A");
+    } finally {
+      await turso.execute(
+        "DELETE FROM student_stats WHERE roll_no LIKE 'BBB%'",
+      );
+      await turso.execute("DELETE FROM studentsnew WHERE roll_no LIKE 'BBB%'");
+    }
+  });
+
+  it("does not rank a 12 semester row for a 11 student", async () => {
+    await turso.batch(
+      [
+        `INSERT INTO studentsnew VALUES ('CCC00001', 'Stale Sem', 'A', '5', '11')`,
+        // the stat still carries the other semester's key
+        `INSERT INTO student_stats
+           (roll_no, attendance_percentage, attendance_updated_at, year_sem)
+         VALUES ('CCC00001', 99.0, datetime('now'), '12')`,
+      ],
+      "write",
+    );
+
+    try {
+      const { rows } = await getLeaderboard("attendance", 10, 0, {
+        year: "1",
+      });
+      expect(rows.map((row) => row.roll_no)).not.toContain("CCC00001");
+
+      // and it is not ranked globally either
+      const rank = await getStudentRank("CCC00001", "attendance");
+      expect(rank).toBeNull();
+    } finally {
+      await turso.execute(
+        "DELETE FROM student_stats WHERE roll_no = 'CCC00001'",
+      );
+      await turso.execute("DELETE FROM studentsnew WHERE roll_no = 'CCC00001'");
+    }
+  });
+});
+
+describe("getLeaderboardCoverage", () => {
+  it("counts the directory for the same filters as the ranked view", async () => {
+    expect(await getLeaderboardCoverage({})).toBe(3);
+    expect(await getLeaderboardCoverage({ section: "A" })).toBe(2);
+    expect(await getLeaderboardCoverage({ year: "3" })).toBe(3);
+    expect(
+      await getLeaderboardCoverage({ year: "3", branch: "5", section: "B" }),
+    ).toBe(1);
+  });
+
+  it("returns 0 for a filter with no known students", async () => {
+    expect(await getLeaderboardCoverage({ year: "4" })).toBe(0);
+  });
+
+  it("matches both semester codes for a year digit", async () => {
+    await turso.batch(
+      [
+        `INSERT INTO studentsnew VALUES ('DDD00011', 'Y1S1', 'A', '5', '11')`,
+        `INSERT INTO studentsnew VALUES ('DDD00012', 'Y1S2', 'A', '5', '12')`,
+      ],
+      "write",
+    );
+
+    try {
+      expect(await getLeaderboardCoverage({ year: "1" })).toBe(2);
+    } finally {
+      await turso.execute("DELETE FROM studentsnew WHERE roll_no LIKE 'DDD%'");
+    }
+  });
+});
+
+describe("getLastSyncAt", () => {
+  it("reports a separate range per metric", async () => {
+    const attendance = await getLastSyncAt("attendance");
+    const midmarks = await getLastSyncAt("midmarks");
+
+    expect(attendance.newest).not.toBeNull();
+    expect(attendance.oldest).not.toBeNull();
+    expect(midmarks.newest).not.toBeNull();
+    expect(midmarks.oldest).not.toBeNull();
+
+    // mid-marks were refreshed days ago; attendance within hours
+    expect(String(attendance.newest) > String(midmarks.newest)).toBe(true);
+    expect(String(midmarks.oldest) < String(attendance.oldest)).toBe(true);
   });
 });
 

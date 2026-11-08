@@ -146,6 +146,10 @@
     const dayWord = (cls) =>
       cls === "up" ? "operational" : cls === "degraded" ? "degraded" : cls === "down" ? "down" : "no data";
 
+    // Technical component ids do not always name what the reader experiences:
+    // "lookup" is the synthetic answer check, so it reads as "Answers".
+    const COMPONENT_LABELS = { lookup: "Answers" };
+
     const ICONS = {
       ok: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.4 2.4 2.4 4.6-5"/></svg>',
       bad: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9.2 9.2 5.6 5.6"/><path d="m14.8 9.2-5.6 5.6"/></svg>',
@@ -205,7 +209,8 @@
           const upPct = c.uptimePct.toFixed(2);
           const byDay = Object.fromEntries(c.buckets.map((b) => [b.day, b]));
           const isUp = c.current === "up";
-          const name = c.component.charAt(0).toUpperCase() + c.component.slice(1);
+          const name = COMPONENT_LABELS[c.component] ||
+            c.component.charAt(0).toUpperCase() + c.component.slice(1);
 
           const div = document.createElement("div");
           div.className = "comp";

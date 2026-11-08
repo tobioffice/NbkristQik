@@ -40,9 +40,8 @@ Monitor (oracle2) ──> /health, /internal/health, portal
   `bot.startPolling()`.
 - **Shutdown:** `SIGINT`/`SIGTERM` stop polling, disconnect Redis, and exit 0.
 - **Bot:** `node-telegram-bot-api`; see `src/bot/` for commands, the academic
-  menu flow, the channel-membership gate, the daily check-in post, and
-  `/syncdb`. The check-in post records the day for engagement; nothing is
-  gated on it. Channel membership remains the gate for non-admin students.
+  menu flow, the channel-membership gate, and `/syncdb`. Channel membership is
+  the gate for non-admin students; there is no daily check-in.
 - **Web shell:** one shipped app at `/library/` with hash routes `#/rank`,
   `#/profile`, `#/library` and `#/issues`. `/api/config` decides whether the
   library tab exists for this caller; the server enforces the same gate on the

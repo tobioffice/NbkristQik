@@ -84,9 +84,9 @@ or deployed.**
 ### Bot and product
 
 - The persistent menu button always opens the app index.
-- The daily check-in gate is removed; channel membership remains. Check-in
-  copy is no longer a "robot" gate, and the callback no longer sends an
-  `unlocked` URL.
+- The daily check-in feature is removed completely: no `/postcheckin`, channel
+  post, `dailycheck` callback, Redis keys or copy. Channel membership remains
+  the only gate.
 - `/register` and its prompting are group-safe (`url` button in groups,
   `web_app` in private) and no longer fail silently.
 - The library tab/index row is hidden until the server says it is open; the
@@ -114,7 +114,7 @@ or deployed.**
   subject; both attendance and mid-marks parsing are covered.
 - Tests are typechecked (`tsconfig.test.json`, `pnpm run typecheck:tests`), the
   embedded admin-panel JS is syntax-checked, and the coverage floor is
-  70/75/82/70 (measured 72.28/76.79/83.84/72.28).
+  70/75/82/70 (measured 72.16/77.11/83.59/72.16).
 - Hand-written docs were synchronised with the code; `openwiki/` is generated
   and was deliberately not hand-edited.
 
@@ -125,8 +125,8 @@ or deployed.**
 | Root `tsc --noEmit` | clean |
 | Root `tsc -p tsconfig.test.json` | clean |
 | Root ESLint (`src`, `tests`) | clean |
-| Root Vitest | 55 files, 386 tests pass |
-| Root coverage | 72.28 / 76.79 / 83.84 / 72.28; floor 70/75/82/70 |
+| Root Vitest | 54 files, 379 tests pass |
+| Root coverage | 72.16 / 77.11 / 83.59 / 72.16; floor 70/75/82/70 |
 | Web Vitest | 5 files, 38 tests pass |
 | Web Vitest | 4 files, 36 tests pass |
 | Web `npm run build` | pass, `dist-library/index.html` + hashed assets |

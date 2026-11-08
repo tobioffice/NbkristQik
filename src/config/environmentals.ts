@@ -33,6 +33,15 @@ const HOST = process.env.HOST?.trim() || "127.0.0.1";
 // is unset both endpoints are absent, so a dev box exposes nothing.
 const UPTIME_INGEST_SECRET = process.env.UPTIME_INGEST_SECRET?.trim() || "";
 
+// Synthetic answer canary. CANARY_ROLL is a real roll already present in
+// studentsnew; the uptime monitor fetches that student's attendance from the
+// live portal and parses it. Both the roll and the explicit opt-in must be
+// set, so an ordinary dev or test box never calls the college portal.
+const CANARY_ROLL = process.env.CANARY_ROLL?.trim() || "";
+const CANARY_ENABLED = ["1", "true"].includes(
+  (process.env.CANARY_ENABLED || "").trim().toLowerCase(),
+);
+
 // The unsigned userId fallback is a development convenience, never a
 // production identity. It requires an explicit opt-in (ALLOW_DEV_IDENTITY=1)
 // or the test environment; merely running with ENV=development is not
@@ -72,6 +81,8 @@ export {
   PORT,
   HOST,
   UPTIME_INGEST_SECRET,
+  CANARY_ROLL,
+  CANARY_ENABLED,
   CORS_ORIGINS,
   LIBRARY_WATERMARK_SECRET,
   allowDevIdentity,

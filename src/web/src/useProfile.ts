@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  deleteLastLookup,
   getProfile,
   registerRoll,
   type ProfileResponse,
@@ -8,11 +9,13 @@ import {
 interface Profile {
   found: boolean;
   registered: boolean;
-  /** registered roll (or the past-lookup suggestion when unregistered) */
+  /** The saved registration's roll. A past lookup never fills this. */
   roll: string | null;
   displayName: string | null;
   stale: boolean;
   studentName: string | null;
+  /** A suggestion for the empty form, not the caller's identity. */
+  lastLookup: string | null;
 }
 
 type ProfileStatus =
@@ -34,6 +37,8 @@ export const useProfile = (
     rollNo: string,
     displayName: string,
   ) => Promise<{ error: string | null; suggestions?: string[] }>;
+  /** Removes the last-lookup suggestion; the registration is untouched. */
+  forgetLookup: () => Promise<void>;
 } => {
   const [status, setStatus] = useState<ProfileStatus>({ state: "loading" });
 
@@ -54,19 +59,28 @@ export const useProfile = (
               displayName: data.registration.display_name,
               stale: "stale" in data ? Boolean(data.stale) : false,
               studentName: data.student?.name ?? null,
+              lastLookup: null,
             },
           });
         } else {
-          const suggestion = "suggestion" in data ? data.suggestion : null;
+          // the form stays empty for an unregistered user; the past lookup
+          // is shown beside it and only fills the field when tapped
+          const unregistered = data as {
+            lastLookup?: string | null;
+            suggestion?: string | null;
+          };
+          const lastLookup =
+            unregistered.lastLookup ?? unregistered.suggestion ?? null;
           setStatus({
             state: "ready",
             profile: {
               found: false,
               registered: false,
-              roll: suggestion ?? null,
+              roll: null,
               displayName: null,
               stale: false,
               studentName: null,
+              lastLookup,
             },
           });
         }
@@ -103,6 +117,7 @@ export const useProfile = (
                   roll: rollNo.toUpperCase(),
                   displayName: displayName || null,
                   stale: false,
+                  lastLookup: null,
                 },
               }
             : prev,
@@ -119,5 +134,17 @@ export const useProfile = (
     [tgUser, initData],
   );
 
-  return { status, save };
+  const forgetLookup = useCallback(async (): Promise<void> => {
+    await deleteLastLookup({ userId: tgUser ?? undefined, initData });
+    setStatus((prev) =>
+      prev.state === "ready"
+        ? {
+            state: "ready",
+            profile: { ...prev.profile, lastLookup: null },
+          }
+        : prev,
+    );
+  }, [tgUser, initData]);
+
+  return { status, save, forgetLookup };
 };

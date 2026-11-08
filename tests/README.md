@@ -62,7 +62,7 @@ Vitest resolves those `.js` specifiers to the TypeScript sources.
 
 ## Test layout
 
-The suite currently has **55 test files (46 unit, 9 integration) and 386
+The suite currently has **54 test files (45 unit, 9 integration) and 379
 tests**. The tree below names the recurring categories, not every file:
 
 ```
@@ -74,7 +74,6 @@ tests/
 ├── unit/                        # 45 files: modules tested in isolation
 │   ├── academic*.test.ts        # portal parsing/orchestration
 │   ├── adminPanel*.test.ts      # panel CSP/nonce + embedded JS/CSS syntax
-│   ├── dailyCheckIn.test.ts     # check-in handler and callback
 │   ├── student_stats.test.ts    # leaderboard/uptime SQL against libSQL
 │   ├── syncdb.test.ts           # scrape/sync orchestration
 │   └── ...                      # bot commands, auth, middleware, library,
@@ -143,10 +142,10 @@ mock at the module boundary instead of reaching for the network.
 
 | Metric     | Threshold | Measured (2026-11-04) |
 | ---------- | --------- | --------------------- |
-| Statements | 70        | 72.28                 |
-| Branches   | 75        | 76.79                 |
-| Functions  | 82        | 83.84                 |
-| Lines      | 70        | 72.28                 |
+| Statements | 70        | 72.16                 |
+| Branches   | 75        | 77.11                 |
+| Functions  | 82        | 83.59                 |
+| Lines      | 70        | 72.16                 |
 
 The thresholds sit about two points below the measured totals so ordinary
 test churn does not flip CI. Raise them when coverage improves. Coverage

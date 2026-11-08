@@ -23,13 +23,20 @@ vi.mock("../../src/services/redis/getRedisClient.js", () => ({
 }));
 
 vi.mock("../../src/services/redis/storeAttOrMidToRedis.js", () => ({
-  storeAttendanceToRedis: vi.fn(),
-  storeMidMarksToRedis: vi.fn(),
+  storeAttendanceToRedis: vi.fn().mockResolvedValue(undefined),
+  storeMidMarksToRedis: vi.fn().mockResolvedValue(undefined),
+  persistAttendanceSection: vi.fn().mockResolvedValue(undefined),
+  persistMidmarksSection: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("../../src/db/fallback/response.model.js", () => ({
   storeResponse: vi.fn(),
+  getResponseRecord: vi.fn().mockResolvedValue(null),
   getResponse: vi.fn().mockResolvedValue(null),
+  buildResponseId: vi.fn(
+    (year: string, branch: string, section: string, type: string) =>
+      `${year}-${branch}-${section}-${type}`,
+  ),
 }));
 
 vi.mock("axios", () => {
@@ -61,6 +68,11 @@ import {
   getAcadYearForDate,
 } from "../../src/services/student.utils/Academic.js";
 import {
+  storeResponse,
+  getResponseRecord,
+} from "../../src/db/fallback/response.model.js";
+import { getClient } from "../../src/services/redis/getRedisClient.js";
+import {
   mockAttendance,
   mockMidmarks,
   mockAttendanceHTML,
@@ -72,9 +84,13 @@ describe("Academic Module", () => {
   let academic: Academic;
   const rollNumber = "21B81A05E9";
 
-  beforeEach(() => {
+  beforeEach(async () => {
     academic = new Academic(rollNumber);
     vi.clearAllMocks();
+    // clearAllMocks keeps implementations; reset the shared Redis read so a
+    // cached-value test cannot leak into the next one.
+    const redisClient = await getClient();
+    vi.mocked(redisClient.get).mockResolvedValue(null);
   });
 
   describe("Constructor", () => {
@@ -212,6 +228,34 @@ describe("Academic Module", () => {
         ServerDownError,
       );
     });
+
+    it("shares one portal request across concurrent same-section lookups", async () => {
+      vi.mocked(axios.post).mockImplementation(async () => {
+        // hold the request open so the second caller joins the in-flight one
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        return { data: mockAttendanceHTML };
+      });
+
+      const other = new Academic(rollNumber);
+      const [first, second] = await Promise.all([
+        academic.getResponse("att"),
+        other.getResponse("att"),
+      ]);
+
+      expect(first).toBe(second);
+      expect(axios.post).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not keep a failed fetch in the single-flight map", async () => {
+      vi.mocked(axios.post).mockRejectedValueOnce(new Error("boom"));
+      await expect(academic.getResponse("att")).rejects.toThrow(
+        ServerDownError,
+      );
+
+      vi.mocked(axios.post).mockResolvedValueOnce({ data: mockAttendanceHTML });
+      await expect(academic.getResponse("att")).resolves.toContain(rollNumber);
+      expect(axios.post).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe("parseAttendanceResponse", () => {
@@ -316,6 +360,50 @@ describe("Academic Module", () => {
 
       expect(result).toBeDefined();
       expect(result.rollno).toBe("21B81A05E9");
+      // the raw response is cached only after the roll check and a parse
+      await vi.waitFor(() => expect(storeResponse).toHaveBeenCalledTimes(1));
+    });
+
+    it("does not cache a response that contains the roll but no usable row", async () => {
+      vi.mocked(axios.post).mockResolvedValue({
+        data: `<html><body><table><tr id="${rollNumber}"></tr></table></body></html>`,
+      });
+
+      const result = await academic.getAttendanceJSON();
+
+      expect(result.percentage).toBe(0);
+      expect(storeResponse).not.toHaveBeenCalled();
+    });
+
+    it("does not cache a response that is missing the roll", async () => {
+      vi.mocked(axios.post).mockResolvedValue({
+        data: mockAttendanceHTML.split(rollNumber).join("21B81A05E8"),
+      });
+
+      await expect(academic.getAttendanceJSON()).rejects.toThrow(
+        NoDataFoundError,
+      );
+      expect(storeResponse).not.toHaveBeenCalled();
+    });
+
+    it("reports the age of the last saved fallback copy", async () => {
+      vi.mocked(axios.post).mockRejectedValue(new Error("Network error"));
+      const updatedAt = new Date(Date.now() - 4 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " ");
+      vi.mocked(getResponseRecord).mockResolvedValueOnce({
+        content: mockAttendanceHTML,
+        updatedAt,
+      });
+
+      const result = await academic.getAttendanceJSON();
+
+      expect(result.rollno).toBe("21B81A05E9");
+      expect(academic.getDataNotice()).toContain("4 hours ago");
+      expect(academic.getDataNotice()).toContain("last saved copy");
+      // a fallback must not refresh its own timestamp
+      expect(storeResponse).not.toHaveBeenCalled();
     });
   });
 
@@ -386,6 +474,17 @@ describe("Academic Module", () => {
       expect(callArgs[2]?.headers?.Cookie).toMatch(
         /PHPSESSID=ggpmgfj8dssskkp2q2h6db/,
       );
+    });
+
+    it("shares one login across concurrent renewals", async () => {
+      vi.mocked(axios.post).mockImplementation(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        return { data: "success" };
+      });
+
+      await Promise.all([academic.renewSession(), academic.renewSession()]);
+
+      expect(axios.post).toHaveBeenCalledTimes(1);
     });
 
     it("should throw InvalidCredentialsError on failure", async () => {

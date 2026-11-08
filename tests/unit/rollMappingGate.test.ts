@@ -12,6 +12,8 @@ vi.mock("../../src/bot/bot.js", () => ({
     onText,
     on: vi.fn(),
     sendMessage,
+    editMessageText: vi.fn(async () => true),
+    editMessageReplyMarkup: vi.fn(async () => true),
     deleteMessage: vi.fn(async () => true),
     answerCallbackQuery: vi.fn(async () => true),
   },
@@ -24,6 +26,16 @@ vi.mock("../../src/bot/authorization.js", () => ({
 }));
 vi.mock("../../src/services/tracker.js", () => ({
   trackActivity: vi.fn(),
+}));
+vi.mock("../../src/services/student.service.js", () => ({
+  getAttendanceCard: vi.fn(async () => ({ text: "Attendance card" })),
+  getMidMarksCard: vi.fn(async () => ({ text: "Mid marks card" })),
+  getBunkPlanCard: vi.fn(async () => ({ text: "Bunk plan card" })),
+}));
+vi.mock("../../src/db/registration.model.js", () => ({
+  getRegistration: vi.fn(async () => null),
+  upsertRegistration: vi.fn(async () => undefined),
+  RollAlreadyRegisteredError: class RollAlreadyRegisteredError extends Error {},
 }));
 
 await import("../../src/bot/academics/academicHandler.js");

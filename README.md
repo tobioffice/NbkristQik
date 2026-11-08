@@ -56,9 +56,6 @@ reports and uptime, and a public status page for service health.
   changes and a replay spool for outages.
 - **Semester sync** — `/setsem` and `/syncdb` refresh sections from the portal
   without a redeploy.
-- **Daily check-in** — an optional pinned channel post that records the day;
-  it is engagement only and no longer unlocks the bot. Channel membership
-  remains the gate.
 
 ## Architecture
 
@@ -107,7 +104,7 @@ needs no migration step.
 .
 ├── src/
 │   ├── api/          Express app, admin panel, API routes
-│   ├── bot/          Entry point, commands, academic and check-in flows
+│   ├── bot/          Entry point, commands and academic flows
 │   ├── config/       Environment and logger
 │   ├── constants/    Bot, web app and channel constants
 │   ├── db/           libSQL client, schema and models
@@ -208,7 +205,6 @@ not.
 | `/close QIK-0007`          | Resolve a report and close its thread               |
 | `/setsem 1\|2`             | Set the semester used by the next sync              |
 | `/syncdb`                  | Refresh student sections from the portal            |
-| `/postcheckin`             | Post and pin today's channel check-in               |
 | `/postopen`                | Repost the "open me in private" card to the channel |
 
 Admin commands are accepted only from `ADMIN_ID` and are not listed in the
@@ -218,7 +214,7 @@ public command menu.
 
 | Surface        | Location                                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Mini App       | [`/library/`](https://checker.tobioffice.dev/library/) — hash routes `#/rank`, `#/profile`, `#/library`, `#/issues` |
+| Mini App       | [`/library/`](https://checker.tobioffice.dev/library/) — hash routes `#/` (my attendance), `#/rank`, `#/profile`, `#/library`, `#/issues` |
 | Status page    | [`/status`](https://checker.tobioffice.dev/status) — Express-served, live health and 90-day bars per component     |
 | Admin panel    | `/<ADMIN_PANEL_PATH>` — Overview, Students, Live, Health, Reports                                                   |
 | Marketing site | [NbkristQik site](https://tobioffice.github.io/NbkristQik/site/)                                                    |

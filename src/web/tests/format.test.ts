@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { formatGap, formatScore, formatSyncedAt } from "../src/format";
+import {
+  formatFreshnessRange,
+  formatGap,
+  formatScore,
+  formatSyncedAt,
+} from "../src/format";
 
 describe("formatScore", () => {
   it("formats attendance to two decimals", () => {
@@ -72,5 +77,40 @@ describe("formatSyncedAt", () => {
   it("has nothing to say without a timestamp", () => {
     expect(formatSyncedAt(null)).toBeNull();
     expect(formatSyncedAt("not a date")).toBeNull();
+  });
+});
+
+describe("formatFreshnessRange", () => {
+  const now = new Date("2026-10-25T12:00:00Z");
+
+  it("keeps the single sync line when the range is under an hour", () => {
+    expect(
+      formatFreshnessRange(
+        "2026-10-25 11:58:00",
+        "2026-10-25 11:20:00",
+        now,
+      ),
+    ).toBe("Synced 2 min ago");
+  });
+
+  it("prints both ends when one fresh row would mask an old register", () => {
+    expect(
+      formatFreshnessRange(
+        "2026-10-25 11:58:00",
+        "2026-10-19 12:00:00",
+        now,
+      ),
+    ).toBe("Updated 2 min to 6 days ago");
+  });
+
+  it("falls back to the newest stamp when the oldest is missing", () => {
+    expect(
+      formatFreshnessRange("2026-10-25 09:00:00", null, now),
+    ).toBe("Synced 3 hours ago");
+  });
+
+  it("has nothing to say without a newest timestamp", () => {
+    expect(formatFreshnessRange(null, "2026-10-19 12:00:00", now)).toBeNull();
+    expect(formatFreshnessRange("not a date", null, now)).toBeNull();
   });
 });

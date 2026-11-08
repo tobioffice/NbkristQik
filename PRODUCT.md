@@ -23,11 +23,11 @@ The product lives entirely inside Telegram â€” no install, no separate account â
 
 - Used one-handed on phones inside the Telegram webview; light/dark surroundings vary.
 - Students reason in roll numbers, sections, branches, and percentages; "how much can I bunk?" is the recurring question.
-- The leaderboard is filtered by year, branch, and section, searchable by roll, and ranked by attendance or mid-marks; it shows the viewer's own rank when identity is known.
+- The leaderboard defaults to the viewer's own section (with a deliberate "All students" widening), is filtered by year, branch, and section, searchable by roll, and ranked by attendance or mid-marks; it shows the viewer's own overall rank, how many students are ranked versus known, and how old the newest and oldest figures are.
 - The public leaderboard is anonymized: signed-out visitors get `name: null` rows and roll-only search. A verified Telegram identity gets names and name search; a saved registration's `display_name` overrides the college name for that roll.
 - Registration is optional and editable at any time; registered users unlock `/attendance`, `/midmarks`, `/bunk` instant commands and are the only students who can open the library.
 - The library is admin-first: the shelf and its tab stay hidden from students until `LIBRARY_ACCESS=all`, and the web shell trusts `/api/config` for that decision. Once open, only registered students see their own subjects.
-- Channel membership is the bot gate. The daily check-in channel post records the day for engagement; it no longer unlocks anything.
+- Channel membership is the bot gate. There is no daily check-in.
 - Reports get an issue id; the admin replies from the admin panel (or `/reply`), and the reply reaches the student on the report page and in Telegram.
 - All wall-clock times shown anywhere are IST (Asia/Kolkata), 12-hour AM/PM, regardless of the UTC storage.
 - Admin panel views: login, Overview (30-day activity pulse, surface split, top actions), Students (searchable table + drill-down), Live (10 s feed), Health (90-day uptime for API, database, Redis, college portal), Reports.
@@ -35,7 +35,7 @@ The product lives entirely inside Telegram â€” no install, no separate account â
 
 ## Capabilities and Constraints
 
-- **Capabilities (web surface):** one Telegram Mini App at `/library/` with the leaderboard and podium, search, infinite scroll and personal-rank banner; profile/register page; issue report form with history and admin replies; the library shelf and reader; public status page (live health, 90-day uptime); password-protected admin panel with the five views above. The legacy GitHub Pages mini-app entry points are retired; the marketing site remains separate.
+- **Capabilities (web surface):** one Telegram Mini App at `/library/` whose first screen is the student's own attendance (overall percentage, subject rows, bunk plan, freshness); the leaderboard and podium with section-scoped default, search, infinite scroll, personal-rank banner, coverage and per-metric freshness; profile/register page; issue report form with history and admin replies; the library shelf and reader; public status page (live health, 90-day uptime, plus an Answers canary); password-protected admin panel with the five views above. The leaderboard is a rolling register that fills as students check; it prints ranked-vs-known coverage rather than claiming a complete college census. The legacy GitHub Pages mini-app entry points are retired; the marketing site remains separate.
 - **Constraints:**
   - The app runs inside the Telegram WebApp SDK; identity comes from signed `initData`, sent in the `X-Telegram-Init-Data` header by the shipped client. Query/body `initData` is accepted for compatibility. The unsigned `userId` development shortcut requires `ALLOW_DEV_IDENTITY=1` or `ENV=test`.
   - The admin panel is served as server-rendered vanilla HTML/CSS/JS from the Express backend; the app is React 19 + Vite + Tailwind; the status page is a single static HTML file. The redesign must fit each surface's existing delivery mechanism.

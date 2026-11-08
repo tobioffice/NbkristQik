@@ -1,5 +1,21 @@
 import { StudentNotFoundError } from "../redis/utils.js";
 
+/**
+ * A lookup's text plus the buttons that belong with it.
+ *
+ * Most messages are text-only. The one exception is "roll not found": the
+ * closest rolls are offered as buttons, so the copy can honestly say "tap
+ * one" instead of listing codes that do nothing.
+ */
+export interface LookupReplyMarkup {
+  inline_keyboard: { text: string; callback_data: string }[][];
+}
+
+export interface LookupResult {
+  text: string;
+  markup?: LookupReplyMarkup;
+}
+
 export const buildServerDownMessage = (
   _dataType: string,
   _timestamp: string,
@@ -15,26 +31,35 @@ export const buildNoDataMessage = (rollNo: string, dataType: string): string =>
 /**
  * Roll number not in college records. Not framed as a typo — the roll is
  * often simply new/unloaded in the DB (e.g. fresh 1st-year batches).
+ *
+ * The suggestions are returned as an inline keyboard: one tap checks that
+ * roll with the same `att_<roll>` callback the card uses, and the callback
+ * handler still validates it before any portal request.
  */
 export const buildStudentNotFoundMessage = (
   error: StudentNotFoundError,
-): string => {
+): LookupResult => {
   const { rollnumber, suggestions } = error;
 
   let msg =
     `⚠️ <code>${rollnumber}</code> isn't in the college records yet.\n` +
     `New admissions can take a while to show up here.\n\n`;
 
-  if (suggestions.length > 0) {
-    msg += `Closest rolls I have, tap one to try it:\n`;
-    for (const s of suggestions) {
-      msg += `• <code>${s}</code>\n`;
-    }
-    msg += `\n`;
+  const markup: LookupReplyMarkup | undefined =
+    suggestions.length > 0
+      ? {
+          inline_keyboard: suggestions.map((s) => [
+            { text: s, callback_data: `att_${s}` },
+          ]),
+        }
+      : undefined;
+
+  if (markup) {
+    msg += `Closest rolls I have, tap one to try it:\n\n`;
   }
 
   msg += `Yours still missing? /report it and I'll add it.`;
-  return msg;
+  return { text: msg, markup };
 };
 
 export const buildBlockedReportMessage = (): string =>

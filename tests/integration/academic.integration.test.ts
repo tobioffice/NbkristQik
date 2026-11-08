@@ -29,6 +29,8 @@ vi.mock("../../src/db/fallback/response.model.js", () => ({
 vi.mock("../../src/services/redis/storeAttOrMidToRedis.js", () => ({
   storeAttendanceToRedis: vi.fn().mockResolvedValue(undefined),
   storeMidMarksToRedis: vi.fn().mockResolvedValue(undefined),
+  persistAttendanceSection: vi.fn().mockResolvedValue(undefined),
+  persistMidmarksSection: vi.fn().mockResolvedValue(undefined),
 }));
 
 describe("Academic Integration Tests", () => {

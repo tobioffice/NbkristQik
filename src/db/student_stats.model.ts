@@ -1,48 +1,153 @@
 import { turso } from "./db.js";
+import { logger } from "../config/logger.js";
 
-// Initialize the table if it doesn't exist
+// Initialize the table if it doesn't exist. New databases get the v2 columns
+// directly; init.ts alters an existing v1 table (guarded by user_version).
 export const initStatsTable = async () => {
   await turso.execute(`
       CREATE TABLE IF NOT EXISTS student_stats (
          roll_no TEXT PRIMARY KEY,
          attendance_percentage REAL,
          mid_marks_avg REAL,
-         last_updated TEXT
+         last_updated TEXT,
+         attendance_updated_at TEXT,
+         midmarks_updated_at TEXT,
+         year_sem TEXT
       )
    `);
 };
 
+/** One attendance/mid-mark row for the section batch writers. */
+export interface StatRow {
+  roll: string;
+  value: number;
+  /** e.g. "32"; the semester the value belongs to. */
+  yearSem: string;
+}
+
+// Every writer stamps the per-metric timestamp (and year_sem) alongside the
+// legacy last_updated. last_updated stays for older readers; the leaderboard
+// honesty work reads the per-metric columns.
+const attendanceStatStatement = (
+  roll: string,
+  percentage: number,
+  yearSem: string | null,
+) => ({
+  sql: `
+       INSERT INTO student_stats
+         (roll_no, attendance_percentage, attendance_updated_at, year_sem, last_updated)
+       VALUES (?, ?, datetime('now'), ?, datetime('now'))
+       ON CONFLICT(roll_no) DO UPDATE SET
+       attendance_percentage = excluded.attendance_percentage,
+       attendance_updated_at = excluded.attendance_updated_at,
+       year_sem = COALESCE(excluded.year_sem, student_stats.year_sem),
+       last_updated = excluded.last_updated
+    `,
+  args: [roll.toUpperCase(), percentage, yearSem],
+});
+
+const midMarkStatStatement = (
+  roll: string,
+  average: number,
+  yearSem: string | null,
+) => ({
+  sql: `
+       INSERT INTO student_stats
+         (roll_no, mid_marks_avg, midmarks_updated_at, year_sem, last_updated)
+       VALUES (?, ?, datetime('now'), ?, datetime('now'))
+       ON CONFLICT(roll_no) DO UPDATE SET
+       mid_marks_avg = excluded.mid_marks_avg,
+       midmarks_updated_at = excluded.midmarks_updated_at,
+       year_sem = COALESCE(excluded.year_sem, student_stats.year_sem),
+       last_updated = excluded.last_updated
+    `,
+  args: [roll.toUpperCase(), average, yearSem],
+});
+
 export const updateAttendanceStat = async (
   rollno: string,
   percentage: number,
+  yearSem?: string,
 ) => {
   // last_updated uses SQLite's datetime('now') format (UTC, no ms) to match
   // every other table in the schema — comparisons like datetime('now', ...)
   // stay consistent.
-  await turso.execute({
-    sql: `
-         INSERT INTO student_stats (roll_no, attendance_percentage, last_updated)
-         VALUES (?, ?, datetime('now'))
-         ON CONFLICT(roll_no) DO UPDATE SET
-         attendance_percentage = excluded.attendance_percentage,
-         last_updated = excluded.last_updated
-      `,
-    args: [rollno.toUpperCase(), percentage],
-  });
+  await turso.execute(
+    attendanceStatStatement(rollno, percentage, yearSem ?? null),
+  );
 };
 
-export const updateMidMarkStat = async (rollno: string, average: number) => {
+export const updateMidMarkStat = async (
+  rollno: string,
+  average: number,
+  yearSem?: string,
+) => {
   // see updateAttendanceStat for the last_updated format rationale
-  await turso.execute({
-    sql: `
-         INSERT INTO student_stats (roll_no, mid_marks_avg, last_updated)
-         VALUES (?, ?, datetime('now'))
-         ON CONFLICT(roll_no) DO UPDATE SET
-         mid_marks_avg = excluded.mid_marks_avg,
-         last_updated = excluded.last_updated
-      `,
-    args: [rollno.toUpperCase(), average],
-  });
+  await turso.execute(midMarkStatStatement(rollno, average, yearSem ?? null));
+};
+
+/**
+ * Writes one section's attendance stats in one write transaction.
+ *
+ * A batch is all-or-nothing: one malformed row would otherwise drop the whole
+ * section silently. On failure, retry per row so the good rows still land and
+ * every failed roll is logged by name.
+ */
+export const updateAttendanceStats = async (rows: StatRow[]): Promise<void> => {
+  if (rows.length === 0) return;
+  const statements = rows.map((row) =>
+    attendanceStatStatement(row.roll, row.value, row.yearSem),
+  );
+
+  try {
+    await turso.batch(statements, "write");
+  } catch (error) {
+    logger.warn(
+      `[leaderboard] attendance stat batch failed (${rows.length} row(s)) — retrying one by one:`,
+      error,
+    );
+    for (const row of rows) {
+      try {
+        await turso.execute(
+          attendanceStatStatement(row.roll, row.value, row.yearSem),
+        );
+      } catch (rowError) {
+        logger.warn(
+          `[leaderboard] attendance stat write failed for ${row.roll}:`,
+          rowError,
+        );
+      }
+    }
+  }
+};
+
+/** Mid-mark counterpart of `updateAttendanceStats` (same retry policy). */
+export const updateMidMarkStats = async (rows: StatRow[]): Promise<void> => {
+  if (rows.length === 0) return;
+  const statements = rows.map((row) =>
+    midMarkStatStatement(row.roll, row.value, row.yearSem),
+  );
+
+  try {
+    await turso.batch(statements, "write");
+  } catch (error) {
+    logger.warn(
+      `[leaderboard] mid-mark stat batch failed (${rows.length} row(s)) — retrying one by one:`,
+      error,
+    );
+    for (const row of rows) {
+      try {
+        await turso.execute(
+          midMarkStatStatement(row.roll, row.value, row.yearSem),
+        );
+      } catch (rowError) {
+        logger.warn(
+          `[leaderboard] mid-mark stat write failed for ${row.roll}:`,
+          rowError,
+        );
+      }
+    }
+  }
 };
 
 export interface LeaderboardFilters {
@@ -76,11 +181,19 @@ const buildLeaderboardWhere = (
   filters: LeaderboardFilters,
   searchNames: boolean,
 ): LeaderboardWhere => {
-  const conditions: string[] = [`st.${column} IS NOT NULL`];
+  const conditions: string[] = [
+    `st.${column} IS NOT NULL`,
+    // A row from an earlier semester must not keep ranking after the portal
+    // switches. year_sem is written with every stat; the migration backfills
+    // it from studentsnew. Rows still null are excluded (and logged at boot).
+    `st.year_sem = s.year`,
+  ];
   const args: (string | number)[] = [];
 
   if (filters.year) {
-    conditions.push(`s.year = ?`);
+    // studentsnew.year is "11".."42" (year-semester). The UI filters by year
+    // only, so match the leading digit: year 1 covers both 11 and 12.
+    conditions.push(`SUBSTR(s.year, 1, 1) = ?`);
     args.push(filters.year);
   }
 
@@ -297,6 +410,7 @@ export const getStudentRank = async (
         FROM student_stats st
         JOIN studentsnew s ON st.roll_no = s.roll_no
         WHERE ${column} IS NOT NULL
+          AND st.year_sem = s.year
       )
       SELECT rank, total, score FROM ranked WHERE roll_no = ?
     `,
@@ -325,7 +439,8 @@ export const getLeaderboardFacets = async (
   const args: string[] = [];
 
   if (filters.year) {
-    conditions.push("year = ?");
+    // same leading-digit rule as buildLeaderboardWhere: 1 covers 11 and 12
+    conditions.push("SUBSTR(year, 1, 1) = ?");
     args.push(filters.year);
   }
   if (filters.branch) {
@@ -342,15 +457,74 @@ export const getLeaderboardFacets = async (
 };
 
 /**
- * When the attendance/mid-mark numbers were last written (UTC, SQLite
- * datetime format). The register prints this so a stale page says so.
+ * How many students the directory knows for the same filters the ranked
+ * leaderboard uses. `ranked` counts students with a current-semester stat;
+ * `known` counts the master table, so the UI can print "412 of 1,240 known
+ * students" instead of implying the register is the whole college.
+ *
+ * Search is deliberately not accepted here: a search is not a coverage view,
+ * and the caller returns `coverage: null` when one is present.
  */
-export const getLastSyncAt = async (): Promise<string | null> => {
+export const getLeaderboardCoverage = async (
+  filters: Pick<LeaderboardFilters, "year" | "branch" | "section">,
+): Promise<number> => {
+  const conditions: string[] = [];
+  const args: string[] = [];
+
+  if (filters.year) {
+    // same leading-digit rule as buildLeaderboardWhere: 1 covers 11 and 12
+    conditions.push("SUBSTR(year, 1, 1) = ?");
+    args.push(filters.year);
+  }
+  if (filters.branch) {
+    conditions.push("branch = ?");
+    args.push(filters.branch);
+  }
+  if (filters.section && filters.section !== "all") {
+    conditions.push("section = ?");
+    args.push(filters.section);
+  }
+
+  const where =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const result = await turso.execute({
+    sql: `SELECT COUNT(*) as total FROM studentsnew ${where}`,
+    args,
+  });
+
+  return Number(result.rows[0]?.total || 0);
+};
+
+/**
+ * When the attendance or mid-mark numbers were last written (UTC, SQLite
+ * datetime format).
+ *
+ * Each metric has its own timestamp: a lookup that refreshes attendance says
+ * nothing about the mid-marks, so MAX over one shared `last_updated` made the
+ * whole register look fresh. A register that fills as students look themselves
+ * up also has a range, not one timestamp, so both ends are returned.
+ */
+export const getLastSyncAt = async (
+  sortBy: "attendance" | "midmarks" = "attendance",
+): Promise<{ newest: string | null; oldest: string | null }> => {
+  const column =
+    sortBy === "midmarks" ? "midmarks_updated_at" : "attendance_updated_at";
+
   const result = await turso.execute(
-    `SELECT MAX(last_updated) AS at FROM student_stats`,
+    `SELECT MAX(st.${column}) AS newest, MIN(st.${column}) AS oldest
+     FROM student_stats st
+     JOIN studentsnew s ON st.roll_no = s.roll_no
+     WHERE st.year_sem = s.year
+       AND st.${column} IS NOT NULL`,
   );
-  const at = result.rows[0]?.at;
-  return at == null ? null : String(at);
+
+  const newest = result.rows[0]?.newest;
+  const oldest = result.rows[0]?.oldest;
+  return {
+    newest: newest == null ? null : String(newest),
+    oldest: oldest == null ? null : String(oldest),
+  };
 };
 
 /**

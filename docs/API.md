@@ -63,22 +63,24 @@ deployment that forgets to set it does not inherit the shortcut.
 
 ## Rate limits
 
-All limits are per client IP unless stated otherwise. They are transport-level
-abuse guards; identity-scoped pacing (the report 60-second gate, the library
-read-burst check) lives in the service that knows the caller.
+The API limiter is per Telegram account when the caller proved an identity,
+and per network address for anonymous callers. A shared campus NAT no longer
+puts every student on one 600-request budget; a generous per-IP backstop still
+caps anonymous abuse. Identity-scoped pacing (the report 60-second gate, the
+library read-burst check) lives in the service that knows the caller.
 
 | Scope | Limit |
 |---|---|
-| Global API middleware | 600 requests / 15 min |
-| `POST /api/register` | 20 / 15 min (on top of the global limit) |
-| `POST /api/report` | 5 / 15 min, plus a 60 s per-user gate in the service |
-| `/api/thread/*` | 120 / 15 min, plus a 3 s per-user gate on follow-ups |
-| `POST /api/library/session` | 20 / hour (other library calls use the global limit) |
+| Global API middleware | 600 / 15 min per account, plus a 10,000 / 15 min per-IP backstop |
+| `POST /api/register` | 20 / 15 min per account (on top of the global limit) |
+| `POST /api/report` | 5 / 15 min per account, plus a 60 s per-user gate in the service |
+| `/api/thread/*` | 120 / 15 min per account, plus a 3 s per-user gate on follow-ups |
+| `POST /api/library/session` | 20 / hour per account (other library calls use the global limit) |
 | `/internal/*` | 120 / 15 min (on top of the global limit) |
 | Admin `POST {base}/login` | 20 requests / 10 min burst, plus a 5-failure / 10 min lockout |
 
 `/health` has no dedicated limiter but is mounted after the global API
-middleware, so it shares the 600 / 15 min limit. `/api/status` also uses the
+middleware, so it shares the account/IP limit. `/api/status` also uses the
 global limit. The static `/status` page and the `/library/` bundle are mounted
 before the API middleware and are not rate-limited.
 
@@ -95,10 +97,17 @@ Paginated, filterable leaderboard rows.
 | `page` | int | 1 | 1–1000 |
 | `limit` | int | 50 | 1–100 |
 | `sort` | string | `attendance` | `attendance` or `midmarks` |
-| `year` | string | `all` | digits or `all` |
-| `branch` | string | `all` | digits or `all` |
-| `section` | string | `all` | single letter or `all` |
+| `scope` | string | `me` for a verified caller, `all` otherwise | `me` or `all` |
+| `year` | string | — | year digit `1`–`4` (legacy `11`/`12` also accepted) or `all` |
+| `branch` | string | — | portal branch digits or `all` |
+| `section` | string | — | single letter or `all` |
 | `search` | string | — | 2–20 chars: letters, digits, underscores, spaces or dashes |
+
+`scope=me` applies the caller's saved registration's year/branch/section
+unless an explicit non-`all` filter overrides it. `all` means "no filter"; the
+web client omits dimensions it does not want to filter. An explicit `all`
+value suppresses the caller scope and is treated as a whole-register request.
+Anonymous callers are always `all`.
 
 Invalid parameters return
 `400 { "success": false, "error": "Validation failed", "details": [...] }`.
@@ -112,20 +121,28 @@ The response is identity-aware:
   search by name as well as roll. A non-empty `display_name` saved in
   `registrations` overrides the college name for that roll.
 
-Rows and total always come from the same filtered set. `updated_at` is the
-newest `student_stats.last_updated` (UTC, SQLite `datetime('now')` format), for
-the client's "Synced 2 hours ago" line. Page 1 also carries the sections that
-exist for the chosen year/branch; later pages return `null` for both
-`updated_at` and `facets` (the client already has them, and each extra query
-costs a database read).
+Rows and `total` always come from the same filtered set. `total` is the number
+of students actually ranked in this view, not the size of the college. Page 1
+also carries the sections that exist for the chosen year/branch and the
+coverage/freshness metadata; later pages return `null` for those extras.
+
+- `coverage: { ranked, known }` — `ranked` is `total`; `known` is the number of
+  students in `studentsnew` matching the same filters. It is `null` for a
+  search or a page after the first. A partial register must print both.
+- `freshness: { newest, oldest }` — the newest and oldest write behind the
+  ranked view (per metric, UTC SQLite datetime). `oldest` matters because the
+  register fills as students check.
+- `scope: { year, branch, section } | null` — the effective filter context,
+  not the caller's identity.
+- `updated_at` remains `freshness.newest` for one release.
 
 The payload is cached in Redis for 60 seconds per unique query. Cache keys are
-segregated by identity mode (`names` vs `anon`), so a cached identified page
-can never be served to an anonymous caller, or the reverse. HTTP caching is
-`Cache-Control: public, max-age=30` for anonymous responses and
-`Cache-Control: private, max-age=30` for identified ones. The two default
-anonymous views are refreshed every 50 seconds so the first student after a
-quiet minute does not pay a cold query.
+segregated by identity mode (`names` vs `anon`), scope mode, and the resolved
+`year:branch:section`; two `scope=me` callers in different sections can never
+share a page. HTTP caching is `Cache-Control: public, max-age=30` for anonymous
+responses and `private, max-age=30` for identified ones, with
+`Vary: X-Telegram-Init-Data`. The anonymous default views are refreshed every
+50 seconds on a remote database; the loop is disabled on the embedded database.
 
 ```json
 {
@@ -134,6 +151,9 @@ quiet minute does not pay a cold query.
   "limit": 50,
   "total": 245,
   "updated_at": "2026-10-25 10:00:00",
+  "freshness": { "newest": "2026-10-25 10:00:00", "oldest": "2026-10-19 08:00:00" },
+  "scope": { "year": "3", "branch": "5", "section": "A" },
+  "coverage": { "ranked": 245, "known": 1200 },
   "facets": { "sections": ["A", "B", "C"] },
   "data": [
     {
@@ -175,18 +195,18 @@ the library tab and route when `libraryOpen` is `false`.
 
 ### `GET /api/me`
 
-Returns the caller's roll number and global ranks, each with the rounded score
+Returns the caller's saved roll and global ranks, each with the rounded score
 the register prints (`value`) so the personal strip and the row agree. A
 verified identity is required; an anonymous request or an invalid one is
 `401 { "found": false, "error": "..." }`.
 
-`source` says how the roll was resolved:
+Identity is the registration, never the last lookup. `tgusers` is auto-upserted
+by every roll lookup, including a friend's, so it is returned separately as a
+suggestion:
 
-- `"registered"` — the caller has a saved registration. This wins over the
-  last roll they happened to look up, because `tgusers` is auto-upserted by
-  every lookup, including a friend's.
-- `"lookup"` — no registration; the roll comes from the `tgusers` last-lookup
-  mapping.
+- Registered: `{ found: true, source: "registered", roll_no, attendance, midmarks }`.
+- Not registered: `{ found: false, lastLookup: "<roll>|null" }`; no rank queries
+  run.
 
 ```json
 {
@@ -198,9 +218,44 @@ verified identity is required; an anonymous request or an invalid one is
 }
 ```
 
-`{ "found": false }` when the user has no roll mapping yet (a verified
-identity with no registration and no past lookup). Ranks are global over all
-students in the register, not over the current filters.
+Ranks are global over all ranked students in the register, not over the
+current filters. `Cache-Control: private, no-store`.
+
+`DELETE /api/me/last-lookup` removes the caller's suggestion row; the
+registration is untouched.
+
+### `GET /api/me/academics`
+
+Structured JSON for the app's first screen. A verified identity and a saved
+registration are required; an unregistered caller gets
+`200 { ok: false, registered: false }` (not an error). `type` is
+`attendance` (default) or `midmarks`.
+
+```json
+{
+  "ok": true,
+  "registered": true,
+  "type": "attendance",
+  "rollNo": "23KB1A0599",
+  "data": {
+    "rollno": "23KB1A0599",
+    "year_branch_section": "3_CSE_A",
+    "percentage": 82.22,
+    "totalClasses": { "attended": 148, "conducted": 180 },
+    "subjects": [
+      { "subject": "DBMS", "attended": 22, "conducted": 30, "lastUpdated": "12-10-2025" }
+    ]
+  },
+  "freshness": { "notice": null, "source": "live" }
+}
+```
+
+`freshness.source` is `live`, `cached`, or `fallback`; `notice` is the
+human-readable line to show. Success is
+`Cache-Control: private, max-age=60`; errors are `private, no-store`. Expected
+portal failures return `404 NO_DATA`/`NO_STUDENT` or `503
+SERVER_DOWN`/`REPORT_BLOCKED` with `{ ok: false, registered, type, rollNo,
+error, code }`.
 
 ### `GET /health`
 
@@ -327,11 +382,11 @@ Optional registration lets students pin their default roll (Telegram Web App
 form via `/register`); `/attendance`, `/midmarks`, and `/bunk` resolve it.
 Identity rules match `/api/me` (signed `X-Telegram-Init-Data`, with the gated
 dev `userId` shortcut). `POST /api/register` is additionally limited to 20
-requests / 15 min / IP.
+requests / 15 min per account.
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/api/profile` | `{found:true, registration:{roll_no, display_name,...}, student}`; `{found:true, stale:true, registration, student:null}` when the saved roll left the college master table; or `{found:false, suggestion}` (roll from past lookups) |
+| `GET` | `/api/profile` | `{found:true, registration:{roll_no, display_name,...}, student}`; `{found:true, stale:true, registration, student:null}` when the saved roll left the college master table; or `{found:false, lastLookup, suggestion}` (the same roll for one release; a suggestion, never a prefill) |
 | `POST` | `/api/register` | Validate + upsert `{rollNo, displayName?}`; 400 on bad format, 404 + `suggestions` on a roll missing from college records |
 
 A successful registration answers

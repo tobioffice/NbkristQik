@@ -16,13 +16,11 @@ interface OverviewPayload {
     day: string;
     actions: number;
     users: number;
-    checkins: number;
   }>;
   hourly: Array<{
     h: string;
     actions: number;
     users: number;
-    checkins: number;
   }>;
   surfaces: Record<string, number>;
   topActions: Array<{ action: string; count: number }>;
@@ -52,8 +50,7 @@ const computeOverview = async (): Promise<OverviewPayload> => {
         args: [],
       },
       {
-        sql: `SELECT date(created_at, '+330 minutes') d, COUNT(*) actions, COUNT(DISTINCT user_id) users,
-                   SUM(CASE WHEN action = 'daily_checkin' THEN 1 ELSE 0 END) checkins
+        sql: `SELECT date(created_at, '+330 minutes') d, COUNT(*) actions, COUNT(DISTINCT user_id) users
              FROM activity_log
              WHERE created_at >= datetime('now', '-30 days')
              GROUP BY d ORDER BY d`,
@@ -77,8 +74,7 @@ const computeOverview = async (): Promise<OverviewPayload> => {
         // day+hour keys in IST (+330 min shift) — storage stays UTC,
         // grouping follows IST wall-clock boundaries
         sql: `SELECT strftime('%Y-%m-%d %H', created_at, '+330 minutes') h,
-                   COUNT(*) actions, COUNT(DISTINCT user_id) users,
-                   SUM(CASE WHEN action = 'daily_checkin' THEN 1 ELSE 0 END) checkins
+                   COUNT(*) actions, COUNT(DISTINCT user_id) users
              FROM activity_log
              WHERE created_at >= datetime('now', '-30 hours')
              GROUP BY h ORDER BY h`,
@@ -116,13 +112,11 @@ const computeOverview = async (): Promise<OverviewPayload> => {
       day: String(r.d),
       actions: Number(r.actions),
       users: Number(r.users),
-      checkins: Number(r.checkins || 0),
     })),
     hourly: hourlyQ.rows.map((r) => ({
       h: String(r.h),
       actions: Number(r.actions),
       users: Number(r.users),
-      checkins: Number(r.checkins || 0),
     })),
     surfaces,
     topActions: topQ.rows.map((r) => ({

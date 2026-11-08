@@ -22,7 +22,10 @@ beforeAll(async () => {
         roll_no TEXT PRIMARY KEY,
         attendance_percentage REAL,
         mid_marks_avg REAL,
-        last_updated TEXT
+        last_updated TEXT,
+        attendance_updated_at TEXT,
+        midmarks_updated_at TEXT,
+        year_sem TEXT
       )`,
       // Deliberately no unique index on roll_no and two rows for the same
       // roll: the query must still return one leaderboard row per student.
@@ -37,8 +40,8 @@ beforeAll(async () => {
         ('AAA00001', 'ALICE MASTER', 'A', '5', '31'),
         ('AAA00002', 'BOB MASTER', 'A', '5', '31')`,
       `INSERT INTO student_stats VALUES
-        ('AAA00001', 90.0, 28.0, datetime('now')),
-        ('AAA00002', 90.0, 27.0, datetime('now'))`,
+        ('AAA00001', 90.0, 28.0, datetime('now'), datetime('now'), datetime('now'), '31'),
+        ('AAA00002', 90.0, 27.0, datetime('now'), datetime('now'), datetime('now'), '31')`,
       `INSERT INTO registrations VALUES
         ('u1', 'AAA00001', 'ALICE REGISTERED', datetime('now'), '2026-01-01 00:00:00'),
         ('u2', 'AAA00001', 'ALICE NEWER', datetime('now'), '2026-02-01 00:00:00')`,

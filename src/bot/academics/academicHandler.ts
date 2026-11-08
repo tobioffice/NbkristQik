@@ -2,8 +2,15 @@ import { bot } from "../bot.js";
 import type { CallbackQuery, Message } from "node-telegram-bot-api";
 
 import { sendAttendanceOrMidMarks, sendBunkPlan } from "./studentActions.js";
+import { cardMarkup } from "./cardMarkup.js";
 import { getStudentCached } from "../../services/redis/utils.js";
 import { upsertTgUser } from "../../db/student.model.js";
+import {
+  getRegistration,
+  upsertRegistration,
+  RollAlreadyRegisteredError,
+} from "../../db/registration.model.js";
+import { invalidateStudentContext } from "../../services/library/entitlement.js";
 
 import { ROLL_REGEX, CHIT_CHAT_ID } from "../../constants/index.js";
 import {
@@ -15,38 +22,69 @@ import { logger } from "../../config/logger.js";
 import { trackActivity, ChatSurface } from "../../services/tracker.js";
 import { isAuthorizedUser, rememberStudent } from "../authorization.js";
 import { TOO_FAST, SOMETHING_BROKE, BAD_ROLL } from "../replies.js";
-import { WEBAPP_URL } from "../../constants/webapp.js";
-import { BOT_USERNAME } from "../../constants/telegram.js";
+import { BOT_USERNAME, botLink } from "../../constants/telegram.js";
+
+/** The same copy the web form shows when a roll belongs to another account. */
+const ROLL_TAKEN_COPY =
+  "This roll number is already saved to another Telegram account. " +
+  "If it's yours, open the app from that account or ask the admin for help.";
+
+const SAVE_PREFIX = "save_";
+
+/** What a tapped card button needs to replace the card in place. */
+interface ActionContext {
+  /** The message carrying the card; the answer replaces it. */
+  editMessageId: number;
+  /** The student who tapped; the card's Save button depends on their roll. */
+  userId: number;
+}
 
 /**
  * What a tapped button asks for.
  *
  * The callback data is `<prefix><roll>` (att_23CS1042). One table, so the
- * activity tracker and the handler cannot drift apart: a new button is a new
- * row here and nothing else.
+ * activity tracker and the handler cannot drift apart: a new lookup button is
+ * a new row here and nothing else. Save is handled separately because it
+ * writes instead of fetching a card.
  */
 interface CallbackAction {
   prefix: string;
   /** The activity this button records. */
   tracked: string;
-  run: (msg: Message, rollNumber: string) => Promise<void>;
+  run: (
+    msg: Message,
+    rollNumber: string,
+    context: ActionContext,
+  ) => Promise<void>;
 }
 
 const CALLBACK_ACTIONS: CallbackAction[] = [
   {
     prefix: "att_",
     tracked: "attendance",
-    run: (msg, rollNumber) => sendAttendanceOrMidMarks(msg, rollNumber, "att"),
+    run: (msg, rollNumber, context) =>
+      sendAttendanceOrMidMarks(msg, rollNumber, "att", {
+        editMessageId: context.editMessageId,
+        userId: context.userId,
+      }),
   },
   {
     prefix: "mid_",
     tracked: "midmarks",
-    run: (msg, rollNumber) => sendAttendanceOrMidMarks(msg, rollNumber, "mid"),
+    run: (msg, rollNumber, context) =>
+      sendAttendanceOrMidMarks(msg, rollNumber, "mid", {
+        editMessageId: context.editMessageId,
+        userId: context.userId,
+      }),
   },
   {
     prefix: "bunk_",
     tracked: "bunk",
-    run: (msg, rollNumber) => sendBunkPlan(msg, rollNumber),
+    run: (msg, rollNumber, context) =>
+      sendBunkPlan(msg, rollNumber, {
+        editMessageId: context.editMessageId,
+        userId: context.userId,
+      }),
   },
 ];
 
@@ -54,47 +92,41 @@ const actionFor = (data: string): CallbackAction | undefined =>
   CALLBACK_ACTIONS.find((action) => data.startsWith(action.prefix));
 
 // persist userId→roll for "You are #N" in the leaderboard web app
-// (best-effort — never block the menu on it)
+// (best-effort — never block the card on it)
 const persistRollMapping = (userId: number, rollNumber: string): void => {
   void getStudentCached(rollNumber)
     .then((student) => upsertTgUser(String(userId), student))
     .catch((e) => logger.debug("tg user upsert skipped:", e?.message ?? e));
 };
 
-const sendRollOptions = (
-  chatId: number,
+/** The one line a group gets: where to go, never what the roll says. */
+const ATTENDANCE_IS_PRIVATE =
+  "Your attendance is private. Tap to open it in the bot.";
+
+/**
+ * A group is a shared room, so it gets the way into the bot and nothing else.
+ * The roll rides in the button's deep link, not in the visible text; the card
+ * itself waits in private.
+ */
+const sendPrivateAttendanceLink = async (
+  msg: Message,
   rollNumber: string,
-  replyToMessageId: number,
-  isPrivate: boolean,
-  notice?: string,
-) =>
-  bot.sendMessage(
-    chatId,
-    `${notice ? `${notice}\n\n` : ""}What do you want to check?`,
-    {
-      parse_mode: "HTML",
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "Attendance 🚀", callback_data: `att_${rollNumber}` }],
-          [{ text: "Mid Marks 📊", callback_data: `mid_${rollNumber}` }],
-          [{ text: "Bunk Plan 🎯", callback_data: `bunk_${rollNumber}` }],
-          [
-            // web_app buttons are private-only; groups get a plain link
-            isPrivate
-              ? { text: "Leaderboard 🏆", web_app: { url: WEBAPP_URL } }
-              : { text: "Leaderboard 🏆", url: WEBAPP_URL },
-          ],
-        ],
-      },
-      reply_to_message_id: replyToMessageId,
+): Promise<void> => {
+  await bot.sendMessage(msg.chat.id, ATTENDANCE_IS_PRIVATE, {
+    reply_to_message_id: msg.message_id,
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "Open attendance", url: botLink(`att_${rollNumber}`) }],
+      ],
     },
-  );
+  });
+};
 
 const handleRollNumberMessage = async (msg: Message): Promise<void> => {
   const chatId = msg.chat.id;
   const from = msg.from;
   if (!from || !msg.text) return;
-  // channels are broadcast: no lookups, no menus, nothing posted back
+  // channels are broadcast: no lookups, no cards, nothing posted back
   if (msg.chat.type === "channel") return;
   const userId = from.id;
   const rawRoll = msg.text.trim().toUpperCase();
@@ -115,11 +147,19 @@ const handleRollNumberMessage = async (msg: Message): Promise<void> => {
   const authorized = await isAuthorizedUser({
     userId,
     chatId,
-    // a group never sees this card: it only makes sense to one reader
+    // the join prompt is a DM with the student, even for a group roll
     joinPromptChatId: userId,
   });
   if (!authorized) return;
   await rememberStudent(userId);
+
+  // A group or supergroup is a shared room: the card would show the student's
+  // attendance, marks and below-75% warning to everyone. The room gets a
+  // deep link instead; the lookup itself happens in private.
+  if (msg.chat.type !== "private") {
+    await sendPrivateAttendanceLink(msg, rollNumber);
+    return;
+  }
 
   // only an authorized lookup may say who "you" are: a blocked or invalid
   // roll must not move the leaderboard identity
@@ -134,15 +174,15 @@ const handleRollNumberMessage = async (msg: Message): Promise<void> => {
     detail: rollNumber,
   });
 
-  await sendRollOptions(
-    chatId,
-    rollNumber,
-    msg.message_id,
-    msg.chat.type === "private",
-    corrected
+  // No menu: the roll is a request for attendance, so answer it with the
+  // attendance card, replying to the student's own message. The card carries
+  // every other action.
+  await sendAttendanceOrMidMarks(msg, rollNumber, "att", {
+    replyToMessageId: msg.message_id,
+    notice: corrected
       ? `Heads up, I read that O as 0, showing <code>${rollNumber}</code>.`
       : undefined,
-  );
+  });
 };
 
 // chit chat group: delete roll numbers, brief in-group notice that self-deletes
@@ -184,18 +224,72 @@ const handleChitChatCallback = async (callbackQueryId: string) => {
     .catch(() => {});
 };
 
-/** Runs the tapped lookup, refusing a roll number that is not one. */
-const runAction = async (
-  action: CallbackAction,
-  data: string,
+/**
+ * `save_<roll>`: pin the roll to this Telegram account.
+ *
+ * The toast is the result. A roll held by another account gets the same copy
+ * as the web form and never reveals which account holds it.
+ */
+const handleSaveRoll = async (
+  callbackQuery: CallbackQuery,
   msg: Message,
 ): Promise<void> => {
-  const rollNumber = data.slice(action.prefix.length);
-  if (!isValidRollNumber(rollNumber)) {
-    await bot.sendMessage(msg.chat.id, BAD_ROLL);
+  const data = callbackQuery.data ?? "";
+  const rollNumber = data.slice(SAVE_PREFIX.length);
+  const userId =
+    callbackQuery.from?.id ??
+    (msg.chat.type === "private" ? msg.chat.id : undefined);
+  const answer = (text: string) =>
+    bot.answerCallbackQuery(callbackQuery.id, { text }).catch(() => {});
+
+  if (userId === undefined) {
+    await answer(SOMETHING_BROKE);
     return;
   }
-  await action.run(msg, rollNumber);
+  if (!isValidRollNumber(rollNumber)) {
+    await answer(BAD_ROLL);
+    return;
+  }
+
+  let saved = false;
+  try {
+    const existing = await getRegistration(String(userId));
+    if (existing?.roll_no.toUpperCase() === rollNumber.toUpperCase()) {
+      await answer("Saved already");
+      saved = true;
+    } else {
+      await upsertRegistration(String(userId), rollNumber, null);
+      invalidateStudentContext(String(userId));
+      await answer("Saved. /attendance answers in one tap now.");
+      saved = true;
+    }
+  } catch (e: unknown) {
+    if (e instanceof RollAlreadyRegisteredError) {
+      await answer(ROLL_TAKEN_COPY);
+    } else {
+      logger.error("[academicHandler] save roll failed:", e);
+      await answer(SOMETHING_BROKE);
+    }
+  }
+
+  if (!saved) return;
+
+  // The card stays on screen; only the Save button goes away.
+  await bot
+    .editMessageReplyMarkup(
+      cardMarkup({
+        roll: rollNumber,
+        isPrivate: msg.chat.type === "private",
+        showSave: false,
+      }),
+      { chat_id: msg.chat.id, message_id: msg.message_id },
+    )
+    .catch((e: Error) =>
+      logger.debug(
+        "[academicHandler] save button hide skipped:",
+        e?.message ?? e,
+      ),
+    );
 };
 
 bot.on("callback_query", async (callbackQuery) => {
@@ -218,10 +312,6 @@ const handleCallbackQuery = async (
   const { data = "", message: msg } = callbackQuery;
 
   if (!msg) return;
-
-  // dailycheck is fully handled in dailyCheckIn.ts (would otherwise
-  // rate-limit + try to delete the pinned channel post)
-  if (data === "dailycheck") return;
 
   // channel taps: dismiss the spinner, serve nothing (broadcast, not a chat)
   if (msg.chat.type === "channel") {
@@ -256,24 +346,60 @@ const handleCallbackQuery = async (
     return;
   }
 
+  if (data.startsWith(SAVE_PREFIX)) {
+    if (callbackQuery.from) {
+      trackActivity({
+        userId: callbackQuery.from.id,
+        username: callbackQuery.from.username,
+        firstName: callbackQuery.from.first_name,
+        chatType: msg.chat.type as ChatSurface,
+        action: "save",
+        detail: data.slice(SAVE_PREFIX.length),
+      });
+    }
+    await handleSaveRoll(callbackQuery, msg);
+    return;
+  }
+
   // the tapped button tells us what they wanted; in channels msg.from is
   // the channel itself, so the actor is always callbackQuery.from
   const action = actionFor(data);
-  if (action && callbackQuery.from) {
+  if (!action) {
+    await bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
+    return;
+  }
+
+  const rollNumber = data.slice(action.prefix.length);
+  if (callbackQuery.from) {
     trackActivity({
       userId: callbackQuery.from.id,
       username: callbackQuery.from.username,
       firstName: callbackQuery.from.first_name,
       chatType: msg.chat.type as ChatSurface,
       action: action.tracked,
-      detail: data.slice(action.prefix.length),
+      detail: rollNumber,
     });
   }
 
+  // A mutated or stale callback is rejected before any portal request.
+  if (!isValidRollNumber(rollNumber)) {
+    await bot
+      .answerCallbackQuery(callbackQuery.id, {
+        text: BAD_ROLL,
+        show_alert: true,
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // The card is edited in place, never deleted: the action surface must stay
+  // on screen. Answering first stops the button's spinner.
   const results = await Promise.allSettled([
-    bot.deleteMessage(msg.chat.id, msg.message_id),
-    action ? runAction(action, data, msg) : Promise.resolve(),
     bot.answerCallbackQuery(callbackQuery.id),
+    action.run(msg, rollNumber, {
+      editMessageId: msg.message_id,
+      userId,
+    }),
   ]);
   for (const result of results) {
     if (result.status === "rejected") {

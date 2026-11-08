@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ROLL_REGEX } from "../api";
+import { useIdentity } from "../identity";
 import { useProfile } from "../useProfile";
 
 interface ProfileViewProps {
@@ -52,31 +53,42 @@ const WarnIcon = () => (
   </svg>
 );
 
+const ProfileSkeleton = () => (
+  <div className="form-block" aria-hidden="true">
+    <div className="sk" style={{ height: 44, marginTop: 22 }} />
+    <div className="sk" style={{ height: 44, marginTop: 12 }} />
+    <div className="sk" style={{ height: 48, marginTop: 16 }} />
+  </div>
+);
+
 export default function ProfileView({
   tgUser,
   initData,
   compact = false,
   onReportIssue,
 }: ProfileViewProps) {
-  const { status, save } = useProfile(tgUser, initData);
+  const { status, save, forgetLookup } = useProfile(tgUser, initData);
+  const identity = useIdentity();
   const [roll, setRoll] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [forgetting, setForgetting] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
-  // prefill once, when the profile data first arrives (user edits take over after)
+  // Prefill once, when the profile data first arrives (user edits take over
+  // after). An unregistered form starts empty: a past lookup is a suggestion
+  // in the margin, not the caller's roll.
   const [prefilledFor, setPrefilledFor] = useState<string | null>(null);
-  const profileReady =
-    status.state === "ready" ? status.profile.roll ?? "" : null;
-  const displayNameReady =
-    status.state === "ready" ? status.profile.displayName ?? "" : null;
-  if (status.state === "ready" && prefilledFor === null) {
+  useEffect(() => {
+    if (status.state !== "ready" || prefilledFor !== null) return;
     setPrefilledFor(tgUser);
-    setRoll(profileReady ?? "");
-    setDisplayName(displayNameReady ?? "");
-  }
+    setRoll(status.profile.registered ? (status.profile.roll ?? "") : "");
+    setDisplayName(
+      status.profile.registered ? (status.profile.displayName ?? "") : "",
+    );
+  }, [status, prefilledFor, tgUser]);
 
   if (!tgUser) {
     return (
@@ -94,13 +106,7 @@ export default function ProfileView({
   }
 
   if (status.state === "loading") {
-    return (
-      <div className="form-block" aria-hidden="true">
-        <div className="sk" style={{ height: 44, marginTop: 22 }} />
-        <div className="sk" style={{ height: 44, marginTop: 12 }} />
-        <div className="sk" style={{ height: 48, marginTop: 16 }} />
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (status.state === "error") {
@@ -114,8 +120,15 @@ export default function ProfileView({
     );
   }
 
+  // the values are filled in an effect; hold the skeleton for that one frame
+  // instead of flashing an empty form at a registered student
+  if (prefilledFor === null) {
+    return <ProfileSkeleton />;
+  }
+
   const registered = status.profile.registered;
   const stale = status.profile.stale;
+  const lastLookup = status.profile.lastLookup;
 
   const submit = async () => {
     setError(null);
@@ -139,6 +152,25 @@ export default function ProfileView({
       if (sugg) setSuggestions(sugg);
     } else {
       setSaved(registered ? "Saved" : "Saved. /attendance, /midmarks and /bunk are ready now.");
+      // the shell's identity is now this registration; ask it again once
+      identity.refresh();
+    }
+  };
+
+  const forget = async () => {
+    setError(null);
+    setSaved(null);
+    setForgetting(true);
+    try {
+      await forgetLookup();
+      // keep the shared identity's suggestion in step with the profile
+      identity.refresh();
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Could not forget that roll.",
+      );
+    } finally {
+      setForgetting(false);
     }
   };
 
@@ -163,6 +195,31 @@ export default function ProfileView({
             </p>
           </>
         )}
+
+        {!registered && lastLookup ? (
+          <div className="note mt-4">
+            <button
+              type="button"
+              className="suggestion"
+              style={{ marginTop: 0 }}
+              onClick={() => {
+                setRoll(lastLookup.toUpperCase());
+                setSaved(null);
+                setError(null);
+              }}
+            >
+              Last looked up: {lastLookup} — use this?
+            </button>
+            <button
+              type="button"
+              className="link-btn mt-2"
+              onClick={forget}
+              disabled={forgetting}
+            >
+              {forgetting ? "Forgetting..." : "That's not me — forget it"}
+            </button>
+          </div>
+        ) : null}
 
         <label className="field">
           <span>Roll number</span>

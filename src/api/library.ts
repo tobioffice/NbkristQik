@@ -21,7 +21,7 @@ import {
   listAllLiveSubjects,
   listSubjectsForStudent,
   mayReadDocument,
-  resolveStudentContext,
+  resolveStudentContextCached,
   studentView,
   type StudentContext,
 } from "../services/library/entitlement.js";
@@ -44,6 +44,12 @@ import { notePageRead, watchForBurst } from "../services/library/reads.js";
  *     subjects, and the app asks for the roll instead.
  *
  * Both are checked by the two helpers below, so no route can forget one.
+ *
+ * TODO(P3-06): `src/api/profile.ts` is the registration writer and should call
+ * `invalidateStudentContext(userId)` (exported by services/library/entitlement)
+ * after a successful upsert, so a changed roll reaches the library on the next
+ * request instead of the next one-minute window. That file is outside this
+ * change; until it is wired, the TTL is the worst case.
  */
 
 export const libraryRouter = Router();
@@ -73,9 +79,17 @@ const refuse = (res: Response, status: number, error: string): null => {
 interface AuthedSession {
   userId: string;
   token: string;
+  /** The reader, resolved once per session per minute; null = unregistered. */
+  ctx: StudentContext | null;
 }
 
-/** Reads the session cookie, or answers 401 and returns null. */
+/**
+ * Reads the session cookie, or answers 401 and returns null.
+ *
+ * The Redis session is still read on every request: that is how a logout or
+ * a closed library takes effect at once. The student behind it is cached for
+ * a minute, because it can only change when the registration changes.
+ */
 const requireSession = async (
   req: Request,
   res: Response,
@@ -91,15 +105,16 @@ const requireSession = async (
     refuse(res, 403, "The library is not open yet.");
     return null;
   }
-  return { userId: session.userId, token };
+
+  const ctx = await resolveStudentContextCached(token, session.userId);
+  return { userId: session.userId, token, ctx };
 };
 
 /** Resolves the reader, or answers 403 and returns null. */
-const requireStudent = async (
+const requireStudent = (
   res: Response,
-  userId: string,
-): Promise<StudentContext | null> => {
-  const ctx = await resolveStudentContext(userId);
+  ctx: StudentContext | null,
+): StudentContext | null => {
   if (!ctx) {
     res.status(403).json({
       ok: false,
@@ -112,18 +127,54 @@ const requireStudent = async (
 };
 
 /**
+ * The document row, cached for a minute by id.
+ *
+ * This is an index row, not the page bytes: the file is still read and
+ * stamped for every delivery. A minute keeps a takedown prompt enough to
+ * notice, and the live check below still runs against the cached row. A
+ * missing row is never cached, so a document that goes live is not refused
+ * for the rest of the minute.
+ */
+const DOCUMENT_TTL_MS = 60_000;
+const DOCUMENT_CACHE_LIMIT = 500;
+
+const documentCache = new Map<
+  string,
+  { doc: LibraryDocument; expiresAt: number }
+>();
+
+const getDocumentCached = async (
+  id: string,
+): Promise<LibraryDocument | null> => {
+  const hit = documentCache.get(id);
+  if (hit && hit.expiresAt > Date.now()) return hit.doc;
+  if (hit) documentCache.delete(id);
+
+  const doc = await getLibraryDocument(String(id));
+  if (!doc) return null;
+
+  if (documentCache.size >= DOCUMENT_CACHE_LIMIT) {
+    const oldest = documentCache.keys().next();
+    if (!oldest.done) documentCache.delete(oldest.value);
+  }
+  documentCache.set(id, { doc, expiresAt: Date.now() + DOCUMENT_TTL_MS });
+  return doc;
+};
+
+/**
  * Loads the document this student asked for, or answers and returns null.
  *
  * A document that is missing, not live, or not of the reader's own semester
  * is refused here, so the page route cannot serve a page the reader may not
- * open.
+ * open. Entitlement is checked per request, even when the reader and the
+ * document row both came from a cache.
  */
 const requireReadableDocument = async (
   res: Response,
   ctx: StudentContext,
   id: string,
 ): Promise<LibraryDocument | null> => {
-  const doc = await getLibraryDocument(String(id));
+  const doc = await getDocumentCached(String(id));
   if (!doc || doc.status !== "live") {
     refuse(res, 404, "That document is not here.");
     return null;
@@ -152,10 +203,22 @@ libraryRouter.post("/session", async (req: Request, res: Response) => {
       return;
     }
 
-    const token = await createSession(String(user.id));
+    // Tab visits re-POST here. Keep the session the cookie already carries
+    // when it still belongs to this account: a new token on every mount left
+    // a trail of live keys nothing would ever read again.
+    const existingToken = readCookie(
+      req.headers.cookie,
+      LIBRARY_SESSION_COOKIE,
+    );
+    const existing = await readSession(existingToken);
+    const token =
+      existingToken && existing?.userId === String(user.id)
+        ? existingToken
+        : await createSession(String(user.id));
+
     setSessionCookie(res, token);
 
-    const ctx = await resolveStudentContext(String(user.id));
+    const ctx = await resolveStudentContextCached(token, String(user.id));
     trackActivity({
       userId: user.id,
       chatType: "unknown",
@@ -186,11 +249,10 @@ libraryRouter.get("/me", async (req: Request, res: Response) => {
   const auth = await requireSession(req, res);
   if (!auth) return;
 
-  const ctx = await resolveStudentContext(auth.userId);
   res.json({
     ok: true,
-    registered: Boolean(ctx),
-    student: ctx ? studentView(ctx) : null,
+    registered: Boolean(auth.ctx),
+    student: auth.ctx ? studentView(auth.ctx) : null,
   });
 });
 
@@ -199,7 +261,7 @@ libraryRouter.get("/subjects", async (req: Request, res: Response) => {
   const auth = await requireSession(req, res);
   if (!auth) return;
 
-  const ctx = await requireStudent(res, auth.userId);
+  const ctx = requireStudent(res, auth.ctx);
   if (!ctx) return;
 
   // the admin's preview shows the whole shelf, not just their own semester;
@@ -224,7 +286,7 @@ libraryRouter.get("/document/:id", async (req: Request, res: Response) => {
   const auth = await requireSession(req, res);
   if (!auth) return;
 
-  const ctx = await requireStudent(res, auth.userId);
+  const ctx = requireStudent(res, auth.ctx);
   if (!ctx) return;
 
   const doc = await requireReadableDocument(res, ctx, req.params.id);
@@ -248,7 +310,7 @@ libraryRouter.get("/page/:id/:page", async (req: Request, res: Response) => {
   const auth = await requireSession(req, res);
   if (!auth) return;
 
-  const ctx = await requireStudent(res, auth.userId);
+  const ctx = requireStudent(res, auth.ctx);
   if (!ctx) return;
 
   const doc = await requireReadableDocument(res, ctx, req.params.id);
@@ -288,12 +350,21 @@ libraryRouter.get("/page/:id/:page", async (req: Request, res: Response) => {
   });
 
   res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
-  res.setHeader("Cache-Control", "no-store, private");
+  // The mark is per reader, so the bytes may live in that reader's private
+  // browser cache: a shared cache can never store them, and a copy taken from
+  // the cache still carries the mark that names them. `Vary: Cookie` keeps two
+  // accounts on one browser from sharing an entry. The trade-off is on the
+  // audit side: a re-view inside five minutes may never reach us, so the
+  // library_reads row is the first delivery in each hour (see reads.ts).
+  res.setHeader("Cache-Control", "private, max-age=300");
+  res.setHeader("Vary", "Cookie");
   res.setHeader("Content-Disposition", "inline");
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
   res.send(stamped);
 
   notePageRead(auth.userId, doc.id, page, token);
-  await watchForBurst(auth.userId);
+  // the burst counter must not keep the response open: it is telemetry, not
+  // part of serving the page
+  void watchForBurst(auth.userId);
 });

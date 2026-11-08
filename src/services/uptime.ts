@@ -1,14 +1,21 @@
 /**
  * Uptime heartbeat — probes the API plus its real dependencies (database,
- * Redis, college portal) every 5 minutes and records the results there.
- * Powers the /status page (90-day bars like OpenAI's status page) and the
- * admin panel health view. Self-healing: the interval keeps running even
- * when a probe fails, and component status transitions notify the admin.
+ * Redis, college portal) every 5 minutes and records the results there. When
+ * CANARY_ROLL and CANARY_ENABLED are set, it also runs a synthetic answer
+ * lookup so a green portal cannot hide a login or parser failure. Powers the
+ * /status page (90-day bars like OpenAI's status page) and the admin panel
+ * health view. Self-healing: the interval keeps running even when a probe
+ * fails, and component status transitions notify the admin.
  */
 import axios from "axios";
 import { recordHeartbeat, initUptimeTable } from "../db/student_stats.model.js";
-import { PORT } from "../config/environmentals.js";
-import { ADMIN_ID } from "../config/environmentals.js";
+import {
+  PORT,
+  ADMIN_ID,
+  ENV,
+  CANARY_ROLL,
+  CANARY_ENABLED,
+} from "../config/environmentals.js";
 import { BASE_URL } from "../constants/index.js";
 import { logger } from "../config/logger.js";
 
@@ -80,12 +87,66 @@ const probePortal = (): Promise<ProbeResult> =>
     });
   });
 
-const componentProbes: Record<string, () => Promise<ProbeResult>> = {
-  api: probeApi,
-  database: probeDatabase,
-  redis: probeRedis,
-  portal: probePortal,
+/**
+ * The answer canary runs one real attendance request for a known roll and
+ * parses it the same way a student request would. getFreshResponse throws
+ * instead of serving the saved section copy, so a login failure, layout
+ * change, or parser regression turns this component down while probePortal
+ * is still green. It deliberately does not call getAttendanceJSON: that path
+ * reads Redis, writes stats/activity, and can return a cached answer.
+ */
+export const probeLookup = (): Promise<ProbeResult> =>
+  timed("lookup", async () => {
+    const [
+      { Academic },
+      { getStudentCached },
+      { contextFor, parseAttendanceSection },
+    ] = await Promise.all([
+      import("./student.utils/Academic.js"),
+      import("./redis/utils.js"),
+      import("./student.utils/parsers.js"),
+    ]);
+
+    const student = await getStudentCached(CANARY_ROLL);
+    const academic = new Academic(CANARY_ROLL);
+    const response = await academic.getFreshResponse("att");
+    const parsed = parseAttendanceSection(response, contextFor(student));
+    const mine =
+      parsed.get(academic.rollnumber) ??
+      parsed.get(student.roll_no.toUpperCase());
+
+    if (
+      !mine ||
+      (mine.subjects.length === 0 && mine.totalClasses.conducted <= 0)
+    ) {
+      throw new Error("lookup canary parsed no usable attendance");
+    }
+  });
+
+/**
+ * The canary is opt-in: enabled explicitly, given a real roll, and never run
+ * by the test suite (which must not touch the college portal).
+ */
+export const canaryProbeEnabled = (
+  env: string = ENV,
+  enabled: boolean = CANARY_ENABLED,
+  roll: string = CANARY_ROLL,
+): boolean => env !== "test" && enabled && roll.trim().length > 0;
+
+export const buildComponentProbes = (
+  includeLookup: boolean,
+): Record<string, () => Promise<ProbeResult>> => {
+  const probes: Record<string, () => Promise<ProbeResult>> = {
+    api: probeApi,
+    database: probeDatabase,
+    redis: probeRedis,
+    portal: probePortal,
+  };
+  if (includeLookup) probes.lookup = probeLookup;
+  return probes;
 };
+
+const componentProbes = buildComponentProbes(canaryProbeEnabled());
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -117,7 +178,7 @@ const notifyAdmin = async (result: ProbeResult): Promise<boolean> => {
   }
 };
 
-const recordAndNotify = async (result: ProbeResult): Promise<void> => {
+export const recordProbeResult = async (result: ProbeResult): Promise<void> => {
   try {
     await recordHeartbeat(result.component, result.status, result.latencyMs);
   } catch (e) {
@@ -149,7 +210,7 @@ const confirmFailure = async (failed: ProbeResult): Promise<void> => {
       `[uptime] ${failed.component} failed once and recovered within ${CONFIRM_DELAY_MS / 1000}s — treating as a transient blip`,
     );
   }
-  await recordAndNotify(retry);
+  await recordProbeResult(retry);
 };
 
 const probe = async () => {
@@ -168,7 +229,7 @@ const probe = async () => {
 
   // record healthy components immediately; confirm failures in parallel
   for (const result of results.filter((r) => r.status === "up")) {
-    await recordAndNotify(result);
+    await recordProbeResult(result);
   }
   await Promise.all(
     results.filter((r) => r.status === "down").map(confirmFailure),
@@ -213,6 +274,6 @@ export const startUptimeMonitor = async () => {
   setInterval(prune, 24 * 60 * 60 * 1000);
 
   logger.info(
-    "[uptime] monitor started (api/database/redis/portal, 5min interval, 90d retention)",
+    `[uptime] monitor started (${Object.keys(componentProbes).join("/")}, 5min interval, 90d retention)`,
   );
 };

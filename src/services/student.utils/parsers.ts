@@ -12,73 +12,104 @@ import { getStudentCached } from "../redis/utils.js";
 import { NoDataFoundError } from "./academicErrors.js";
 
 /**
- * Parses attendance HTML response into structured data
+ * The known section of a report request: the same fields the portal POST
+ * carries. Parsing a whole report needs no per-row student lookup because the
+ * section is already known — that is the point of the section parsers.
  */
-export const parseAttendanceResponse = async (
+export interface SectionContext {
+  /** e.g. "32" (3rd year, 2nd semester) */
+  yearSem: string;
+  /** portal branch id, e.g. "5" */
+  branch: string;
+  /** section letter, e.g. "A" */
+  section: string;
+}
+
+/** `3_CSE_A` from a yearSem/branch/section context. */
+const sectionLabel = (context: SectionContext): string =>
+  `${String(context.yearSem).slice(0, 1)}_${BRANCHES[parseInt(context.branch)]}_${context.section}`;
+
+/** Normalise a `tr[id]` roll number; reports print it uppercase already. */
+const rowRoll = (id: string | undefined): string =>
+  (id ?? "").trim().toUpperCase();
+
+/**
+ * Parses one attendance report page into every student row it contains.
+ *
+ * One `cheerio.load` and one pass over the report rows for the whole section.
+ * The previous implementation reloaded and re-parsed the same document once
+ * per roll number and looked up each student in Redis/DB; a 60-student
+ * section paid 60 DOM parses for one page.
+ *
+ * A row that is missing or has no id is skipped, not fatal — the caller that
+ * needs a specific student raises `NoDataFoundError`.
+ */
+export const parseAttendanceSection = (
   doc: string,
-  rollnumber: string,
-): Promise<Attendance> => {
-  const student = await getStudentCached(rollnumber);
-  const { roll_no, branch, section, year } = student;
-
+  context: SectionContext,
+): Map<string, Attendance> => {
   const $ = cheerio.load(doc);
-  const studentRow = $(`tr[id=${roll_no.toUpperCase()}]`);
-
-  if (!studentRow.length) {
-    throw new NoDataFoundError("attendance");
-  }
-
-  const percentageText = studentRow.find("td[class=tdPercent]").text();
-  const totalClassesMatch = percentageText.match(/\(([^)]+)\)/);
-  const totalClassesStr = totalClassesMatch
-    ? totalClassesMatch[1].trim()
-    : "0/0";
+  const label = sectionLabel(context);
 
   const rows = $("tr");
-  const nameRow = rows.eq(1);
-  const lastUpdatedRow = rows.eq(2);
-  const conductedRow = rows.eq(3);
-
-  // Extract data from rows
-  const names = nameRow
+  const names = rows
+    .eq(1)
     .find("td")
     .map((_, el) => $(el).text())
     .get();
-  const lastUpdated = lastUpdatedRow
+  const lastUpdated = rows
+    .eq(2)
     .find("td")
     .map((_, el) => $(el).text())
     .get();
-  const attended = studentRow
-    .find("td")
-    .map((_, el) => $(el).text())
-    .get();
-  const conducted = conductedRow
+  const conducted = rows
+    .eq(3)
     .find("td")
     .map((_, el) => $(el).text())
     .get();
 
-  // Clean up arrays
+  // Clean up arrays once for the whole section (the first cells are labels).
   lastUpdated.shift();
   conducted.shift();
-  attended.splice(0, 2);
 
-  // Filter out empty subjects and format data
-  const subjects = buildSubjectList(names, attended, conducted, lastUpdated);
+  const students = new Map<string, Attendance>();
 
-  const [attendedTotal, conductedTotal] = totalClassesStr
-    .split("/")
-    .map((s) => parseInt(s.trim()) || 0);
+  $("tr[id]").each((_, element) => {
+    const studentRow = $(element);
+    const rollno = rowRoll(studentRow.attr("id"));
+    if (!rollno) return;
 
-  return {
-    rollno: roll_no,
-    year_branch_section: `${year.slice(0, 1)}_${BRANCHES[parseInt(branch)]}_${section}`,
-    percentage: parseFloat(percentageText.split("(")[0].trim()) || 0,
-    totalClasses: {
-      attended: attendedTotal,
-      conducted: conductedTotal,
-    },
-    subjects,
-  };
+    const percentageText = studentRow.find("td[class=tdPercent]").text();
+    const totalClassesMatch = percentageText.match(/\(([^)]+)\)/);
+    const totalClassesStr = totalClassesMatch
+      ? totalClassesMatch[1].trim()
+      : "0/0";
+
+    const attended = studentRow
+      .find("td")
+      .map((_, el) => $(el).text())
+      .get();
+    attended.splice(0, 2);
+
+    const subjects = buildSubjectList(names, attended, conducted, lastUpdated);
+
+    const [attendedTotal, conductedTotal] = totalClassesStr
+      .split("/")
+      .map((s) => parseInt(s.trim()) || 0);
+
+    students.set(rollno, {
+      rollno,
+      year_branch_section: label,
+      percentage: parseFloat(percentageText.split("(")[0].trim()) || 0,
+      totalClasses: {
+        attended: attendedTotal,
+        conducted: conductedTotal,
+      },
+      subjects,
+    });
+  });
+
+  return students;
 };
 
 const buildSubjectList = (
@@ -107,40 +138,96 @@ const buildSubjectList = (
 };
 
 /**
- * Parses midmarks HTML response into structured data
+ * Parses one mid-marks report page into every student row it contains.
+ * One `cheerio.load` for the section; no per-row student lookup.
+ */
+export const parseMidmarksSection = (
+  doc: string,
+  context: SectionContext,
+): Map<string, Midmarks> => {
+  const $ = cheerio.load(doc);
+  const label = sectionLabel(context);
+
+  const nameRow = $("tr").eq(1);
+  const { subjects, labs } = separateSubjectsAndLabs($, nameRow);
+  const allSubjects = [...subjects, ...labs];
+
+  const students = new Map<string, Midmarks>();
+
+  $("tr[id]").each((_, element) => {
+    const studentRow = $(element);
+    const rollno = rowRoll(studentRow.attr("id"));
+    if (!rollno) return;
+
+    const marksList = studentRow
+      .find("td")
+      .slice(2)
+      .map((_, el) => $(el).text())
+      .get();
+
+    students.set(rollno, {
+      rollno,
+      year_branch_section: label,
+      subjects: buildMidmarksList(allSubjects, marksList, subjects),
+    });
+  });
+
+  return students;
+};
+
+/**
+ * Parses attendance for one student.
+ *
+ * A thin wrapper over `parseAttendanceSection` kept for the requester path and
+ * existing importers: it resolves the student's section, parses that section
+ * once, and returns the requested row.
+ */
+export const parseAttendanceResponse = async (
+  doc: string,
+  rollnumber: string,
+): Promise<Attendance> => {
+  const student: Student = await getStudentCached(rollnumber);
+  const students = parseAttendanceSection(doc, contextFor(student));
+
+  const attendance =
+    students.get(student.roll_no.toUpperCase()) ??
+    students.get(rollnumber.toUpperCase());
+
+  if (!attendance) {
+    throw new NoDataFoundError("attendance");
+  }
+
+  return attendance;
+};
+
+/**
+ * Parses mid-marks for one student — a thin wrapper over
+ * `parseMidmarksSection` (see `parseAttendanceResponse`).
  */
 export const parseMidmarksResponse = async (
   doc: string,
   rollnumber: string,
 ): Promise<Midmarks> => {
   const student: Student = await getStudentCached(rollnumber);
-  const { roll_no, year, section, branch } = student;
+  const students = parseMidmarksSection(doc, contextFor(student));
 
-  const $ = cheerio.load(doc);
-  const studentRow = $(`tr[id=${roll_no.toUpperCase()}]`);
+  const midmarks =
+    students.get(student.roll_no.toUpperCase()) ??
+    students.get(rollnumber.toUpperCase());
 
-  if (!studentRow.length) {
+  if (!midmarks) {
     throw new NoDataFoundError("midmarks");
   }
 
-  const marksCells = studentRow.find("td").slice(2);
-  const marksList = marksCells.map((_, el) => $(el).text()).get();
-
-  const nameRow = $("tr").eq(1);
-  const { subjects, labs } = separateSubjectsAndLabs($, nameRow);
-
-  const midmarksList = buildMidmarksList(
-    [...subjects, ...labs],
-    marksList,
-    subjects,
-  );
-
-  return {
-    rollno: roll_no,
-    year_branch_section: `${year.slice(0, 1)}_${BRANCHES[parseInt(branch)]}_${section}`,
-    subjects: midmarksList,
-  };
+  return midmarks;
 };
+
+/** The section context a student's stored record describes. */
+export const contextFor = (student: Student): SectionContext => ({
+  yearSem: student.year,
+  branch: student.branch,
+  section: student.section,
+});
 
 const separateSubjectsAndLabs = (
   $: cheerio.CheerioAPI,

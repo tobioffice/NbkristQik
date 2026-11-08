@@ -22,6 +22,7 @@ export type SendMessageOptions = {
   parse_mode?: string;
   reply_markup?: ReplyKeyboard;
   disable_notification?: boolean;
+  reply_to_message_id?: number;
 };
 
 export type SendMessageArgs = (

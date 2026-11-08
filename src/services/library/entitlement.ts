@@ -67,6 +67,83 @@ export const resolveStudentContext = async (
   };
 };
 
+/**
+ * A one-minute, in-process cache of resolved readers.
+ *
+ * Every page of a unit used to cost a registration read plus a student
+ * Redis/DB read just to answer "who is this?" again. A reader turns twenty
+ * pages in a minute, so the answer is cached per session token: the token is
+ * the thing every request already carries, and a token dropped at logout can
+ * never be asked for again.
+ *
+ * The cache is deliberately short-lived rather than invalidated everywhere:
+ * a registration edit may be written by the bot or the profile API, and both
+ * are outside this module. `invalidateStudentContext` is the exact hook for
+ * those writers; until they call it, a minute is the worst-case staleness.
+ *
+ * A *missing* registration is not cached. The reader is about to save a roll,
+ * and the next request must see it — caching "not registered" for a minute
+ * would turn a successful save into "Save your roll number first."
+ */
+const CONTEXT_TTL_MS = 60_000;
+const CONTEXT_CACHE_LIMIT = 1_000;
+
+const contextCache = new Map<
+  string,
+  { ctx: StudentContext; expiresAt: number }
+>();
+
+/**
+ * Resolves the reader behind a session token, from cache when fresh.
+ *
+ * The caller supplies the user id too: a token is only reused when it still
+ * belongs to the same Telegram account, so a stale or recycled cookie cannot
+ * inherit someone else's student.
+ */
+export const resolveStudentContextCached = async (
+  token: string,
+  userId: string,
+): Promise<StudentContext | null> => {
+  const hit = contextCache.get(token);
+  if (hit && hit.ctx.userId === userId && hit.expiresAt > Date.now()) {
+    return hit.ctx;
+  }
+  if (hit) contextCache.delete(token);
+
+  const ctx = await resolveStudentContext(userId);
+
+  // negative answers are not cached: see the note above
+  if (!ctx) return null;
+
+  // bounded: the oldest insertion leaves first, and Redis already bounds how
+  // many live tokens exist
+  if (!contextCache.has(token) && contextCache.size >= CONTEXT_CACHE_LIMIT) {
+    const oldest = contextCache.keys().next();
+    if (!oldest.done) contextCache.delete(oldest.value);
+  }
+  contextCache.set(token, { ctx, expiresAt: Date.now() + CONTEXT_TTL_MS });
+  return ctx;
+};
+
+/**
+ * Drops every cached reader for one Telegram account.
+ *
+ * Registration writers call this after changing a roll number, so the next
+ * request resolves the new year-sem immediately instead of after the cache
+ * window. It scans at most `CONTEXT_CACHE_LIMIT` entries, which is cheaper
+ * than making every page request pay for a version lookup.
+ */
+export const invalidateStudentContext = (userId: string): void => {
+  for (const [token, entry] of contextCache) {
+    if (entry.ctx.userId === userId) contextCache.delete(token);
+  }
+};
+
+/** Test seam: forget every cached reader. */
+export const clearStudentContextCache = (): void => {
+  contextCache.clear();
+};
+
 export interface LibrarySubjectUnit {
   /** The document id, which is what the reader asks for */
   id: string;
