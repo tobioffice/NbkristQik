@@ -102,7 +102,9 @@ cookie:
   lets the cookie survive Telegram Web: there the mini app runs in an iframe on
   `web.telegram.org`, every request is cross-site, and a `Strict` cookie is
   stored but never sent back (that was the PC-only 401). Local http dev keeps
-  `SameSite=Lax`, because `None` demands `Secure`.
+  `SameSite=Lax`, because `None` demands `Secure`. A browser can hold the old
+  Strict copy and the new Partitioned one at the same time, so the server
+  tries every `nbq_lib` value and uses the first one Redis still knows.
 - The cookie is the only credential for every later call. `initData` is never
   put in a query string, so it never lands in nginx access logs, in a
   `Referer` header, or in a shared screenshot of the URL bar.

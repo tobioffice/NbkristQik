@@ -235,6 +235,20 @@ describe("opening the library", () => {
     expect(cookie).toContain("SameSite=Lax");
   });
 
+  it("accepts the live cookie even when a stale copy is listed first", async () => {
+    await upsertRegistration(String(REGISTERED), "23CS1042", "Test Student");
+    const cookie = await openSessionFrom(REGISTERED, "198.51.100.99");
+
+    const res = await request(app)
+      .get("/api/library/subjects")
+      .set("Cookie", `nbq_lib=made-up-token; ${cookie}`);
+
+    // both a Strict and a Partitioned jar can carry nbq_lib: the first one
+    // listed must not shadow the live one
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+  });
+
   it("reuses a valid session instead of minting another", async () => {
     sessions.clear();
     const ip = "198.51.100.10";

@@ -36,6 +36,8 @@ const {
   LIBRARY_SESSION_TTL_SECONDS,
   LIBRARY_PC_TOKEN_TTL_SECONDS,
   librarySessionCookieOptions,
+  readCookies,
+  readSessionFromCookies,
 } = await import("../../src/services/library/session.js");
 
 describe("library sessions", () => {
@@ -142,5 +144,26 @@ describe("the session cookie attributes", () => {
     expect(options.sameSite).toBe("lax");
     expect(options.secure).toBe(false);
     expect(options.partitioned).toBe(false);
+  });
+});
+
+describe("a request carrying two copies of the cookie", () => {
+  it("finds the live session behind a stale copy", async () => {
+    const live = await createSession("4242");
+    const header = `nbq_lib=expired; nbq_lib=${live}`;
+
+    expect(readCookies(header, LIBRARY_SESSION_COOKIE)).toEqual([
+      "expired",
+      live,
+    ]);
+
+    const found = await readSessionFromCookies(header);
+    expect(found?.token).toBe(live);
+    expect(found?.session.userId).toBe("4242");
+  });
+
+  it("opens nothing when every copy is dead", async () => {
+    expect(await readSessionFromCookies("nbq_lib=one; nbq_lib=two")).toBeNull();
+    expect(await readSessionFromCookies(undefined)).toBeNull();
   });
 });

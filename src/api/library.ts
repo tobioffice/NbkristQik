@@ -17,8 +17,8 @@ import {
   LIBRARY_SESSION_COOKIE,
   LIBRARY_SESSION_TTL_SECONDS,
   librarySessionCookieOptions,
-  readCookie,
-  readSession,
+  readCookies,
+  readSessionFromCookies,
   type LibrarySessionKind,
 } from "../services/library/session.js";
 import {
@@ -120,12 +120,12 @@ const requireSession = async (
   req: Request,
   res: Response,
 ): Promise<AuthedSession | null> => {
-  const token = readCookie(req.headers.cookie, LIBRARY_SESSION_COOKIE);
-  const session = await readSession(token);
-  if (!session || !token) {
+  const found = await readSessionFromCookies(req.headers.cookie);
+  if (!found) {
     refuse(res, 401, "Open the library from Telegram");
     return null;
   }
+  const { token, session } = found;
   // a session made before the library was closed must not outlive the close
   if (!canOpenLibrary(session.userId)) {
     refuse(res, 403, "The library is not open yet.");
@@ -280,17 +280,12 @@ libraryRouter.post("/session", async (req: Request, res: Response) => {
     // when it still belongs to this account and this session kind: a new
     // token on every mount left a trail of live keys nothing would read
     // again. A PC exchange always mints its own short session.
-    const existingToken = readCookie(
-      req.headers.cookie,
-      LIBRARY_SESSION_COOKIE,
-    );
-    const existing = await readSession(existingToken);
+    const existing = await readSessionFromCookies(req.headers.cookie);
     const token =
       kind === "telegram" &&
-      existingToken &&
-      existing?.userId === userId &&
-      (existing.kind ?? "telegram") === "telegram"
-        ? existingToken
+      existing?.session.userId === userId &&
+      (existing.session.kind ?? "telegram") === "telegram"
+        ? existing.token
         : await createSession(userId, { kind, ttlSeconds });
 
     setSessionCookie(res, token, ttlSeconds);
@@ -316,8 +311,10 @@ libraryRouter.post("/session", async (req: Request, res: Response) => {
 
 // DELETE /api/library/session — the student leaves
 libraryRouter.delete("/session", async (req: Request, res: Response) => {
-  const token = readCookie(req.headers.cookie, LIBRARY_SESSION_COOKIE);
-  if (token) await dropSession(token);
+  // both jars may hold a token: a sign-out must end every one of them
+  for (const token of readCookies(req.headers.cookie, LIBRARY_SESSION_COOKIE)) {
+    await dropSession(token);
+  }
   clearSessionCookie(res);
   res.json({ ok: true });
 });

@@ -172,18 +172,47 @@ export const consumePcLoginToken = async (
 export const readCookie = (
   header: string | undefined,
   name: string,
-): string | undefined => {
-  if (!header) return undefined;
+): string | undefined => readCookies(header, name)[0];
+
+/**
+ * Every value the header carries for one name.
+ *
+ * A browser can hold the same cookie twice: the old unpartitioned one and
+ * the new `Partitioned` one live in different jars, and both ride the same
+ * request. The first is not necessarily the live one, so callers that verify
+ * a token must try each instead of trusting the first match.
+ */
+export const readCookies = (
+  header: string | undefined,
+  name: string,
+): string[] => {
+  if (!header) return [];
+  const found: string[] = [];
   for (const part of header.split(";")) {
     const [key, ...rest] = part.trim().split("=");
-    if (key === name) {
-      try {
-        return decodeURIComponent(rest.join("="));
-      } catch {
-        // A malformed cookie is absent, not a 500 on every library route.
-        return undefined;
-      }
+    if (key !== name) continue;
+    try {
+      found.push(decodeURIComponent(rest.join("=")));
+    } catch {
+      // A malformed cookie is absent, not a 500 on every library route.
     }
   }
-  return undefined;
+  return found;
+};
+
+/**
+ * The first session carried by the request's cookie header, or null.
+ *
+ * Trying every `nbq_lib` value is what makes the change from `SameSite=Strict`
+ * to `Partitioned` non-breaking: a jar that still holds the old cookie must
+ * not shadow the new one just because it is listed first.
+ */
+export const readSessionFromCookies = async (
+  header: string | undefined,
+): Promise<{ token: string; session: LibrarySession } | null> => {
+  for (const token of readCookies(header, LIBRARY_SESSION_COOKIE)) {
+    const session = await readSession(token);
+    if (session) return { token, session };
+  }
+  return null;
 };

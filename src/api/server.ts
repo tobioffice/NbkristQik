@@ -37,11 +37,7 @@ import { registerAdminRoutes } from "./admin/index.js";
 import { profileRouter } from "./profile.js";
 import { reportRouter } from "./report.js";
 import { libraryRouter } from "./library.js";
-import {
-  LIBRARY_SESSION_COOKIE,
-  readCookie,
-  readSession,
-} from "../services/library/session.js";
+import { readSessionFromCookies } from "../services/library/session.js";
 import { registerInternalRoutes } from "./internal.js";
 import { meAcademicsRouter } from "./meAcademics.js";
 
@@ -545,12 +541,8 @@ app.get("/api/config", async (req: Request, res: Response) => {
     // session is what proves who it is, so the Library tab survives a reload.
     let sessionUserId: string | null = userId;
     if (!sessionUserId) {
-      const sessionToken = readCookie(
-        req.headers.cookie,
-        LIBRARY_SESSION_COOKIE,
-      );
-      const session = await readSession(sessionToken);
-      sessionUserId = session?.userId ?? null;
+      const session = await readSessionFromCookies(req.headers.cookie);
+      sessionUserId = session?.session.userId ?? null;
     }
 
     res.set("Cache-Control", "no-store");
