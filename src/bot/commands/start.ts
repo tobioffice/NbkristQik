@@ -30,21 +30,28 @@ const sendWelcome = async (msg: Message): Promise<void> => {
 };
 
 /**
- * The group prompt that led here is spent: the student is in the bot now.
- * Telegram only deletes its own messages, so the student's roll message in
- * the group is left alone.
+ * The group exchange that led here is spent: the student is in the bot now.
+ * The bot's prompt goes away, and so does the roll message it replied to;
+ * otherwise the room fills with roll numbers whose prompts have already been
+ * cleared, which reads like the bot never answered.
  *
- * Deliberately not awaited: a slow delete must never hold the card back, and
- * every failure (already gone, no permission, stale id) is just noise.
+ * Deleting a member's message needs the bot to be an admin with delete
+ * rights, so a refusal is expected noise. Deliberately not awaited: a slow
+ * delete must never hold the card back.
  */
 const clearGroupPrompts = (userId: number, rollNumber: string): void => {
-  for (const { chatId, messageId } of takeGroupPrompts(userId, rollNumber)) {
-    void bot.deleteMessage(chatId, messageId).catch((e: unknown) => {
-      logger.debug(
-        "[start] group prompt could not be deleted:",
-        e instanceof Error ? e.message : e,
-      );
-    });
+  for (const { chatId, messageId, sourceMessageId } of takeGroupPrompts(
+    userId,
+    rollNumber,
+  )) {
+    for (const id of [messageId, sourceMessageId]) {
+      void bot.deleteMessage(chatId, id).catch((e: unknown) => {
+        logger.debug(
+          "[start] group message could not be deleted:",
+          e instanceof Error ? e.message : e,
+        );
+      });
+    }
   }
 };
 

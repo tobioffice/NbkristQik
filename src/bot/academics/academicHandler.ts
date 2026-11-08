@@ -122,12 +122,13 @@ const sendPrivateAttendanceLink = async (
     },
   });
 
-  // the prompt exists only to carry the student into the bot; park its
-  // coordinates so the private `/start` can clear it from the room
+  // the prompt exists only to carry the student into the bot; park it and
+  // the roll it answers so the private `/start` can clear both from the room
   if (msg.from && typeof prompt?.message_id === "number") {
     rememberGroupPrompt(msg.from.id, rollNumber, {
       chatId: msg.chat.id,
       messageId: prompt.message_id,
+      sourceMessageId: msg.message_id,
     });
   }
 };

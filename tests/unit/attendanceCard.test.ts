@@ -237,9 +237,10 @@ describe("attendance card", () => {
       expect(getStudentCached).not.toHaveBeenCalled();
       expect(upsertTgUser).not.toHaveBeenCalled();
 
-      // the prompt is parked so the private /start can clear it from the room
+      // the prompt and the roll it replies to are parked so the private
+      // /start can clear both from the room
       expect(takeGroupPrompts(203, "25KB1A05AR")).toEqual([
-        { chatId: 203, messageId: 1 },
+        { chatId: 203, messageId: 1, sourceMessageId: 7 },
       ]);
     },
   );

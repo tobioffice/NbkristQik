@@ -1,6 +1,8 @@
 /**
  * The group reply "Your attendance is private…" is disposable: once the
- * student follows its button into the bot, the room no longer needs it.
+ * student follows its button into the bot, the room no longer needs it, nor
+ * the roll message that asked for it. Clearing both keeps a group from
+ * filling with roll numbers that look like the bot ignored them.
  *
  * Telegram tells a `/start att_<roll>` who tapped and which roll the payload
  * carried, but not which group message pointed them here. So each prompt is
@@ -8,17 +10,19 @@
  * link lands in private.
  *
  * Best effort by design: this lives in process memory, so a restart (or a
- * prompt its author already deleted) just leaves the message in the group
- * instead of failing the lookup.
+ * message its author already deleted) just leaves it in the group instead of
+ * failing the lookup.
  */
 export interface GroupPrompt {
   /** The group the prompt sits in. */
   chatId: number;
   /** The prompt's own message id, for `deleteMessage`. */
   messageId: number;
+  /** The sender's roll message that the prompt replies to. */
+  sourceMessageId: number;
 }
 
-/** Telegram only lets a bot delete its own messages for 48 hours. */
+/** Telegram refuses deletes past 48 hours, so older prompts are worthless. */
 const PROMPT_TTL_MS = 48 * 60 * 60 * 1000;
 
 /** A student retrying a roll must not park an unbounded list of prompts. */

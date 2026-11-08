@@ -156,20 +156,29 @@ describe("/start att_<roll>", () => {
     expect(options.notice).toContain("read that O as 0");
   });
 
-  it("clears the group prompt once the student is in the bot", async () => {
-    rememberGroupPrompt(42, "25KB1A05AR", { chatId: -100200, messageId: 77 });
+  it("clears the group prompt and the roll message once the student is in the bot", async () => {
+    rememberGroupPrompt(42, "25KB1A05AR", {
+      chatId: -100200,
+      messageId: 77,
+      sourceMessageId: 76,
+    });
 
     await start(message("/start att_25KB1A05AR"));
 
     await vi.waitFor(() =>
       expect(deleteMessage).toHaveBeenCalledWith(-100200, 77),
     );
-    // the prompt is gone, the lookup still happens
+    expect(deleteMessage).toHaveBeenCalledWith(-100200, 76);
+    // the room is clean, the lookup still happens
     expect(sendAttendanceOrMidMarks).toHaveBeenCalledTimes(1);
   });
 
   it("clears the prompt only once when the link is opened twice", async () => {
-    rememberGroupPrompt(42, "25KB1A05AR", { chatId: -100201, messageId: 78 });
+    rememberGroupPrompt(42, "25KB1A05AR", {
+      chatId: -100201,
+      messageId: 78,
+      sourceMessageId: 77,
+    });
 
     await start(message("/start att_25KB1A05AR"));
     await vi.waitFor(() =>
@@ -177,18 +186,22 @@ describe("/start att_<roll>", () => {
     );
 
     await start(message("/start att_25KB1A05AR"));
-    expect(deleteMessage).toHaveBeenCalledTimes(1);
+    expect(deleteMessage).toHaveBeenCalledTimes(2);
   });
 
   it("still answers when the prompt is already gone", async () => {
     deleteMessage.mockRejectedValueOnce(
       new Error("message to delete not found"),
     );
-    rememberGroupPrompt(42, "25KB1A05AR", { chatId: -100202, messageId: 79 });
+    rememberGroupPrompt(42, "25KB1A05AR", {
+      chatId: -100202,
+      messageId: 79,
+      sourceMessageId: 78,
+    });
 
     await start(message("/start att_25KB1A05AR"));
 
-    await vi.waitFor(() => expect(deleteMessage).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(deleteMessage).toHaveBeenCalledTimes(2));
     expect(sendAttendanceOrMidMarks).toHaveBeenCalledTimes(1);
     expect(sendMessage).not.toHaveBeenCalled();
   });
