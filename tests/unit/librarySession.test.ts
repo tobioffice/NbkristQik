@@ -33,7 +33,9 @@ const {
   createPcLoginToken,
   consumePcLoginToken,
   LIBRARY_SESSION_COOKIE,
+  LIBRARY_SESSION_TTL_SECONDS,
   LIBRARY_PC_TOKEN_TTL_SECONDS,
+  librarySessionCookieOptions,
 } = await import("../../src/services/library/session.js");
 
 describe("library sessions", () => {
@@ -112,5 +114,33 @@ describe("reading a cookie", () => {
     expect(readCookie("nbq_lib=a%2Bb%3Dc", LIBRARY_SESSION_COOKIE)).toBe(
       "a+b=c",
     );
+  });
+});
+
+describe("the session cookie attributes", () => {
+  it("can cross the Telegram Web iframe in production", () => {
+    const options = librarySessionCookieOptions(true);
+
+    // Telegram Web embeds the app in an iframe on web.telegram.org: a Strict
+    // cookie is stored and never sent back there, which is the PC 401.
+    expect(options.sameSite).toBe("none");
+    expect(options.secure).toBe(true);
+    // CHIPS: browsers that block third-party cookies still keep this one
+    expect(options.partitioned).toBe(true);
+    expect(options.httpOnly).toBe(true);
+    expect(options.path).toBe("/");
+    expect(options.maxAge).toBe(LIBRARY_SESSION_TTL_SECONDS * 1000);
+  });
+
+  it("keeps a short PC session short", () => {
+    expect(librarySessionCookieOptions(true, 3600).maxAge).toBe(3_600_000);
+  });
+
+  it("stays Lax on plain http, where None would be dropped", () => {
+    const options = librarySessionCookieOptions(false);
+
+    expect(options.sameSite).toBe("lax");
+    expect(options.secure).toBe(false);
+    expect(options.partitioned).toBe(false);
   });
 });

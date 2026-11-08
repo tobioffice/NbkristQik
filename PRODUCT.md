@@ -31,7 +31,7 @@ The product lives entirely inside Telegram â€” no install, no separate account â
 - Reports get an issue id; the admin replies from the admin panel (or `/reply`), and the reply reaches the student on the report page and in Telegram.
 - All wall-clock times shown anywhere are IST (Asia/Kolkata), 12-hour AM/PM, regardless of the UTC storage.
 - Admin panel views: login, Overview (30-day activity pulse, surface split, top actions), Students (searchable table + drill-down), Live (10 s feed), Health (90-day uptime for API, database, Redis, college portal), Reports.
-- Deployment: one React app is built with Vite and served by Express at `/library/` on the same origin as the API, so the library's session cookie is first-party. The status page at `/status` and the admin panel are also served by Express; the bot runs as a systemd service behind nginx. The marketing site remains a separate static surface on GitHub Pages.
+- Deployment: one React app is built with Vite and served by Express at `/library/` on the same origin as the API, so the library's session cookie is same-origin there (and `SameSite=None` + `Partitioned` for Telegram Web's cross-site iframe). The status page at `/status` and the admin panel are also served by Express; the bot runs as a systemd service behind nginx. The marketing site remains a separate static surface on GitHub Pages.
 
 ## Capabilities and Constraints
 

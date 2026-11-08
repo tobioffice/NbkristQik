@@ -10,7 +10,9 @@ import { logger } from "../../config/logger.js";
  * client a signed `initData` blob. The client swaps that blob for a session
  * cookie, and every later call carries only the cookie. That keeps the signed
  * blob out of URLs, out of access logs and out of screenshots of the address
- * bar; the cookie is first-party because the app is served from our own host.
+ * bar. The app is served from our own host, which makes the cookie
+ * first-party in the native clients; Telegram Web embeds the app in an
+ * iframe, so the cookie is partitioned there (see the attributes below).
  *
  * The cookie is a bearer token, so it is short-lived and stored server side
  * where it can be dropped.
@@ -18,6 +20,45 @@ import { logger } from "../../config/logger.js";
 
 export const LIBRARY_SESSION_COOKIE = "nbq_lib";
 export const LIBRARY_SESSION_TTL_SECONDS = 12 * 60 * 60;
+
+/** The attributes the session cookie is set with, and why they matter. */
+export interface LibraryCookieOptions {
+  httpOnly: true;
+  secure: boolean;
+  sameSite: "none" | "lax";
+  /** Partitioned (CHIPS): the token is stored under the embedding site. */
+  partitioned: boolean;
+  maxAge: number;
+  path: string;
+}
+
+/**
+ * The session cookie's attributes.
+ *
+ * The native clients show the mini app as a top-level page, where any
+ * SameSite value is sent back. Telegram Web is different: it embeds the app
+ * in an iframe on web.telegram.org, so every request from it is cross-site,
+ * and a `Strict` cookie is stored and then never sent again — the shelf
+ * answered 401 on a PC while the same account worked on the phone.
+ * `SameSite=None` lets the token travel from that iframe, and `Partitioned`
+ * keeps it under the embedding site, so browsers that block third-party
+ * cookies still store and send it.
+ *
+ * `None` is only honoured on a `Secure` cookie, so local http development
+ * keeps `Lax`; the deployed app is https and gets the relaxed pair.
+ */
+export const librarySessionCookieOptions = (
+  secure: boolean,
+  ttlSeconds = LIBRARY_SESSION_TTL_SECONDS,
+): LibraryCookieOptions => ({
+  httpOnly: true,
+  secure,
+  sameSite: secure ? "none" : "lax",
+  partitioned: secure,
+  maxAge: ttlSeconds * 1000,
+  path: "/",
+});
+
 /** A browser opened by a one-time link is a shorter, shared-machine session. */
 export const LIBRARY_PC_SESSION_TTL_SECONDS = 60 * 60;
 

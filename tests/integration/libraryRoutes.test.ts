@@ -230,7 +230,9 @@ describe("opening the library", () => {
     const cookie = res.headers["set-cookie"]?.[0] ?? "";
     expect(cookie).toContain("nbq_lib=");
     expect(cookie).toContain("HttpOnly");
-    expect(cookie).toContain("SameSite=Strict");
+    // test env is http: the relaxed production pair (None + Partitioned) is
+    // covered in tests/unit/librarySession.test.ts
+    expect(cookie).toContain("SameSite=Lax");
   });
 
   it("reuses a valid session instead of minting another", async () => {

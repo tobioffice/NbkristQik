@@ -300,9 +300,12 @@ development.
 
 The library uses a session cookie, not the API identity header. Exchange
 signed `initData` once, then send the `nbq_lib` cookie on every later call. The
-session is HttpOnly, SameSite=Strict, `Secure` in production, and lasts 12
-hours for Telegram or 1 hour for a PC link; the session exchange is
-additionally limited to 20 requests / hour per account or PC token.
+session is HttpOnly, SameSite=None with `Partitioned`, `Secure` in
+production (local http dev uses SameSite=Lax), and lasts 12 hours for Telegram
+or 1 hour for a PC link; the session exchange is additionally limited to 20
+requests / hour per account or PC token. `None` + `Partitioned` exists for
+Telegram Web, which runs the mini app in a cross-site iframe where a Strict
+cookie is never sent back.
 
 A computer gets in through a one-time `pcToken` minted by the bot in private
 for five minutes. It is consumed by `POST /api/library/session`; it cannot be

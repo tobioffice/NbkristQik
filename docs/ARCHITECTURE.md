@@ -107,10 +107,12 @@ The same identity decision drives the leaderboard's privacy:
   for that roll.
 
 The library has a second step: `POST /api/library/session` verifies signed
-`initData` and exchanges it for an HttpOnly, SameSite=Strict session cookie.
-The app is served from the same origin as the API, so that cookie stays
-first-party and survives iOS WKWebView. Only a registered roll can see
-subjects, and every page request re-checks entitlement.
+`initData` and exchanges it for an HttpOnly session cookie (`SameSite=None`
+with `Partitioned` in production, `Lax` on http dev). The app is served from
+the same origin as the API; the relaxed pair keeps the cookie alive inside
+Telegram Web's cross-site iframe, where a Strict cookie would never be sent
+back. Only a registered roll can see subjects, and every page request re-checks
+entitlement.
 
 ## Data layer
 

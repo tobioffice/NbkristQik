@@ -95,10 +95,14 @@ the existing `verifyInitData()` (HMAC-SHA256 against the bot token, 24 h
 replay window), or consumes the PC token once, and answers with a session
 cookie:
 
-- `nbq_lib` — random 32-byte token, `HttpOnly`, `Secure`, `SameSite=Strict`,
-  `Path=/`, 12 h expiry for Telegram, 1 h for a PC link, stored in Redis with
-  the Telegram user id and session kind. The PC shelf shows a sign-out because
-  a computer may be shared.
+- `nbq_lib` — random 32-byte token, `HttpOnly`, `Secure`, `SameSite=None`,
+  `Partitioned`, `Path=/`, 12 h expiry for Telegram, 1 h for a PC link, stored
+  in Redis with the Telegram user id and session kind. The PC shelf shows a
+  sign-out because a computer may be shared. `None` + `Partitioned` is what
+  lets the cookie survive Telegram Web: there the mini app runs in an iframe on
+  `web.telegram.org`, every request is cross-site, and a `Strict` cookie is
+  stored but never sent back (that was the PC-only 401). Local http dev keeps
+  `SameSite=Lax`, because `None` demands `Secure`.
 - The cookie is the only credential for every later call. `initData` is never
   put in a query string, so it never lands in nginx access logs, in a
   `Referer` header, or in a shared screenshot of the URL bar.
@@ -114,10 +118,12 @@ that the reader's year, sem and branch include the requested document. A
 student who somehow gets a document id still gets a 403 on the pages of a
 subject that is not theirs.
 
-Why we host the app on our own origin: the cookie must be first-party. Served
-from GitHub Pages the API would be a third-party origin, and iOS WKWebView
-blocks those cookies by default, which would break the session for half the
-students. Same origin, same-site cookie, no ITP.
+Why we host the app on our own origin: the cookie must be same-origin with
+the API. Served from GitHub Pages the API would be a third-party origin, and
+iOS WKWebView blocks those cookies by default, which would break the session
+for half the students. Same origin keeps the request path short and the cookie
+under our control; Telegram Web still embeds the app cross-site, so the cookie
+is also `SameSite=None` and `Partitioned` (CHIPS) to survive that iframe.
 
 **Gate 5 — the library is the admin's until it is filled.** While the shelf
 holds only a unit or two, `LIBRARY_ACCESS` is `admin` (the default). Then:

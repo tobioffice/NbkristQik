@@ -16,6 +16,7 @@ import {
   LIBRARY_PC_SESSION_TTL_SECONDS,
   LIBRARY_SESSION_COOKIE,
   LIBRARY_SESSION_TTL_SECONDS,
+  librarySessionCookieOptions,
   readCookie,
   readSession,
   type LibrarySessionKind,
@@ -81,13 +82,13 @@ const setSessionCookie = (
   token: string,
   ttlSeconds = LIBRARY_SESSION_TTL_SECONDS,
 ): void => {
-  res.cookie(LIBRARY_SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: secureCookie,
-    sameSite: "strict",
-    maxAge: ttlSeconds * 1000,
-    path: "/",
-  });
+  // see `librarySessionCookieOptions`: Telegram Web runs the app in a
+  // cross-site iframe, where a SameSite=Strict cookie is never sent back
+  res.cookie(
+    LIBRARY_SESSION_COOKIE,
+    token,
+    librarySessionCookieOptions(secureCookie, ttlSeconds),
+  );
 };
 
 const clearSessionCookie = (res: Response): void => {

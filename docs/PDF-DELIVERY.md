@@ -458,8 +458,10 @@ Current flow:
    first exchange gets the user id, the second gets `null` and `401`. It does
    not fall back to `initData` when the PC token is bad. It then checks
    `canOpenLibrary`, calls `createSession(userId, {kind:"pc", ttlSeconds:3600})`,
-   and sets `nbq_lib`: `httpOnly`, `secure` in production, `sameSite=strict`,
-   `path=/`, one-hour `maxAge`. A Telegram session remains 12 hours.
+   and sets `nbq_lib`: `httpOnly`, `secure` in production,
+   `sameSite=none` + `partitioned` (so Telegram Web's iframe can send it back;
+   local http dev uses `lax`), `path=/`, one-hour `maxAge`. A Telegram session
+   remains 12 hours.
 4. The app clears the spent token from React state after success, so a tab
    switch or remount does not present it again; the cookie is the session. The
    shelf shows "Signed in on this computer" with a sign-out that calls
