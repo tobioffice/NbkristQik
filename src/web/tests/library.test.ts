@@ -1,26 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { libraryDocumentPdfUrl } from "../src/libraryApi";
+import { documentDownloadPath } from "../src/libraryApi";
 import { addressWithoutPcToken, sessionCredential } from "../src/useLibrary";
 
-describe("the PDF address", () => {
-  it("builds the watermarked attachment path for a document", () => {
-    expect(libraryDocumentPdfUrl("dbms-u1")).toBe(
-      "/api/library/document/dbms-u1/pdf",
+describe("the PDF link", () => {
+  it("asks the API to mint a download link for a document", () => {
+    expect(documentDownloadPath("dbms-u1")).toBe(
+      "/api/library/document/dbms-u1/download",
     );
   });
 
   it("keeps a document id inside one path segment", () => {
-    expect(libraryDocumentPdfUrl("a b/c?#")).toBe(
-      "/api/library/document/a%20b%2Fc%3F%23/pdf",
+    expect(documentDownloadPath("a b/c?#")).toBe(
+      "/api/library/document/a%20b%2Fc%3F%23/download",
     );
   });
 });
 
 describe("which credential opens the shelf", () => {
   it("presents a computer link instead of a Telegram blob", () => {
-    expect(
-      sessionCredential({ initData: "signed", pcToken: "one-time" }),
-    ).toBe("pcToken");
+    expect(sessionCredential({ initData: "signed", pcToken: "one-time" })).toBe(
+      "pcToken",
+    );
   });
 
   it("uses Telegram's signed identity when there is no computer link", () => {

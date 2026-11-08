@@ -290,6 +290,17 @@ keeps the pages on disk. The source PDF stays on the server.
 - 30 pages of a unit is about 9 MB of disk. The whole shelf is 443 MB. The
   server has 41 GB free. Fine.
 
+### Downloads in a mini app
+
+A link to a PDF does not download inside Telegram: the webview displays the
+file, the HTML `download` attribute is ignored, and iOS WKWebView cannot
+download at all. The app therefore asks `POST /api/library/document/:id/download`
+for a `{ url, fileName }` pair and hands the URL to `WebApp.downloadFile`
+(Bot API 8.0). The client's downloader fetches the URL itself, with no cookie
+jar, so the URL carries an HMAC token scoped to that reader and that document,
+good for five minutes. Clients without `downloadFile` get the link opened in
+the system browser, which downloads it the ordinary way.
+
 The clean PDF is not served, ranged, or proxied. The only endpoint that
 returns document bytes is `/api/library/document/:id/pdf`, and it returns a
 per-reader stamped copy, not the source. See `docs/PDF-DELIVERY.md` for the

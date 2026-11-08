@@ -45,6 +45,10 @@ import {
   notePageRead,
   watchForBurst,
 } from "../services/library/reads.js";
+import {
+  mintDownloadToken,
+  verifyDownloadToken,
+} from "../services/library/download.js";
 
 /**
  * The library API.
@@ -155,6 +159,40 @@ const requireStudent = (
     return null;
   }
   return ctx;
+};
+
+/**
+ * A session for a document request.
+ *
+ * The reader's browser proves itself with the session cookie. The Telegram
+ * client's own downloader cannot: it fetches the URL itself, with no cookie
+ * jar. So a download may carry a short-lived token minted for that reader and
+ * that document instead — nothing else uses this path.
+ */
+const requireDocumentSession = async (
+  req: Request,
+  res: Response,
+  documentId: string,
+): Promise<AuthedSession | null> => {
+  const downloadToken =
+    typeof req.query.d === "string" ? req.query.d : undefined;
+
+  if (downloadToken) {
+    const userId = verifyDownloadToken(downloadToken, documentId);
+    if (!userId) {
+      refuse(res, 401, "This download link has expired. Open the PDF again.");
+      return null;
+    }
+    if (!canOpenLibrary(userId)) {
+      refuse(res, 403, "The library is not open yet.");
+      return null;
+    }
+    // the token itself is only a cache key here; the reader is what matters
+    const ctx = await resolveStudentContextCached(downloadToken, userId);
+    return { userId, token: downloadToken, kind: "telegram", ctx };
+  }
+
+  return requireSession(req, res);
 };
 
 /**
@@ -367,10 +405,38 @@ const downloadFileName = (doc: LibraryDocument): string => {
   return `${stem}.pdf`;
 };
 
+// POST /api/library/document/:id/download — a link the Telegram client can
+// fetch itself, since its downloader sends no cookie.
+libraryRouter.post(
+  "/document/:id/download",
+  async (req: Request, res: Response) => {
+    const auth = await requireSession(req, res);
+    if (!auth) return;
+
+    const ctx = requireStudent(res, auth.ctx);
+    if (!ctx) return;
+
+    const doc = await requireReadableDocument(res, ctx, req.params.id);
+    if (!doc) return;
+
+    const token = mintDownloadToken(auth.userId, doc.id);
+    if (!token) {
+      refuse(res, 503, "Downloads are not configured on this server.");
+      return;
+    }
+
+    res.json({
+      ok: true,
+      fileName: downloadFileName(doc),
+      url: `/api/library/document/${encodeURIComponent(doc.id)}/pdf?d=${encodeURIComponent(token)}`,
+    });
+  },
+);
+
 // GET /api/library/document/:id/pdf — the whole document, stamped for this
 // reader. Registered before `/document/:id` so the two can never be confused.
 libraryRouter.get("/document/:id/pdf", async (req: Request, res: Response) => {
-  const auth = await requireSession(req, res);
+  const auth = await requireDocumentSession(req, res, String(req.params.id));
   if (!auth) return;
 
   const ctx = requireStudent(res, auth.ctx);

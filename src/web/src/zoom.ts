@@ -104,3 +104,30 @@ export const touchMidpoint = (a: Point, b: Point): Point => ({
   x: (a.x + b.x) / 2,
   y: (a.y + b.y) / 2,
 });
+
+/**
+ * The zoom a pinch has reached.
+ *
+ * The distance between the fingers when the gesture started is the baseline,
+ * and the zoom follows the ratio from it. Measuring from the baseline, not
+ * from the last frame, means rounding errors cannot accumulate over a long
+ * pinch.
+ */
+export const pinchZoom = (
+  startZoom: number,
+  startDistance: number,
+  distance: number,
+): number =>
+  startDistance > 0 ? startZoom * (distance / startDistance) : startZoom;
+
+/**
+ * How much one wheel or trackpad delta zooms.
+ *
+ * The factor is exponential in the delta, so a real wheel notch (~100 px)
+ * lands near a 12% step, and a trackpad's many small deltas add up to the
+ * same place smoothly instead of jumping a fixed step per event.
+ */
+export const WHEEL_ZOOM_RATE = 0.0012;
+
+export const wheelZoom = (zoom: number, deltaY: number): number =>
+  zoom * Math.exp(-deltaY * WHEEL_ZOOM_RATE);

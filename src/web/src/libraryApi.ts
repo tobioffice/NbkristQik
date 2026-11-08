@@ -105,9 +105,30 @@ export const closeLibrarySession = async (): Promise<void> => {
   await fetchWithTimeout("/api/library/session", { method: "DELETE" });
 };
 
-/** The watermarked PDF for one document, as an attachment. */
-export const libraryDocumentPdfUrl = (id: string): string =>
-  `/api/library/document/${encodeURIComponent(id)}/pdf`;
+export interface DownloadLink {
+  ok: boolean;
+  /** Short-lived URL that proves this reader may have this document. */
+  url: string;
+  fileName: string;
+  error?: string;
+}
+
+/** The endpoint that mints one download link for a document. */
+export const documentDownloadPath = (id: string): string =>
+  `/api/library/document/${encodeURIComponent(id)}/download`;
+
+/**
+ * A download link the Telegram client can fetch on its own.
+ *
+ * The client's downloader has no cookie jar, so the API mints a URL carrying
+ * its own short-lived proof instead of relying on the session cookie.
+ */
+export const requestDocumentDownload = async (
+  id: string,
+): Promise<DownloadLink> =>
+  readJson<DownloadLink>(
+    await fetchWithTimeout(documentDownloadPath(id), { method: "POST" }),
+  );
 
 /**
  * The shelf. `all` is the admin's whole-shelf preview; `roll` is exactly what

@@ -4,11 +4,13 @@ import {
   MAX_ZOOM,
   MIN_ZOOM,
   clampZoom,
+  pinchZoom,
   pointInPage,
   scrollToHold,
   stepZoom,
   touchDistance,
   touchMidpoint,
+  wheelZoom,
   zoomLabel,
 } from "../src/zoom";
 
@@ -88,5 +90,51 @@ describe("a pinch", () => {
       x: 50,
       y: 20,
     });
+  });
+});
+
+describe("a pinch in progress", () => {
+  it("follows the ratio of the fingers, from where they started", () => {
+    // fingers 100 px apart at 100%, now 250 px apart: a quarter turn bigger
+    expect(pinchZoom(1, 100, 250)).toBe(2.5);
+    // the same gesture from an already zoomed page keeps that zoom
+    expect(pinchZoom(2, 100, 50)).toBe(1);
+  });
+
+  it("measures from the baseline, so repeated frames do not compound", () => {
+    // a per-frame rebase would multiply the ratio ten times
+    const frames = Array.from({ length: 10 }, (_, i) =>
+      pinchZoom(1, 200, 200 + 2 * (i + 1)),
+    );
+    const last = frames.at(-1) ?? 1;
+    expect(last).toBeCloseTo(1.1, 10);
+    expect(last).toBeLessThan(1.1 ** 10);
+  });
+
+  it("leaves the zoom alone when the fingers start on the same spot", () => {
+    expect(pinchZoom(1.5, 0, 80)).toBe(1.5);
+  });
+});
+
+describe("the wheel over a page", () => {
+  it("zooms out on a scroll down and in on a scroll up", () => {
+    expect(wheelZoom(1, 100)).toBeLessThan(1);
+    expect(wheelZoom(1, -100)).toBeGreaterThan(1);
+  });
+
+  it("lands near a 12% step for a real notch", () => {
+    expect(wheelZoom(1, -100)).toBeCloseTo(1.127, 2);
+    expect(wheelZoom(1, 100)).toBeCloseTo(0.887, 2);
+  });
+
+  it("adds small trackpad deltas up to the same place", () => {
+    // ten 10 px events must equal one 100 px event
+    let zoom = 1;
+    for (let i = 0; i < 10; i += 1) zoom = wheelZoom(zoom, -10);
+    expect(zoom).toBeCloseTo(wheelZoom(1, -100), 10);
+  });
+
+  it("is a no-op at zero", () => {
+    expect(wheelZoom(1.4, 0)).toBe(1.4);
   });
 });

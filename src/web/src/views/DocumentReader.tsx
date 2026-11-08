@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { libraryDocumentPdfUrl } from "../libraryApi";
 import { useReaderViewport } from "../reader/useReaderViewport";
 import { useReaderGestures } from "../reader/useReaderGestures";
 import { useBackHandler } from "../backButton";
+import { useDocumentPdf } from "../useDocumentPdf";
 import ReaderPage from "../reader/ReaderPage";
 import { usePageWindow } from "../usePageWindow";
 
@@ -22,9 +22,8 @@ const stopKey = (docId: string) => `nbk:read:${docId}`;
  *
  * Pages are fetched as the student scrolls and dropped as they scroll away,
  * so only the pages on screen are held in memory. Each page is a vector SVG
- * drawn by the browser: the layout is the PDF's own page, with no text layer
- * to select and nothing on a page image to save. The head carries the way out
- * to a whole watermarked PDF when the student wants one.
+ * drawn by the browser, so the layout is the PDF's own page and the ink stays
+ * sharp at every zoom. The head carries the way out to the PDF.
  *
  * A page is a vector, so it can be made bigger or smaller without the server
  * sending anything else, and the ink stays sharp at every zoom the reader
@@ -42,6 +41,7 @@ export default function DocumentReader({
   onClose,
 }: DocumentReaderProps) {
   const viewport = useReaderViewport(pages);
+  const { busyId, save } = useDocumentPdf();
   const [current, setCurrent] = useState(1);
   const [failed, setFailed] = useState<Set<number>>(() => new Set());
   const [loaded, setLoaded] = useState<Set<number>>(() => new Set());
@@ -265,14 +265,15 @@ export default function DocumentReader({
             +
           </button>
         </div>
-        <a
+        <button
+          type="button"
           className="reader__pdf"
-          href={libraryDocumentPdfUrl(docId)}
-          download
+          onClick={() => save(docId)}
+          disabled={busyId === docId}
           aria-label={`Download ${title}, ${unitLabel}, PDF`}
         >
-          PDF
-        </a>
+          {busyId === docId ? "…" : "PDF"}
+        </button>
         <span
           className="reader__progress"
           style={{ transform: `scaleX(${progress})` }}

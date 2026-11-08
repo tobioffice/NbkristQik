@@ -319,7 +319,8 @@ reused, and a bad token is a `401` with no fallback to `initData`.
 | `GET` | `/api/library/subjects` | The student's own subjects for the running semester, with units and live status; while the shelf is admin-only, the admin may use `?view=all` for the whole shelf, `?view=roll` for exactly the registered roll's view |
 | `GET` | `/api/library/document/:id` | One document's metadata: id, code, title, unit, pages, version; `404` if missing or not live, `403` if not the reader's |
 | `GET` | `/api/library/page/:id/:page` | One watermarked SVG page (`Cache-Control: private, max-age=300`, `Content-Disposition: inline`, no text layer). `400`/`404` for a bad page, `503` when no watermark secret is configured |
-| `GET` | `/api/library/document/:id/pdf` | A whole PDF stamped with the reader's token (`application/pdf`, attachment, `private, max-age=3600`). Same session/registration/entitlement checks as a page; `503` if the watermark secret is missing or the generation queue is full |
+| `POST` | `/api/library/document/:id/download` | Mints `{ url, fileName }`: a five-minute link to the PDF for this reader and this document. The Telegram client's downloader has no cookie jar, so the URL carries its own HMAC proof |
+| `GET` | `/api/library/document/:id/pdf` | A whole PDF stamped with the reader's token (`application/pdf`, attachment, `private, max-age=3600`). Accepts the session cookie or the `?d=` token from the mint route (scoped to one document, five minutes); same registration/entitlement checks as a page; `503` if the watermark secret is missing or the generation queue is full |
 
 ## Private monitor endpoints
 

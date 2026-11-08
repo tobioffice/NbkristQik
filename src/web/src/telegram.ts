@@ -35,6 +35,12 @@ export interface TelegramWebApp {
   disableVerticalSwipes?: () => void;
   enableClosingConfirmation?: () => void;
   disableClosingConfirmation?: () => void;
+  /** Bot API 8.0+: ask the client to save a file at an https URL. */
+  downloadFile?: (params: { url: string; file_name: string }) => void;
+  /** Open an address outside the mini app. */
+  openLink?: (url: string, options?: { try_instant_view?: boolean }) => void;
+  /** A native alert, when the client has one. */
+  showAlert?: (message: string) => void;
 }
 
 /** The SDK, when the page is running inside Telegram. */

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { plural } from "../format";
 import {
-  libraryDocumentPdfUrl,
   registerLibraryRoll,
   type LibraryStudent,
   type LibrarySubject,
@@ -9,6 +8,7 @@ import {
 } from "../libraryApi";
 import { useBandStamp } from "../bandStamp";
 import { useLibrary } from "../useLibrary";
+import { useDocumentPdf } from "../useDocumentPdf";
 import DocumentReader from "./DocumentReader";
 
 /**
@@ -281,7 +281,9 @@ function Shelf({
 
         <div className="form-block mt-4">
           {preview ? (
-            <p className="form-note">Admin preview · not what this roll sees.</p>
+            <p className="form-note">
+              Admin preview · not what this roll sees.
+            </p>
           ) : null}
 
           {onSwitchView ? (
@@ -361,6 +363,8 @@ function UnitList({
   onOpen: (unit: LibraryUnit) => void;
   onBack: () => void;
 }) {
+  const { busyId, save } = useDocumentPdf();
+
   return (
     <div className="page">
       <div className="page-head">
@@ -385,18 +389,19 @@ function UnitList({
                   {plural(unit.pages, "page")}
                 </span>
               </button>
-              <a
+              <button
+                type="button"
                 className="lib-pdf"
-                href={libraryDocumentPdfUrl(unit.id)}
-                download
+                onClick={() => save(unit.id)}
+                disabled={busyId === unit.id}
                 aria-label={
                   unit.unit
                     ? `Download Unit ${unit.unit} PDF`
                     : "Download the full subject PDF"
                 }
               >
-                PDF
-              </a>
+                {busyId === unit.id ? "…" : "PDF"}
+              </button>
             </div>
           );
         })}

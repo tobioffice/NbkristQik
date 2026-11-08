@@ -1656,6 +1656,12 @@ a:focus-visible {
   /* a swipe to the left must not become a swipe back out of the app */
   overscroll-behavior-x: contain;
   touch-action: pan-x pan-y;
+  /*
+   * the zoom moves the scroll itself to hold the point under the fingers.
+   * Scroll anchoring would apply a second correction on the same frame and
+   * make a pinch feel like it is fighting back.
+   */
+  overflow-anchor: none;
 }
 
 .reader__pages::-webkit-scrollbar {
@@ -1685,11 +1691,11 @@ a:focus-visible {
   display: block;
   width: 100%;
   height: 100%;
-  /* the page is the PDF's own layout: nothing here to select, drag or save */
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  /* the reader does the pinch itself, so the browser gets pan and nothing else */
+  /*
+   * the reader does the pinch itself, so the browser gets pan and nothing
+   * else. Selection, drag and the long-press menu are left to the browser:
+   * the page is content, not a locked surface.
+   */
   touch-action: pan-x pan-y;
 }
 
@@ -2373,6 +2379,7 @@ a:focus-visible {
   justify-content: center;
   min-width: 44px;
   min-height: 44px;
+  padding: 0 7px;
   border: 1px solid var(--ink);
   border-radius: 1px;
   background: var(--paper-2);
@@ -2383,12 +2390,19 @@ a:focus-visible {
   letter-spacing: 0.12em;
   line-height: 1;
   text-transform: uppercase;
-  text-decoration: none;
+  cursor: pointer;
 }
 
 .lib-pdf:hover,
 .lib-pdf:active {
   background: var(--paper-3);
+}
+
+/* the bytes are being prepared: the client has not been handed the URL yet */
+.lib-pdf:disabled,
+.reader__pdf:disabled {
+  opacity: 0.55;
+  cursor: progress;
 }
 
 /* the reader keeps the same stamp in the cloth band, beside the zoom */
@@ -2410,7 +2424,7 @@ a:focus-visible {
   letter-spacing: 0.1em;
   line-height: 1;
   text-transform: uppercase;
-  text-decoration: none;
+  cursor: pointer;
   touch-action: manipulation;
 }
 

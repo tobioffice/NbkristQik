@@ -169,8 +169,10 @@ const { upsertRegistration } =
   await import("../../src/db/registration.model.js");
 const { invalidateStudentContext } =
   await import("../../src/services/library/entitlement.js");
-const { createPcLoginToken } =
+const { createPcLoginToken, createSession } =
   await import("../../src/services/library/session.js");
+const { mintDownloadToken } =
+  await import("../../src/services/library/download.js");
 
 /**
  * Opens a library session from a given address.
@@ -689,6 +691,48 @@ describe("downloading a document", () => {
     expect(Buffer.from(res.body).subarray(0, 5).toString("latin1")).toBe(
       "%PDF-",
     );
+  });
+
+  it("mints a link the Telegram client can fetch without a cookie", async () => {
+    // a session minted straight in the store: this test is about the link,
+    // and the exchange limiter has a per-account budget the suite shares
+    const cookie = `nbq_lib=${await createSession(String(REGISTERED))}`;
+
+    const minted = await request(app)
+      .post("/api/library/document/23CS31T2-u2/download")
+      .set("Cookie", cookie);
+
+    expect(minted.status).toBe(200);
+    expect(minted.body.ok).toBe(true);
+    expect(minted.body.fileName).toBe("NbkristQik-23CS31T2-uII.pdf");
+    expect(minted.body.url).toContain(
+      "/api/library/document/23CS31T2-u2/pdf?d=",
+    );
+
+    // the client's downloader has no cookie jar: the link is the credential
+    const file = await request(app).get(minted.body.url);
+    expect(file.status).toBe(200);
+    expect(file.headers["content-type"]).toContain("application/pdf");
+    expect(file.headers["content-disposition"]).toContain("attachment");
+  });
+
+  it("refuses a download link that is not a live token", async () => {
+    const res = await request(app).get(
+      "/api/library/document/23CS31T2-u2/pdf?d=not-a-token",
+    );
+
+    expect(res.status).toBe(401);
+    expect(res.body.error).toContain("expired");
+  });
+
+  it("will not spend one document's link on another", async () => {
+    const token = mintDownloadToken(String(REGISTERED), "23CS31T2-u2");
+
+    const res = await request(app).get(
+      `/api/library/document/23CS31T2-u3/pdf?d=${encodeURIComponent(token ?? "")}`,
+    );
+
+    expect(res.status).toBe(401);
   });
 
   it("records one download row per hour, as page 0", async () => {

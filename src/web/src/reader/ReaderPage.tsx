@@ -8,8 +8,9 @@ import { PAGE_RATIO } from "../pagePosition";
  * SVG is on its way, so the scrollbar is honest from the first frame and the
  * reader can jump to any page before the middle of the document exists.
  *
- * The image is not draggable, not selectable and has no context menu, so a
- * page cannot be saved out of the reader by a long press.
+ * The page is plain content now: long press, drag and the context menu all
+ * behave the way they do anywhere else, so a reader can copy or save a page
+ * instead of fighting the view.
  */
 interface ReaderPageProps {
   page: number;
@@ -56,8 +57,6 @@ const ReaderPage = ({
       className="reader__canvas"
       ref={(element) => onImage(page, element)}
       alt=""
-      onContextMenu={(e) => e.preventDefault()}
-      draggable={false}
     />
   </div>
 );
