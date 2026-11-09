@@ -464,7 +464,7 @@ libraryRouter.post(
       return;
     }
 
-    noteDownload(auth.userId, doc.id, token);
+    noteDownload(auth.userId, doc.id, token, auth.kind);
     void watchForBurst(auth.userId, Math.max(1, doc.page_count));
 
     res.json({ ok: true, fileName });
@@ -545,7 +545,7 @@ libraryRouter.get("/document/:id/pdf", async (req: Request, res: Response) => {
 
   // one audit row per reader, document and hour, carrying the same token as
   // the pages; the file is already on its way
-  noteDownload(auth.userId, doc.id, token);
+  noteDownload(auth.userId, doc.id, token, auth.kind);
   // A download delivers the whole unit at once, so count its pages in the
   // same five-minute burst window as page views. The audit row is deduped;
   // this counter is not.
@@ -634,7 +634,7 @@ libraryRouter.get("/page/:id/:page", async (req: Request, res: Response) => {
   res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
   res.send(stamped);
 
-  notePageRead(auth.userId, doc.id, page, token);
+  notePageRead(auth.userId, doc.id, page, token, auth.kind);
   // the burst counter must not keep the response open: it is telemetry, not
   // part of serving the page
   void watchForBurst(auth.userId);

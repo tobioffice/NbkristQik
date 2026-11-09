@@ -49,6 +49,7 @@ ${panelCss}
   <nav class="nav" role="tablist">
     <button role="tab" aria-selected="true" data-view="overview">Overview</button>
     <button role="tab" aria-selected="false" data-view="students">Students</button>
+    <button role="tab" aria-selected="false" data-view="library">Library</button>
     <button role="tab" aria-selected="false" data-view="reports">Reports</button>
     <button role="tab" aria-selected="false" data-view="live">Live</button>
     <button role="tab" aria-selected="false" data-view="health">Health</button>
@@ -133,6 +134,69 @@ ${panelCss}
       </table>
     </div>
     <div class="empty" id="userempty" style="display:none">No students match.</div>
+  </section>
+
+  <section class="view" id="view-library">
+    <div class="section-head" style="margin-bottom:12px">
+      <h2>Library reading</h2>
+      <span class="hint">who is reading and downloading PDFs</span>
+    </div>
+    <div class="statline">
+      <div class="stat"><div class="n" id="lib-readers">&ndash;</div><div class="l">readers</div></div>
+      <div class="stat"><div class="n" id="lib-pages">&ndash;</div><div class="l">pages read</div></div>
+      <div class="stat"><div class="n" id="lib-downloads">&ndash;</div><div class="l">pdf downloads</div></div>
+      <div class="stat"><div class="n" id="lib-docs">&ndash;</div><div class="l">documents read</div></div>
+    </div>
+    <div class="toolbar" style="margin-top:16px">
+      <input class="search" id="libsearch" placeholder="Search name, @username, roll or ID&hellip;" aria-label="Search readers">
+      <div class="seg" role="tablist" id="libsort">
+        <button aria-selected="true" data-sort="recent">Recent</button>
+        <button aria-selected="false" data-sort="pages">Most pages</button>
+        <button aria-selected="false" data-sort="downloads">Most downloads</button>
+      </div>
+      <button class="btn-ghost" id="librefresh">Refresh</button>
+    </div>
+    <div class="toolbar">
+      <input class="search" id="libtoken" placeholder="Resolve a watermark, e.g. NBK-0000-0000-0000-0000" aria-label="Resolve a watermark token">
+      <button class="btn-ghost" id="libresolve">Resolve mark</button>
+    </div>
+    <div id="libresolved"></div>
+    <div class="section" style="margin-top:20px">
+      <div class="section-head"><h2>Who is reading</h2><span class="hint" id="lib-reader-hint"></span></div>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th><th>Roll</th>
+              <th class="num">Docs</th><th class="num">Pages</th>
+              <th class="num">PDFs</th><th>Last read</th>
+            </tr>
+          </thead>
+          <tbody id="libreaders"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="libreaderempty" style="display:none">No readers match.</div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h2>Which documents</h2><span class="hint">most to least used</span></div>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Code</th><th>Subject</th><th>Unit</th>
+              <th class="num">Readers</th><th class="num">Pages</th>
+              <th class="num">PDFs</th><th class="num">Done</th><th>Last read</th>
+            </tr>
+          </thead>
+          <tbody id="libdocs"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="libdocsempty" style="display:none">No documents have been read yet.</div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h2>Latest activity</h2><span class="hint">pages and PDF downloads</span></div>
+      <div class="feed" id="libfeed"></div>
+    </div>
   </section>
 
   <section class="view" id="view-live">

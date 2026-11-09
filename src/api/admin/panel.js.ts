@@ -132,7 +132,7 @@ export const panelJs = `(function () {
   var drawerIssue = null;
   var threadCache = {};
   var userCache = {};
-  var STALE_MS = { overview: 60000, students: 30000, reports: 60000, live: 0, health: 300000 };
+  var STALE_MS = { overview: 60000, students: 30000, library: 30000, reports: 60000, live: 0, health: 300000 };
   var isStale = function (name) {
     return !lastLoad[name] || Date.now() - lastLoad[name] > STALE_MS[name];
   };
@@ -149,6 +149,7 @@ export const panelJs = `(function () {
     activateTab(name);
     if (name === "overview" && isStale("overview")) loadOverview();
     if (name === "students" && isStale("students")) loadUsers();
+    if (name === "library" && isStale("library")) loadLibrary();
     if (name === "live") loadFeed();
     if (name === "reports" && isStale("reports")) loadReports();
     if (name === "health" && isStale("health")) loadHealth();
@@ -393,6 +394,191 @@ export const panelJs = `(function () {
         sortBtns[k].setAttribute("aria-selected", String(sortBtns[k] === this));
       loadUsers();
     });
+
+  /* ---------- library ---------- */
+  var libQuery = "", libSort = "recent";
+  var libReaderLabel = function (r) {
+    var name = r.displayName || r.collegeName || r.firstName || r.username || ("ID " + r.userId);
+    var handle = r.username ? "@" + r.username : "";
+    return { name: name, handle: handle };
+  };
+  var loadLibrary = function () {
+    if (inflight.library) return;
+    inflight.library = true;
+    lastLoad.library = Date.now();
+    var readersUrl = "library/readers?q=" + encodeURIComponent(libQuery) + "&sort=" + libSort + "&limit=100";
+    Promise.all([
+      api("library/summary"),
+      api(readersUrl),
+      api("library/documents"),
+      api("library/recent?limit=60"),
+    ]).then(function (parts) {
+      renderLibrarySummary(parts[0]);
+      renderLibraryReaders(parts[1]);
+      renderLibraryDocs(parts[2]);
+      renderLibraryFeed(parts[3]);
+    }).catch(function () {}).then(function () { inflight.library = false; });
+  };
+  var renderLibrarySummary = function (d) {
+    $("lib-readers").textContent = fmt(d.readers);
+    $("lib-pages").textContent = fmt(d.pagesRead);
+    $("lib-downloads").textContent = fmt(d.pdfDownloads);
+    $("lib-docs").textContent = fmt(d.docs);
+  };
+  var renderLibraryReaders = function (d) {
+    var rows = $("libreaders");
+    var html = "";
+    for (var i = 0; i < d.readers.length; i++) {
+      var r = d.readers[i];
+      var label = libReaderLabel(r);
+      html += '<tr data-uid="' + esc(String(r.userId)) + '">' +
+        '<td class="who"><div class="name">' + esc(label.name) + (label.handle ? ' <span class="handle">' + esc(label.handle) + "</span>" : "") + "</div></td>" +
+        '<td class="mono rolls">' + (r.rollNo ? esc(r.rollNo) : "&ndash;") + "</td>" +
+        '<td class="num mono">' + fmt(r.docsRead) + "</td>" +
+        '<td class="num mono">' + fmt(r.pagesRead) + "</td>" +
+        '<td class="num mono">' + fmt(r.pdfDownloads) + "</td>" +
+        '<td class="dim">' + clockOrAgo(r.lastAt) + "</td></tr>";
+    }
+    rows.innerHTML = html;
+    $("libreaderempty").style.display = d.readers.length ? "none" : "block";
+    $("lib-reader-hint").textContent = d.readers.length ? d.readers.length + " readers" : "";
+    var trs = rows.querySelectorAll("tr");
+    for (var t = 0; t < trs.length; t++)
+      trs[t].addEventListener("click", function () { openLibraryDrawer(this.dataset.uid); });
+  };
+  var renderLibraryDocs = function (d) {
+    var rows = $("libdocs");
+    var html = "";
+    for (var i = 0; i < d.documents.length; i++) {
+      var doc = d.documents[i];
+      html += "<tr>" +
+        '<td class="mono rolls">' + esc(doc.code) + "</td>" +
+        '<td class="who"><div class="name">' + esc(doc.title) + "</div></td>" +
+        '<td class="mono rolls">' + (doc.unit ? esc(doc.unit) : "&ndash;") + "</td>" +
+        '<td class="num mono">' + fmt(doc.readers) + "</td>" +
+        '<td class="num mono">' + fmt(doc.pagesRead) + "</td>" +
+        '<td class="num mono">' + fmt(doc.pdfDownloads) + "</td>" +
+        '<td class="num mono">' + fmt(doc.completionPct) + "%</td>" +
+        '<td class="dim">' + clockOrAgo(doc.lastAt) + "</td></tr>";
+    }
+    rows.innerHTML = html;
+    $("libdocsempty").style.display = d.documents.length ? "none" : "block";
+  };
+  var renderLibraryFeed = function (d) {
+    var el = $("libfeed");
+    if (!d.events.length) {
+      el.innerHTML = '<div class="empty">No library activity yet. Page views and PDF downloads appear here.</div>';
+      return;
+    }
+    var html = "";
+    for (var i = 0; i < d.events.length; i++) {
+      var e = d.events[i];
+      var who = e.displayName || e.collegeName || e.firstName || e.username || ("ID " + e.userId);
+      var what = e.page === 0 ? "PDF" : "p" + e.page;
+      var docLabel = e.code ? e.code + (e.unit ? " · Unit " + e.unit : "") : (e.title || e.docId);
+      html += '<div class="feedrow"><span class="when">' + istTime(e.at) + "</span>" +
+        '<span class="what"><span class="badge">' + esc(what) + "</span>" +
+        esc(who) + (e.rollNo ? ' <span class="detail mono">' + esc(e.rollNo) + "</span>" : "") +
+        '<span class="detail">' + esc(docLabel) + " · " + esc(e.surface) + "</span></span></div>";
+    }
+    el.innerHTML = html;
+  };
+  var libSearchTimer = null;
+  $("libsearch").addEventListener("input", function () {
+    clearTimeout(libSearchTimer);
+    var v = this.value;
+    libSearchTimer = setTimeout(function () { var q = v.trim(); if (q === libQuery) return; libQuery = q; lastLoad.library = 0; loadLibrary(); }, 250);
+  });
+  var libSortBtns = document.querySelectorAll("#libsort button");
+  for (var lb = 0; lb < libSortBtns.length; lb++)
+    libSortBtns[lb].addEventListener("click", function () {
+      libSort = this.dataset.sort;
+      for (var k2 = 0; k2 < libSortBtns.length; k2++)
+        libSortBtns[k2].setAttribute("aria-selected", String(libSortBtns[k2] === this));
+      lastLoad.library = 0;
+      loadLibrary();
+    });
+  $("librefresh").addEventListener("click", function () { lastLoad.library = 0; loadLibrary(); });
+  $("libresolve").addEventListener("click", function () {
+    var token = $("libtoken").value.trim().toUpperCase();
+    var box = $("libresolved");
+    if (!token) { box.innerHTML = '<div class="empty">Paste a mark to resolve it.</div>'; return; }
+    box.innerHTML = '<div class="empty">Resolving&hellip;</div>';
+    api("library/resolve?token=" + encodeURIComponent(token)).then(function (d) {
+      var reads = d.reads || [];
+      var first = reads[0] || {};
+      var who = first.displayName || first.collegeName || first.firstName || first.username || ("ID " + first.userId);
+      var html = '<div class="section" style="margin-top:20px"><div class="section-head"><h2>Watermark resolved</h2><span class="hint">' + esc(d.token) + "</span></div>" +
+        '<div class="rrow"><div class="rhead"><span class="rname">' + esc(who) +
+        ' <span class="mono" style="opacity:.7">' + esc(String(first.userId || "")) + "</span></span>" +
+        (first.rollNo ? '<span class="mono rolls">' + esc(first.rollNo) + "</span>" : "") + "</div>" +
+        '<div class="rsum">' + reads.length + " reads · " + clockOrAgo(first.at) + "</div></div>";
+      for (var i = 0; i < reads.length; i++) {
+        var r = reads[i];
+        html += '<div class="feedrow" style="margin-top:2px"><span class="when">' + istTime(r.at) + "</span>" +
+          '<span class="what"><span class="badge">' + (r.page === 0 ? "PDF" : "p" + r.page) + "</span>" +
+          esc(r.code || r.docId) + (r.unit ? " · Unit " + esc(r.unit) : "") + '<span class="detail">' + esc(r.title || "") + " · " + esc(r.surface) + "</span></span></div>";
+      }
+      box.innerHTML = html + "</div>";
+    }).catch(function (err) {
+      box.innerHTML = '<div class="empty">' + esc(err && err.message ? err.message : "Could not resolve that mark.") + "</div>";
+    });
+  });
+  var openLibraryDrawer = function (userId) {
+    openDrawerShell(userId);
+    refreshLibraryDrawer(userId);
+  };
+  var refreshLibraryDrawer = function (userId) {
+    var key = "user:" + userId;
+    if (inflight.libraryUser) return;
+    inflight.libraryUser = true;
+    // reuse the warm user cache lane for the drawer shell, then reconcile
+    // against the library detail (which carries per-document depth).
+    api("library/readers/" + userId).then(function (d) {
+      if (drawerIssue === key) renderLibraryDrawer(d);
+    }).catch(function () {
+      if (drawerIssue === key) renderThreadError(function () { refreshLibraryDrawer(userId); });
+    }).then(function () { inflight.libraryUser = false; });
+  };
+  var renderLibraryDrawer = function (d) {
+    var r = d.reader;
+    var label = libReaderLabel(r);
+    var name = label.name;
+    var html = '<div class="dhead"><div><h3>' + esc(name) + "</h3>" +
+      '<div class="meta mono">' + (label.handle ? esc(label.handle) + " · " : "") + "ID " + esc(String(r.userId)) +
+      (r.rollNo ? " · " + esc(r.rollNo) : "") + (r.collegeName ? " · " + esc(r.collegeName) : "") + "</div></div>" +
+      '<button class="x" id="dclose" aria-label="Close">&times;</button></div>' +
+      '<div class="dstats">' +
+      '<div class="stat"><div class="n">' + fmt(r.docsRead) + '</div><div class="l">docs</div></div>' +
+      '<div class="stat"><div class="n">' + fmt(r.pagesRead) + '</div><div class="l">pages</div></div>' +
+      '<div class="stat"><div class="n">' + fmt(r.pdfDownloads) + '</div><div class="l">pdfs</div></div>' +
+      "</div>" +
+      '<div class="dim" style="font-size:12.5px">first read ' + istDate(parseUtc(r.firstAt)) + " " + istTime(r.firstAt) +
+      " · last read " + ago(r.lastAt) + " · " + istTime(r.lastAt) + "</div>" +
+      "<h4>Documents</h4>" +
+      '<div class="dfeed">';
+    for (var i = 0; i < d.docs.length; i++) {
+      var doc = d.docs[i];
+      html += '<div class="feedrow"><span class="when">' + esc(doc.code || "") + "</span>" +
+        '<span class="what">' + esc(doc.title || doc.docId) + (doc.unit ? " · Unit " + esc(doc.unit) : "") +
+        '<span class="detail">' + fmt(doc.pagesRead) + " pages · " + fmt(doc.completionPct) + "% done" +
+        (doc.pdfDownloads ? " · " + fmt(doc.pdfDownloads) + " PDF" : "") + "</span></span></div>";
+    }
+    html += '</div><h4>Recent</h4><div class="dfeed">';
+    for (var j = 0; j < d.recent.length; j++) {
+      var e = d.recent[j];
+      html += '<div class="feedrow"><span class="when">' + istDate(parseUtc(e.at)).slice(5) + " " + istTime(e.at) + "</span>" +
+        '<span class="what"><span class="badge">' + (e.page === 0 ? "PDF" : "p" + e.page) + "</span>" +
+        esc(e.code || e.title || "") + '<span class="detail">' + esc(e.surface) + "</span></span></div>";
+    }
+    html += "</div>";
+    $("drawer").innerHTML = html;
+    $("dclose").addEventListener("click", closeDrawer);
+    drawerIssue = "user:" + r.userId;
+    $("drawer").classList.add("open");
+    $("scrim").classList.add("open");
+    $("drawer").setAttribute("aria-hidden", "false");
+  };
 
   /* ---------- live ---------- */
   var feedRow = function (e) {

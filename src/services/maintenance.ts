@@ -9,6 +9,7 @@ import { pruneDownloadCache } from "./library/pdf.js";
  * read trail bounded.
  */
 const RETENTION_DAYS = 95;
+const LIBRARY_RETENTION_DAYS = 365;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 let started = false;
@@ -41,12 +42,13 @@ export const prune = async (): Promise<void> => {
     "admin_sessions",
     `DELETE FROM admin_sessions WHERE expires_at < datetime('now')`,
   );
-  // The page-read audit trail is what a takedown is argued from, so it gets
-  // the same 95-day window as the other history tables instead of growing
-  // forever (one row per served page).
+  // The page-read audit trail is what a takedown is argued from, and what
+  // the product is improved from, so it gets a longer 365-day window than
+  // the other history tables instead of growing forever (one row per served
+  // page).
   await pruneTable(
     "library_reads",
-    `DELETE FROM library_reads WHERE at < datetime('now', '-${RETENTION_DAYS} days')`,
+    `DELETE FROM library_reads WHERE at < datetime('now', '-${LIBRARY_RETENTION_DAYS} days')`,
   );
 
   // Stamped PDFs expire on their own seven-day clock and a disk budget; this
@@ -70,6 +72,6 @@ export const startMaintenance = (): void => {
   const timer = setInterval(() => void prune(), DAY_MS);
   timer.unref();
   logger.info(
-    "[maintenance] startup prune done, daily prune scheduled (95-day retention)",
+    "[maintenance] startup prune done, daily prune scheduled (95-day retention, 365-day library)",
   );
 };

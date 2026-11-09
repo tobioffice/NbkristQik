@@ -122,4 +122,27 @@ describe("library read dedupe", () => {
     expect(incrBy).toHaveBeenCalledTimes(2);
     expect(recordLibraryRead).toHaveBeenCalledTimes(1);
   });
+
+  it("carries the reading surface through to the audit row", async () => {
+    const { noteDownload } =
+      await import("../../src/services/library/reads.js");
+    notePageRead("u1", "doc1", 1, "tok", "pc");
+    noteDownload("u1", "doc1", "tok", "telegram");
+    await settle();
+
+    expect(recordLibraryRead).toHaveBeenCalledWith(
+      "u1",
+      "doc1",
+      1,
+      "tok",
+      "pc",
+    );
+    expect(recordLibraryRead).toHaveBeenCalledWith(
+      "u1",
+      "doc1",
+      0,
+      "tok",
+      "telegram",
+    );
+  });
 });

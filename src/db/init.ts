@@ -31,7 +31,7 @@ import { logger } from "../config/logger.js";
  * Version 2 adds per-metric timestamps and a semester key to student_stats,
  * and updated_at to fallbackResponses. See migrateToV2().
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 /** Reads the database's user_version, treating a missing row as 0. */
 const readSchemaVersion = async (): Promise<number> => {
@@ -203,6 +203,9 @@ export const initDatabase = async () => {
   if (schemaVersion < 2) {
     await migrateToV2();
   }
+  if (schemaVersion < 3) {
+    await migrateToV3();
+  }
 
   // Stamp after every table exists, so a crash mid-init leaves the old version
   // and the next boot retries the whole (idempotent) schema instead of
@@ -289,6 +292,19 @@ const migrateToV2 = async (): Promise<void> => {
   }
 
   logger.info("[db] schema v2 migration complete");
+};
+
+/**
+ * Schema v3: reading surface on the library audit trail.
+ *
+ * `library_reads.surface` records where the page was served from
+ * ('telegram' inside the app, 'pc' from a computer link). It powers the
+ * admin Library view's split, and older rows carry NULL, read as 'telegram'
+ * by the queries that need it.
+ */
+const migrateToV3 = async (): Promise<void> => {
+  await ensureColumn("library_reads", "surface", "TEXT");
+  logger.info("[db] schema v3 migration complete");
 };
 
 /**

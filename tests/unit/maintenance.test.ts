@@ -55,7 +55,7 @@ beforeAll(async () => {
       `INSERT INTO activity_log (user_id, chat_type, action, created_at) VALUES (1, 'private', 'fresh-action', datetime('now'))`,
       `INSERT INTO admin_sessions (token_hash, expires_at) VALUES ('old-session', datetime('now', '-1 day'))`,
       `INSERT INTO admin_sessions (token_hash, expires_at) VALUES ('live-session', datetime('now', '+1 day'))`,
-      `INSERT INTO library_reads (user_id, doc_id, page, at) VALUES ('u1', 'old-doc', 1, datetime('now', '-100 days'))`,
+      `INSERT INTO library_reads (user_id, doc_id, page, at) VALUES ('u1', 'old-doc', 1, datetime('now', '-400 days'))`,
       `INSERT INTO library_reads (user_id, doc_id, page, at) VALUES ('u1', 'fresh-doc', 2, datetime('now'))`,
     ],
     "write",

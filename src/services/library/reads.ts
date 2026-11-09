@@ -91,11 +91,13 @@ export const notePageRead = (
   docId: string,
   page: number,
   token: string,
+  surface?: "telegram" | "pc",
 ): void => {
   void (async () => {
     if (!(await claimFirstRead(userId, docId, page))) return;
     try {
-      await recordLibraryRead(userId, docId, page, token);
+      if (surface) await recordLibraryRead(userId, docId, page, token, surface);
+      else await recordLibraryRead(userId, docId, page, token);
     } catch (e) {
       // a claim without a row is a lost audit entry: give it back
       await releaseFirstRead(userId, docId, page).catch(() => {});
@@ -115,11 +117,13 @@ export const noteDownload = (
   userId: string,
   docId: string,
   token: string,
+  surface?: "telegram" | "pc",
 ): void => {
   void (async () => {
     if (!(await claimFirstRead(userId, docId, "pdf"))) return;
     try {
-      await recordLibraryRead(userId, docId, 0, token);
+      if (surface) await recordLibraryRead(userId, docId, 0, token, surface);
+      else await recordLibraryRead(userId, docId, 0, token);
     } catch (e) {
       // a claim without a row is a lost audit entry: give it back
       await releaseFirstRead(userId, docId, "pdf").catch(() => {});
