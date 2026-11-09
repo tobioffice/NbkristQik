@@ -61,7 +61,7 @@ describe("/report form message", () => {
       text: "🗂 My reports",
       web_app: { url: REPORT_LIST_WEBAPP_URL },
     });
-    expect(REPORT_LIST_WEBAPP_URL.endsWith("#/issues/reports")).toBe(true);
+    expect(REPORT_LIST_WEBAPP_URL.endsWith("?page=issues/reports")).toBe(true);
   });
 
   it("falls back to plain links outside a private chat (web_app is private-only)", () => {

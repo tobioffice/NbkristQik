@@ -8,6 +8,14 @@ import { useAppConfig } from "./useAppConfig";
 import { useTelegramIdentity } from "./useTelegramIdentity";
 import { haptic } from "./telegram";
 import type { IssuesRoute } from "./issuesRoute";
+import {
+  ATTENDANCE_ROUTE,
+  hashFor,
+  parseRouteHash,
+  takePageLink,
+  type Route,
+  type Section,
+} from "./route";
 import ProfileView from "./views/Profile";
 import MyAttendance from "./views/MyAttendance";
 
@@ -25,8 +33,9 @@ const Leaderboard = lazy(() => import("./Leaderboard"));
  * be navigated before the useful answer. The cloth band says where you are
  * and the tabs at the foot turn to another section without leaving the sheet.
  *
- * Routes live in the hash, so a reload or a bot deep link lands on the same
- * page:
+ * Routes live in the hash, so a reload lands on the same page. Bot buttons
+ * name their section in `?page=`, because Telegram replaces the fragment with
+ * its own launch data; the shell folds it into the hash at startup:
  *   #/                    my attendance (the first screen)
  *   #/rank                the attendance register
  *   #/library             the shelf
@@ -35,16 +44,6 @@ const Leaderboard = lazy(() => import("./Leaderboard"));
  *   #/issues/reports      the reporter's own list
  *   #/issues/QIK-0007     one conversation
  */
-
-type Section = "attendance" | "rank" | "library" | "profile" | "issues";
-
-interface Route {
-  section: Section;
-  /** The opened conversation, for #/issues/<id>. */
-  issue: string | null;
-  /** True for #/issues/reports: the reporter's own list. */
-  mine: boolean;
-}
 
 interface SectionEntry {
   section: Section;
@@ -84,8 +83,6 @@ const SECTIONS: SectionEntry[] = [
   },
 ];
 
-const ATTENDANCE_ROUTE: Route = { section: "attendance", issue: null, mine: false };
-
 /**
  * The one-time computer-link token, read once at startup. The hook that spends
  * it removes `pc` from the address bar, but the shell keeps it for this app
@@ -96,31 +93,22 @@ const readPcToken = (): string | undefined => {
   return new URLSearchParams(window.location.search).get("pc") || undefined;
 };
 
-const parseRoute = (): Route => {
-  const parts = (typeof window === "undefined" ? "" : window.location.hash)
-    .replace(/^#\/?/, "")
-    .split("/")
-    .filter(Boolean);
-  const section = parts[0] as Section;
-  if (!SECTIONS.some((entry) => entry.section === section)) {
-    return ATTENDANCE_ROUTE;
+/**
+ * The address bar at startup: a bot's `?page=` deep link first, then the
+ * hash. Folding the page into the hash here (rather than reading it on every
+ * render) keeps the hash the only route the shell ever consults, so the next
+ * tab tap is not overruled by a stale deep link.
+ */
+const routeAtStartup = (): Route => {
+  if (typeof window === "undefined") return ATTENDANCE_ROUTE;
+  const link = takePageLink(window.location.href);
+  if (!link) return parseRouteHash(window.location.hash);
+  try {
+    window.history.replaceState(null, "", link.href);
+  } catch {
+    // an address bar we cannot rewrite still lands on the right section
   }
-
-  if (section !== "issues") return { section, issue: null, mine: false };
-  if (!parts[1]) return { section, issue: null, mine: false };
-  if (parts[1] === "reports") return { section, issue: null, mine: true };
-  return {
-    section,
-    issue: decodeURIComponent(parts[1]).toUpperCase(),
-    mine: false,
-  };
-};
-
-const hashFor = (route: Route): string => {
-  if (route.section === "attendance") return "#/";
-  if (route.section !== "issues") return `#/${route.section}`;
-  if (route.issue) return `#/issues/${encodeURIComponent(route.issue)}`;
-  return route.mine ? "#/issues/reports" : "#/issues";
+  return link.route;
 };
 
 /** The band's context line, by section. */
@@ -133,7 +121,7 @@ const BAND_SUB: Record<Section, string> = {
 };
 
 export default function AppShell() {
-  const [route, setRoute] = useState<Route>(parseRoute);
+  const [route, setRoute] = useState<Route>(routeAtStartup);
   const [stamp, setStamp] = useState<BandStamp | null>(null);
   const [immersive, setImmersive] = useState(false);
   const { tgUser, initData } = useTelegramIdentity();
@@ -159,9 +147,7 @@ export default function AppShell() {
   // shell never offers a shut door.
   const visibleSections = useMemo(
     () =>
-      SECTIONS.filter(
-        (entry) => entry.section !== "library" || libraryAllowed,
-      ),
+      SECTIONS.filter((entry) => entry.section !== "library" || libraryAllowed),
     [libraryAllowed],
   );
 
@@ -177,7 +163,7 @@ export default function AppShell() {
   // links all arrive as a hash change
   useEffect(() => {
     const onHash = () => {
-      setRoute(parseRoute());
+      setRoute(parseRouteHash(window.location.hash));
       // a deep link can land mid-reader; the sheet always comes back
       setImmersive(false);
     };

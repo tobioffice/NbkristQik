@@ -7,7 +7,11 @@
  * has to be first-party or iOS drops it and the reader is signed out on every
  * open.
  *
- * The hash routes must match `parseRoute` in `src/web/src/AppShell.tsx`.
+ * A section rides in `?page=` rather than in the fragment. Telegram hands a
+ * Mini App its launch data in the fragment (`#tgWebAppData=…`) and drops
+ * whatever the button put there, while the query string arrives intact. The
+ * app folds the page into its hash route on load (`takePageLink` in
+ * `src/web/src/route.ts`); the hash routes must match it.
  */
 
 const APP_BASE = "https://checker.tobioffice.dev/library/";
@@ -15,8 +19,15 @@ const APP_BASE = "https://checker.tobioffice.dev/library/";
 /** The app's index page. */
 export const APP_WEBAPP_URL = APP_BASE;
 
-/** One section of the app, by its hash route. */
-const section = (route: string): string => `${APP_BASE}#${route}`;
+/** One section of the app, by its route path. */
+const section = (route: string): string => {
+  const page = route
+    .split("/")
+    .filter(Boolean)
+    .map(encodeURIComponent)
+    .join("/");
+  return `${APP_BASE}?page=${page}`;
+};
 
 /** Leaderboard: the attendance register. */
 export const WEBAPP_URL = section("/rank");
@@ -33,4 +44,4 @@ export const REPORT_LIST_WEBAPP_URL = section("/issues/reports");
 
 /** One conversation, for a reply notification. */
 export const reportThreadUrl = (issueId: string): string =>
-  section(`/issues/${encodeURIComponent(issueId)}`);
+  section(`/issues/${issueId}`);

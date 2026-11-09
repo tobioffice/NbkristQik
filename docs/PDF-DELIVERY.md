@@ -448,7 +448,7 @@ Current flow:
    `src/bot/commands/library.ts` checks `canOpenLibrary`, mints a 32-byte
    random token, stores it in Redis as `lib:pc:<token>` with a 5-minute TTL,
    and adds an "Open on this computer" button. The link is
-   `...?pc=<token>` before the hash route. Groups never get the button.
+   `...?page=library&pc=<token>`. Groups never get the button.
 2. The app reads `pc` once (`src/web/src/AppShell.tsx`) and immediately
    removes it from the address bar. A presented PC token wins over an existing
    cookie: a shared browser must not keep the previous account's shelf. It

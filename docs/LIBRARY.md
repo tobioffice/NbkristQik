@@ -474,9 +474,11 @@ sheet:
 - **One cloth band.** A section never draws its own head; it publishes one
   figure into the band's stamp (ready units on the shelf, students on the
   register) through `useBandStamp`.
-- **Hash routes** make every section reloadable and deep-linkable:
-  `#/rank`, `#/library`, `#/profile`, `#/issues`, `#/issues/reports`,
-  `#/issues/QIK-0007`. The bot's buttons use these instead of separate pages.
+- **Routes** make every section reloadable and deep-linkable. The hash carries
+  `#/rank`, `#/library`, `#/profile`, `#/issues`, `#/issues/reports` and
+  `#/issues/QIK-0007`; the bot's buttons carry the same path in `?page=`, which
+  `takePageLink` folds into the hash on load. Telegram overwrites the fragment
+  with its own launch data, so a hash written by a button never arrives.
 - **The reader takes the sheet.** While a page is open the band and the tabs
   step away and the reader carries its own head.
 - **The Telegram back arrow** is a stack (`backButton.ts`): the reader closes

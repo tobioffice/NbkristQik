@@ -24,7 +24,11 @@ import { TOO_FAST } from "../replies.js";
  * nothing at all in a group.
  */
 
-/** `?pc=<token>` goes before the hash route, where the app can read it. */
+/**
+ * `?page=library&pc=<token>`: the page marker is folded into the hash by the
+ * app, and `pc` is read before that happens. Nothing follows the fragment,
+ * because Telegram rewrites it with its own launch data.
+ */
 const pcLoginUrl = (token: string): string => {
   const [base, hash] = LIBRARY_WEBAPP_URL.split("#");
   const query = `${base}${base.includes("?") ? "&" : "?"}pc=${encodeURIComponent(token)}`;

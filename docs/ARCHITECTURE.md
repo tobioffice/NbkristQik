@@ -43,10 +43,12 @@ Monitor (oracle2) ──> /health, /internal/health, portal
   menu flow, the channel-membership gate, and `/syncdb`. Channel membership is
   the gate for non-admin students; there is no daily check-in.
 - **Web shell:** one shipped app at `/library/` with hash routes `#/rank`,
-  `#/profile`, `#/library` and `#/issues`. `/api/config` decides whether the
-  library tab exists for this caller; the server enforces the same gate on the
-  library API. The legacy GitHub Pages app build is retired; the marketing site
-  remains a separate static surface.
+  `#/profile`, `#/library` and `#/issues`. Bot buttons name the section in
+  `?page=` because Telegram replaces the fragment with its own launch data;
+  the shell folds it into the hash at startup (`takePageLink`). `/api/config`
+  decides whether the library tab exists for this caller; the server enforces
+  the same gate on the library API. The legacy GitHub Pages app build is
+  retired; the marketing site remains a separate static surface.
 
 ## HTTP surface
 
