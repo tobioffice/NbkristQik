@@ -22,7 +22,7 @@ export const panelCss = `:root {
   --line-2: rgba(30, 42, 56, 0.45);
   --line-soft: rgba(30, 42, 56, 0.12);
   --font-display: "Zilla Slab", "Roboto Slab", Georgia, serif;
-  --mono: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --tabular: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { color-scheme: light; }
@@ -194,7 +194,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
 
 .badge {
   display: inline-block; font-size: 11px; font-weight: 700;
-  letter-spacing: 0.1em; text-transform: uppercase;
+  letter-spacing: 0.14em; text-transform: uppercase;
   padding: 2px 8px; border-radius: 2px;
   background: var(--paper-2); color: var(--ink-2); margin-right: 8px;
   border: 1px solid var(--line-soft);
@@ -214,7 +214,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
 .ubars i.miss { background: var(--line-soft); }
 .hstat { text-align: right; }
 .hstat .pct { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.hstat .lat { color: var(--ink-3); font-size: 12px; }
+.hstat .lat { color: var(--ink-3); font-size: 12px; font-variant-numeric: tabular-nums; }
 
 /* ---------- drawer ---------- */
 .scrim {
@@ -306,7 +306,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
 .rrow.resolved { border-color: var(--green); }
 .rrow.resolved { opacity: .82; }
 .rhead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.rid { font-size: 13px; color: var(--ink); font-weight: 700; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+.rid { font-size: 13px; color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
 .rstatus { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); display: inline-flex; align-items: center; gap: 6px; }
 .rstatus .dot { width: 8px; height: 8px; border-radius: 50%; }
 .rstatus.open .dot { background: var(--ink-3); }
@@ -355,7 +355,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
 /* a thread that moved on since it was last read */
 .rrow.hasnew { border-color: var(--red); }
 .rnew {
-  font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--red-ink); border: 1.5px solid var(--red); border-radius: 1px;
   padding: 1px 6px; transform: rotate(-2deg); display: inline-block;
   font-variant-numeric: tabular-nums;
@@ -375,7 +375,7 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
 }
 .tmsg .tmeta {
   display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
-  font-size: 10.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--ink-3);
 }
 .tmsg.admin .tmeta b { color: var(--ink); }

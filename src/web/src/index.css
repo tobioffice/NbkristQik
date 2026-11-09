@@ -27,6 +27,7 @@
   --paper: #e7dcc3;
   --paper-2: #efe5cd;
   --paper-3: #f6efdd;
+  --page-white: #fff;
   --ink: #1e2a38;
   --ink-2: #5a5140;
   --ink-3: #675d4b;
@@ -378,6 +379,7 @@ a:focus-visible {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
   color: var(--ink-2);
 }
 
@@ -1179,7 +1181,6 @@ a:focus-visible {
 .issue-id {
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.06em;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1472,6 +1473,9 @@ a:focus-visible {
 }
 
 .lib-row__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   text-align: right;
   font-size: 11px;
   font-weight: 700;
@@ -1538,10 +1542,8 @@ a:focus-visible {
   cursor: pointer;
 }
 
-.reader__back span {
-  font-size: 16px;
-  line-height: 1;
-  margin-top: -1px;
+.reader__back svg {
+  flex: none;
 }
 
 .reader__back:active {
@@ -1581,7 +1583,6 @@ a:focus-visible {
 .reader__title span em {
   font-style: normal;
   font-weight: 700;
-  letter-spacing: 0.08em;
   font-variant-numeric: tabular-nums;
   color: var(--paper-3);
 }
@@ -1635,7 +1636,6 @@ a:focus-visible {
   min-width: 48px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.06em;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1679,7 +1679,7 @@ a:focus-visible {
   margin: 0 auto 18px;
   /* white, like the printed page: the PDF's figures are set on white, and
      they must not sit in white boxes on a cream sheet */
-  background: #fff;
+  background: var(--page-white);
   border: 1px solid var(--rule);
   /* the sticky head must not cover a page scrolled back to */
   scroll-margin-top: 68px;
@@ -2058,7 +2058,7 @@ a:focus-visible {
   padding: 9px 2px 8px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-2);
   transition: color 0.12s ease, background-color 0.12s ease;

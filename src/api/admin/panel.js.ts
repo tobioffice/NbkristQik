@@ -13,12 +13,12 @@ export const panelJs = `(function () {
   var SURFACES = [
     { key: "private", label: "Private chat", color: "#3f6457" },
     { key: "channel", label: "Channel", color: "#1e2a38" },
-    { key: "group", label: "Group", color: "#857b67" },
-    { key: "unknown", label: "Web app", color: "#a62f22" }
+    { key: "group", label: "Group", color: "#5a5140" },
+    { key: "unknown", label: "Web app", color: "#675d4b" }
   ];
   var surfaceColor = function (k) {
     for (var i = 0; i < SURFACES.length; i++) if (SURFACES[i].key === k) return SURFACES[i].color;
-    return "#857b67";
+    return "#675d4b";
   };
   var surfaceLabel = function (k) {
     for (var i = 0; i < SURFACES.length; i++) if (SURFACES[i].key === k) return SURFACES[i].label;
@@ -223,10 +223,7 @@ export const panelJs = `(function () {
     for (var q = 0; q < pts.length; q++) line += (q ? " L" : "M") + pts[q][0].toFixed(1) + " " + pts[q][1].toFixed(1);
     var area = line + " L" + (W - pad) + " " + H + " L" + pad + " " + H + " Z";
     var svgHtml =
-      '<defs><linearGradient id="pulsefill" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0" stop-color="#1e2a38" stop-opacity="0.16"/>' +
-      '<stop offset="1" stop-color="#1e2a38" stop-opacity="0"/></linearGradient></defs>' +
-      '<path d="' + area + '" fill="url(#pulsefill)"/>' +
+      '<path d="' + area + '" fill="#1e2a38" fill-opacity="0.12"/>' +
       '<path d="' + line + '" fill="none" stroke="#1e2a38" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
       '<line x1="' + pts[pts.length - 1][0] + '" y1="' + pts[pts.length - 1][1] + '" x2="' + pts[pts.length - 1][0] + '" y2="' + H + '" stroke="#1e2a38" stroke-opacity="0.32" stroke-dasharray="2 3"/>';
     for (var r = 0; r < points.length; r += 1) {
@@ -244,7 +241,7 @@ export const panelJs = `(function () {
       if (!tip) {
         tip = document.createElement("div");
         tip.id = "pctip";
-        tip.style.cssText = "position:fixed;pointer-events:none;font-size:12px;background:#f6efdd;border:1px solid rgba(30,42,56,.45);color:#1e2a38;padding:5px 9px;border-radius:2px;z-index:30;font-family:" + "var(--mono)" + ";white-space:nowrap";
+        tip.style.cssText = "position:fixed;pointer-events:none;font-size:12px;background:#f6efdd;border:1px solid rgba(30,42,56,.45);color:#1e2a38;padding:5px 9px;border-radius:2px;z-index:30;font-family:" + "var(--tabular)" + ";white-space:nowrap";
         document.body.appendChild(tip);
       }
       tip.textContent = lab + (pulseRange === "24h" ? " IST" : "") + " · " + pt.actions + " actions · " + pt.users + " students";

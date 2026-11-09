@@ -231,7 +231,20 @@ export default function DocumentReader({
     <div className="reader">
       <div className="reader__head">
         <button className="reader__back" onClick={onClose} aria-label="Back">
-          <span aria-hidden="true">‹</span> Back
+          <svg
+            aria-hidden="true"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m14 6-6 6 6 6" />
+          </svg>
+          Back
         </button>
         <div className="reader__title">
           <b>{title}</b>
@@ -248,7 +261,19 @@ export default function DocumentReader({
             onClick={viewport.zoomOut}
             aria-label="Zoom out"
           >
-            &minus;
+            <svg
+              aria-hidden="true"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 12h14" />
+            </svg>
           </button>
           <button
             className="reader__zoom-btn reader__zoom-value"
@@ -262,7 +287,19 @@ export default function DocumentReader({
             onClick={viewport.zoomIn}
             aria-label="Zoom in"
           >
-            +
+            <svg
+              aria-hidden="true"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
           </button>
         </div>
         <button
