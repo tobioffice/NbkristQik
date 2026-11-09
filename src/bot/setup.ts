@@ -13,7 +13,7 @@ const USER_COMMANDS = [
   { command: "register", description: "Save your roll number" },
   { command: "report", description: "Tell me something's broken" },
   { command: "help", description: "How this works" },
-  { command: "leaderboard", description: "View the leaderboard" },
+  { command: "leaderboard", description: "Print the attendance register" },
 ];
 
 const LIBRARY_COMMAND = {

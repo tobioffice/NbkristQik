@@ -1,11 +1,11 @@
 /**
  * The app's address grammar.
  *
- * Sections live in the hash (`#/rank`): the address bar is the source of
+ * Sections live in the hash (`#/profile`): the address bar is the source of
  * truth, so Back, Forward and a reload land where the reader left off.
  *
  * Telegram uses the fragment for its own launch data, though. A Mini App is
- * handed `#tgWebAppData=…` (or `#/rank?tgWebAppData=…` when the client keeps
+ * handed `#tgWebAppData=…` (or `#/profile?tgWebAppData=…` when the client keeps
  * the button's path), so a fragment the bot wrote is either buried behind a
  * `?` or gone entirely. Bot buttons therefore name their section in
  * `?page=rank`, which the client leaves alone; `takePageLink` folds that into
@@ -13,7 +13,7 @@
  * were already sent still open the right section.
  */
 
-export type Section = "attendance" | "rank" | "library" | "profile" | "issues";
+export type Section = "profile" | "issues" | "library";
 
 export interface Route {
   section: Section;
@@ -23,19 +23,14 @@ export interface Route {
   mine: boolean;
 }
 
-export const ATTENDANCE_ROUTE: Route = {
-  section: "attendance",
+/** The first screen: the roll form, the one thing the bot cannot do faster. */
+export const HOME_ROUTE: Route = {
+  section: "profile",
   issue: null,
   mine: false,
 };
 
-const SECTIONS: Section[] = [
-  "attendance",
-  "rank",
-  "library",
-  "profile",
-  "issues",
-];
+const SECTIONS: Section[] = ["profile", "issues", "library"];
 
 const isSection = (value: string): value is Section =>
   (SECTIONS as string[]).includes(value);
@@ -47,7 +42,7 @@ const isSection = (value: string): value is Section =>
 export const parseRoutePath = (path: string): Route => {
   const parts = path.split("/").filter(Boolean);
   const head = parts[0];
-  if (!head || !isSection(head)) return ATTENDANCE_ROUTE;
+  if (!head || !isSection(head)) return HOME_ROUTE;
   if (head !== "issues") return { section: head, issue: null, mine: false };
 
   const second = parts[1];
@@ -76,7 +71,7 @@ export const parseRouteHash = (hash: string): Route =>
 
 /** The address that names a route. */
 export const hashFor = (route: Route): string => {
-  if (route.section === "attendance") return "#/";
+  if (route.section === "profile") return "#/";
   if (route.section !== "issues") return `#/${route.section}`;
   if (route.issue) return `#/issues/${encodeURIComponent(route.issue)}`;
   return route.mine ? "#/issues/reports" : "#/issues";

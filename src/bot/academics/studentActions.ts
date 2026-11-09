@@ -96,11 +96,7 @@ const resolveMarkup = async (
   if (options?.replyMarkup) return options.replyMarkup;
   const userId = options?.userId ?? msg.from?.id;
   const showSave = userId ? !(await isRollSaved(userId, roll)) : false;
-  return cardMarkup({
-    roll,
-    isPrivate: msg.chat.type === "private",
-    showSave,
-  });
+  return cardMarkup({ roll, showSave });
 };
 
 /**

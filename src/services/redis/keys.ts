@@ -11,8 +11,6 @@ export const redisKeys = {
   midmarks: (roll: string) => `midmarks:${roll}`,
   /** Channel membership cache: isMember:{userId} */
   isMember: (userId: number | string) => `isMember:${userId}`,
-  /** Leaderboard API response cache: lb:{sort}:{page}:{limit}:{...filters} */
-  leaderboard: (key: string) => `lb:${key}`,
   /** Per-user tracker profile upsert throttle (SET NX) */
   trackProfile: (userId: number | string) => `track:p:${userId}`,
   /** Semester type for /syncdb ("1" | "2") */
@@ -37,5 +35,4 @@ export const cacheFlushPatterns = [
   "student:*",
   "attendance:*",
   "midmarks:*",
-  "lb:*",
 ] as const;

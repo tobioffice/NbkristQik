@@ -41,8 +41,8 @@ library session cookie. Every later library call uses that cookie instead of
 `initData`.
 
 A **presented but invalid** identity is never downgraded to anonymous: the
-request fails with `401` on `/api/leaderboard`, `/api/config`, `/api/me` and
-the other identity routes. Anonymous callers are allowed only where the route
+request fails with `401` on `/api/config`, `/api/profile` and the other
+identity routes. Anonymous callers are allowed only where the route
 is explicitly public. Signed `initData` is checked against the bot token with
 HMAC-SHA256, a 24-hour `auth_date` replay window and a 5-minute future-skew
 allowance.
@@ -54,9 +54,7 @@ deployment that forgets to set it does not inherit the shortcut.
 
 | Route | Anonymous | Verified Telegram identity |
 |---|---|---|
-| `GET /api/leaderboard` | allowed; `name` is `null`, search matches rolls only | names; search matches rolls and names |
 | `GET /api/config` | allowed; both flags `false` | flags reflect the caller |
-| `GET /api/me` | `401` | allowed |
 | `/api/profile`, `/api/register`, `/api/report`, `/api/thread/*` | `401` | allowed |
 | `POST /api/library/session` | `401` without signed `initData` in the body | sets the `nbq_lib` session cookie |
 | other `/api/library/*` | `401` without that cookie | cookie from the session exchange |
@@ -88,90 +86,6 @@ The rate-limit response is `429 { "success": false, "error": "...", "retryAfter"
 
 ## Public endpoints
 
-### `GET /api/leaderboard`
-
-Paginated, filterable leaderboard rows.
-
-| Param | Type | Default | Rules |
-|---|---|---|---|
-| `page` | int | 1 | 1–1000 |
-| `limit` | int | 50 | 1–100 |
-| `sort` | string | `attendance` | `attendance` or `midmarks` |
-| `scope` | string | `me` for a verified caller, `all` otherwise | `me` or `all` |
-| `year` | string | — | year digit `1`–`4` (legacy `11`/`12` also accepted) or `all` |
-| `branch` | string | — | portal branch digits or `all` |
-| `section` | string | — | single letter or `all` |
-| `search` | string | — | 2–20 chars: letters, digits, underscores, spaces or dashes |
-
-`scope=me` applies the caller's saved registration's year/branch/section
-unless an explicit non-`all` filter overrides it. `all` means "no filter"; the
-web client omits dimensions it does not want to filter. An explicit `all`
-value suppresses the caller scope and is treated as a whole-register request.
-Anonymous callers are always `all`.
-
-Invalid parameters return
-`400 { "success": false, "error": "Validation failed", "details": [...] }`.
-
-The response is identity-aware:
-
-- **Anonymous** callers get `name: null` on every row, and `search` matches
-  roll numbers only. This keeps a public page from harvesting a name for every
-  roll.
-- **Verified Telegram identity** callers get the leaderboard name and can
-  search by name as well as roll. A non-empty `display_name` saved in
-  `registrations` overrides the college name for that roll.
-
-Rows and `total` always come from the same filtered set. `total` is the number
-of students actually ranked in this view, not the size of the college. Page 1
-also carries the sections that exist for the chosen year/branch and the
-coverage/freshness metadata; later pages return `null` for those extras.
-
-- `coverage: { ranked, known }` — `ranked` is `total`; `known` is the number of
-  students in `studentsnew` matching the same filters. It is `null` for a
-  search or a page after the first. A partial register must print both.
-- `freshness: { newest, oldest }` — the newest and oldest write behind the
-  ranked view (per metric, UTC SQLite datetime). `oldest` matters because the
-  register fills as students check.
-- `scope: { year, branch, section } | null` — the effective filter context,
-  not the caller's identity.
-- `updated_at` remains `freshness.newest` for one release.
-
-The payload is cached in Redis for 60 seconds per unique query. Cache keys are
-segregated by identity mode (`names` vs `anon`), scope mode, and the resolved
-`year:branch:section`; two `scope=me` callers in different sections can never
-share a page. HTTP caching is `Cache-Control: public, max-age=30` for anonymous
-responses and `private, max-age=30` for identified ones, with
-`Vary: X-Telegram-Init-Data`. The anonymous default views are refreshed every
-50 seconds on a remote database; the loop is disabled on the embedded database.
-
-```json
-{
-  "success": true,
-  "page": 1,
-  "limit": 50,
-  "total": 245,
-  "updated_at": "2026-10-25 10:00:00",
-  "freshness": { "newest": "2026-10-25 10:00:00", "oldest": "2026-10-19 08:00:00" },
-  "scope": { "year": "3", "branch": "5", "section": "A" },
-  "coverage": { "ranked": 245, "known": 1200 },
-  "facets": { "sections": ["A", "B", "C"] },
-  "data": [
-    {
-      "roll_no": "21B81A05E9",
-      "name": null,
-      "attendance_percentage": 95.5,
-      "mid_marks_avg": 18.75,
-      "rank": 1
-    }
-  ]
-}
-```
-
-A verified caller receives the same envelope with the resolved name in place
-of `null` and `Cache-Control: private, max-age=30`. Ranks are computed over the
-full filtered set, with the rounded score the register prints (2 decimal
-places for attendance, 1 for mid marks).
-
 ### `GET /api/config`
 
 Public, identity-aware feature flags. No identity is required; a provided but
@@ -196,69 +110,16 @@ The response is `Cache-Control: no-store` because it depends on the caller.
 The web shell treats the library as closed until this route answers, and hides
 the library tab and route when `libraryOpen` is `false`.
 
-### `GET /api/me`
+### `DELETE /api/me/last-lookup`
 
-Returns the caller's saved roll and global ranks, each with the rounded score
-the register prints (`value`) so the personal strip and the row agree. A
-verified identity is required; an anonymous request or an invalid one is
-`401 { "found": false, "error": "..." }`.
-
-Identity is the registration, never the last lookup. `tgusers` is auto-upserted
-by every roll lookup, including a friend's, so it is returned separately as a
-suggestion:
-
-- Registered: `{ found: true, source: "registered", roll_no, attendance, midmarks }`.
-- Not registered: `{ found: false, lastLookup: "<roll>|null" }`; no rank queries
-  run.
+Forgets the roll this account last looked up; the registration (if any) is
+untouched. A verified identity is required. The suggestion exists so an
+unregistered visitor can see the roll they typed last time without it being
+treated as their identity.
 
 ```json
-{
-  "found": true,
-  "source": "registered",
-  "roll_no": "21B81A05E9",
-  "attendance": { "rank": 12, "total": 245, "value": 95.5 },
-  "midmarks": { "rank": 30, "total": 245, "value": 18.8 }
-}
+{ "ok": true }
 ```
-
-Ranks are global over all ranked students in the register, not over the
-current filters. `Cache-Control: private, no-store`.
-
-`DELETE /api/me/last-lookup` removes the caller's suggestion row; the
-registration is untouched.
-
-### `GET /api/me/academics`
-
-Structured JSON for the app's first screen. A verified identity and a saved
-registration are required; an unregistered caller gets
-`200 { ok: false, registered: false }` (not an error). `type` is
-`attendance` (default) or `midmarks`.
-
-```json
-{
-  "ok": true,
-  "registered": true,
-  "type": "attendance",
-  "rollNo": "23KB1A0599",
-  "data": {
-    "rollno": "23KB1A0599",
-    "year_branch_section": "3_CSE_A",
-    "percentage": 82.22,
-    "totalClasses": { "attended": 148, "conducted": 180 },
-    "subjects": [
-      { "subject": "DBMS", "attended": 22, "conducted": 30, "lastUpdated": "12-10-2025" }
-    ]
-  },
-  "freshness": { "notice": null, "source": "live" }
-}
-```
-
-`freshness.source` is `live`, `cached`, or `fallback`; `notice` is the
-human-readable line to show. Success is
-`Cache-Control: private, max-age=60`; errors are `private, no-store`. Expected
-portal failures return `404 NO_DATA`/`NO_STUDENT` or `503
-SERVER_DOWN`/`REPORT_BLOCKED` with `{ ok: false, registered, type, rollNo,
-error, code }`.
 
 ### `GET /health`
 
@@ -392,8 +253,8 @@ Day and hour groupings use IST (`+330 minutes`); storage stays UTC.
 
 Optional registration lets students pin their default roll (Telegram Web App
 form via `/register`); `/attendance`, `/midmarks`, and `/bunk` resolve it.
-Identity rules match `/api/me` (signed `X-Telegram-Init-Data`, with the gated
-dev `userId` shortcut). `POST /api/register` is additionally limited to 20
+Identity rules match the rest of the API (signed `X-Telegram-Init-Data`, with
+the gated dev `userId` shortcut). `POST /api/register` is additionally limited to 20
 requests / 15 min per account.
 
 | Method | Path | Purpose |
@@ -403,7 +264,7 @@ requests / 15 min per account.
 
 A successful registration answers
 `{ "ok": true, "registered": { "roll_no": "21B81A05E9", "name": "..." } }`.
-A non-empty `displayName` (trimmed, max 40 chars) is the name the leaderboard
+A non-empty `displayName` (trimmed, max 40 chars) is the name the register
 shows for that roll.
 
 One roll belongs to one Telegram account. A second account claiming a roll

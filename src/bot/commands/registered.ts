@@ -75,7 +75,7 @@ export const resolveRegisteredRoll = async (
   }
 
   try {
-    // also refresh the tgusers mapping so the leaderboard stays consistent
+    // also refresh the tgusers mapping so the last-lookup suggestion stays consistent
     const student = await getStudentCached(registration.roll_no);
     void upsertTgUser(String(userId), student).catch(() => {});
     return registration.roll_no;

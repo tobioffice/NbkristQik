@@ -65,8 +65,8 @@ Monitor (oracle2) ──> /health, /internal/health, portal
   get a one-hour cache. `/status` sends the file from `public/status/index.html`
   with `Cache-Control: no-store` and a clean JSON 404 if the deploy did not
   copy it.
-- **API:** `/health`, `/api/*` including `/api/config`, `/api/leaderboard`,
-  `/api/me`, profile/registration, reports and library endpoints. They pass
+- **API:** `/health`, `/api/*` including `/api/config`, profile/registration,
+  reports and library endpoints. They pass
   through suspicious-request logging, body sanitization and an IP rate limit;
   validation and route-specific limits sit on top.
 - **Admin:** mounted at the secret `ADMIN_PANEL_PATH`, before the global API
@@ -92,21 +92,20 @@ Monitor (oracle2) ──> /health, /internal/health, portal
 Only the first present source is used. A bad header is not rescued by a valid
 query string. `verifyInitData()` checks the HMAC against the bot token, a
 24-hour `auth_date` window and a 5-minute future-skew allowance. A presented
-but invalid identity is `401` on `/api/leaderboard`, `/api/config`, `/api/me`
-and the other identity routes; it is never silently downgraded to anonymous.
+but invalid identity is `401` on `/api/config`, `/api/profile` and the other
+identity routes; it is never silently downgraded to anonymous.
 
 The unsigned numeric `userId` shortcut requires `ALLOW_DEV_IDENTITY=1` or
 `ENV=test`; `ENV=development` alone is not enough. `ENV` defaults to
 `production`.
 
-The same identity decision drives the leaderboard's privacy:
+The same identity decision drives the register's privacy. It is answered only
+in the chat (`/leaderboard` and the card's button), never over HTTP:
 
-- Anonymous: `name` is `NULL`, search matches rolls only, HTTP cache is public.
-- Verified: names and name search, HTTP cache is private.
-- Redis keys include the `names`/`anon` mode, so the two payloads are never
-  mixed.
-- A non-empty `display_name` from `registrations` overrides the college name
-  for that roll.
+- A private chat sees names, taken from `registrations.display_name` first and
+  the college name second.
+- A group message sees rolls only, because a group message gets forwarded.
+- Nothing about the register is cached: each ask reads the database.
 
 The library has a second step: `POST /api/library/session` verifies signed
 `initData` and exchanges it for an HttpOnly session cookie (`SameSite=None`
@@ -128,10 +127,9 @@ entitlement.
   `report_messages`, `report_reads`, `library_documents`, `library_reads`,
   `admin_sessions`, `uptime_log`.
 - **Redis** — caches student records (7d), attendance (1h), midmarks (2h) per
-  roll, leaderboard responses (60s), membership (1d), the tracker's per-user
-  write throttle, and library sessions. Leaderboard stats are written to the
-  database independently of Redis, so a cache outage cannot stop ranking data
-  from landing.
+  roll, membership (1d), the tracker's per-user write throttle, and library
+  sessions. Register stats are written to the database independently of Redis,
+  so a cache outage cannot stop ranking data from landing.
 - **Retention:** a startup prune plus a daily job removes
   `uptime_log`, `activity_log` and `library_reads` rows older than 95 days, and
   expired `admin_sessions`.
@@ -146,7 +144,7 @@ response, and typed errors (`ServerDownError`, `BlockedReportError`,
 `/syncdb` shares the same login and parsing helpers; its scrape is fail-closed,
 and its upsert is an atomic batch per chunk.
 
-## Leaderboard ranking
+## Register ranking
 
 Scores are projected into `student_stats` when a section response is cached.
 Ranks use `RANK()` over the **rounded** score only; the deterministic tiebreak
@@ -157,7 +155,7 @@ ties — see the notes in `src/db/student_stats.model.ts`.
 The displayed name is `COALESCE` of the newest non-empty registration
 `display_name` for the roll and the `studentsnew` college name. The name is
 selected as a scalar subquery, not by joining `registrations`, so duplicate
-historical rows cannot duplicate leaderboard rows.
+historical rows cannot duplicate register rows.
 
 ## Deployment topology
 

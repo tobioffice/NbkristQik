@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  ATTENDANCE_ROUTE,
+  HOME_ROUTE,
   hashFor,
   parseRouteHash,
   parseRoutePath,
@@ -8,23 +8,24 @@ import {
 } from "../src/route";
 
 describe("the hash router", () => {
-  it("opens the first screen for an empty or unknown address", () => {
-    expect(parseRouteHash("")).toEqual(ATTENDANCE_ROUTE);
-    expect(parseRouteHash("#/")).toEqual(ATTENDANCE_ROUTE);
-    expect(parseRouteHash("#/tgWebAppData=abc")).toEqual(ATTENDANCE_ROUTE);
+  it("opens the roll form for an empty or unknown address", () => {
+    expect(parseRouteHash("")).toEqual(HOME_ROUTE);
+    expect(parseRouteHash("#/")).toEqual(HOME_ROUTE);
+    expect(parseRouteHash("#/tgWebAppData=abc")).toEqual(HOME_ROUTE);
+    expect(parseRouteHash("#/rank")).toEqual(HOME_ROUTE);
+    expect(parseRouteHash("#/attendance")).toEqual(HOME_ROUTE);
   });
 
   it("ignores Telegram's launch data appended after the path", () => {
     expect(
-      parseRouteHash("#/rank?tgWebAppData=abc&tgWebAppVersion=8.0"),
-    ).toEqual({ section: "rank", issue: null, mine: false });
+      parseRouteHash("#/library?tgWebAppData=abc&tgWebAppVersion=8.0"),
+    ).toEqual({ section: "library", issue: null, mine: false });
     expect(parseRouteHash("#/issues/QIK-0007?tgWebAppData=abc").issue).toBe(
       "QIK-0007",
     );
   });
 
   it("reads every section", () => {
-    expect(parseRouteHash("#/rank").section).toBe("rank");
     expect(parseRouteHash("#/profile").section).toBe("profile");
     expect(parseRouteHash("#/library").section).toBe("library");
     expect(parseRouteHash("#/issues")).toEqual({
@@ -46,8 +47,7 @@ describe("the hash router", () => {
 
   it("writes the hash a route came from", () => {
     const routes = [
-      ATTENDANCE_ROUTE,
-      { section: "rank", issue: null, mine: false },
+      HOME_ROUTE,
       { section: "library", issue: null, mine: false },
       { section: "issues", issue: null, mine: false },
       { section: "issues", issue: null, mine: true },
@@ -61,9 +61,9 @@ describe("the hash router", () => {
 
 describe("a bot deep link", () => {
   it("folds ?page= into the hash the router reads", () => {
-    expect(takePageLink("https://x.test/library/?page=rank")).toEqual({
-      route: { section: "rank", issue: null, mine: false },
-      href: "/library/#/rank",
+    expect(takePageLink("https://x.test/library/?page=profile")).toEqual({
+      route: { section: "profile", issue: null, mine: false },
+      href: "/library/#/",
     });
   });
 
@@ -89,12 +89,15 @@ describe("a bot deep link", () => {
 
   it("is absent when the button named no page", () => {
     expect(takePageLink("https://x.test/library/")).toBeNull();
-    expect(takePageLink("https://x.test/library/#/rank")).toBeNull();
+    expect(takePageLink("https://x.test/library/#/profile")).toBeNull();
   });
 
-  it("lands unknown pages on the first screen instead of a blank sheet", () => {
+  it("lands retired pages on the roll form, not a blank sheet", () => {
+    expect(takePageLink("https://x.test/library/?page=rank")?.route).toEqual(
+      HOME_ROUTE,
+    );
     expect(takePageLink("https://x.test/library/?page=nope")?.route).toEqual(
-      ATTENDANCE_ROUTE,
+      HOME_ROUTE,
     );
   });
 });

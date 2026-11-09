@@ -243,8 +243,8 @@ const buildLeaderboardWhere = (
  * student_stats can contain scores for roll numbers that no longer exist in
  * studentsnew (student re-sectioned, typo'd roll, or roll wiped by a sync).
  * LEFT JOIN would list them with roll_no = NULL and no name — blank ghost
- * rows in the web leaderboard. Use an INNER JOIN so only students who exist
- * in the master table rank.
+ * rows in the register. Use an INNER JOIN so only students who exist in the
+ * master table rank.
  */
 const rankedSubQuery = (
   scoreExpr: string,

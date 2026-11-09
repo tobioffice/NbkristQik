@@ -421,7 +421,7 @@ async function flushCaches(ctx: SyncContext): Promise<void> {
       if (keys.length) await redis.del(keys);
     } while (cursor !== "0");
   }
-  p.lines.push(`🗑️ Cache flushed (student/attendance/midmarks/leaderboard)`);
+  p.lines.push(`🗑️ Cache flushed (student/attendance/midmarks)`);
 }
 
 /**

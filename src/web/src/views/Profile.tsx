@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { ROLL_REGEX } from "../api";
-import { useIdentity } from "../identity";
 import { useProfile } from "../useProfile";
 
 interface ProfileViewProps {
@@ -68,7 +67,6 @@ export default function ProfileView({
   onReportIssue,
 }: ProfileViewProps) {
   const { status, save, forgetLookup } = useProfile(tgUser, initData);
-  const identity = useIdentity();
   const [roll, setRoll] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -151,9 +149,11 @@ export default function ProfileView({
       setError(saveError);
       if (sugg) setSuggestions(sugg);
     } else {
-      setSaved(registered ? "Saved" : "Saved. /attendance, /midmarks and /bunk are ready now.");
-      // the shell's identity is now this registration; ask it again once
-      identity.refresh();
+      setSaved(
+        registered
+          ? "Saved"
+          : "Saved. /attendance, /midmarks and /bunk are ready now.",
+      );
     }
   };
 
@@ -163,8 +163,6 @@ export default function ProfileView({
     setForgetting(true);
     try {
       await forgetLookup();
-      // keep the shared identity's suggestion in step with the profile
-      identity.refresh();
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Could not forget that roll.",

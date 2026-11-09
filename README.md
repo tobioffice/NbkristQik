@@ -26,9 +26,9 @@ NbkristQik reads the college portal so students do not have to. Attendance
 percentages, mid-term marks and a "how much can I bunk?" plan arrive as a
 Telegram reply, formatted for a phone held in a corridor between classes.
 
-The same service also runs a Telegram Mini App with the live leaderboard, an
-optional roll-number profile, a watermarked library of semester material and a
-threaded issue desk. The maintainer gets a private admin panel for activity,
+The same service also runs a Telegram Mini App with an optional roll-number
+profile, a watermarked library of semester material and a threaded issue desk.
+Attendance and the register are answered only in the chat. The maintainer gets a private admin panel for activity,
 reports and uptime, and a public status page for service health.
 
 ## Features
@@ -39,8 +39,8 @@ reports and uptime, and a public status page for service health.
   and a bunk plan without leaving the chat.
 - **Optional registration** — save your roll once, then use `/attendance`,
   `/midmarks` and `/bunk` as one-tap commands. Edit it at any time.
-- **Live leaderboard** — the attendance register ranks students by attendance
-  or mid-term marks, filtered by year, branch and section.
+- **Live register** — `/leaderboard`, or the button on any card, prints the
+  attendance ranking for your section in the chat. Nothing to open.
 - **Library** — read your semester's syllabus units as paged documents,
   watermarked for the signed-in reader. Download a watermarked PDF, or open
   the shelf on a computer with a one-time link from the bot. The shelf is
@@ -190,7 +190,7 @@ The full list, with defaults, lives in [`.env.example`](.env.example) and
 | `/midmarks`    | Mid-term marks for your saved roll number            |
 | `/bunk`        | How many classes you can skip and stay above 75%     |
 | `/register`    | Save your roll number once, edit it any time         |
-| `/leaderboard` | Open the attendance register                         |
+| `/leaderboard` | Print the attendance register in the chat            |
 | `/library`     | Open your semester's library, when the shelf is open |
 | `/report`      | File an issue, or `/report <message>` directly       |
 | `/help`        | How the bot works                                    |

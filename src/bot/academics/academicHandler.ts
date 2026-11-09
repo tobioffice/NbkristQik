@@ -3,6 +3,7 @@ import type { CallbackQuery, Message } from "node-telegram-bot-api";
 
 import { sendAttendanceOrMidMarks, sendBunkPlan } from "./studentActions.js";
 import { cardMarkup } from "./cardMarkup.js";
+import { leaderboardText } from "./leaderboardCard.js";
 import { rememberGroupPrompt } from "./groupPrompt.js";
 import { getStudentCached } from "../../services/redis/utils.js";
 import { upsertTgUser } from "../../db/student.model.js";
@@ -92,7 +93,7 @@ const CALLBACK_ACTIONS: CallbackAction[] = [
 const actionFor = (data: string): CallbackAction | undefined =>
   CALLBACK_ACTIONS.find((action) => data.startsWith(action.prefix));
 
-// persist userId→roll for "You are #N" in the leaderboard web app
+// persist userId→roll for the register's "you" row
 // (best-effort — never block the card on it)
 const persistRollMapping = (userId: number, rollNumber: string): void => {
   void getStudentCached(rollNumber)
@@ -287,14 +288,10 @@ const handleSaveRoll = async (
 
   // The card stays on screen; only the Save button goes away.
   await bot
-    .editMessageReplyMarkup(
-      cardMarkup({
-        roll: rollNumber,
-        isPrivate: msg.chat.type === "private",
-        showSave: false,
-      }),
-      { chat_id: msg.chat.id, message_id: msg.message_id },
-    )
+    .editMessageReplyMarkup(cardMarkup({ roll: rollNumber, showSave: false }), {
+      chat_id: msg.chat.id,
+      message_id: msg.message_id,
+    })
     .catch((e: Error) =>
       logger.debug(
         "[academicHandler] save button hide skipped:",
@@ -369,6 +366,21 @@ const handleCallbackQuery = async (
       });
     }
     await handleSaveRoll(callbackQuery, msg);
+    return;
+  }
+
+  // the register has no roll in its callback: it is the same answer for
+  // everyone in the chat
+  if (data === "lb") {
+    const text = await leaderboardText({
+      userId,
+      withNames: msg.chat.type === "private",
+    });
+    await bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
+    await bot.sendMessage(msg.chat.id, text, {
+      parse_mode: "HTML",
+      reply_to_message_id: msg.message_id,
+    });
     return;
   }
 

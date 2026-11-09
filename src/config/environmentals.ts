@@ -58,9 +58,9 @@ const allowDevIdentity = (): boolean =>
 const LIBRARY_WATERMARK_SECRET =
   process.env.LIBRARY_WATERMARK_SECRET?.trim() || TELEGRAM_BOT_TOKEN || "";
 
-// Comma-separated allowlist for the web leaderboard origin(s). The leaderboard
-// is served same-origin from checker.tobioffice.dev now, so the old GitHub
-// Pages host is no longer the default; deployments can still override this.
+// Comma-separated allowlist for the web app origin(s). The app is served
+// same-origin from checker.tobioffice.dev, so that is the default; deployments
+// can still override this.
 const CORS_ORIGINS = (
   process.env.CORS_ORIGINS || "https://checker.tobioffice.dev"
 )

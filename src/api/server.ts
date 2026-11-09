@@ -3,27 +3,16 @@ import cors from "cors";
 import { existsSync } from "fs";
 import path from "path";
 import {
-  getLeaderboard,
-  getLeaderboardFacets,
-  getLeaderboardCoverage,
-  getLastSyncAt,
-  getStudentRank,
   getUptimeSummary,
   getUptimeDailyBuckets,
 } from "../db/student_stats.model.js";
-import { deleteTgUser, getTgUserRoll } from "../db/student.model.js";
-import { getRegistration } from "../db/registration.model.js";
-import { getStudentCached } from "../services/redis/utils.js";
-import { getClient } from "../services/redis/getRedisClient.js";
-import { redisKeys } from "../services/redis/keys.js";
-import { attachedIdentity, type Identity } from "./resolveUser.js";
+import { deleteTgUser } from "../db/student.model.js";
+import { attachedIdentity } from "./resolveUser.js";
 import {
   canOpenLibrary,
   canPreviewEverything,
 } from "../services/library/access.js";
-import { trackActivity } from "../services/tracker.js";
 import {
-  leaderboardSecurityMiddlewares,
   apiSecurityMiddlewares,
   securityLogger,
   createRateLimit,
@@ -32,14 +21,12 @@ import {
 } from "../middleware/security.js";
 import { PORT, HOST, CORS_ORIGINS } from "../config/environmentals.js";
 import { logger } from "../config/logger.js";
-import { isEmbeddedDatabase } from "../db/db.js";
 import { registerAdminRoutes } from "./admin/index.js";
 import { profileRouter } from "./profile.js";
 import { reportRouter } from "./report.js";
 import { libraryRouter } from "./library.js";
 import { readSessionFromCookies } from "../services/library/session.js";
 import { registerInternalRoutes } from "./internal.js";
-import { meAcademicsRouter } from "./meAcademics.js";
 
 export const app = express();
 
@@ -209,314 +196,6 @@ const librarySessionLimit = createRateLimit(
 app.use("/api/library/session", librarySessionLimit);
 app.use("/api/library", libraryRouter);
 
-interface LeaderboardFilters {
-  year?: string;
-  branch?: string;
-  section?: string;
-  search?: string;
-}
-
-type LeaderboardScopeMode = "me" | "all";
-
-interface LeaderboardScope {
-  year: string | null;
-  branch: string | null;
-  section: string | null;
-}
-
-interface LeaderboardQuery {
-  page: number;
-  limit: number;
-  sortBy: "attendance" | "midmarks";
-  /** `me` is the default; `all` is a deliberate whole-college request. */
-  scopeMode: LeaderboardScopeMode;
-  /** True when the client set at least one of year/branch/section. */
-  explicitScopeFilter: boolean;
-  /** The effective section context, or null for a whole-college page. */
-  scope: LeaderboardScope | null;
-  filters: LeaderboardFilters;
-}
-
-/**
- * The UI sends a year digit (1..4); older links may still carry the portal's
- * year-semester code (11/21/31/41, or a stale 12). Both resolve to the leading
- * digit, which is what the SQL filters on. `all` (or unparseable input) means
- * no filter rather than an empty page.
- */
-const normalizeYearFilter = (value: unknown): string | undefined => {
-  if (value == null || value === "all") return undefined;
-  const match = String(value)
-    .trim()
-    .match(/^([1-4])/);
-  return match ? match[1] : undefined;
-};
-
-const parseLeaderboardQuery = (
-  req: Request,
-  identity: Identity,
-): LeaderboardQuery => {
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 50;
-  const sortBy = (req.query.sort as "attendance" | "midmarks") || "attendance";
-
-  // Presence, not value: `branch=all` is an explicit "whole branch" choice
-  // and must override the caller's own branch, not silently re-apply it.
-  const explicitScopeFilter =
-    req.query.year != null ||
-    req.query.branch != null ||
-    req.query.section != null;
-
-  // `me` is the default only for a caller who can actually have a saved roll.
-  // An anonymous request defaults to `all`, which is also the mode the warm
-  // cache writes; otherwise the warm key would never be read.
-  const requestedScope = req.query.scope;
-  const scopeMode: LeaderboardScopeMode =
-    requestedScope === "all"
-      ? "all"
-      : requestedScope === "me"
-        ? "me"
-        : identity.status === "authenticated"
-          ? "me"
-          : "all";
-
-  const filters = {
-    year: normalizeYearFilter(req.query.year),
-    branch:
-      req.query.branch === "all" ? undefined : (req.query.branch as string),
-    section:
-      req.query.section === "all" ? undefined : (req.query.section as string),
-    search: req.query.search
-      ? String(req.query.search).trim().slice(0, 20)
-      : undefined,
-  };
-
-  return {
-    page,
-    limit,
-    sortBy,
-    scopeMode,
-    explicitScopeFilter,
-    scope: null,
-    filters,
-  };
-};
-
-/** The page's effective section context, or null when no filter is set. */
-const scopeFromFilters = (
-  filters: LeaderboardFilters,
-): LeaderboardScope | null => {
-  if (!filters.year && !filters.branch && !filters.section) return null;
-  return {
-    year: filters.year ?? null,
-    branch: filters.branch ?? null,
-    section: filters.section ?? null,
-  };
-};
-
-/**
- * Resolve the caller's own section from their *registration* and master row.
- * tgusers is the last looked-up roll (often a friend's), so it is never used
- * to decide what "my section" means. Failures fall back to the explicit
- * filters rather than failing the leaderboard.
- */
-const resolveCallerScope = async (
-  userId: string,
-): Promise<LeaderboardScope | null> => {
-  try {
-    const registration = await getRegistration(userId);
-    if (!registration) return null;
-
-    const student = await getStudentCached(registration.roll_no);
-    const year = normalizeYearFilter(student.year);
-    if (!year) return null;
-
-    return {
-      year,
-      branch: student.branch ? String(student.branch) : null,
-      section: student.section ? String(student.section) : null,
-    };
-  } catch (e) {
-    logger.debug("[API] leaderboard scope lookup failed:", e);
-    return null;
-  }
-};
-
-/**
- * Apply `scope=me` only when the caller has a registration *and* did not
- * choose a filter explicitly. An explicit filter (including `all`) always
- * wins; `scope=all` never applies the caller's section.
- */
-const applyLeaderboardScope = async (
-  query: LeaderboardQuery,
-  identity: Identity,
-): Promise<void> => {
-  if (
-    query.scopeMode === "me" &&
-    !query.explicitScopeFilter &&
-    identity.status === "authenticated"
-  ) {
-    query.scope = await resolveCallerScope(identity.userId);
-    if (query.scope) {
-      query.filters = {
-        ...query.filters,
-        year: query.scope.year ?? undefined,
-        branch: query.scope.branch ?? undefined,
-        section: query.scope.section ?? undefined,
-      };
-      return;
-    }
-  }
-
-  query.scope = scopeFromFilters(query.filters);
-};
-
-/**
- * Cache key. The `names`/`anon` segment is security-critical: a cached
- * identified page carries names and must never be served to an anonymous
- * caller (or vice versa: an empty anonymous page must not hide names from a
- * signed-in student on the next request).
- *
- * The scope mode and the resolved year:branch:section are correctness-
- * critical: two callers using `scope=me` from different sections must never
- * share a cached page, even if a filter resolution fails or a warm job writes
- * a similarly shaped key.
- */
-const leaderboardCacheKey = (
-  q: LeaderboardQuery,
-  includeNames: boolean,
-): string => {
-  const scopeKey = q.scope
-    ? `${q.scope.year ?? ""}:${q.scope.branch ?? ""}:${q.scope.section ?? ""}`
-    : "-";
-  return redisKeys.leaderboard(
-    `${includeNames ? "names" : "anon"}:${q.scopeMode}:${scopeKey}:${q.sortBy}:${q.page}:${q.limit}:${q.filters.year || "all"}:${q.filters.branch || "all"}:${q.filters.section || "all"}:${q.filters.search || ""}`,
-  );
-};
-
-// 60s Redis cache per unique query — protects Turso read quota (best-effort)
-const getCachedLeaderboard = async (
-  cacheKey: string,
-): Promise<string | null> => {
-  try {
-    return await getClient().then((c) => c.get(cacheKey));
-  } catch (e) {
-    logger.warn("[API] leaderboard cache read failed:", e);
-    return null;
-  }
-};
-
-const cacheLeaderboard = async (cacheKey: string, payload: object) => {
-  try {
-    await getClient().then((c) =>
-      c.set(cacheKey, JSON.stringify(payload), { EX: 60 }),
-    );
-  } catch (e) {
-    logger.warn("[API] leaderboard cache write failed:", e);
-  }
-};
-
-const buildLeaderboardPayload = async (
-  query: LeaderboardQuery,
-  includeNames: boolean,
-) => {
-  const { rows, total } = await getLeaderboard(
-    query.sortBy,
-    query.limit,
-    (query.page - 1) * query.limit,
-    query.filters,
-    // Names (and name search) only for a verified Telegram identity. The DB
-    // nulls the column and restricts search for anonymous callers.
-    { includeNames, searchNames: includeNames },
-  );
-
-  // Freshness, the live section list and coverage belong to the first page
-  // only; later pages already have them, and each extra query costs Turso
-  // reads. A search has no denominator, so its coverage is null.
-  const asOf =
-    query.page === 1
-      ? await Promise.all([
-          getLastSyncAt(query.sortBy),
-          getLeaderboardFacets(query.filters),
-          query.filters.search
-            ? Promise.resolve(null)
-            : getLeaderboardCoverage(query.filters),
-        ])
-      : null;
-
-  const known = asOf ? asOf[2] : null;
-
-  // Defence in depth: the SQL already selects NULL for anonymous callers,
-  // but never serialize a name just because a stale/other-layer row carried
-  // one. The public cache must be name-free at the point it is written.
-  const data = includeNames
-    ? rows
-    : rows.map((row) => ({ ...row, name: null }));
-
-  return {
-    success: true,
-    page: query.page,
-    limit: query.limit,
-    total,
-    data,
-    updated_at: asOf ? asOf[0].newest : null,
-    // Keep updated_at = newest for one release (older clients read it); the
-    // range is additive so the UI can say "newest 2 min ago, oldest 6 days".
-    freshness: asOf ? asOf[0] : null,
-    facets: asOf ? { sections: asOf[1] } : null,
-    scope: query.scope,
-    // `ranked` is how many students the register actually has for this view;
-    // `known` is the directory count for the same filters. Never present
-    // ranked as the whole college.
-    coverage: asOf && known != null ? { ranked: total, known } : null,
-  };
-};
-
-// API Routes
-app.get(
-  "/api/leaderboard",
-  leaderboardSecurityMiddlewares,
-  async (req: Request, res: Response) => {
-    try {
-      const identity = attachedIdentity(req, res);
-      if (identity.status === "invalid") {
-        // A presented-but-bad signature is never downgraded to anonymous:
-        // that would let a broken client silently change what it sees.
-        res.status(401).json({ success: false, error: identity.error });
-        return;
-      }
-
-      const identified = identity.status === "authenticated";
-      const query = parseLeaderboardQuery(req, identity);
-      await applyLeaderboardScope(query, identity);
-      const cacheKey = leaderboardCacheKey(query, identified);
-
-      // Identified payloads carry names, so they go to one browser only;
-      // anonymous payloads are identical for everyone and may be shared. The
-      // response varies on the identity header either way, so a shared cache
-      // cannot hand an identified page to an anonymous caller.
-      res.vary("X-Telegram-Init-Data");
-      res.set(
-        "Cache-Control",
-        identified ? "private, max-age=30" : "public, max-age=30",
-      );
-
-      const cached = await getCachedLeaderboard(cacheKey);
-      if (cached) {
-        res.json(JSON.parse(cached));
-        return;
-      }
-
-      const payload = await buildLeaderboardPayload(query, identified);
-      await cacheLeaderboard(cacheKey, payload);
-
-      res.json(payload);
-    } catch (error) {
-      logger.error("Error fetching leaderboard:", error);
-      res.status(500).json({ success: false, error: "Internal Server Error" });
-    }
-  },
-);
-
 /**
  * Public, identity-aware feature flags. The frontend uses this to hide the
  * library when it is closed (the admin can still open it) and to show admin
@@ -560,80 +239,6 @@ app.get("/api/config", async (req: Request, res: Response) => {
   }
 });
 
-app.use("/api", meAcademicsRouter);
-
-app.get(
-  "/api/me",
-  leaderboardSecurityMiddlewares,
-  async (req: Request, res: Response) => {
-    res.set("Cache-Control", "private, no-store");
-    try {
-      const identity = attachedIdentity(req, res);
-      if (identity.status === "anonymous") {
-        res
-          .status(401)
-          .json({ found: false, error: "Telegram initData required" });
-        return;
-      }
-      if (identity.status === "invalid") {
-        res.status(401).json({ found: false, error: identity.error });
-        return;
-      }
-
-      // a verified initData call means the student opened the leaderboard
-      // web app — worth counting even if they have no roll mapped yet
-      trackActivity({
-        userId: Number(identity.userId),
-        chatType: "unknown",
-        action: "leaderboard_webapp",
-      });
-
-      // Identity is the registration, nothing else. tgusers is auto-upserted
-      // by every lookup (including a friend's), so treating it as identity
-      // made the app say "Reading as" the friend and show their rank.
-      const registration = await getRegistration(identity.userId).catch(
-        () => null,
-      );
-      if (!registration) {
-        const lastLookup = await getTgUserRoll(identity.userId).catch(
-          () => null,
-        );
-        res.json({ found: false, lastLookup });
-        return;
-      }
-
-      const rollNo = registration.roll_no;
-      const [attendance, midmarks] = await Promise.all([
-        getStudentRank(rollNo, "attendance"),
-        getStudentRank(rollNo, "midmarks"),
-      ]);
-
-      res.json({
-        found: true,
-        source: "registered",
-        roll_no: rollNo,
-        attendance: attendance
-          ? {
-              rank: attendance.rank,
-              total: attendance.total,
-              value: attendance.value,
-            }
-          : null,
-        midmarks: midmarks
-          ? {
-              rank: midmarks.rank,
-              total: midmarks.total,
-              value: midmarks.value,
-            }
-          : null,
-      });
-    } catch (error) {
-      logger.error("Error fetching /api/me:", error);
-      res.status(500).json({ found: false, error: "Internal Server Error" });
-    }
-  },
-);
-
 /**
  * Forgets the caller's last-lookup roll. Requires a verified identity; the
  * registration (if any) is untouched. Useful when a friend's roll is stuck as
@@ -670,50 +275,6 @@ app.get("/health", securityLogger, (_req: Request, res: Response) => {
     version: "1.0.0",
   });
 });
-
-/**
- * The 60 s Redis cache only helps while traffic is flowing. With a small user
- * base, the first student to open the app after a quiet minute otherwise pays
- * the full ~1 s cold Turso query before the first row renders. Keeping the
- * two default views warm costs two queries every 50 s, before the TTL can
- * lapse, so every open hits the cache.
- */
-const WARM_LEADERBOARD_QUERIES: LeaderboardQuery[] = [
-  {
-    page: 1,
-    limit: 20,
-    sortBy: "attendance",
-    scopeMode: "all",
-    explicitScopeFilter: false,
-    scope: null,
-    filters: {},
-  },
-  {
-    page: 1,
-    limit: 20,
-    sortBy: "midmarks",
-    scopeMode: "all",
-    explicitScopeFilter: false,
-    scope: null,
-    filters: {},
-  },
-];
-
-const warmLeaderboardCache = async () => {
-  await Promise.all(
-    WARM_LEADERBOARD_QUERIES.map(async (query) => {
-      try {
-        // warm the anonymous payload only: names stay behind identity
-        await cacheLeaderboard(
-          leaderboardCacheKey(query, false),
-          await buildLeaderboardPayload(query, false),
-        );
-      } catch (e) {
-        logger.debug("[API] leaderboard warm refresh failed:", e);
-      }
-    }),
-  );
-};
 
 // Pro status page — 90-day uptime summary + daily bars.
 // The underlying data only changes on the 5-min probe, so the assembled
@@ -812,18 +373,5 @@ export const startServer = () => {
     logger.error("[API] server error:", e);
   });
 
-  // The warm loop is a Turso-era latency workaround. With the embedded file
-  // the default query is local and cheap, so do not spend a query every 50 s
-  // in the background. Remote deployments keep the original behaviour until
-  // the cutover is verified.
-  if (!isEmbeddedDatabase) {
-    void warmLeaderboardCache();
-    const warmTimer = setInterval(() => {
-      void warmLeaderboardCache();
-    }, 50_000);
-    warmTimer.unref();
-  } else {
-    logger.info("[API] embedded database: leaderboard warm loop disabled");
-  }
   return server;
 };

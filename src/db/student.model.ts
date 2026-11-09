@@ -2,7 +2,7 @@ import { turso } from "./db.js";
 import { Student } from "../types/index.js";
 
 /**
- * Persist userId→rollNo mapping for "You are #N" on the web leaderboard.
+ * Persist the userId→rollNo mapping the register reads.
  * Fire-and-forget from the bot flow; failures must never break the user.
  */
 export const upsertTgUser = async (

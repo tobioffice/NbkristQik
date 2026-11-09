@@ -1,15 +1,21 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Band from "./components/Band";
 import BandStampProvider from "./BandStampProvider";
 import type { BandStamp } from "./bandStamp";
 import { useBackHandler } from "./backButton";
-import { IdentityProvider } from "./identity";
 import { useAppConfig } from "./useAppConfig";
 import { useTelegramIdentity } from "./useTelegramIdentity";
 import { haptic } from "./telegram";
 import type { IssuesRoute } from "./issuesRoute";
 import {
-  ATTENDANCE_ROUTE,
+  HOME_ROUTE,
   hashFor,
   parseRouteHash,
   takePageLink,
@@ -17,29 +23,27 @@ import {
   type Section,
 } from "./route";
 import ProfileView from "./views/Profile";
-import MyAttendance from "./views/MyAttendance";
 
-// The reader, the issue desk and the register are their own chunks: the first
-// screen (MyAttendance) and the tiny profile form stay in the entry. Each
-// route chunk is fetched the first time its tab opens, not before.
+// The reader and the issue desk are their own chunks; the first screen (the
+// roll form) stays in the entry. Each route chunk is fetched the first time
+// its tab opens, not before.
 const LibraryView = lazy(() => import("./views/LibraryView"));
 const Issues = lazy(() => import("./views/Issues"));
-const Leaderboard = lazy(() => import("./Leaderboard"));
 
 /**
  * The app: every surface the bot has, on one sheet.
  *
- * The first screen is the student's own attendance, not a cover that has to
- * be navigated before the useful answer. The cloth band says where you are
- * and the tabs at the foot turn to another section without leaving the sheet.
+ * The first screen is the roll form. Attendance and the register live only in
+ * the bot: the answer arrives with the bot's ad, and this sheet never becomes
+ * a second place to read it. The cloth band says where you are and the tabs at
+ * the foot turn to another section without leaving the sheet.
  *
  * Routes live in the hash, so a reload lands on the same page. Bot buttons
  * name their section in `?page=`, because Telegram replaces the fragment with
  * its own launch data; the shell folds it into the hash at startup:
- *   #/                    my attendance (the first screen)
- *   #/rank                the attendance register
+ *   #/                    the roll form (the first screen)
+ *   #/profile             the same form, by name
  *   #/library             the shelf
- *   #/profile             the student's roll
  *   #/issues              report an issue
  *   #/issues/reports      the reporter's own list
  *   #/issues/QIK-0007     one conversation
@@ -52,20 +56,10 @@ interface SectionEntry {
   icon: string;
 }
 
-// The tab order is the order a student reads the app: their own attendance,
-// then the register, then their roll and the way to report a problem. The
-// shelf is last and appears only when the server opens it.
+// The tab order is the order a student needs the app: their roll first (the
+// bot's commands depend on it), then the way to report a problem. The shelf is
+// last and appears only when the server opens it.
 const SECTIONS: SectionEntry[] = [
-  {
-    section: "attendance",
-    tab: "Attendance",
-    icon: "M5 4.5h14v15H5zM8 9h8M8 12.5h8M8 16h5",
-  },
-  {
-    section: "rank",
-    tab: "Ranks",
-    icon: "M4 19V11M10 19V5M16 19V14M21 19H3",
-  },
   {
     section: "profile",
     tab: "Profile",
@@ -100,7 +94,7 @@ const readPcToken = (): string | undefined => {
  * tab tap is not overruled by a stale deep link.
  */
 const routeAtStartup = (): Route => {
-  if (typeof window === "undefined") return ATTENDANCE_ROUTE;
+  if (typeof window === "undefined") return HOME_ROUTE;
   const link = takePageLink(window.location.href);
   if (!link) return parseRouteHash(window.location.hash);
   try {
@@ -113,10 +107,8 @@ const routeAtStartup = (): Route => {
 
 /** The band's context line, by section. */
 const BAND_SUB: Record<Section, string> = {
-  attendance: "My attendance",
-  rank: "Attendance register",
-  library: "Library",
   profile: "Student profile",
+  library: "Library",
   issues: "Issue reports",
 };
 
@@ -188,13 +180,13 @@ export default function AppShell() {
       "",
       `${window.location.pathname}${window.location.search}#/`,
     );
-    setRoute(ATTENDANCE_ROUTE);
+    setRoute(HOME_ROUTE);
     setImmersive(false);
   }, [appConfig.loading, libraryAllowed, route.section]);
 
   // the Telegram arrow walks back out of a section; inside a conversation it
   // goes to the list first, the same trail the buttons walk
-  const goHome = useCallback(() => go(ATTENDANCE_ROUTE), [go]);
+  const goHome = useCallback(() => go(HOME_ROUTE), [go]);
   const goBack = useCallback(() => {
     if (route.section === "issues" && route.issue) {
       go({ section: "issues", issue: null, mine: true });
@@ -202,7 +194,7 @@ export default function AppShell() {
     }
     goHome();
   }, [go, goHome, route.section, route.issue]);
-  useBackHandler(route.section === "attendance" || immersive ? null : goBack);
+  useBackHandler(route.section === "profile" || immersive ? null : goBack);
 
   const onIssuesRoute = useCallback(
     (next: IssuesRoute) =>
@@ -215,81 +207,68 @@ export default function AppShell() {
   );
 
   return (
-    <IdentityProvider>
-      <div className="app">
-        <div className="sheet">
-          {!immersive && (
-            <Band
-              sub={BAND_SUB[route.section]}
-              stamp={stamp}
-              onHome={route.section === "attendance" ? undefined : goHome}
-            />
-          )}
+    <div className="app">
+      <div className="sheet">
+        {!immersive && (
+          <Band
+            sub={BAND_SUB[route.section]}
+            stamp={stamp}
+            onHome={route.section === "profile" ? undefined : goHome}
+          />
+        )}
 
-          <BandStampProvider onChange={setStamp}>
-            <main className="shell-body">
-              <Suspense fallback={<PageLoading />}>
-                {route.section === "attendance" && (
-                  <MyAttendance
-                    onReport={() =>
-                      go({ section: "issues", issue: null, mine: false })
-                    }
-                    onProfile={() =>
-                      go({ section: "profile", issue: null, mine: false })
-                    }
-                  />
-                )}
-                {route.section === "rank" && <Leaderboard showBand={false} />}
-                {route.section === "library" && libraryAllowed && (
-                  <LibraryView
-                    initData={initData}
-                    pcToken={pcToken}
-                    onPcConsumed={onPcConsumed}
-                    onImmersiveChange={setImmersive}
-                  />
-                )}
-                {route.section === "profile" && (
-                  <ProfileSection
-                    onReportIssue={() =>
-                      go({ section: "issues", issue: null, mine: false })
-                    }
-                  />
-                )}
-                {route.section === "issues" && (
-                  <IssuesSection
-                    route={{
-                      view: route.issue
-                        ? "thread"
-                        : route.mine
-                          ? "history"
-                          : "form",
-                      issue: route.issue,
-                    }}
-                    onRoute={onIssuesRoute}
-                  />
-                )}
-              </Suspense>
-            </main>
-          </BandStampProvider>
-
-          {!immersive && (
-            <nav className="tabbar" aria-label="Sections">
-              {visibleSections.map((entry) => (
-                <Tab
-                  key={entry.section}
-                  label={entry.tab}
-                  icon={entry.icon}
-                  active={route.section === entry.section}
-                  onClick={() =>
-                    go({ section: entry.section, issue: null, mine: false })
+        <BandStampProvider onChange={setStamp}>
+          <main className="shell-body">
+            <Suspense fallback={<PageLoading />}>
+              {route.section === "library" && libraryAllowed && (
+                <LibraryView
+                  initData={initData}
+                  pcToken={pcToken}
+                  onPcConsumed={onPcConsumed}
+                  onImmersiveChange={setImmersive}
+                />
+              )}
+              {route.section === "profile" && (
+                <ProfileSection
+                  onReportIssue={() =>
+                    go({ section: "issues", issue: null, mine: false })
                   }
                 />
-              ))}
-            </nav>
-          )}
-        </div>
+              )}
+              {route.section === "issues" && (
+                <IssuesSection
+                  route={{
+                    view: route.issue
+                      ? "thread"
+                      : route.mine
+                        ? "history"
+                        : "form",
+                    issue: route.issue,
+                  }}
+                  onRoute={onIssuesRoute}
+                />
+              )}
+            </Suspense>
+          </main>
+        </BandStampProvider>
+
+        {!immersive && (
+          <nav className="tabbar" aria-label="Sections">
+            {visibleSections.map((entry) => (
+              <Tab
+                key={entry.section}
+                label={entry.tab}
+                icon={entry.icon}
+                active={route.section === entry.section}
+                onClick={() =>
+                  go({ section: entry.section, issue: null, mine: false })
+                }
+              />
+            ))}
+          </nav>
+        )}
       </div>
-    </IdentityProvider>
+    </div>
   );
 }
 

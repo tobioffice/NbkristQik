@@ -1,12 +1,11 @@
 import { getRegistration } from "../../db/registration.model.js";
 import { logger } from "../../config/logger.js";
-import { WEBAPP_URL } from "../../constants/webapp.js";
 
 /**
  * The keyboard that travels with every attendance card.
  *
  * A card is not a dead end: the student can switch to mid marks, ask for a
- * bunk plan, save the roll, or open the leaderboard without typing the roll
+ * bunk plan, save the roll, or pull the register without typing the roll
  * again. The same markup is rebuilt for each render so the Save button
  * disappears as soon as the roll belongs to the reader.
  */
@@ -23,23 +22,18 @@ export interface CardMarkup {
 
 export const cardMarkup = ({
   roll,
-  isPrivate,
   showSave,
 }: {
   roll: string;
-  isPrivate: boolean;
   showSave: boolean;
 }): CardMarkup => {
   const secondRow: InlineKeyboardButton[] = [];
   if (showSave) {
     secondRow.push({ text: "Save this roll", callback_data: `save_${roll}` });
   }
-  secondRow.push(
-    // web_app buttons are private-only; groups get a plain link
-    isPrivate
-      ? { text: "Leaderboard", web_app: { url: WEBAPP_URL } }
-      : { text: "Leaderboard", url: WEBAPP_URL },
-  );
+  // The register is answered in the chat, the same as /leaderboard: no
+  // second surface, and a group tap is safe.
+  secondRow.push({ text: "Leaderboard", callback_data: "lb" });
 
   return {
     inline_keyboard: [

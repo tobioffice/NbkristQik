@@ -38,7 +38,7 @@ beforeAll(async () => {
       )`,
       `INSERT INTO studentsnew VALUES ('26KB5A0218', 'BILLE PRANTH', '-', '2', '21')`,
       `INSERT INTO studentsnew VALUES ('26KB5A0219', 'TEST NEIGHBOUR', '-', '2', '21')`,
-      // /api/me reads ranks; the profile suite only needs the two rolls above
+      // kept for the registration flow's master rows
       `CREATE TABLE student_stats (
         roll_no TEXT PRIMARY KEY,
         attendance_percentage REAL,
@@ -214,41 +214,9 @@ describe("profile endpoints", () => {
   });
 });
 
-describe("/api/me identity preference", () => {
-  it("prefers the explicit registration roll over the last lookup", async () => {
-    // tgusers says 0218 (last lookup); the registration pins 0219
-    await upsertRegistration("555666777", "26KB5A0219", "Preference");
-
-    const res = await request(app).get("/api/me?userId=555666777");
-
-    expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({
-      found: true,
-      source: "registered",
-      roll_no: "26KB5A0219",
-    });
-    expect(res.body.attendance).toBeTruthy();
-  });
-
-  it("does not treat the last lookup as identity", async () => {
-    const res = await request(app).get("/api/me?userId=111222333");
-
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual({
-      found: false,
-      lastLookup: "26KB5A0219",
-    });
-  });
-
-  it("reports found:false when neither registration nor lookup has a roll", async () => {
-    const res = await request(app).get("/api/me?userId=424242424");
-
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual({ found: false, lastLookup: null });
-  });
-
+describe("forgetting the last lookup", () => {
   it("DELETE /api/me/last-lookup forgets the caller's lookup", async () => {
-    const before = await request(app).get("/api/me?userId=111222333");
+    const before = await request(app).get("/api/profile?userId=111222333");
     expect(before.body.lastLookup).toBe("26KB5A0219");
 
     const res = await request(app).delete(
@@ -257,11 +225,8 @@ describe("/api/me identity preference", () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ ok: true });
 
-    const after = await request(app).get("/api/me?userId=111222333");
-    expect(after.body).toEqual({ found: false, lastLookup: null });
-
-    const profile = await request(app).get("/api/profile?userId=111222333");
-    expect(profile.body).toEqual({
+    const after = await request(app).get("/api/profile?userId=111222333");
+    expect(after.body).toEqual({
       found: false,
       lastLookup: null,
       suggestion: null,

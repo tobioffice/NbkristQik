@@ -6,7 +6,7 @@ export const panelJs = `(function () {
 
   var ACTION_LABELS = {
     "roll_lookup": "Roll lookup", "attendance": "Attendance", "midmarks": "Mid marks",
-    "bunk": "Bunk plan", "leaderboard_webapp": "Opened leaderboard",
+    "bunk": "Bunk plan",
     "command:start": "/start", "command:help": "/help", "command:leaderboard": "/leaderboard",
     "report": "Report to admin", "report_followup": "Thread follow-up"
   };

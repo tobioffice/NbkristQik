@@ -147,7 +147,7 @@ A restrained, warm palette of paper and ink with one marking pen.
 
 ## Layout
 
-Phone-first single column, full-bleed on the sheet. At 720px and up the register sits as one 560px centered sheet on the cloth-deep desk; the admin panel becomes a full-width paper workspace (main capped at 1060px) under its cloth band. The leaderboard's row grid is fixed and narrow — rank 38px, roll 94px, name 1fr, score 62px — so the table scans identically on every phone. Rhythm: 4/8/16/24px in components, 44px between admin sections, more space above a heading than below it. Form controls on phones are 16px to prevent browser zoom.
+Phone-first single column, full-bleed on the sheet. At 720px and up the register sits as one 560px centered sheet on the cloth-deep desk; the admin panel becomes a full-width paper workspace (main capped at 1060px) under its cloth band. The register-style row grid is fixed and narrow — rank 38px, roll 94px, name 1fr, score 62px — so the table scans identically on every phone. Rhythm: 4/8/16/24px in components, 44px between admin sections, more space above a heading than below it. Form controls on phones are 16px to prevent browser zoom.
 
 ### Named Rules
 **The Sheet Rule.** Phones get the register edge to edge; desktops get one sheet on the desk. Never two overlapping panels, never a card grid.

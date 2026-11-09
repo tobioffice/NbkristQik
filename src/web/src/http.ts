@@ -33,7 +33,7 @@ export const REQUEST_TIMEOUT_MS = 15_000;
  *
  * A phone on a weak line can sit on a request for minutes; the screen then
  * waits on a spinner that will never resolve. Every call gets the same 15s
- * ceiling, and an abort from the caller (a superseded leaderboard page, for
+ * ceiling, and an abort from the caller (a superseded issue thread, for
  * example) still passes through untouched.
  */
 export const fetchWithTimeout = async (

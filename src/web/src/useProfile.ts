@@ -25,7 +25,7 @@ type ProfileStatus =
 
 /**
  * Profile/registration data layer: loads the caller's registration and
- * submits edits. Same identity rules as useTelegramUser — initData inside
+ * submits edits. Identity rules are the same everywhere: initData inside
  * Telegram, dev userId shortcut outside.
  */
 export const useProfile = (

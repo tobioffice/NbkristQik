@@ -16,7 +16,7 @@ async function createRedisClient() {
   const client = createClient({
     url: REDIS_URL,
     // bound the reconnect loop: if Redis stays down, connect() settles with
-    // an error so callers can fall back (e.g. leaderboard serves from DB)
+    // an error so callers can fall back (e.g. the student cache reads the DB)
     socket: {
       reconnectStrategy: (retries) => {
         if (retries > 3) {

@@ -60,8 +60,8 @@ const clearGroupPrompts = (userId: number, rollNumber: string): void => {
  *
  * The group tap writes no lookup: this request is the lookup, so it carries
  * the same validation, rate limit and channel gate as a typed roll, and then
- * answers here in the DM. The leaderboard identity is registration, not the
- * last lookup, so no roll-to-user mapping is written.
+ * answers here in the DM. The register reads the registration, not the last
+ * lookup, so no roll-to-user mapping is written.
  */
 const answerDeepLinkRoll = async (
   msg: Message,

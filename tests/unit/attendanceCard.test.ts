@@ -74,6 +74,21 @@ vi.mock("../../src/services/redis/utils.js", () => ({
   getStudentCached: vi.fn(async () => ({ roll_no: "25KB1A05AR" })),
 }));
 vi.mock("../../src/db/student.model.js", () => ({ upsertTgUser: vi.fn() }));
+vi.mock("../../src/db/student_stats.model.js", () => ({
+  getLeaderboard: vi.fn(async () => ({
+    rows: [
+      {
+        roll_no: "25KB1A05AA",
+        name: "FIRST STUDENT",
+        attendance_percentage: 91.5,
+        mid_marks_avg: 24.5,
+        rank: 1,
+      },
+    ],
+    total: 1,
+  })),
+  getStudentRank: vi.fn(async () => ({ rank: 4, total: 60, value: 88.1 })),
+}));
 vi.mock("../../src/services/tracker.js", () => ({ trackActivity: vi.fn() }));
 vi.mock("../../src/bot/authorization.js", () => ({
   isAuthorizedUser: vi.fn(async () => true),
@@ -94,7 +109,7 @@ const { getRegistration, upsertRegistration, RollAlreadyRegisteredError } =
 const { trackActivity } = await import("../../src/services/tracker.js");
 const { upsertTgUser } = await import("../../src/db/student.model.js");
 const { getStudentCached } = await import("../../src/services/redis/utils.js");
-const { WEBAPP_URL } = await import("../../src/constants/webapp.js");
+const { getLeaderboard } = await import("../../src/db/student_stats.model.js");
 const { takeGroupPrompts } =
   await import("../../src/bot/academics/groupPrompt.js");
 
@@ -203,8 +218,9 @@ describe("attendance card", () => {
     const leaderboard = buttonsIn(options.reply_markup).find(
       (button) => button.text === "Leaderboard",
     );
-    // private chat: the leaderboard opens inside Telegram
-    expect(leaderboard?.web_app).toEqual({ url: WEBAPP_URL });
+    // the register is answered in the same chat, never on a second surface
+    expect(leaderboard?.callback_data).toBe("lb");
+    expect(leaderboard?.web_app).toBeUndefined();
   });
 
   it.each(["group", "supergroup"])(
@@ -253,15 +269,32 @@ describe("attendance card", () => {
     expect(takeGroupPrompts(218, "25KB1A05AR")).toEqual([]);
   });
 
-  it("keeps a plain leaderboard link when an old group card is tapped", async () => {
-    await tap(210, "att_25KB1A05AR", 9, "group");
+  it("answers a Leaderboard tap in the chat, by roll in a group", async () => {
+    await tap(210, "lb", 9, "group");
 
-    const [, options] = lastEdit();
-    const leaderboard = buttonsIn(options.reply_markup).find(
-      (button) => button.text === "Leaderboard",
-    );
-    expect(leaderboard?.url).toBe(WEBAPP_URL);
-    expect(leaderboard?.web_app).toBeUndefined();
+    const [, text, options] = sentMessage(sendMessage);
+    expect(text).toContain("Attendance register");
+    expect(text).toContain("25KB1A05AA");
+    // a group message is forwarded: no classmate's name
+    expect(text).not.toContain("FIRST STUDENT");
+    expect(options.parse_mode).toBe("HTML");
+    expect(getLeaderboard).toHaveBeenCalled();
+  });
+
+  it("names the register's top rows in a private chat, and the caller's rank", async () => {
+    vi.mocked(getRegistration).mockResolvedValue({
+      userId: "211",
+      roll_no: "25KB1A05AR",
+      display_name: null,
+      registered_at: "2026-01-01 00:00:00",
+      updated_at: "2026-01-01 00:00:00",
+    });
+
+    await tap(211, "lb");
+
+    const [, text] = sentMessage(sendMessage);
+    expect(text).toContain("FIRST STUDENT");
+    expect(text).toContain("You are #4 of 60 at 88.10%.");
   });
 
   it("edits the tapped card in place and never deletes it", async () => {

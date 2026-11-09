@@ -1,8 +1,8 @@
 /**
  * Where the bot sends a student.
  *
- * One app holds every surface now: the register, the shelf, the roll and the
- * issue desk are sections of it, reached by a hash route. It is served from
+ * One app holds the roll, the issue desk and the shelf, reached by a hash
+ * route. Attendance and the register are answered only in the chat. It is served from
  * our own host rather than GitHub Pages, because the library's session cookie
  * has to be first-party or iOS drops it and the reader is signed out on every
  * open.
@@ -28,9 +28,6 @@ const section = (route: string): string => {
     .join("/");
   return `${APP_BASE}?page=${page}`;
 };
-
-/** Leaderboard: the attendance register. */
-export const WEBAPP_URL = section("/rank");
 
 /** The profile form. */
 export const REGISTER_WEBAPP_URL = section("/profile");
