@@ -50,7 +50,7 @@ describe("Academic Integration Tests", () => {
       const message = await academicTG.getAttendanceMessage();
 
       expect(message).toContain("21B81A05E9");
-      expect(message).toContain("3_CSE_A");
+      expect(message).toContain("3 CSE A");
       expect(message).toBeTruthy();
     });
 

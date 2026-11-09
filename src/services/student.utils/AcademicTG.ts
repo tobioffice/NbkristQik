@@ -33,9 +33,11 @@ export class AcademicTG extends Academic {
    */
   private withFreshnessNotice(body: string): string {
     const notice = this.getDataNotice();
-    // The notice carries its own compact marker (🕘 cached / ⚠️ offline), so
-    // a cached answer is not framed as a warning.
-    return notice ? `<i>${notice}</i>\n\n${body}` : body;
+    // The stamp rides at the foot of the card: the numbers open the card, and
+    // freshness is the last thing a reader checks. The notice carries its own
+    // compact marker (🕘 cached / ⚠️ offline), so a cached answer is not framed
+    // as a warning.
+    return notice ? `${body}\n\n<i>${notice}</i>` : body;
   }
 
   /**

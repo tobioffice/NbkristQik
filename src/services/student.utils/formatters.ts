@@ -80,6 +80,38 @@ const belowTargetLine = (
 };
 
 /**
+ * The portal's own branch string reads "2_ECE_D"; a room reads "2 ECE D".
+ * The separators are underscores and the section can end bare, so this only
+ * swaps the separators, squeezes the spaces and drops a dangling dash.
+ */
+const cleanBranch = (raw: string): string =>
+  raw
+    .replace(/_+/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/^[\s-]+|[\s-]+$/g, "")
+    .trim();
+
+/**
+ * The 75% line said in classes, so the percentage has something to be
+ * measured against.
+ *
+ * The target is the attended count that sits on the line at today's
+ * denominator: ceil(75% of conducted, minus a hair so an exact hit does not
+ * round up into the next class). The gap is that count against what the
+ * student has; the Bunk button carries the real recover-or-skip arithmetic.
+ */
+const targetLine = (attended: number, conducted: number): string | null => {
+  if (conducted <= 0) return null;
+
+  const target = Math.ceil((TARGET_PERCENT / 100) * conducted - 1e-9);
+  const gap = attended - target;
+
+  if (gap > 0) return `🎯 75% needs ${target} · you're ${gap} ahead.`;
+  if (gap < 0) return `🎯 75% needs ${target} · you're ${-gap} short.`;
+  return `🎯 75% needs ${target} · you're right on it.`;
+};
+
+/**
  * Formats attendance data into a Telegram-friendly message with a freshness
  * indicator and a row per subject.
  */
@@ -88,20 +120,17 @@ export const formatAttendanceMessage = (data: Attendance): string => {
     data;
 
   let msg =
-    `🧑‍🎓 ROLL: ${escapeHtml(rollno)}\n` +
-    `🏫 Branch: ${escapeHtml(year_branch_section)}\n` +
-    `📚 Attended: ${totalClasses.attended}/${totalClasses.conducted}\n\n` +
-    `📈 Percentage: ${percentage.toFixed(2)}%\n` +
-    buildProgressBar(percentage);
+    `🧑‍🎓 <code>${escapeHtml(rollno)}</code> · ${escapeHtml(cleanBranch(year_branch_section))}\n\n` +
+    `📊 ${percentage.toFixed(2)}% · ${totalClasses.attended}/${totalClasses.conducted}\n` +
+    buildProgressBar(percentage) +
+    (targetLine(totalClasses.attended, totalClasses.conducted) ?? "");
 
   if (subjects.length === 0) return msg.trimEnd();
 
-  msg += `\n${buildAttendanceTable(subjects)}`;
+  msg += `\n\n${buildAttendanceTable(subjects)}`;
 
   const warning = belowTargetLine(subjects, (subject) => subject.subject);
-  if (warning) msg += `\n${warning}\n`;
-
-  msg += `\n<i>Stay above ${TARGET_PERCENT}% and you're safe.</i>`;
+  if (warning) msg += `\n${warning}`;
 
   return msg.trimEnd();
 };
@@ -150,8 +179,7 @@ export const formatMidmarksMessage = (data: Midmarks): string => {
   const { rollno, year_branch_section, subjects } = data;
 
   return (
-    `Mid marks for <code>${escapeHtml(rollno)}</code>\n` +
-    `<code>${escapeHtml(year_branch_section)}</code>\n\n` +
+    `Mid marks for <code>${escapeHtml(rollno)}</code> · ${escapeHtml(cleanBranch(year_branch_section))}\n\n` +
     buildMidmarksTable(subjects) +
     `\n<i>Give the low ones some extra time.</i>`
   );
@@ -195,9 +223,8 @@ export const formatBunkPlanMessage = (data: Attendance): string => {
     Math.max(0, Math.ceil((target * cond - att) / (1 - target)));
 
   let msg =
-    `Bunk plan for <code>${escapeHtml(rollno)}</code>\n` +
-    `<code>${escapeHtml(year_branch_section)}</code> · <b>${percentage.toFixed(2)}%</b> ` +
-    `(${totalClasses.attended}/${totalClasses.conducted})\n\n`;
+    `Bunk plan for <code>${escapeHtml(rollno)}</code> · ${escapeHtml(cleanBranch(year_branch_section))}\n` +
+    `<b>${percentage.toFixed(2)}%</b> · ${totalClasses.attended}/${totalClasses.conducted}\n\n`;
 
   msg += buildBunkHeadline(
     skipsAffordable(totalClasses.attended, totalClasses.conducted),

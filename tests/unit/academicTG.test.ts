@@ -20,7 +20,7 @@ describe("AcademicTG Module", () => {
       const message = await academicTG.getAttendanceMessage();
 
       expect(message).toContain("21B81A05E9");
-      expect(message).toContain("3_CSE_A");
+      expect(message).toContain("3 CSE A");
       // The percentage is formatted as 85.50% not 85.5%
       expect(message).toContain("85.50%");
       expect(message).toContain("450/526");
@@ -42,7 +42,7 @@ describe("AcademicTG Module", () => {
       expect(message).toMatch(/[🟩🟨🟥⬜]/u);
     });
 
-    it("should mark cached figures with a freshness warning above the card", async () => {
+    it("stamps the freshness a reader checks last, under the card", async () => {
       vi.spyOn(academicTG, "getAttendanceJSON").mockResolvedValue(
         mockAttendance,
       );
@@ -53,8 +53,8 @@ describe("AcademicTG Module", () => {
       const message = await academicTG.getAttendanceMessage();
 
       expect(message).toContain("Offline copy");
-      expect(message.indexOf("Offline copy")).toBeLessThan(
-        message.indexOf("85.50%"),
+      expect(message.indexOf("85.50%")).toBeLessThan(
+        message.indexOf("Offline copy"),
       );
     });
 
@@ -101,7 +101,7 @@ describe("AcademicTG Module", () => {
 
       expect(message).toContain("Mid marks for");
       expect(message).toContain("21B81A05E9");
-      expect(message).toContain("3_CSE_A");
+      expect(message).toContain("3 CSE A");
       expect(message).toContain("<pre>");
       expect(message).toContain("</pre>");
     });

@@ -87,7 +87,7 @@ describe("AcademicTG - Error Handling", () => {
     it("should format attendance message correctly", async () => {
       const mockAttendance: Attendance = {
         rollno: "21B81A05E9",
-        year_branch_section: "3_CSE_A",
+        year_branch_section: "3 CSE A",
         percentage: 85.5,
         totalClasses: { attended: 85, conducted: 100 },
         subjects: [
@@ -107,14 +107,14 @@ describe("AcademicTG - Error Handling", () => {
       const result = await academicTG.getAttendanceMessage();
 
       expect(result).toContain("21B81A05E9");
-      expect(result).toContain("3_CSE_A");
+      expect(result).toContain("3 CSE A");
       expect(result).toContain("85.50%");
     });
 
     it("should format midmarks message correctly", async () => {
       const mockMidmarks: Midmarks = {
         rollno: "21B81A05E9",
-        year_branch_section: "3_CSE_A",
+        year_branch_section: "3 CSE A",
         subjects: [
           {
             subject: "Data Structures",
@@ -132,7 +132,7 @@ describe("AcademicTG - Error Handling", () => {
 
       expect(result).toContain("Mid marks for");
       expect(result).toContain("21B81A05E9");
-      expect(result).toContain("3_CSE_A");
+      expect(result).toContain("3 CSE A");
     });
   });
 

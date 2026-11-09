@@ -14,19 +14,28 @@ const sample: Attendance = {
 describe("formatAttendanceMessage", () => {
   it("prints the compact card students see in chat", () => {
     expect(formatAttendanceMessage(sample)).toBe(
-      "🧑‍🎓 ROLL: 23KB1A3061\n" +
-        "🏫 Branch: 4_AI_DS_B\n" +
-        "📚 Attended: 188/206\n" +
+      "🧑‍🎓 <code>23KB1A3061</code> · 4 AI DS B\n" +
         "\n" +
-        "📈 Percentage: 91.26%\n" +
-        "🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜",
+        "📊 91.26% · 188/206\n" +
+        "🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜\n" +
+        "🎯 75% needs 155 · you're 33 ahead.",
     );
+  });
+
+  it("reads the portal's branch string the way the room reads it", () => {
+    const message = formatAttendanceMessage({
+      ...sample,
+      year_branch_section: "2_ECE_D",
+    });
+
+    expect(message).toContain("· 2 ECE D");
+    expect(message).not.toContain("2_ECE_D");
   });
 
   it("fills one block per ten percent, leaving the rest white", () => {
     const message = formatAttendanceMessage({ ...sample, percentage: 85 });
 
-    expect(message.endsWith("🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜")).toBe(true);
+    expect(message).toContain("🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜");
   });
 
   it("turns the bar yellow below 75 and red below 50", () => {
@@ -36,6 +45,34 @@ describe("formatAttendanceMessage", () => {
     expect(formatAttendanceMessage({ ...sample, percentage: 40 })).toContain(
       "🟥🟥🟥🟥⬜⬜⬜⬜⬜⬜",
     );
+  });
+
+  it("says which side of the 75% line the numbers are on", () => {
+    // 185 of 205 is 90%: the same attended count minus ten reads the other
+    // way, so both halves of the line are pinned here
+    expect(
+      formatAttendanceMessage({
+        ...sample,
+        percentage: 90.24,
+        totalClasses: { attended: 185, conducted: 205 },
+      }),
+    ).toContain("🎯 75% needs 154 · you're 31 ahead.");
+    expect(
+      formatAttendanceMessage({
+        ...sample,
+        percentage: 48.78,
+        totalClasses: { attended: 191, conducted: 368 },
+      }),
+    ).toContain("🎯 75% needs 276 · you're 85 short.");
+  });
+
+  it("leaves the target out before the portal has counted anything", () => {
+    const message = formatAttendanceMessage({
+      ...sample,
+      totalClasses: { attended: 0, conducted: 0 },
+    });
+
+    expect(message).not.toContain("🎯");
   });
 
   it("prints the other half: a row per subject under the card", () => {
@@ -49,7 +86,6 @@ describe("formatAttendanceMessage", () => {
     expect(message).toContain("DBMS");
     expect(message).toContain("22/30");
     expect(message).toContain("│  73% │ 12-10");
-    expect(message).toContain("Stay above 75% and you're safe.");
   });
 
   it("leaves a dash where a subject has no classes yet, never a NaN", () => {

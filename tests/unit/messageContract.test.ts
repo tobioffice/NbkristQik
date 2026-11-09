@@ -76,11 +76,11 @@ const semester: Attendance = {
 describe("attendance: the card and the half that explains it", () => {
   const message = formatAttendanceMessage(semester);
 
-  it("keeps the card a student checks first", () => {
-    expect(message).toContain("ROLL: 23KB1A1229");
-    expect(message).toContain("Branch: 4_IT_-");
-    expect(message).toContain("Attended: 148/180");
-    expect(message).toContain("Percentage: 82.22%");
+  it("opens with who the card is about, and the numbers under it", () => {
+    expect(message).toContain("<code>23KB1A1229</code>");
+    expect(message).toContain("· 4 IT");
+    expect(message).not.toContain("4_IT_-");
+    expect(message).toContain("82.22% · 148/180");
   });
 
   it("prints a row for every subject the portal returned", () => {
@@ -103,8 +103,10 @@ describe("attendance: the card and the half that explains it", () => {
     expect(message).toContain("DATABASE MANAGEMENT SYSTEMS");
   });
 
-  it("closes with the one line that says what the number means", () => {
-    expect(message).toContain("Stay above 75% and you're safe.");
+  it("carries the target, so the percentage has something to sit against", () => {
+    // 13 attended ahead of the 154.5 line, said as whole classes
+    expect(message).toContain("🎯 75% needs 135 · you're 13 ahead.");
+    expect(message).not.toContain("Stay above 75% and you're safe.");
   });
 
   it("leaves the table out only when there is nothing to put in it", () => {
