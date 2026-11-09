@@ -17,6 +17,38 @@ import { escapeHtml } from "../text.js";
 /** The pass mark the college enforces, and the one every warning compares to. */
 const TARGET_PERCENT = 75;
 
+/**
+ * The college day: six periods. The card counts days, not raw classes,
+ * because "go to the next 340 in a row" is a number nobody can picture.
+ */
+const CLASSES_PER_DAY = 6;
+
+/**
+ * Classes that can be skipped and still land on the target.
+ *
+ * Math: to stay at or above TARGET after skipping X more classes (conducted
+ * grows):  attended / (conducted + X) >= TARGET  ->  X <= attended/TARGET - conducted
+ */
+const skipsAffordable = (attended: number, conducted: number): number =>
+  Math.max(0, Math.floor(attended / (TARGET_PERCENT / 100) - conducted));
+
+/**
+ * Classes to attend in a row to get back to the target.
+ *
+ * (attended + Y) / (conducted + Y) >= TARGET  ->  Y >= (TARGET*conducted - attended) / (1 - TARGET)
+ */
+const classesNeeded = (attended: number, conducted: number): number =>
+  Math.max(
+    0,
+    Math.ceil(
+      ((TARGET_PERCENT / 100) * conducted - attended) /
+        (1 - TARGET_PERCENT / 100),
+    ),
+  );
+
+/** "1 day" / "3 days". */
+const dayWord = (days: number): string => `${days} day${days === 1 ? "" : "s"}`;
+
 interface Column {
   header: string;
   width: number;
@@ -92,23 +124,30 @@ const cleanBranch = (raw: string): string =>
     .trim();
 
 /**
- * The 75% line said in classes, so the percentage has something to be
- * measured against.
+ * The 75% line said in days, so the percentage has something to be measured
+ * against and the answer is a thing a student can do.
  *
- * The target is the attended count that sits on the line at today's
- * denominator: ceil(75% of conducted, minus a hair so an exact hit does not
- * round up into the next class). The gap is that count against what the
- * student has; the Bunk button carries the real recover-or-skip arithmetic.
+ * Behind the line: the college days of straight attendance it takes to climb
+ * back. Ahead of it: the days of classes that can still be bunked. Six
+ * classes make a day, and both numbers come from the same arithmetic the bunk
+ * plan uses, so the card and the plan can never disagree.
  */
 const targetLine = (attended: number, conducted: number): string | null => {
   if (conducted <= 0) return null;
 
-  const target = Math.ceil((TARGET_PERCENT / 100) * conducted - 1e-9);
-  const gap = attended - target;
+  const need = classesNeeded(attended, conducted);
+  if (need > 0) {
+    return `${dayWord(Math.ceil(need / CLASSES_PER_DAY))} straight to get back to 75%.`;
+  }
 
-  if (gap > 0) return `🎯 75% needs ${target} · you're ${gap} ahead.`;
-  if (gap < 0) return `🎯 75% needs ${target} · you're ${-gap} short.`;
-  return `🎯 75% needs ${target} · you're right on it.`;
+  const bunk = skipsAffordable(attended, conducted);
+  if (bunk >= CLASSES_PER_DAY) {
+    return `You can bunk ${dayWord(Math.floor(bunk / CLASSES_PER_DAY))}.`;
+  }
+  if (bunk > 0) {
+    return `You can bunk ${bunk} class${bunk === 1 ? "" : "es"}.`;
+  }
+  return `Right on the 75% line.`;
 };
 
 /**
@@ -120,17 +159,21 @@ export const formatAttendanceMessage = (data: Attendance): string => {
     data;
 
   let msg =
-    `🧑‍🎓 <code>${escapeHtml(rollno)}</code> · ${escapeHtml(cleanBranch(year_branch_section))}\n\n` +
-    `📊 ${percentage.toFixed(2)}% · ${totalClasses.attended}/${totalClasses.conducted}\n` +
-    buildProgressBar(percentage) +
-    (targetLine(totalClasses.attended, totalClasses.conducted) ?? "");
+    `Attendance for <code>${escapeHtml(rollno)}</code> · ${escapeHtml(cleanBranch(year_branch_section))}\n` +
+    `<b>${percentage.toFixed(2)}%</b> · ${totalClasses.attended}/${totalClasses.conducted}\n\n`;
 
-  if (subjects.length === 0) return msg.trimEnd();
+  const status = targetLine(totalClasses.attended, totalClasses.conducted);
+  if (status) msg += `${status}\n\n`;
 
-  msg += `\n\n${buildAttendanceTable(subjects)}`;
+  if (subjects.length > 0) {
+    msg += `${buildAttendanceTable(subjects)}\n\n`;
 
-  const warning = belowTargetLine(subjects, (subject) => subject.subject);
-  if (warning) msg += `\n${warning}`;
+    const warning = belowTargetLine(subjects, (subject) => subject.subject);
+    if (warning) msg += `${warning}\n\n`;
+  }
+
+  // the day is an assumption, so the card says it out loud
+  if (status) msg += `<i>Six classes make a day.</i>`;
 
   return msg.trimEnd();
 };
@@ -181,7 +224,7 @@ export const formatMidmarksMessage = (data: Midmarks): string => {
   return (
     `Mid marks for <code>${escapeHtml(rollno)}</code> · ${escapeHtml(cleanBranch(year_branch_section))}\n\n` +
     buildMidmarksTable(subjects) +
-    `\n<i>Give the low ones some extra time.</i>`
+    `\n\n<i>Give the low ones some extra time.</i>`
   );
 };
 
@@ -216,12 +259,6 @@ export const formatBunkPlanMessage = (data: Attendance): string => {
   const { rollno, year_branch_section, percentage, totalClasses, subjects } =
     data;
 
-  const target = TARGET_PERCENT / 100;
-  const skipsAffordable = (att: number, cond: number) =>
-    Math.max(0, Math.floor(att / target - cond));
-  const classesNeeded = (att: number, cond: number) =>
-    Math.max(0, Math.ceil((target * cond - att) / (1 - target)));
-
   let msg =
     `Bunk plan for <code>${escapeHtml(rollno)}</code> · ${escapeHtml(cleanBranch(year_branch_section))}\n` +
     `<b>${percentage.toFixed(2)}%</b> · ${totalClasses.attended}/${totalClasses.conducted}\n\n`;
@@ -237,7 +274,7 @@ export const formatBunkPlanMessage = (data: Attendance): string => {
   );
   if (warning) msg += `${warning}\n\n`;
 
-  msg += `<i>Bunk means skips you can afford, need means classes to attend in a row.</i>`;
+  msg += `<i>Bunk means classes you can skip, need means classes in a row. Six classes make a day.</i>`;
 
   return msg;
 };
@@ -247,7 +284,8 @@ const buildBunkHeadline = (bunk: number, need: number): string => {
     return `You can bunk ${bunk} more and stay above ${TARGET_PERCENT}%.\n\n`;
   }
   if (need > 0) {
-    return `Go to the next ${need} in a row to get back to ${TARGET_PERCENT}%.\n\n`;
+    // days, not classes: the recovery number is large and a day is graspable
+    return `Go ${dayWord(Math.ceil(need / CLASSES_PER_DAY))} straight to get back to ${TARGET_PERCENT}%.\n\n`;
   }
   return `You're right at ${TARGET_PERCENT}%. Go to everything.\n\n`;
 };
@@ -278,16 +316,6 @@ const buildBunkTable = (
       ];
     }),
   )}\n\n`;
-
-/** A visual bar for the attendance card. */
-const buildProgressBar = (percentage: number): string => {
-  const filled = Math.floor(percentage / 10);
-  // green is safe, amber is close, red is already behind
-  const block =
-    percentage >= TARGET_PERCENT ? "🟩" : percentage >= 50 ? "🟨" : "🟥";
-
-  return block.repeat(filled) + "⬜".repeat(10 - filled) + "\n";
-};
 
 const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text;

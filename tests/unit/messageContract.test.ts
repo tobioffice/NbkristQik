@@ -76,11 +76,11 @@ const semester: Attendance = {
 describe("attendance: the card and the half that explains it", () => {
   const message = formatAttendanceMessage(semester);
 
-  it("opens with who the card is about, and the numbers under it", () => {
-    expect(message).toContain("<code>23KB1A1229</code>");
+  it("opens the way the mid marks and bunk replies open", () => {
+    expect(message).toContain("Attendance for <code>23KB1A1229</code>");
     expect(message).toContain("· 4 IT");
     expect(message).not.toContain("4_IT_-");
-    expect(message).toContain("82.22% · 148/180");
+    expect(message).toContain("<b>82.22%</b> · 148/180");
   });
 
   it("prints a row for every subject the portal returned", () => {
@@ -103,9 +103,9 @@ describe("attendance: the card and the half that explains it", () => {
     expect(message).toContain("DATABASE MANAGEMENT SYSTEMS");
   });
 
-  it("carries the target, so the percentage has something to sit against", () => {
-    // 13 attended ahead of the 154.5 line, said as whole classes
-    expect(message).toContain("🎯 75% needs 135 · you're 13 ahead.");
+  it("carries the target, said in college days, not raw classes", () => {
+    // 17 classes of room is two whole days at six classes a day
+    expect(message).toContain("You can bunk 2 days.");
     expect(message).not.toContain("Stay above 75% and you're safe.");
   });
 
@@ -213,17 +213,17 @@ describe("bunk: the headline has to agree with the numbers", () => {
     expect(message).toContain("DATABASE");
   });
 
-  it("says how many classes in a row get a student back to 75", () => {
+  it("says how many days in a row get a student back to 75", () => {
     const behind: Attendance = {
       ...semester,
       percentage: 50,
       totalClasses: { attended: 10, conducted: 20 },
     };
     const needed = classesNeeded(10, 20);
+    // six classes to a day, and a partial day still counts as a day
+    const days = Math.ceil(needed / 6);
 
-    expect(formatBunkPlanMessage(behind)).toContain(
-      `Go to the next ${needed} in a row`,
-    );
+    expect(formatBunkPlanMessage(behind)).toContain(`Go ${days} days straight`);
   });
 
   it("tells a student exactly at 75 to go to everything", () => {
@@ -238,9 +238,9 @@ describe("bunk: the headline has to agree with the numbers", () => {
     );
   });
 
-  it("explains its own two words", () => {
+  it("explains its own two words and the day it counts in", () => {
     expect(message).toContain(
-      "Bunk means skips you can afford, need means classes to attend in a row.",
+      "Bunk means classes you can skip, need means classes in a row. Six classes make a day.",
     );
   });
 

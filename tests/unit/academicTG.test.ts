@@ -32,16 +32,6 @@ describe("AcademicTG Module", () => {
       expect(message).toContain("│  90% │ 01-02");
     });
 
-    it("should include progress bar in message", async () => {
-      vi.spyOn(academicTG, "getAttendanceJSON").mockResolvedValue(
-        mockAttendance,
-      );
-
-      const message = await academicTG.getAttendanceMessage();
-
-      expect(message).toMatch(/[🟩🟨🟥⬜]/u);
-    });
-
     it("stamps the freshness a reader checks last, under the card", async () => {
       vi.spyOn(academicTG, "getAttendanceJSON").mockResolvedValue(
         mockAttendance,
@@ -56,17 +46,6 @@ describe("AcademicTG Module", () => {
       expect(message.indexOf("85.50%")).toBeLessThan(
         message.indexOf("Offline copy"),
       );
-    });
-
-    it("should show one bar block per ten percent", async () => {
-      vi.spyOn(academicTG, "getAttendanceJSON").mockResolvedValue(
-        mockAttendance,
-      );
-
-      const message = await academicTG.getAttendanceMessage();
-
-      // 85.5% -> 8 filled, 2 empty
-      expect(message).toContain("🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜");
     });
 
     it("should return error message on failure", async () => {
@@ -143,40 +122,6 @@ describe("AcademicTG Module", () => {
   });
 
   describe("Message Formatting Helpers", () => {
-    it("should generate correct progress bar for high percentage", async () => {
-      // Test through actual message generation
-      const highAttendance = { ...mockAttendance, percentage: 85 };
-      vi.spyOn(academicTG, "getAttendanceJSON").mockResolvedValue(
-        highAttendance,
-      );
-
-      const message = await academicTG.getAttendanceMessage();
-
-      expect(message).toContain("🟩");
-    });
-
-    it("should generate correct progress bar for medium percentage", async () => {
-      const mediumAttendance = { ...mockAttendance, percentage: 60 };
-      vi.spyOn(academicTG, "getAttendanceJSON").mockResolvedValue(
-        mediumAttendance,
-      );
-
-      const message = await academicTG.getAttendanceMessage();
-
-      expect(message).toContain("🟨");
-    });
-
-    it("should generate correct progress bar for low percentage", async () => {
-      const lowAttendance = { ...mockAttendance, percentage: 40 };
-      vi.spyOn(academicTG, "getAttendanceJSON").mockResolvedValue(
-        lowAttendance,
-      );
-
-      const message = await academicTG.getAttendanceMessage();
-
-      expect(message).toContain("🟥");
-    });
-
     it("should truncate long subject names in the bunk plan", async () => {
       const longNameAttendance = {
         ...mockAttendance,
