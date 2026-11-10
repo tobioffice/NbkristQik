@@ -49,6 +49,186 @@ const withQuery = (path: string, params: URLSearchParams): string => {
   return query ? `${API_BASE}${path}?${query}` : `${API_BASE}${path}`;
 };
 
+export type SortBy = "attendance" | "midmarks";
+
+export interface StudentStat {
+  roll_no: string;
+  name: string | null;
+  attendance_percentage: number;
+  mid_marks_avg: number | null;
+  rank: number;
+}
+
+/**
+ * The portal stores `yearSem` (11..42), but the register filters on the year
+ * digit only; semester 2 (12, 22, ...) must answer to the same year.
+ */
+export type YearFilter = "all" | "1" | "2" | "3" | "4";
+
+export interface LeaderboardFilters {
+  year: YearFilter;
+  branch: string;
+  section: string;
+}
+
+/**
+ * Which slice the register shows. `me` asks the server to resolve the
+ * caller's saved registration to a year/branch/section; `all` is a
+ * deliberate whole-register view. Explicit filters override both.
+ */
+export type LeaderboardScope = "me" | "all";
+
+/** The section context the server actually applied to the page. */
+export interface LeaderboardScopeInfo {
+  year: string | null;
+  branch: string | null;
+  section: string | null;
+}
+
+/**
+ * `ranked` is the number of students with a figure in this view; `known` is
+ * the (possibly stale) directory count for the same filters. It is a partial
+ * register, never the whole college.
+ */
+export interface LeaderboardCoverage {
+  ranked: number;
+  known: number;
+}
+
+/** The newest and oldest write behind the figures on page 1. */
+export interface LeaderboardFreshness {
+  newest: string | null;
+  oldest: string | null;
+}
+
+export interface MyRank {
+  attendance: RankInfo | null;
+  midmarks: RankInfo | null;
+}
+
+/** Global position plus the figure printed for it. */
+export interface RankInfo {
+  rank: number;
+  total: number;
+  value: number | null;
+}
+
+/** What page 1 adds to the envelope: sync freshness and live filter options. */
+export interface LeaderboardMeta {
+  updated_at: string | null;
+  facets: { sections: string[] } | null;
+  scope: LeaderboardScopeInfo | null;
+  coverage: LeaderboardCoverage | null;
+  freshness: LeaderboardFreshness | null;
+}
+
+/**
+ * The leaderboard URL. `scope` decides what an unfiltered page means:
+ * `me` lets the server resolve the caller's own section, `all` is the whole
+ * register. Dimensions set to `all` are omitted entirely — sending
+ * `year=all` would be an explicit filter and would suppress `scope=me`.
+ */
+export const buildLeaderboardUrl = (
+  page: number,
+  sort: SortBy,
+  filters: LeaderboardFilters,
+  search: string,
+  scope: LeaderboardScope = "me",
+): string => {
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: "20",
+    sort: sort,
+    scope,
+  });
+  if (filters.year !== "all") queryParams.set("year", filters.year);
+  if (filters.branch !== "all") queryParams.set("branch", filters.branch);
+  if (filters.section !== "all") queryParams.set("section", filters.section);
+  if (search) queryParams.set("search", search);
+  return `${API_BASE}/api/leaderboard?${queryParams.toString()}`;
+};
+
+/**
+ * `/api/me` reads identity from the header. `userId` is kept here only as the
+ * dev fallback, so a real initData call leaves the URL completely bare.
+ */
+export const buildMeUrl = (userId: string, initData?: string): string => {
+  const params = new URLSearchParams();
+  if (!initData && userId) params.set("userId", userId);
+  return withQuery("/api/me", params);
+};
+
+export interface MeResponse {
+  found: boolean;
+  roll_no?: string;
+  attendance?: RankInfo | null;
+  midmarks?: RankInfo | null;
+  /**
+   * The last roll this account looked up. It is a suggestion for an
+   * unregistered user, never their identity.
+   */
+  lastLookup?: string | null;
+  /** A found caller is always a saved registration. */
+  source?: "registered";
+}
+
+/** The verified caller, after `/api/me` has been mapped to a screen state. */
+export interface MeState {
+  status: "ready" | "no-roll";
+  roll: string | null;
+  ranks: MyRank | null;
+  source: "registered" | null;
+  /** Kept apart from `roll` so a friend's lookup is never read as identity. */
+  lastLookup: string | null;
+}
+
+const rankInfo = (raw: unknown): RankInfo | null => {
+  if (!raw || typeof raw !== "object") return null;
+  const info = raw as Partial<RankInfo>;
+  if (typeof info.rank !== "number") return null;
+  return {
+    rank: info.rank,
+    total: typeof info.total === "number" ? info.total : 0,
+    value: typeof info.value === "number" ? info.value : null,
+  };
+};
+
+/**
+ * `/api/me` is the registration, nothing else. `lastLookup` is returned as a
+ * separate suggestion and is deliberately not allowed to fill `roll`.
+ */
+export const mapMe = (me: MeResponse): MeState => {
+  if (!me.found || !me.roll_no) {
+    return {
+      status: "no-roll",
+      roll: null,
+      ranks: null,
+      source: null,
+      lastLookup: me.lastLookup ?? null,
+    };
+  }
+
+  return {
+    status: "ready",
+    roll: me.roll_no,
+    ranks: {
+      attendance: rankInfo(me.attendance),
+      midmarks: rankInfo(me.midmarks),
+    },
+    source: "registered",
+    lastLookup: null,
+  };
+};
+
+/** The caller's roll and global ranks, resolved through their identity. */
+export const getMe = async (identity: ApiIdentity): Promise<MeResponse> => {
+  const res = await fetchWithTimeout(
+    buildMeUrl(identity.userId ?? "", identity.initData),
+    { headers: authHeaders(identity.initData) },
+  );
+  return readJson<MeResponse>(res);
+};
+
 /** Forget the last roll this account looked up; the registration is untouched. */
 export const deleteLastLookup = async (
   identity: ApiIdentity,
@@ -62,6 +242,8 @@ export const deleteLastLookup = async (
   );
   await readJson(res);
 };
+
+export const PAGE_SIZE = 20;
 
 // ---------- app config ----------
 

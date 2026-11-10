@@ -1,11 +1,11 @@
 /**
  * The app's address grammar.
  *
- * Sections live in the hash (`#/profile`): the address bar is the source of
+ * Sections live in the hash (`#/rank`): the address bar is the source of
  * truth, so Back, Forward and a reload land where the reader left off.
  *
  * Telegram uses the fragment for its own launch data, though. A Mini App is
- * handed `#tgWebAppData=…` (or `#/profile?tgWebAppData=…` when the client keeps
+ * handed `#tgWebAppData=…` (or `#/rank?tgWebAppData=…` when the client keeps
  * the button's path), so a fragment the bot wrote is either buried behind a
  * `?` or gone entirely. Bot buttons therefore name their section in
  * `?page=rank`, which the client leaves alone; `takePageLink` folds that into
@@ -13,7 +13,7 @@
  * were already sent still open the right section.
  */
 
-export type Section = "profile" | "issues" | "library";
+export type Section = "profile" | "rank" | "issues" | "library";
 
 export interface Route {
   section: Section;
@@ -30,7 +30,7 @@ export const HOME_ROUTE: Route = {
   mine: false,
 };
 
-const SECTIONS: Section[] = ["profile", "issues", "library"];
+const SECTIONS: Section[] = ["profile", "rank", "issues", "library"];
 
 const isSection = (value: string): value is Section =>
   (SECTIONS as string[]).includes(value);

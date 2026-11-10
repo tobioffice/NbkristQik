@@ -1,6 +1,11 @@
 import crypto from "crypto";
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
+import {
+  query,
+  validationResult,
+  FieldValidationError,
+} from "express-validator";
 import { logger } from "../config/logger.js";
 import { ROLL_REGEX } from "../constants/index.js";
 import { attachIdentity, type Identity } from "../api/resolveUser.js";
@@ -99,9 +104,10 @@ const API_USER_REQUESTS = 600; // ~40/min, comfortable for infinite scroll
 const API_IP_BACKSTOP_REQUESTS = 10_000;
 
 /**
- * Run a limiter at most once per request. A route that carries more than one
- * limiter chain would otherwise spend a token from the same budget twice and
- * be throttled at half its documented rate.
+ * Run a limiter at most once per request. `/api` and the leaderboard chain
+ * both carry these limiters; without the flag a leaderboard request would
+ * spend two tokens from the same budget and the route would be throttled at
+ * half its documented rate.
  */
 const chargeOnce = (flag: string, limiter: RequestHandler): RequestHandler => {
   return (req, res, next) => {
@@ -143,6 +149,50 @@ export const apiIpBackstop = chargeOnce(
   ),
 );
 
+// API parameter validation for leaderboard
+export const leaderboardValidation = [
+  query("page")
+    .optional()
+    .isInt({ min: 1, max: 1000 })
+    .withMessage("Page must be between 1 and 1000"),
+
+  query("limit")
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage("Limit must be between 1 and 100"),
+
+  query("sort")
+    .optional()
+    .isIn(["attendance", "midmarks"])
+    .withMessage('Sort must be either "attendance" or "midmarks"'),
+
+  query("year")
+    .optional()
+    .matches(/^(\d{1,2}|all)$/)
+    .withMessage('Year must be a digit or "all"'),
+
+  query("branch")
+    .optional()
+    .matches(/^(\d+|all)$/)
+    .withMessage('Branch must be digits or "all"'),
+
+  query("section")
+    .optional()
+    .matches(/^([A-Z]|all)$/i)
+    .withMessage('Section must be a letter or "all"'),
+
+  query("scope")
+    .optional()
+    .isIn(["me", "all"])
+    .withMessage('Scope must be either "me" or "all"'),
+
+  query("search")
+    .optional()
+    .isLength({ min: 2, max: 20 })
+    .matches(/^[\w\s-]+$/)
+    .withMessage("Search must be 2-20 letters, digits, spaces or dashes"),
+];
+
 // Input sanitization middleware
 // Only req.body is mutated: under Express 5 req.query/req.params come from
 // getters, so in-place edits there are unreliable. Query input is already
@@ -169,6 +219,31 @@ export const sanitizeInput = (
 
   if (req.body) sanitizeObject(req.body);
 
+  next();
+};
+
+// Validation error handler
+export const handleValidationErrors = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({
+      success: false,
+      error: "Validation failed",
+      details: errors.array().map((err) => {
+        const fieldErr = err as FieldValidationError;
+        return {
+          field: fieldErr.path,
+          message: fieldErr.msg,
+          value: fieldErr.value,
+        };
+      }),
+    });
+    return;
+  }
   next();
 };
 
@@ -293,4 +368,12 @@ export const apiSecurityMiddlewares = [
   attachIdentity,
   apiRateLimit,
   apiIpBackstop,
+];
+
+export const leaderboardSecurityMiddlewares = [
+  attachIdentity,
+  apiRateLimit,
+  apiIpBackstop,
+  ...leaderboardValidation,
+  handleValidationErrors,
 ];

@@ -12,7 +12,6 @@ describe("the hash router", () => {
     expect(parseRouteHash("")).toEqual(HOME_ROUTE);
     expect(parseRouteHash("#/")).toEqual(HOME_ROUTE);
     expect(parseRouteHash("#/tgWebAppData=abc")).toEqual(HOME_ROUTE);
-    expect(parseRouteHash("#/rank")).toEqual(HOME_ROUTE);
     expect(parseRouteHash("#/attendance")).toEqual(HOME_ROUTE);
   });
 
@@ -27,6 +26,7 @@ describe("the hash router", () => {
 
   it("reads every section", () => {
     expect(parseRouteHash("#/profile").section).toBe("profile");
+    expect(parseRouteHash("#/rank").section).toBe("rank");
     expect(parseRouteHash("#/library").section).toBe("library");
     expect(parseRouteHash("#/issues")).toEqual({
       section: "issues",
@@ -48,6 +48,7 @@ describe("the hash router", () => {
   it("writes the hash a route came from", () => {
     const routes = [
       HOME_ROUTE,
+      { section: "rank", issue: null, mine: false },
       { section: "library", issue: null, mine: false },
       { section: "issues", issue: null, mine: false },
       { section: "issues", issue: null, mine: true },
@@ -92,8 +93,16 @@ describe("a bot deep link", () => {
     expect(takePageLink("https://x.test/library/#/profile")).toBeNull();
   });
 
+  it("opens the register from a rank button", () => {
+    expect(takePageLink("https://x.test/library/?page=rank")).toEqual({
+      route: { section: "rank", issue: null, mine: false },
+      href: "/library/#/rank",
+    });
+  });
+
   it("lands retired pages on the roll form, not a blank sheet", () => {
-    expect(takePageLink("https://x.test/library/?page=rank")?.route).toEqual(
+    // attendance now lives in the bot, so the old button opens the roll form
+    expect(takePageLink("https://x.test/library/?page=attendance")?.route).toEqual(
       HOME_ROUTE,
     );
     expect(takePageLink("https://x.test/library/?page=nope")?.route).toEqual(

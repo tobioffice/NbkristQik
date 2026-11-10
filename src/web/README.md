@@ -5,8 +5,9 @@ The Telegram mini app: one Vite entry in this package.
 `app.html` → `src/app-main.tsx` → `src/AppShell.tsx`
 
 It holds the surfaces the bot links to: the roll form (the first screen), the
-library and the issue desk. Attendance and the register are answered in the
-chat, not here, so the app never becomes a second place to read them.
+attendance register, the library and the issue desk. Attendance itself is
+answered in the chat, not here, so the app never becomes a second place to
+read a student's own numbers.
 
 `vite.library.config.ts` sets the `/library/` base, builds into
 `dist-library/`, and renames the emitted `app.html` to `index.html` so the
