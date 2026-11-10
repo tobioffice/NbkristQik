@@ -341,6 +341,32 @@ describe("monitor transitions", () => {
     expect(upBody.disable_notification).toBe(true);
   });
 
+  it("records the portal without paging when it goes down or recovers", async () => {
+    configureTelegram();
+    const fetchMock = stubFetch(async () => response());
+
+    await notifyTransitions([makeRow("portal", "up", 30)]);
+    await notifyTransitions([makeRow("portal", "down")]);
+    await notifyTransitions([makeRow("portal", "up", 31)]);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    // The silent transitions still move the state; the app still pages.
+    await notifyTransitions([makeRow("api", "up", 5)]);
+    await notifyTransitions([makeRow("api", "down")]);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(
+      JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)).text,
+    ).toContain("<b>api</b> is DOWN");
+  });
+
+  it("does not page for a portal that is already down on a fresh state", async () => {
+    configureTelegram();
+    const fetchMock = stubFetch(async () => response());
+
+    await notifyTransitions([makeRow("portal", "down")]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("alerts at least once when a fresh state already reports down", async () => {
     configureTelegram();
     const fetchMock = stubFetch(async () => response());

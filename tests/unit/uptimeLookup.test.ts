@@ -46,6 +46,7 @@ vi.mock("../../src/services/redis/utils.js", () => ({
 }));
 
 import {
+  alertsOnComponent,
   buildComponentProbes,
   canaryProbeEnabled,
   probeLookup,
@@ -132,5 +133,15 @@ describe("lookup canary probe", () => {
 
     expect(buildComponentProbes(false)).not.toHaveProperty("lookup");
     expect(buildComponentProbes(true)).toHaveProperty("lookup");
+  });
+});
+
+describe("component alerting", () => {
+  it("pages for the app and its dependencies but never for the portal", () => {
+    expect(alertsOnComponent("api")).toBe(true);
+    expect(alertsOnComponent("database")).toBe(true);
+    expect(alertsOnComponent("redis")).toBe(true);
+    expect(alertsOnComponent("lookup")).toBe(true);
+    expect(alertsOnComponent("portal")).toBe(false);
   });
 });

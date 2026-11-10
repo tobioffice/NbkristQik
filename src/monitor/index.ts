@@ -578,12 +578,29 @@ const checkAlertChannel = async (): Promise<void> => {
   await check("getChat", `?chat_id=${encodeURIComponent(CONFIG.adminId)}`);
 };
 
+/**
+ * The college portal belongs to the college. Nobody on this project can bring
+ * it back, so its probes still feed the history and the status page, but its
+ * transitions never page anyone: a portal outage is not actionable here.
+ */
+export const alertsOnComponent = (component: Component): boolean =>
+  component !== "portal";
+
 export const notifyTransitions = async (rows: ProbeResult[]): Promise<void> => {
   const state = await readState();
   let changed = false;
 
   for (const row of rows) {
     const previous = state[row.component];
+
+    // Track the portal so a later recovery stays quiet, but send nothing.
+    if (!alertsOnComponent(row.component)) {
+      if (state[row.component] !== row.status) {
+        state[row.component] = row.status;
+        changed = true;
+      }
+      continue;
+    }
 
     if (previous === undefined) {
       // Fresh state file (first run, or a component added later). Seed it, but

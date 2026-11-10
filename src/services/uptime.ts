@@ -151,7 +151,15 @@ const componentProbes = buildComponentProbes(canaryProbeEnabled());
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Record one result and fire any transition alert. */
+/**
+ * The college portal is not ours to maintain: its history still feeds the
+ * status page, but its outages are not paged.
+ */
+export const alertsOnComponent = (component: string): boolean =>
+  component !== "portal";
+
 const notifyAdmin = async (result: ProbeResult): Promise<boolean> => {
+  if (!alertsOnComponent(result.component)) return true;
   if (!ADMIN_ID) return true;
   const previous = previousStatus.get(result.component);
   // First probe of a down component is an alert too: a restart during an
