@@ -1,9 +1,5 @@
 # NbkristQik Deployment
 
-> **Note:** The generated wiki is authoritative; see
-> [`openwiki/operations.md`](openwiki/operations.md). If this file disagrees
-> with the code, the code wins.
-
 ## Environment variables
 
 | Variable | Consumer | Notes |
@@ -315,6 +311,3 @@ page must stay up during a full oracle3 failure, host the static page and
 - **web** — lint, unit tests and the one same-origin `/library/` build of
   `src/web`, on Node 24 with pnpm caching that keys off
   `src/web/pnpm-lock.yaml`.
-
-`.github/workflows/openwiki-update.yml` refreshes the generated wiki daily and
-opens a pull request.

@@ -156,7 +156,7 @@ daily check-in, and updated tests.
 
 **Steps**
 1. Review `git status` and the diff for `src/bot/`, `src/api/admin/`,
-   `PRODUCT.md`, `README.md`, `FIXES.md`.
+   `PRODUCT.md` and `README.md`.
 2. Commit the remediation tree, or explicitly stash it and record why.
 3. Run:
    ```bash

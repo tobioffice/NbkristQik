@@ -118,7 +118,6 @@ needs no migration step.
 │   └── web/          React Mini App and marketing site (own package)
 ├── tests/            Unit and integration tests
 ├── docs/             Hand-written guides
-├── openwiki/         Generated, source-grounded wiki
 ├── scripts/          Deploy, backup and import helpers
 └── assets/           Brand assets
 ```
@@ -318,10 +317,8 @@ external monitor until fresh external heartbeats have been verified in the
 | [`docs/ROADMAP.md`](docs/ROADMAP.md)               | Decided but unbuilt work                    |
 | [`DESIGN.md`](DESIGN.md)                           | Design system, binding before any UI change |
 | [`PRODUCT.md`](PRODUCT.md)                         | Product brief, users and principles         |
-| [`openwiki/quickstart.md`](openwiki/quickstart.md) | Generated, source-grounded wiki             |
 
-If a hand-written guide and the generated wiki disagree, the code and
-`openwiki/` are authoritative.
+If a hand-written guide and the code disagree, the code wins.
 
 ## Contributing
 

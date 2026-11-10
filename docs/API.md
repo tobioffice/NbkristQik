@@ -1,10 +1,5 @@
 # NbkristQik REST API
 
-> **Note:** The generated wiki is authoritative for endpoint behavior; see
-> [`openwiki/api/server.md`](openwiki/api/server.md) and
-> [`openwiki/api/admin-panel.md`](openwiki/api/admin-panel.md). If this file
-> disagrees with the code, the code wins.
-
 The API is served by the Express app in `src/api/server.ts`, started in-process
 by the bot entry point. It binds `HOST` (default `127.0.0.1`) on `PORT`
 (default `3000`); production is reached through nginx at

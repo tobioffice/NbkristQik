@@ -1,9 +1,5 @@
 # NbkristQik Database
 
-> **Note:** The generated wiki is authoritative; see
-> [`openwiki/data/database.md`](openwiki/data/database.md). If this file
-> disagrees with the code, the code wins.
-
 **Provider:** libSQL/SQLite via `@libsql/client`.
 **Client:** `src/db/db.ts`. `LOCAL_DB_URL` (for example
 `file:/home/ubuntu/nbkristqik/data/qik.db`) takes precedence and uses the

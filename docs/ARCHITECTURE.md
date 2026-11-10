@@ -1,9 +1,5 @@
 # NbkristQik Architecture
 
-> **Note:** Deep, source-grounded documentation is generated in [`openwiki/`](openwiki/quickstart.md)
-> and refreshed by CI. This file is a concise hand-maintained overview; if the two
-> disagree, the code and `openwiki/` are authoritative.
-
 ## Overview
 
 NbkristQik is a Telegram bot that lets NBKRIST students check attendance and
@@ -193,8 +189,7 @@ historical rows cannot duplicate leaderboard rows.
 
 ## Further reading
 
-- [`openwiki/quickstart.md`](openwiki/quickstart.md) — wiki entry point
-- [`openwiki/architecture.md`](openwiki/architecture.md) — runtime topology
-- [`openwiki/portal/scraping.md`](openwiki/portal/scraping.md) — portal details
-- [`openwiki/data/caching-and-stats.md`](openwiki/data/caching-and-stats.md) — caches and ranking
-- [`openwiki/api/admin-panel.md`](openwiki/api/admin-panel.md) — admin panel
+- [`docs/API.md`](API.md) — REST endpoints and parameters
+- [`docs/DATABASE.md`](DATABASE.md) — schema and caches
+- [`docs/LIBRARY.md`](LIBRARY.md) — library, reader and watermarking
+- [`docs/DEPLOYMENT.md`](DEPLOYMENT.md) — environment and production
