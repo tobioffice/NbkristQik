@@ -57,6 +57,9 @@ plainly, not pretend the sample is a census.
   removing that cache.
 - P4-01/02/03: the channel gate, leaderboard names/consent, and library
   fate are product decisions and were not changed.
+- Roll ownership: saving a roll is unverified and several accounts may share
+  one. The college email OTP that fixes it is planned in
+  [`ROADMAP.md`](ROADMAP.md).
 - P4-05: the canary row and "Answers" label are live; the full Overview
   p50/p95/coverage panel is not built.
 

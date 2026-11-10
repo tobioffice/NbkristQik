@@ -24,20 +24,6 @@ export interface Registration {
   updated_at: string;
 }
 
-/** Thrown when a roll is already held by a different Telegram account. */
-export class RollAlreadyRegisteredError extends Error {
-  readonly rollNo: string;
-  /** The account that already owns the roll (never exposed to the client). */
-  readonly userId: string;
-
-  constructor(rollNo: string, userId: string) {
-    super(`Roll ${rollNo} is already registered to another account.`);
-    this.name = "RollAlreadyRegisteredError";
-    this.rollNo = rollNo;
-    this.userId = userId;
-  }
-}
-
 const toRegistration = (row: Record<string, unknown>): Registration => ({
   userId: String(row.userId),
   roll_no: String(row.roll_no),
@@ -46,45 +32,21 @@ const toRegistration = (row: Record<string, unknown>): Registration => ({
   updated_at: String(row.updated_at),
 });
 
-/** True when the database rejected the write because roll_no must be unique. */
-const isRollConflict = (error: unknown): boolean => {
-  const message = error instanceof Error ? error.message : String(error ?? "");
-  return /unique/i.test(message) && /(registrations\.)?roll_no/i.test(message);
-};
-
 /** Insert or update. Keeps registered_at, refreshes updated_at. */
 export const upsertRegistration = async (
   userId: string,
   rollNo: string,
   displayName: string | null,
 ): Promise<void> => {
-  const normalized = rollNo.toUpperCase();
-
-  // App-level guard: the roll may only be claimed by its current owner.
-  const existing = await getRegistrationByRoll(normalized);
-  if (existing && existing.userId !== userId) {
-    throw new RollAlreadyRegisteredError(normalized, existing.userId);
-  }
-
-  try {
-    await turso.execute({
-      sql: `INSERT INTO registrations (userId, roll_no, display_name, registered_at, updated_at)
-            VALUES (?, ?, ?, datetime('now'), datetime('now'))
-            ON CONFLICT(userId) DO UPDATE SET
-              roll_no = excluded.roll_no,
-              display_name = excluded.display_name,
-              updated_at = datetime('now')`,
-      args: [userId, normalized, displayName],
-    });
-  } catch (error) {
-    // The unique index (added by the migration) is the backstop for a race
-    // between the check above and this write. Report it as the same typed
-    // error so the API still answers 409, not 500.
-    if (isRollConflict(error)) {
-      throw new RollAlreadyRegisteredError(normalized, "unknown");
-    }
-    throw error;
-  }
+  await turso.execute({
+    sql: `INSERT INTO registrations (userId, roll_no, display_name, registered_at, updated_at)
+          VALUES (?, ?, ?, datetime('now'), datetime('now'))
+          ON CONFLICT(userId) DO UPDATE SET
+            roll_no = excluded.roll_no,
+            display_name = excluded.display_name,
+            updated_at = datetime('now')`,
+    args: [userId, rollNo.toUpperCase(), displayName],
+  });
 };
 
 export const getRegistration = async (
@@ -99,10 +61,11 @@ export const getRegistration = async (
 };
 
 /**
- * The registration that currently holds a roll, if any.
+ * The newest registration for a roll, if any.
  *
- * Ordered by updated_at DESC so a database that still carries duplicate rows
- * from before the unique index resolves to the newest claim, deterministically.
+ * Several accounts may hold the same roll now, so this answers with the most
+ * recently updated claim. rowid breaks a same-second tie in favour of the
+ * later insert, which keeps the answer stable instead of arbitrary.
  */
 export const getRegistrationByRoll = async (
   rollNo: string,
@@ -111,7 +74,7 @@ export const getRegistrationByRoll = async (
     sql: `SELECT userId, roll_no, display_name, registered_at, updated_at
           FROM registrations
           WHERE UPPER(roll_no) = ?
-          ORDER BY updated_at DESC, userId ASC
+          ORDER BY updated_at DESC, rowid DESC
           LIMIT 1`,
     args: [rollNo.toUpperCase()],
   });

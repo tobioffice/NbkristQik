@@ -52,23 +52,10 @@ vi.mock("../../src/services/student.service.js", () => ({
   getBunkPlanCard: vi.fn(),
 }));
 
-vi.mock("../../src/db/registration.model.js", () => {
-  class RollAlreadyRegisteredError extends Error {
-    readonly rollNo: string;
-    readonly userId: string;
-    constructor(rollNo: string, userId: string) {
-      super(`Roll ${rollNo} is already registered to another account.`);
-      this.name = "RollAlreadyRegisteredError";
-      this.rollNo = rollNo;
-      this.userId = userId;
-    }
-  }
-  return {
-    getRegistration: vi.fn(),
-    upsertRegistration: vi.fn(),
-    RollAlreadyRegisteredError,
-  };
-});
+vi.mock("../../src/db/registration.model.js", () => ({
+  getRegistration: vi.fn(),
+  upsertRegistration: vi.fn(),
+}));
 
 vi.mock("../../src/services/redis/utils.js", () => ({
   getStudentCached: vi.fn(async () => ({ roll_no: "25KB1A05AR" })),
@@ -104,7 +91,7 @@ await import("../../src/bot/academics/academicHandler.js");
 
 const { getAttendanceCard, getMidMarksCard, getBunkPlanCard } =
   await import("../../src/services/student.service.js");
-const { getRegistration, upsertRegistration, RollAlreadyRegisteredError } =
+const { getRegistration, upsertRegistration } =
   await import("../../src/db/registration.model.js");
 const { trackActivity } = await import("../../src/services/tracker.js");
 const { upsertTgUser } = await import("../../src/db/student.model.js");
@@ -356,20 +343,14 @@ describe("attendance card", () => {
     );
   });
 
-  it("answers with the web 409 copy when another account holds the roll", async () => {
-    vi.mocked(upsertRegistration).mockRejectedValue(
-      new RollAlreadyRegisteredError("25KB1A05AR", "someone-else"),
-    );
-
+  it("saves a roll another account already holds", async () => {
+    // a shared roll is allowed now: the write goes through and the card's
+    // Save button is replaced like any other save
     await tap(207, "save_25KB1A05AR", 9);
 
-    const answer = answerCallbackQuery.mock.calls.at(-1);
-    expect(answer?.[1]?.text).toContain(
-      "already saved to another Telegram account",
-    );
-    expect(answer?.[1]?.text).not.toContain("someone-else");
-    // the card keeps its Save button: nothing was saved
-    expect(editMessageReplyMarkup).not.toHaveBeenCalled();
+    expect(upsertRegistration).toHaveBeenCalledWith("207", "25KB1A05AR", null);
+    expect(answerCallbackQuery.mock.calls.at(-1)?.[1]?.text).toContain("Saved");
+    expect(editMessageReplyMarkup).toHaveBeenCalled();
   });
 
   it("makes suggested rolls tappable and keeps the card actions", async () => {

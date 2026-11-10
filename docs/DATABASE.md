@@ -77,15 +77,17 @@ when the user has no explicit registration.
 | Column | Type | Notes |
 |---|---|---|
 | `userId` | TEXT PRIMARY KEY | Telegram user id |
-| `roll_no` | TEXT NOT NULL | Uppercased; one account per roll |
+| `roll_no` | TEXT NOT NULL | Uppercased; several accounts may share a roll |
 | `display_name` | TEXT | Optional; non-empty values override the college name on the leaderboard |
 | `registered_at` | TEXT | `datetime('now')` (UTC) |
 | `updated_at` | TEXT | `datetime('now')` (UTC) |
 
-One roll belongs to one Telegram account. A unique index on `roll_no` backs
-the API's `409 ROLL_ALREADY_REGISTERED`; boot-time dedupe keeps the newest
-registration per roll (`updated_at` descending, then highest `rowid`) before
-the index is created, which also cleans up databases written before the guard.
+Several accounts may save the same roll: a shared roll is common and the
+server cannot tell who owns one. Schema v4 dropped the unique index and the
+boot-time dedupe that came with it, so two rows for one roll are now normal.
+Lookups by roll (`getRegistrationByRoll`, the leaderboard's name subquery)
+take the newest claim, `updated_at` descending then `rowid` descending.
+Ownership proof is planned; see [`ROADMAP.md`](ROADMAP.md).
 
 ### `student_stats` — projected scores for ranking
 
@@ -179,7 +181,7 @@ not skew the history.
 | `idx_library_reads_doc` | `library_reads` | `doc_id, at` |
 | `idx_library_reads_token` | `library_reads` | `token` |
 | `idx_library_reads_user` | `library_reads` | `user_id, at` |
-| `idx_registrations_roll` (unique) | `registrations` | `roll_no` |
+| `idx_registrations_roll` | `registrations` | `roll_no` |
 | `idx_report_messages` | `report_messages` | `report_id, id` |
 | `idx_reports_created` | `reports` | `created_at` |
 | `idx_reports_status` | `reports` | `status, id` |

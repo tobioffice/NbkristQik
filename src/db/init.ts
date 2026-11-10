@@ -30,8 +30,12 @@ import { logger } from "../config/logger.js";
  *
  * Version 2 adds per-metric timestamps and a semester key to student_stats,
  * and updated_at to fallbackResponses. See migrateToV2().
+ *
+ * Version 4 drops the unique roll index. One roll may be saved by more than
+ * one account until a college-email OTP proves who the student is; see
+ * docs/ROADMAP.md. See migrateToV4().
  */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 /** Reads the database's user_version, treating a missing row as 0. */
 const readSchemaVersion = async (): Promise<number> => {
@@ -133,12 +137,11 @@ export const initDatabase = async () => {
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
-  await dedupeRegistrations();
-  // One roll number maps to one registration. The API also rejects a second
-  // user registering a taken roll; this index is the database-level backstop
-  // for racing requests and pre-guard data.
+  // Not unique on purpose: several accounts may save the same roll until
+  // ownership is proven (see docs/ROADMAP.md). The index only speeds up the
+  // "who holds this roll" lookups.
   await turso.execute(
-    `CREATE UNIQUE INDEX IF NOT EXISTS idx_registrations_roll ON registrations (roll_no);`,
+    `CREATE INDEX IF NOT EXISTS idx_registrations_roll ON registrations (roll_no);`,
   );
   await turso.execute(`
     CREATE TABLE IF NOT EXISTS reports (
@@ -205,6 +208,9 @@ export const initDatabase = async () => {
   }
   if (schemaVersion < 3) {
     await migrateToV3();
+  }
+  if (schemaVersion < 4) {
+    await migrateToV4();
   }
 
   // Stamp after every table exists, so a crash mid-init leaves the old version
@@ -308,36 +314,21 @@ const migrateToV3 = async (): Promise<void> => {
 };
 
 /**
- * The unique roll index can only be created over clean data. Older databases
- * may hold several users on one roll; keep the newest registration per roll
- * (latest updated_at, then highest rowid) and log how many went.
+ * v4: the unique roll index goes away.
+ *
+ * It was added to keep one roll to one account, which blocked honest people
+ * who share a roll and could not be told apart from squatters anyway. Drop it
+ * and leave a plain index for lookups. The ownership check returns only when
+ * it can prove something (college email OTP, docs/ROADMAP.md).
  */
-const dedupeRegistrations = async (): Promise<void> => {
-  const result = await turso.execute(`
-    DELETE FROM registrations
-    WHERE rowid NOT IN (
-      SELECT candidate.rowid
-      FROM registrations candidate
-      WHERE NOT EXISTS (
-        SELECT 1
-        FROM registrations newer
-        WHERE newer.roll_no = candidate.roll_no
-          AND (
-            COALESCE(newer.updated_at, '') > COALESCE(candidate.updated_at, '')
-            OR (
-              COALESCE(newer.updated_at, '') = COALESCE(candidate.updated_at, '')
-              AND newer.rowid > candidate.rowid
-            )
-          )
-      )
-    );
-  `);
-  const removed = Number(result.rowsAffected ?? 0);
-  if (removed > 0) {
-    logger.warn(
-      `[db] removed ${removed} duplicate registration row(s) for the unique roll index`,
-    );
-  }
+const migrateToV4 = async (): Promise<void> => {
+  await turso.execute("DROP INDEX IF EXISTS idx_registrations_roll");
+  await turso.execute(
+    `CREATE INDEX IF NOT EXISTS idx_registrations_roll ON registrations (roll_no);`,
+  );
+  logger.info(
+    "[db] schema v4 migration complete: roll index is no longer unique",
+  );
 };
 
 /**

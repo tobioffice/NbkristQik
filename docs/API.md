@@ -373,20 +373,13 @@ A successful registration answers
 A non-empty `displayName` (trimmed, max 40 chars) is the name the leaderboard
 shows for that roll.
 
-One roll belongs to one Telegram account. A second account claiming a roll
-gets `409`:
-
-```json
-{
-  "code": "ROLL_ALREADY_REGISTERED",
-  "error": "This roll number is already saved to another Telegram account. ..."
-}
-```
-
-The API never says which account holds it. A unique index on
-`registrations.roll_no` backs the application guard, and boot-time dedupe
-keeps the newest claim per roll. There is no delete endpoint by design;
-registering again overwrites the caller's own registration.
+Any number of accounts may save the same roll. Nothing on the server can tell
+a student from someone who typed their roll, so the earlier `409
+ROLL_ALREADY_REGISTERED` guard only blocked people sharing a roll and was
+removed in schema v4. A shared roll shows the newest non-empty `display_name`
+on the leaderboard. Proof of ownership (a college email OTP) is planned; see
+[`ROADMAP.md`](ROADMAP.md). There is no delete endpoint by design; registering
+again overwrites the caller's own registration.
 
 ## Issue report endpoints
 

@@ -10,7 +10,6 @@ import { upsertTgUser } from "../../db/student.model.js";
 import {
   getRegistration,
   upsertRegistration,
-  RollAlreadyRegisteredError,
 } from "../../db/registration.model.js";
 import { invalidateStudentContext } from "../../services/library/entitlement.js";
 
@@ -25,11 +24,6 @@ import { trackActivity, ChatSurface } from "../../services/tracker.js";
 import { isAuthorizedUser, rememberStudent } from "../authorization.js";
 import { TOO_FAST, SOMETHING_BROKE, BAD_ROLL } from "../replies.js";
 import { BOT_USERNAME, botLink } from "../../constants/telegram.js";
-
-/** The same copy the web form shows when a roll belongs to another account. */
-const ROLL_TAKEN_COPY =
-  "This roll number is already saved to another Telegram account. " +
-  "If it's yours, open the app from that account or ask the admin for help.";
 
 const SAVE_PREFIX = "save_";
 
@@ -276,12 +270,8 @@ const handleSaveRoll = async (
       saved = true;
     }
   } catch (e: unknown) {
-    if (e instanceof RollAlreadyRegisteredError) {
-      await answer(ROLL_TAKEN_COPY);
-    } else {
-      logger.error("[academicHandler] save roll failed:", e);
-      await answer(SOMETHING_BROKE);
-    }
+    logger.error("[academicHandler] save roll failed:", e);
+    await answer(SOMETHING_BROKE);
   }
 
   if (!saved) return;

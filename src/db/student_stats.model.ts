@@ -263,16 +263,17 @@ const rankedSubQuery = (
  * The name shown on the leaderboard.
  *
  * An explicit registration's display_name wins over the master-table name,
- * per roll. It must be a scalar subquery, not a JOIN: registrations can hold
- * more than one row for the same roll (before the unique index, or after a
- * manual fix), and a JOIN would duplicate every leaderboard row. ORDER BY
- * updated_at DESC makes the newest claim win deterministically.
+ * per roll. It must be a scalar subquery, not a JOIN: several accounts may
+ * save the same roll (a shared roll, until college-email OTP proves who the
+ * student is — docs/ROADMAP.md), and a JOIN would duplicate every leaderboard
+ * row. ORDER BY updated_at DESC, rowid DESC makes the newest claim win, so two
+ * accounts on one roll cannot make the name flicker between reads.
  */
 const registrationAwareName = (): string =>
   `COALESCE((SELECT r.display_name
              FROM registrations r
              WHERE r.roll_no = s.roll_no AND r.display_name IS NOT NULL
-             ORDER BY r.updated_at DESC
+             ORDER BY r.updated_at DESC, r.rowid DESC
              LIMIT 1), s.name)`;
 
 // Page beyond the end: rows are empty so COUNT(*) OVER() is gone with them.

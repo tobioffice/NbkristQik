@@ -12,8 +12,8 @@ const columnNames = async (table: string): Promise<string[]> => {
   return result.rows.map((row) => String(row.name));
 };
 
-// A database from before the registration guard: two users already hold the
-// same roll and PRAGMA user_version was never stamped.
+// A database from before schema versioning: two users already hold the same
+// roll and PRAGMA user_version was never stamped.
 beforeAll(async () => {
   await turso.execute(`
     CREATE TABLE registrations (
@@ -65,7 +65,7 @@ beforeAll(async () => {
 });
 
 describe("initDatabase", () => {
-  it("deduplicates registrations before enforcing one row per roll", async () => {
+  it("keeps both accounts that already share a roll", async () => {
     const rows = await turso.execute(
       "SELECT userId, roll_no FROM registrations ORDER BY userId",
     );
@@ -73,26 +73,28 @@ describe("initDatabase", () => {
       rows.rows.map((row) => [String(row.userId), String(row.roll_no)]),
     ).toEqual([
       ["u-new", "26KB1A0501"],
+      ["u-old", "26KB1A0501"],
       ["u-other", "26KB1A0502"],
     ]);
 
+    // the index is still there for lookups, just no longer unique
     const index = await turso.execute(
       `SELECT name FROM sqlite_master WHERE type = 'index' AND name = 'idx_registrations_roll'`,
     );
     expect(index.rows).toHaveLength(1);
   });
 
-  it("rejects a second registration for an already-taken roll", async () => {
+  it("accepts a third account on the same roll", async () => {
     await expect(
       turso.execute(
         `INSERT INTO registrations (userId, roll_no) VALUES ('u-third', '26KB1A0501')`,
       ),
-    ).rejects.toThrow(/UNIQUE|constraint/i);
+    ).resolves.toBeTruthy();
   });
 
   it("stamps user_version on a previously unversioned database", async () => {
     expect(await pragmaNumber("PRAGMA user_version")).toBe(SCHEMA_VERSION);
-    expect(SCHEMA_VERSION).toBe(3);
+    expect(SCHEMA_VERSION).toBe(4);
 
     // a second boot is idempotent and does not move the stamp
     await initDatabase();
@@ -102,7 +104,7 @@ describe("initDatabase", () => {
         (await turso.execute("SELECT COUNT(*) AS n FROM registrations")).rows[0]
           .n,
       ),
-    ).toBe(2);
+    ).toBe(4);
   });
 
   it("migrates v1 student_stats to per-metric timestamps and a semester key", async () => {

@@ -59,12 +59,8 @@ beforeAll(async () => {
 });
 
 const { app } = await import("../../src/api/server.js");
-const {
-  upsertRegistration,
-  getRegistration,
-  getRegistrationByRoll,
-  RollAlreadyRegisteredError,
-} = await import("../../src/db/registration.model.js");
+const { upsertRegistration, getRegistration, getRegistrationByRoll } =
+  await import("../../src/db/registration.model.js");
 
 // test env keeps the dev userId shortcut available (ENV=test opt-in)
 const ME = "444555666";
@@ -99,18 +95,18 @@ describe("registration model", () => {
     expect(await getRegistration("000999888777")).toBeNull();
   });
 
-  it("finds a registration by roll and refuses a second account", async () => {
+  it("lets a second account save a roll that is already taken", async () => {
     await upsertRegistration("888999000", "26kb5a0217", "Owner");
+    await upsertRegistration("999000111", "26kb5a0217", "Sharer");
 
-    const byRoll = await getRegistrationByRoll("26KB5A0217");
-    expect(byRoll?.userId).toBe("888999000");
-    expect(byRoll?.display_name).toBe("Owner");
+    // both registrations exist; the roll lookup answers with the newest claim
+    expect((await getRegistration("888999000"))?.roll_no).toBe("26KB5A0217");
+    expect((await getRegistration("999000111"))?.roll_no).toBe("26KB5A0217");
+    expect((await getRegistrationByRoll("26KB5A0217"))?.userId).toBe(
+      "999000111",
+    );
 
-    await expect(
-      upsertRegistration("999000111", "26KB5A0217", null),
-    ).rejects.toBeInstanceOf(RollAlreadyRegisteredError);
-
-    // the owner can still edit their own registration
+    // and the owner can still edit their own registration
     await upsertRegistration("888999000", "26KB5A0217", "Owner Two");
     expect((await getRegistration("888999000"))?.display_name).toBe(
       "Owner Two",
@@ -181,7 +177,7 @@ describe("profile endpoints", () => {
     expect(get.body.student).toMatchObject({ section: "-", branch: "2" });
   });
 
-  it("POST /api/register refuses a roll held by another account with 409", async () => {
+  it("POST /api/register lets a second account save a taken roll", async () => {
     // ME owns 26KB5A0218 (the previous test registered it)
     await upsertRegistration(ME, "26KB5A0218", "Prasanth");
 
@@ -189,12 +185,10 @@ describe("profile endpoints", () => {
       .post("/api/register")
       .send({ userId: "777000111", rollNo: "26KB5A0218" });
 
-    expect(res.status).toBe(409);
-    expect(res.body.code).toBe("ROLL_ALREADY_REGISTERED");
-    expect(res.body.error).toMatch(/another Telegram account/i);
-    // nothing was written for the second account
-    expect(await getRegistration("777000111")).toBeNull();
-    // and the owner's registration is untouched
+    expect(res.status).toBe(200);
+    expect(res.body.registered.roll_no).toBe("26KB5A0218");
+    expect((await getRegistration("777000111"))?.roll_no).toBe("26KB5A0218");
+    // and the first account keeps its own row
     expect((await getRegistration(ME))?.roll_no).toBe("26KB5A0218");
   });
 

@@ -315,6 +315,7 @@ external monitor until fresh external heartbeats have been verified in the
 | [`docs/LIBRARY.md`](docs/LIBRARY.md)               | Library, reader and watermarking            |
 | [`docs/DOCUMENTS.md`](docs/DOCUMENTS.md)           | Document ingest and catalogue               |
 | [`docs/SITE.md`](docs/SITE.md)                     | Marketing site                              |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md)               | Decided but unbuilt work                    |
 | [`DESIGN.md`](DESIGN.md)                           | Design system, binding before any UI change |
 | [`PRODUCT.md`](PRODUCT.md)                         | Product brief, users and principles         |
 | [`openwiki/quickstart.md`](openwiki/quickstart.md) | Generated, source-grounded wiki             |
