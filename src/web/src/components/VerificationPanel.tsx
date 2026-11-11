@@ -96,8 +96,7 @@ export default function VerificationPanel({
           <span>
             <b>Hide me in the leaderboard</b>
             <br />
-            Your row leaves the ranked register and its coverage counts. Nothing
-            else changes.
+            Your name and roll are hidden. Your rank and score still count.
           </span>
         </label>
 

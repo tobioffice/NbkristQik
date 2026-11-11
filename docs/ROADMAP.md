@@ -14,7 +14,7 @@ single-use for ten minutes. Confirming it:
 - makes that Telegram account the roll's verified owner,
 - deletes every other registration for the roll,
 - sets the caller's registration to it,
-- unlocks three independent switches: hide the row in the leaderboard, refuse
+- unlocks three independent switches: hide the name and roll while the row keeps ranking, refuse
   other accounts' data lookups, and refuse other accounts' registrations.
 
 All three start off. With them off the register behaves as before, except that

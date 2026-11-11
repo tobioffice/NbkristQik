@@ -43,7 +43,7 @@ public status page for service health.
 - **College-email verification** — prove your roll with the mailbox the
   college gave you (`<roll>@nbkrist.org`). A verified roll belongs to one
   Telegram account, other claims on it are removed, and you choose separately
-  whether to leave the leaderboard, refuse other accounts' lookups, or refuse
+  whether to hide your name and roll in the leaderboard, refuse other accounts' lookups, or refuse
   their registrations.
 - **Live leaderboard** — the attendance register ranks students by attendance
   or mid-term marks, filtered by year, branch and section. `/leaderboard`

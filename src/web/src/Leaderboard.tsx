@@ -427,7 +427,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
               >
                 {lineBeforeFirst && <TheLine />}
                 {listStats.map((stat, index) => (
-                  <Fragment key={stat.roll_no}>
+                  <Fragment key={stat.hidden ? `hidden-${stat.rank}-${index}` : stat.roll_no}>
                     <StudentRow
                       stat={stat}
                       sortBy={sortBy}

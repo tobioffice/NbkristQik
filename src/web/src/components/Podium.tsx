@@ -36,8 +36,10 @@ const MeritEntry = ({
       <span className={`merit-mark${struck ? " struck" : ""}`}>
         {stat.rank}
       </span>
-      <h3 className="merit-name">{stat.name || stat.roll_no}</h3>
-      <p className="merit-roll">{stat.roll_no}</p>
+      <h3 className="merit-name">
+        {stat.hidden ? "Hidden student" : stat.name || stat.roll_no}
+      </h3>
+      <p className="merit-roll">{stat.hidden ? "Hidden" : stat.roll_no}</p>
       <ScoreStat stat={stat} sortBy={sortBy} />
     </div>
   );

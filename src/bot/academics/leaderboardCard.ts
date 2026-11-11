@@ -122,7 +122,11 @@ export const leaderboardText = async ({
 
   const head = scopeLine(caller.scope);
   const lines = rows.map((row, index) => {
-    const who = withNames && row.name ? row.name : row.roll_no;
+    const who = row.hidden
+      ? "Hidden student"
+      : withNames && row.name
+        ? row.name
+        : row.roll_no;
     return `<b>${index + 1}</b> ${escapeHtml(String(who))} · ${scoreOf(row.attendance_percentage)}`;
   });
 

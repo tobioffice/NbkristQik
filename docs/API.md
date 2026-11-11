@@ -392,7 +392,7 @@ allows five wrong tries. One code a minute and five an hour per account.
 
 The three switches are independent and all start off:
 
-- `hideLeaderboard` removes the row from `/api/leaderboard` rows, totals and coverage.
+- `hideLeaderboard` masks the name and roll in `/api/leaderboard` rows, totals and coverage. The row still ranks and counts.
 - `blockLookups` refuses the bot's attendance, mid-mark and bunk answers for every
   account except the owner and `ADMIN_ID`.
 - `blockRegistration` makes `POST /api/register` answer 403 for every other

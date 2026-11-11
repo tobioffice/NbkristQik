@@ -26,11 +26,13 @@ const StudentRow = ({
       className={`reg-row${isMe ? " reg-row--me" : ""}`}
     >
       <span className="reg-row__rank">{stat.rank}</span>
-      <span className="reg-row__roll">{stat.roll_no}</span>
+      <span className="reg-row__roll">
+        {stat.hidden ? "Hidden" : stat.roll_no}
+      </span>
       {/* a name is not a heading: hundreds of h3s make the register
           unnavigable for a screen reader */}
       <span className="reg-row__name">
-        {stat.name || stat.roll_no}
+        {stat.hidden ? "Hidden student" : stat.name || stat.roll_no}
         {isMe && <span className="you-stamp">YOU</span>}
       </span>
       <span className={`reg-row__score${belowMinimum ? " is-below" : ""}`}>

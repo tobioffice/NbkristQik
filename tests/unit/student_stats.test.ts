@@ -178,6 +178,18 @@ describe("getLeaderboardCoverage", () => {
     ).toBe(1);
   });
 
+  it("keeps a hidden roll in the known total", async () => {
+    await turso.execute(
+      `INSERT INTO roll_claims (roll_no, user_id, email, hide_leaderboard)
+       VALUES ('AAA00001', 'u1', 'aaa00001@nbkrist.org', 1)`,
+    );
+    try {
+      expect(await getLeaderboardCoverage({})).toBe(3);
+    } finally {
+      await turso.execute(`DELETE FROM roll_claims`);
+    }
+  });
+
   it("returns 0 for a filter with no known students", async () => {
     expect(await getLeaderboardCoverage({ year: "4" })).toBe(0);
   });

@@ -52,11 +52,14 @@ const withQuery = (path: string, params: URLSearchParams): string => {
 export type SortBy = "attendance" | "midmarks";
 
 export interface StudentStat {
-  roll_no: string;
+  /** Null when the owner hid the row: rank and score still count. */
+  roll_no: string | null;
   name: string | null;
   attendance_percentage: number;
   mid_marks_avg: number | null;
   rank: number;
+  /** The owner hid their identity; the row itself still ranks. */
+  hidden?: boolean;
 }
 
 /**

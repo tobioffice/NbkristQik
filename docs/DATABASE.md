@@ -91,7 +91,8 @@ Ownership proof is planned; see [`ROADMAP.md`](ROADMAP.md).
 
 One row per roll proved by its college mailbox: `roll_no` (primary key),
 `user_id`, `email`, `verified_at`, the three independent switches
-(`hide_leaderboard`, `block_lookups`, `block_registration`), the legacy
+(`hide_leaderboard` masks the identity but keeps the row ranked,
+`block_lookups`, `block_registration`), the legacy
 `blocked` mirror (1 when any switch is on) and `updated_at`. Written only by
 the verification service; verification terminates other registrations for the
 roll at the moment it is proved, not on every read.

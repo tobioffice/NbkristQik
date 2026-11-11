@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   APP_WEBAPP_URL,
+  LEADERBOARD_WEBAPP_URL,
   LIBRARY_WEBAPP_URL,
   REGISTER_WEBAPP_URL,
   REPORT_LIST_WEBAPP_URL,
@@ -17,6 +18,7 @@ describe("bot links to the app", () => {
   it("puts the section in the query, never the fragment", () => {
     const links = [
       REGISTER_WEBAPP_URL,
+      LEADERBOARD_WEBAPP_URL,
       LIBRARY_WEBAPP_URL,
       REPORT_WEBAPP_URL,
       REPORT_LIST_WEBAPP_URL,
@@ -30,6 +32,7 @@ describe("bot links to the app", () => {
 
   it("names each surface", () => {
     expect(REGISTER_WEBAPP_URL).toBe(`${APP_WEBAPP_URL}?page=profile`);
+    expect(LEADERBOARD_WEBAPP_URL).toBe(`${APP_WEBAPP_URL}?page=rank`);
     expect(LIBRARY_WEBAPP_URL).toBe(`${APP_WEBAPP_URL}?page=library`);
     expect(REPORT_WEBAPP_URL).toBe(`${APP_WEBAPP_URL}?page=issues`);
     expect(REPORT_LIST_WEBAPP_URL).toBe(

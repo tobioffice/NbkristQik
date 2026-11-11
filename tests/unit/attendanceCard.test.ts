@@ -216,9 +216,9 @@ describe("attendance card", () => {
     const leaderboard = buttonsIn(options.reply_markup).find(
       (button) => button.text === "Leaderboard",
     );
-    // the register is answered in the same chat, never on a second surface
-    expect(leaderboard?.callback_data).toBe("lb");
-    expect(leaderboard?.web_app).toBeUndefined();
+    // the register is a page in the mini app now, not a chat answer
+    expect(leaderboard?.callback_data).toBeUndefined();
+    expect(leaderboard?.web_app?.url).toContain("?page=rank");
   });
 
   it.each(["group", "supergroup"])(

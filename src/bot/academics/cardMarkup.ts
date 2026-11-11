@@ -1,5 +1,6 @@
 import { getRegistration } from "../../db/registration.model.js";
 import { logger } from "../../config/logger.js";
+import { LEADERBOARD_WEBAPP_URL } from "../../constants/webapp.js";
 
 /**
  * The keyboard that travels with every attendance card.
@@ -23,17 +24,28 @@ export interface CardMarkup {
 export const cardMarkup = ({
   roll,
   showSave,
+  isPrivate,
 }: {
   roll: string;
   showSave: boolean;
+  /** Telegram only allows web_app buttons in a private chat. */
+  isPrivate: boolean;
 }): CardMarkup => {
   const secondRow: InlineKeyboardButton[] = [];
   if (showSave) {
     secondRow.push({ text: "Save this roll", callback_data: `save_${roll}` });
   }
-  // The register is answered in the chat, the same as /leaderboard: no
-  // second surface, and a group tap is safe.
-  secondRow.push({ text: "Leaderboard", callback_data: "lb" });
+  // The register is a page now: the button opens the mini app's rank route.
+  // In a group the same URL is a plain link, because Telegram refuses web_app
+  // buttons outside a private chat.
+  secondRow.push(
+    isPrivate
+      ? {
+          text: "Leaderboard",
+          web_app: { url: LEADERBOARD_WEBAPP_URL },
+        }
+      : { text: "Leaderboard", url: LEADERBOARD_WEBAPP_URL },
+  );
 
   return {
     inline_keyboard: [

@@ -32,6 +32,9 @@ const section = (route: string): string => {
 /** The profile form. */
 export const REGISTER_WEBAPP_URL = section("/profile");
 
+/** The attendance register, opened from a card's Leaderboard button. */
+export const LEADERBOARD_WEBAPP_URL = section("/rank");
+
 /** The library shelf (admin-only until LIBRARY_ACCESS=all). */
 export const LIBRARY_WEBAPP_URL = section("/library");
 

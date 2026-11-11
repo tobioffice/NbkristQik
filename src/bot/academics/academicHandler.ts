@@ -291,10 +291,17 @@ const handleSaveRoll = async (
 
   // The card stays on screen; only the Save button goes away.
   await bot
-    .editMessageReplyMarkup(cardMarkup({ roll: rollNumber, showSave: false }), {
-      chat_id: msg.chat.id,
-      message_id: msg.message_id,
-    })
+    .editMessageReplyMarkup(
+      cardMarkup({
+        roll: rollNumber,
+        showSave: false,
+        isPrivate: msg.chat.type === "private",
+      }),
+      {
+        chat_id: msg.chat.id,
+        message_id: msg.message_id,
+      },
+    )
     .catch((e: Error) =>
       logger.debug(
         "[academicHandler] save button hide skipped:",

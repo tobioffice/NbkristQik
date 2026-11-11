@@ -157,6 +157,17 @@ export interface LeaderboardFilters {
   search?: string;
 }
 
+export interface LeaderboardRow {
+  /** Null when the owner hid the row; it still ranks and counts. */
+  roll_no: string | null;
+  /** Null for anonymous callers and for hidden rows. */
+  name: string | null;
+  attendance_percentage: number;
+  mid_marks_avg: number | null;
+  rank: number;
+  hidden: boolean;
+}
+
 export interface LeaderboardOptions {
   /**
    * Include student names. Public/anonymous callers pass false so the page
@@ -187,10 +198,6 @@ const buildLeaderboardWhere = (
     // switches. year_sem is written with every stat; the migration backfills
     // it from studentsnew. Rows still null are excluded (and logged at boot).
     `st.year_sem = s.year`,
-    // A verified owner can hide the roll from the public register. Hidden
-    // rows are out of the ranking and the count, so the list stays honest.
-    `NOT EXISTS (SELECT 1 FROM roll_claims c
-                 WHERE c.roll_no = s.roll_no AND c.hide_leaderboard = 1)`,
   ];
   const args: (string | number)[] = [];
 
@@ -257,7 +264,9 @@ const rankedSubQuery = (
 ): string => `
       SELECT s.roll_no, ${nameExpr} AS name, st.attendance_percentage, st.mid_marks_avg,
               RANK() OVER (ORDER BY ${scoreExpr} DESC) as rank,
-              COUNT(*) OVER() as total
+              COUNT(*) OVER() as total,
+              EXISTS(SELECT 1 FROM roll_claims c
+                     WHERE c.roll_no = s.roll_no AND c.hide_leaderboard = 1) as hidden
       FROM student_stats st
       JOIN studentsnew s ON st.roll_no = s.roll_no
       ${whereClause}
@@ -359,7 +368,7 @@ export const getLeaderboard = async (
 
   const result = await turso.execute({
     sql: `
-      SELECT roll_no, name, attendance_percentage, mid_marks_avg, rank, total
+      SELECT roll_no, name, attendance_percentage, mid_marks_avg, rank, total, hidden
       FROM (${rankedSubQuery(scoreExpr, nameExpr, whereClause)})
       ORDER BY rank ASC, roll_no ASC
       LIMIT ? OFFSET ?
@@ -372,7 +381,21 @@ export const getLeaderboard = async (
   }
 
   return {
-    rows: result.rows.map(({ total: _total, ...row }) => row),
+    // A hidden row still counts and keeps its rank; only the identity is
+    // masked. nameExpr already handles anonymous callers, this handles the
+    // verified owner's hide switch.
+    rows: result.rows.map((row): LeaderboardRow => {
+      const isHidden = Number(row.hidden) === 1;
+      return {
+        roll_no: isHidden ? null : String(row.roll_no),
+        name: isHidden || row.name == null ? null : String(row.name),
+        attendance_percentage: Number(row.attendance_percentage),
+        mid_marks_avg:
+          row.mid_marks_avg == null ? null : Number(row.mid_marks_avg),
+        rank: Number(row.rank),
+        hidden: isHidden,
+      };
+    }),
     total: Number(result.rows[0]?.total || 0),
   };
 };
@@ -416,8 +439,6 @@ export const getStudentRank = async (
         JOIN studentsnew s ON st.roll_no = s.roll_no
         WHERE ${column} IS NOT NULL
           AND st.year_sem = s.year
-          AND NOT EXISTS (SELECT 1 FROM roll_claims c
-                          WHERE c.roll_no = s.roll_no AND c.hide_leaderboard = 1)
       )
       SELECT rank, total, score FROM ranked WHERE roll_no = ?
     `,
@@ -475,10 +496,7 @@ export const getLeaderboardFacets = async (
 export const getLeaderboardCoverage = async (
   filters: Pick<LeaderboardFilters, "year" | "branch" | "section">,
 ): Promise<number> => {
-  const conditions: string[] = [
-    // hidden rolls are not part of the denominator either
-    "NOT EXISTS (SELECT 1 FROM roll_claims c WHERE c.roll_no = studentsnew.roll_no AND c.hide_leaderboard = 1)",
-  ];
+  const conditions: string[] = [];
   const args: string[] = [];
 
   if (filters.year) {

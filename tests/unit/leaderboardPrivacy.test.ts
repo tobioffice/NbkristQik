@@ -143,15 +143,26 @@ describe("getLeaderboard search privacy", () => {
     expect(byRoll.rows[0].roll_no).toBe("AAA00001");
   });
 
-  it("drops a row whose owner hid it from the leaderboard", async () => {
+  it("counts a hidden row but masks its identity", async () => {
     await client.execute(
       `INSERT INTO roll_claims (roll_no, user_id, email, hide_leaderboard)
        VALUES ('AAA00001', 'u1', 'aaa00001@nbkrist.org', 1)`,
     );
     try {
       const { rows, total } = await getLeaderboard("attendance", 10, 0, {});
-      expect(total).toBe(1);
-      expect(rows.map((r) => r.roll_no)).toEqual(["AAA00002"]);
+
+      // the row still ranks and counts; only who it is disappears
+      expect(total).toBe(2);
+      expect(rows).toHaveLength(2);
+      const hidden = rows.find((r) => r.hidden === true);
+      expect(hidden).toMatchObject({
+        roll_no: null,
+        name: null,
+        rank: 1,
+        attendance_percentage: 90,
+      });
+      const visible = rows.find((r) => r.hidden === false);
+      expect(visible?.roll_no).toBe("AAA00002");
     } finally {
       await client.execute(`DELETE FROM roll_claims`);
     }
