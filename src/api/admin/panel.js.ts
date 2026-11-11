@@ -132,7 +132,7 @@ export const panelJs = `(function () {
   var drawerIssue = null;
   var threadCache = {};
   var userCache = {};
-  var STALE_MS = { overview: 60000, students: 30000, library: 30000, reports: 60000, live: 0, health: 300000 };
+  var STALE_MS = { overview: 60000, students: 30000, verified: 20000, library: 30000, reports: 60000, live: 0, health: 300000 };
   var isStale = function (name) {
     return !lastLoad[name] || Date.now() - lastLoad[name] > STALE_MS[name];
   };
@@ -149,6 +149,7 @@ export const panelJs = `(function () {
     activateTab(name);
     if (name === "overview" && isStale("overview")) loadOverview();
     if (name === "students" && isStale("students")) loadUsers();
+    if (name === "verified" && isStale("verified")) loadVerified();
     if (name === "library" && isStale("library")) loadLibrary();
     if (name === "live") loadFeed();
     if (name === "reports" && isStale("reports")) loadReports();
@@ -380,6 +381,54 @@ export const panelJs = `(function () {
         trs[t].addEventListener("click", function () { openDrawer(this.dataset.uid); });
     }).catch(function () {}).then(function () { inflight.students = false; });
   };
+  /* ---------- verified rolls ---------- */
+  var verifiedQuery = "";
+  var verifiedTimer = null;
+  var loadVerified = function () {
+    if (inflight.verified) return;
+    inflight.verified = true;
+    lastLoad.verified = Date.now();
+    api("verified?q=" + encodeURIComponent(verifiedQuery) + "&limit=200").then(function (d) {
+      var html = "";
+      for (var i = 0; i < d.claims.length; i++) {
+        var c = d.claims[i];
+        var name = c.displayName || c.masterName || c.firstName || c.username || ("ID " + c.userId);
+        var handle = c.username ? ' <span class="handle">@' + esc(c.username) + "</span>" : "";
+        var when = istDate(parseUtc(c.verifiedAt)) + " " + istTime(parseUtc(c.verifiedAt));
+        var privacy = "";
+        if (c.hideLeaderboard) privacy += '<span class="badge">Hidden</span>';
+        if (c.blockLookups) privacy += '<span class="badge">Owner only</span>';
+        if (c.blockRegistration) privacy += '<span class="badge">Locked</span>';
+        if (!privacy) privacy = '<span class="dim">Open</span>';
+        html += '<tr data-uid="' + (c.userId == null ? "" : c.userId) + '">' +
+          '<td class="who"><div class="name">' + esc(name) + handle + "</div></td>" +
+          '<td class="mono rolls">' + esc(c.rollNo) + "</td>" +
+          '<td class="mono">' + esc(c.email) + "</td>" +
+          '<td class="dim">' + when + "</td>" +
+          "<td>" + privacy + "</td>" +
+          "</tr>";
+      }
+      $("verifiedrows").innerHTML = html;
+      $("verifiedempty").style.display = d.claims.length ? "none" : "block";
+      var trs = $("verifiedrows").querySelectorAll("tr");
+      for (var t = 0; t < trs.length; t++) {
+        var uid = trs[t].dataset.uid;
+        if (uid) trs[t].addEventListener("click", function () { openDrawer(this.dataset.uid); });
+      }
+    }).catch(function () {}).then(function () { inflight.verified = false; });
+  };
+  $("verifiedsearch").addEventListener("input", function () {
+    clearTimeout(verifiedTimer);
+    var v = this.value;
+    verifiedTimer = setTimeout(function () {
+      var q = v.trim();
+      if (q === verifiedQuery) return;
+      verifiedQuery = q;
+      loadVerified();
+    }, 250);
+  });
+  $("verifiedrefresh").addEventListener("click", function () { loadVerified(); });
+
   var searchTimer = null;
   $("usersearch").addEventListener("input", function () {
     clearTimeout(searchTimer);

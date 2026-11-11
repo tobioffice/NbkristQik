@@ -29,6 +29,14 @@ beforeAll(async () => {
       `CREATE TABLE tgusers (userId TEXT PRIMARY KEY, rollNo TEXT)`,
       `CREATE TABLE uptime_log (id INTEGER PRIMARY KEY AUTOINCREMENT, component TEXT,
          status TEXT, latency_ms INTEGER, created_at TEXT)`,
+      `CREATE TABLE studentsnew (roll_no TEXT PRIMARY KEY, name TEXT, section TEXT,
+         branch TEXT, year TEXT)`,
+      `CREATE TABLE registrations (userId TEXT PRIMARY KEY, roll_no TEXT NOT NULL,
+         display_name TEXT, registered_at TEXT, updated_at TEXT)`,
+      `CREATE TABLE roll_claims (roll_no TEXT PRIMARY KEY, user_id TEXT NOT NULL,
+         email TEXT NOT NULL, verified_at TEXT, blocked INTEGER DEFAULT 0,
+         hide_leaderboard INTEGER DEFAULT 0, block_lookups INTEGER DEFAULT 0,
+         block_registration INTEGER DEFAULT 0, updated_at TEXT)`,
     ],
     "write",
   );
@@ -147,6 +155,48 @@ describe("admin routes", () => {
       .set("Cookie", `qik_admin=${rawToken}`);
 
     expect(res.status).toBe(401);
+  });
+
+  it("lists verified rolls with their three privacy flags", async () => {
+    await client.execute(
+      `INSERT INTO studentsnew VALUES ('99KB9A9999', 'MASTER NAME', 'A', '5', '31')`,
+    );
+    await client.execute(
+      `INSERT INTO registrations VALUES ('7', '99KB9A9999', 'VERIFIED STUDENT', datetime('now'), datetime('now'))`,
+    );
+    await client.execute(
+      `INSERT INTO botusers VALUES (7, 'verified', 'Verified', datetime('now'), datetime('now'), 0, 0, 0, 0)`,
+    );
+    await client.execute(
+      `INSERT INTO roll_claims VALUES ('99KB9A9999', '7', '99kb9a9999@nbkrist.org',
+         datetime('now'), 1, 1, 1, 0, datetime('now'))`,
+    );
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    await client.execute({
+      sql: `INSERT INTO admin_sessions (token_hash, expires_at)
+            VALUES (?, datetime('now', '+1 hour'))`,
+      args: [tokenHash(rawToken, PASSWORD)],
+    });
+
+    const res = await request(app)
+      .get(`${BASE}/api/verified`)
+      .set("Cookie", `qik_admin=${rawToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.claims[0]).toMatchObject({
+      rollNo: "99KB9A9999",
+      email: "99kb9a9999@nbkrist.org",
+      displayName: "VERIFIED STUDENT",
+      hideLeaderboard: true,
+      blockLookups: true,
+      blockRegistration: false,
+    });
+
+    const filtered = await request(app)
+      .get(`${BASE}/api/verified?q=nothingmatches`)
+      .set("Cookie", `qik_admin=${rawToken}`);
+    expect(filtered.body.claims).toEqual([]);
   });
 
   it("serves the users table and per-user detail for an authed caller", async () => {

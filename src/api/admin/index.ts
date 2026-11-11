@@ -9,6 +9,7 @@ import { registerUsersRoutes } from "./users.js";
 import { registerRecentRoute, registerHealthRoute } from "./feed.js";
 import { registerReportsRoutes } from "./reports.js";
 import { registerLibraryRoutes } from "./library.js";
+import { registerVerifiedRoutes } from "./verified.js";
 
 /**
  * Admin panel route registry. Disabled (no routes) unless both
@@ -70,6 +71,7 @@ export const registerAdminRoutes = (app: Express): void => {
   registerReportsRoutes(app, base, requireAdmin);
   registerHealthRoute(app, base, requireAdmin);
   registerLibraryRoutes(app, base, requireAdmin);
+  registerVerifiedRoutes(app, base, requireAdmin);
 
   logger.info(`[admin] panel mounted at ${base}`);
 };

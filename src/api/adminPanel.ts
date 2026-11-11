@@ -49,6 +49,7 @@ ${panelCss}
   <nav class="nav" role="tablist">
     <button role="tab" aria-selected="true" data-view="overview">Overview</button>
     <button role="tab" aria-selected="false" data-view="students">Students</button>
+    <button role="tab" aria-selected="false" data-view="verified">Verified</button>
     <button role="tab" aria-selected="false" data-view="library">Library</button>
     <button role="tab" aria-selected="false" data-view="reports">Reports</button>
     <button role="tab" aria-selected="false" data-view="live">Live</button>
@@ -134,6 +135,29 @@ ${panelCss}
       </table>
     </div>
     <div class="empty" id="userempty" style="display:none">No students match.</div>
+  </section>
+
+  <section class="view" id="view-verified">
+    <div class="section-head" style="margin-bottom:12px">
+      <h2>Verified rolls</h2>
+      <span class="hint">college-email ownership and what each owner chose to hide</span>
+    </div>
+    <div class="toolbar">
+      <input class="search" id="verifiedsearch" placeholder="Search roll, name, email or @username&hellip;" aria-label="Search verified rolls">
+      <button class="btn-ghost" id="verifiedrefresh">Refresh</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th><th>Roll</th><th>College email</th><th>Verified</th>
+            <th>Privacy</th>
+          </tr>
+        </thead>
+        <tbody id="verifiedrows"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="verifiedempty" style="display:none">No verified rolls yet.</div>
   </section>
 
   <section class="view" id="view-library">
