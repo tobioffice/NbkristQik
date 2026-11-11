@@ -14,12 +14,12 @@ single-use for ten minutes. Confirming it:
 - makes that Telegram account the roll's verified owner,
 - deletes every other registration for the roll,
 - sets the caller's registration to it,
-- unlocks the owner's "hide my roll" switch.
+- unlocks three independent switches: hide the row in the leaderboard, refuse
+  other accounts' data lookups, and refuse other accounts' registrations.
 
-Ownership always blocks other accounts from registering the roll. The switch
-additionally removes the roll from the leaderboard and its coverage counts, and
-refuses `/attendance`, `/midmarks` and `/bunk` lookups from anyone but the owner
-(or `ADMIN_ID`). Unverified registrations keep working exactly as before.
+All three start off. With them off the register behaves as before, except that
+verification already removed the other claims. Turning one on affects only its
+own surface. Unverified registrations keep working exactly as before.
 
 ## Other open work
 

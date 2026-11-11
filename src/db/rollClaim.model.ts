@@ -9,9 +9,21 @@ export interface RollClaim {
   user_id: string;
   email: string;
   verified_at: string;
-  /** 1 = the owner hid this roll from the public register. */
+  /** 1 = at least one privacy switch is on (mirror for older readers). */
   blocked: number;
+  /** 1 = the row is hidden from the public leaderboard. */
+  hide_leaderboard: number;
+  /** 1 = other accounts may not fetch this roll's data. */
+  block_lookups: number;
+  /** 1 = other accounts may not register this roll. */
+  block_registration: number;
   updated_at: string;
+}
+
+export interface RollClaimOptions {
+  hideLeaderboard: boolean;
+  blockLookups: boolean;
+  blockRegistration: boolean;
 }
 
 const toClaim = (row: Record<string, unknown>): RollClaim => ({
@@ -20,6 +32,9 @@ const toClaim = (row: Record<string, unknown>): RollClaim => ({
   email: String(row.email),
   verified_at: String(row.verified_at),
   blocked: Number(row.blocked) === 1 ? 1 : 0,
+  hide_leaderboard: Number(row.hide_leaderboard) === 1 ? 1 : 0,
+  block_lookups: Number(row.block_lookups) === 1 ? 1 : 0,
+  block_registration: Number(row.block_registration) === 1 ? 1 : 0,
   updated_at: String(row.updated_at),
 });
 
@@ -27,7 +42,8 @@ export const getRollClaim = async (
   rollNo: string,
 ): Promise<RollClaim | null> => {
   const result = await turso.execute({
-    sql: `SELECT roll_no, user_id, email, verified_at, blocked, updated_at
+    sql: `SELECT roll_no, user_id, email, verified_at, blocked,
+                 hide_leaderboard, block_lookups, block_registration, updated_at
           FROM roll_claims WHERE UPPER(roll_no) = ?`,
     args: [rollNo.toUpperCase()],
   });
@@ -38,7 +54,8 @@ export const getClaimForUser = async (
   userId: string,
 ): Promise<RollClaim | null> => {
   const result = await turso.execute({
-    sql: `SELECT roll_no, user_id, email, verified_at, blocked, updated_at
+    sql: `SELECT roll_no, user_id, email, verified_at, blocked,
+                 hide_leaderboard, block_lookups, block_registration, updated_at
           FROM roll_claims WHERE user_id = ?
           ORDER BY verified_at DESC, rowid DESC
           LIMIT 1`,
@@ -60,21 +77,33 @@ export const upsertRollClaim = async (
             user_id = excluded.user_id,
             email = excluded.email,
             verified_at = datetime('now'),
+            blocked = 0,
+            hide_leaderboard = 0,
+            block_lookups = 0,
+            block_registration = 0,
             updated_at = datetime('now')`,
     args: [rollNo.toUpperCase(), String(userId), email],
   });
 };
 
-/** Flip the owner's hide switch. Returns false when the user owns no claim. */
-export const setClaimBlocked = async (
+/**
+ * Set the owner's three privacy switches. Returns false when the user owns no
+ * claim. `blocked` is kept as the "any switch is on" mirror.
+ */
+export const setClaimOptions = async (
   userId: string,
-  blocked: boolean,
+  options: RollClaimOptions,
 ): Promise<boolean> => {
+  const hide = options.hideLeaderboard ? 1 : 0;
+  const lookups = options.blockLookups ? 1 : 0;
+  const registration = options.blockRegistration ? 1 : 0;
+  const any = hide || lookups || registration;
   const result = await turso.execute({
     sql: `UPDATE roll_claims
-          SET blocked = ?, updated_at = datetime('now')
+          SET hide_leaderboard = ?, block_lookups = ?, block_registration = ?,
+              blocked = ?, updated_at = datetime('now')
           WHERE user_id = ?`,
-    args: [blocked ? 1 : 0, String(userId)],
+    args: [hide, lookups, registration, any, String(userId)],
   });
   return Number(result.rowsAffected ?? 0) > 0;
 };

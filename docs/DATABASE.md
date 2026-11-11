@@ -27,9 +27,10 @@ reports `journal_mode = memory` instead of `wal`, which is expected.
 
 ## Schema versioning
 
-The schema version lives in `PRAGMA user_version` and is currently **5**
+The schema version lives in `PRAGMA user_version` and is currently **6**
 (`SCHEMA_VERSION` in `src/db/init.ts`). Version 5 added `roll_claims` and
-`email_verifications` for college-email verification.
+`email_verifications` for college-email verification; version 6 split the
+single hide switch into three independent options.
 
 - `0` means a fresh or pre-versioning database. Every table is created first,
   then the version is stamped, so a crash mid-init leaves version 0 and the
@@ -89,9 +90,11 @@ Ownership proof is planned; see [`ROADMAP.md`](ROADMAP.md).
 ### `roll_claims` — verified roll ownership
 
 One row per roll proved by its college mailbox: `roll_no` (primary key),
-`user_id`, `email`, `verified_at`, `blocked` (1 = hidden from the register)
-and `updated_at`. Written only by the verification service; ownership always
-terminates other registrations for the roll.
+`user_id`, `email`, `verified_at`, the three independent switches
+(`hide_leaderboard`, `block_lookups`, `block_registration`), the legacy
+`blocked` mirror (1 when any switch is on) and `updated_at`. Written only by
+the verification service; verification terminates other registrations for the
+roll at the moment it is proved, not on every read.
 
 ### `email_verifications` — one row per code sent
 

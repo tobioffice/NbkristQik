@@ -13,7 +13,7 @@ import { bot } from "../bot.js";
 import type { Message } from "node-telegram-bot-api";
 import { logger } from "../../config/logger.js";
 import { cardMarkup, isRollSaved, type CardMarkup } from "./cardMarkup.js";
-import { isRollBlockedForViewer } from "../../services/verification/otp.js";
+import { isLookupBlockedForViewer } from "../../services/verification/otp.js";
 
 /**
  * Where a card should appear.
@@ -211,7 +211,7 @@ const refusePrivateRoll = async (
   options?: CardOptions,
 ): Promise<boolean> => {
   const viewer = options?.userId ?? msg.from?.id;
-  if (!(await isRollBlockedForViewer(rollno, viewer))) return false;
+  if (!(await isLookupBlockedForViewer(rollno, viewer))) return false;
   await bot
     .sendMessage(msg.chat.id, ROLL_IS_PRIVATE, {
       reply_to_message_id: msg.message_id,

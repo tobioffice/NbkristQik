@@ -38,8 +38,12 @@ import { logger } from "../config/logger.js";
  * Version 5 adds college-email ownership: roll_claims (one verified owner per
  * roll, with the optional hide switch) and email_verifications (hashed OTPs).
  * The tables are created with IF NOT EXISTS on every boot.
+ *
+ * Version 6 splits the single hide switch into three independent choices:
+ * hide_leaderboard, block_lookups and block_registration. `blocked` stays as
+ * an "any option is on" mirror so older readers keep working.
  */
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 /** Reads the database's user_version, treating a missing row as 0. */
 const readSchemaVersion = async (): Promise<number> => {
@@ -148,10 +152,10 @@ export const initDatabase = async () => {
     `CREATE INDEX IF NOT EXISTS idx_registrations_roll ON registrations (roll_no);`,
   );
 
-  // A roll proved by its college email has exactly one owner. `blocked` is
-  // the owner's switch: hide the roll's figures from the public register and
-  // from every other account. Ownership itself always terminates other
-  // registrations; see the verification service.
+  // A roll proved by its college email has exactly one owner. The three
+  // switches are independent: hide the row from the public register, refuse
+  // other accounts' data lookups, refuse other accounts' registrations.
+  // `blocked` mirrors "any of the three is on" for older readers.
   await turso.execute(`
     CREATE TABLE IF NOT EXISTS roll_claims (
         roll_no TEXT PRIMARY KEY,
@@ -159,6 +163,9 @@ export const initDatabase = async () => {
         email TEXT NOT NULL,
         verified_at TEXT NOT NULL DEFAULT (datetime('now')),
         blocked INTEGER NOT NULL DEFAULT 0,
+        hide_leaderboard INTEGER NOT NULL DEFAULT 0,
+        block_lookups INTEGER NOT NULL DEFAULT 0,
+        block_registration INTEGER NOT NULL DEFAULT 0,
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
@@ -259,6 +266,9 @@ export const initDatabase = async () => {
   }
   if (schemaVersion < 4) {
     await migrateToV4();
+  }
+  if (schemaVersion < 6) {
+    await migrateToV6();
   }
 
   // Stamp after every table exists, so a crash mid-init leaves the old version
@@ -377,6 +387,41 @@ const migrateToV4 = async (): Promise<void> => {
   logger.info(
     "[db] schema v4 migration complete: roll index is no longer unique",
   );
+};
+
+/**
+ * v6: the single hide switch becomes three independent choices.
+ *
+ * A claim that was hidden before keeps hiding everything: all three columns
+ * start at 1 for it. A fresh claim starts with all three off.
+ */
+const migrateToV6 = async (): Promise<void> => {
+  await ensureColumn(
+    "roll_claims",
+    "hide_leaderboard",
+    "INTEGER NOT NULL DEFAULT 0",
+  );
+  await ensureColumn(
+    "roll_claims",
+    "block_lookups",
+    "INTEGER NOT NULL DEFAULT 0",
+  );
+  await ensureColumn(
+    "roll_claims",
+    "block_registration",
+    "INTEGER NOT NULL DEFAULT 0",
+  );
+  await turso.execute(`
+    UPDATE roll_claims
+    SET hide_leaderboard = blocked,
+        block_lookups = blocked,
+        block_registration = blocked
+    WHERE blocked = 1
+      AND hide_leaderboard = 0
+      AND block_lookups = 0
+      AND block_registration = 0
+  `);
+  logger.info("[db] schema v6 migration complete: three privacy switches");
 };
 
 /**

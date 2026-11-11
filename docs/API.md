@@ -384,14 +384,22 @@ allows five wrong tries. One code a minute and five an hour per account.
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/api/verification` | `{verified, roll, email, blocked}` for the caller |
+| `GET` | `/api/verification` | `{verified, roll, email, blocked, hideLeaderboard, blockLookups, blockRegistration}` for the caller |
 | `POST` | `/api/verification/start` | `{rollNo}`; sends the code, answers 404 for an unknown roll, 429 when rate-limited, 503 when SMTP is unset |
 | `POST` | `/api/verification/confirm` | `{rollNo, code}`; claims the roll, terminates other registrations for it, answers the new state |
-| `POST` | `/api/verification/block` | `{blocked}`; only a verified owner; hides or restores the roll |
+| `POST` | `/api/verification/options` | `{hideLeaderboard, blockLookups, blockRegistration}`, all booleans; only a verified owner |
+| `POST` | `/api/verification/block` | Deprecated alias: `{blocked}` sets all three switches together |
 
-A blocked roll is excluded from `/api/leaderboard` rows, totals and coverage,
-and from the bot's attendance, mid-mark and bunk answers for every viewer except
-its owner and `ADMIN_ID`.
+The three switches are independent and all start off:
+
+- `hideLeaderboard` removes the row from `/api/leaderboard` rows, totals and coverage.
+- `blockLookups` refuses the bot's attendance, mid-mark and bunk answers for every
+  account except the owner and `ADMIN_ID`.
+- `blockRegistration` makes `POST /api/register` answer 403 for every other
+  account. With it off, another account may save the roll again.
+
+`blocked` in the GET response is true when any of the three is on. It is kept for
+older clients and is not a separate switch.
 
 ## Issue report endpoints
 

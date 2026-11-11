@@ -35,6 +35,9 @@ beforeAll(async () => {
         email TEXT NOT NULL,
         verified_at TEXT NOT NULL DEFAULT (datetime('now')),
         blocked INTEGER NOT NULL DEFAULT 0,
+        hide_leaderboard INTEGER NOT NULL DEFAULT 0,
+        block_lookups INTEGER NOT NULL DEFAULT 0,
+        block_registration INTEGER NOT NULL DEFAULT 0,
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )`,
       `CREATE TABLE registrations (
@@ -138,6 +141,20 @@ describe("getLeaderboard search privacy", () => {
     );
     expect(byRoll.total).toBe(1);
     expect(byRoll.rows[0].roll_no).toBe("AAA00001");
+  });
+
+  it("drops a row whose owner hid it from the leaderboard", async () => {
+    await client.execute(
+      `INSERT INTO roll_claims (roll_no, user_id, email, hide_leaderboard)
+       VALUES ('AAA00001', 'u1', 'aaa00001@nbkrist.org', 1)`,
+    );
+    try {
+      const { rows, total } = await getLeaderboard("attendance", 10, 0, {});
+      expect(total).toBe(1);
+      expect(rows.map((r) => r.roll_no)).toEqual(["AAA00002"]);
+    } finally {
+      await client.execute(`DELETE FROM roll_claims`);
+    }
   });
 
   it("keeps rank ties and totals unchanged with names off", async () => {

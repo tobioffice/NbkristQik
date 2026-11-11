@@ -353,7 +353,17 @@ export interface VerificationState {
   verified: boolean;
   roll: string | null;
   email: string | null;
+  /** At least one switch is on. */
   blocked: boolean;
+  hideLeaderboard: boolean;
+  blockLookups: boolean;
+  blockRegistration: boolean;
+}
+
+export interface VerificationOptions {
+  hideLeaderboard: boolean;
+  blockLookups: boolean;
+  blockRegistration: boolean;
 }
 
 const verificationRequest = async (
@@ -408,17 +418,17 @@ export const confirmVerification = async (
   return readJson<VerificationState>(res);
 };
 
-export const setRollBlocked = async (
+export const setVerificationOptions = async (
   identity: ApiIdentity,
-  blocked: boolean,
+  options: VerificationOptions,
 ): Promise<VerificationState> => {
-  const res = await fetchWithTimeout(`${API_BASE}/api/verification/block`, {
+  const res = await fetchWithTimeout(`${API_BASE}/api/verification/options`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...authHeaders(identity.initData),
     },
-    body: JSON.stringify({ blocked, ...identityBody(identity) }),
+    body: JSON.stringify({ ...options, ...identityBody(identity) }),
   });
   return readJson<VerificationState>(res);
 };

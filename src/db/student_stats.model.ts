@@ -190,7 +190,7 @@ const buildLeaderboardWhere = (
     // A verified owner can hide the roll from the public register. Hidden
     // rows are out of the ranking and the count, so the list stays honest.
     `NOT EXISTS (SELECT 1 FROM roll_claims c
-                 WHERE c.roll_no = s.roll_no AND c.blocked = 1)`,
+                 WHERE c.roll_no = s.roll_no AND c.hide_leaderboard = 1)`,
   ];
   const args: (string | number)[] = [];
 
@@ -417,7 +417,7 @@ export const getStudentRank = async (
         WHERE ${column} IS NOT NULL
           AND st.year_sem = s.year
           AND NOT EXISTS (SELECT 1 FROM roll_claims c
-                          WHERE c.roll_no = s.roll_no AND c.blocked = 1)
+                          WHERE c.roll_no = s.roll_no AND c.hide_leaderboard = 1)
       )
       SELECT rank, total, score FROM ranked WHERE roll_no = ?
     `,
@@ -477,7 +477,7 @@ export const getLeaderboardCoverage = async (
 ): Promise<number> => {
   const conditions: string[] = [
     // hidden rolls are not part of the denominator either
-    "NOT EXISTS (SELECT 1 FROM roll_claims c WHERE c.roll_no = studentsnew.roll_no AND c.blocked = 1)",
+    "NOT EXISTS (SELECT 1 FROM roll_claims c WHERE c.roll_no = studentsnew.roll_no AND c.hide_leaderboard = 1)",
   ];
   const args: string[] = [];
 

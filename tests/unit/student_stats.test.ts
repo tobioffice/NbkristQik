@@ -39,6 +39,9 @@ beforeAll(async () => {
     email TEXT NOT NULL,
     verified_at TEXT NOT NULL DEFAULT (datetime('now')),
     blocked INTEGER NOT NULL DEFAULT 0,
+    hide_leaderboard INTEGER NOT NULL DEFAULT 0,
+    block_lookups INTEGER NOT NULL DEFAULT 0,
+    block_registration INTEGER NOT NULL DEFAULT 0,
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`);
   await turso.execute(`CREATE TABLE registrations (

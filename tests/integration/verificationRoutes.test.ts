@@ -51,6 +51,9 @@ beforeAll(async () => {
         email TEXT NOT NULL,
         verified_at TEXT NOT NULL DEFAULT (datetime('now')),
         blocked INTEGER NOT NULL DEFAULT 0,
+        hide_leaderboard INTEGER NOT NULL DEFAULT 0,
+        block_lookups INTEGER NOT NULL DEFAULT 0,
+        block_registration INTEGER NOT NULL DEFAULT 0,
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )`,
       `CREATE TABLE email_verifications (
@@ -114,37 +117,93 @@ describe("verification API", () => {
       verified: true,
       roll: ROLL,
       blocked: false,
+      hideLeaderboard: false,
+      blockLookups: false,
+      blockRegistration: false,
     });
 
     const state = await request(app).get(`/api/verification?${as(OWNER)}`);
     expect(state.body.verified).toBe(true);
   });
 
-  it("refuses the roll to every other account", async () => {
-    const res = await request(app)
+  it("lets another account register until the owner restricts it", async () => {
+    const allowed = await request(app)
       .post(`/api/register?${as(OTHER)}`)
       .send({ rollNo: ROLL, displayName: "OTHER" });
+    expect(allowed.status).toBe(200);
 
-    expect(res.status).toBe(403);
+    const restrict = await request(app)
+      .post(`/api/verification/options?${as(OWNER)}`)
+      .send({
+        hideLeaderboard: false,
+        blockLookups: false,
+        blockRegistration: true,
+      });
+    expect(restrict.status).toBe(200);
+    expect(restrict.body).toMatchObject({ blockRegistration: true });
+
+    const refused = await request(app)
+      .post(`/api/register?${as(OTHER)}`)
+      .send({ rollNo: ROLL, displayName: "OTHER" });
+    expect(refused.status).toBe(403);
   });
 
-  it("lets the owner register it", async () => {
-    const res = await request(app)
-      .post(`/api/register?${as(OWNER)}`)
-      .send({ rollNo: ROLL, displayName: "OWNER" });
-
-    expect(res.status).toBe(200);
-  });
-
-  it("hides and restores the roll with the owner's switch", async () => {
+  it("sets the three switches independently", async () => {
     const hide = await request(app)
+      .post(`/api/verification/options?${as(OWNER)}`)
+      .send({
+        hideLeaderboard: true,
+        blockLookups: false,
+        blockRegistration: false,
+      });
+    expect(hide.body).toMatchObject({
+      hideLeaderboard: true,
+      blockLookups: false,
+      blockRegistration: false,
+      blocked: true,
+    });
+
+    const lookups = await request(app)
+      .post(`/api/verification/options?${as(OWNER)}`)
+      .send({
+        hideLeaderboard: false,
+        blockLookups: true,
+        blockRegistration: false,
+      });
+    expect(lookups.body).toMatchObject({
+      hideLeaderboard: false,
+      blockLookups: true,
+      blockRegistration: false,
+      blocked: true,
+    });
+  });
+
+  it("rejects a partial options body", async () => {
+    const res = await request(app)
+      .post(`/api/verification/options?${as(OWNER)}`)
+      .send({ hideLeaderboard: true });
+    expect(res.status).toBe(400);
+  });
+
+  it("keeps the deprecated all-or-nothing alias", async () => {
+    const on = await request(app)
       .post(`/api/verification/block?${as(OWNER)}`)
       .send({ blocked: true });
-    expect(hide.body).toMatchObject({ ok: true, blocked: true });
+    expect(on.body).toMatchObject({
+      ok: true,
+      hideLeaderboard: true,
+      blockLookups: true,
+      blockRegistration: true,
+    });
 
-    const show = await request(app)
+    const off = await request(app)
       .post(`/api/verification/block?${as(OWNER)}`)
       .send({ blocked: false });
-    expect(show.body).toMatchObject({ ok: true, blocked: false });
+    expect(off.body).toMatchObject({
+      ok: true,
+      hideLeaderboard: false,
+      blockLookups: false,
+      blockRegistration: false,
+    });
   });
 });

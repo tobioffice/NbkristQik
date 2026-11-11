@@ -4,7 +4,7 @@ import {
   VerificationError,
   confirmEmailVerification,
   getVerificationState,
-  setVerificationBlock,
+  setVerificationOptions,
   startEmailVerification,
 } from "../services/verification/otp.js";
 import { logger } from "../config/logger.js";
@@ -89,7 +89,43 @@ verificationRouter.post(
   },
 );
 
-// POST /api/verification/block — the owner's hide switch
+// POST /api/verification/options — the owner's three privacy switches
+verificationRouter.post(
+  "/verification/options",
+  async (req: Request, res: Response) => {
+    try {
+      const resolved = resolveUserId(req);
+      if (!resolved || resolved.error) {
+        unauthorized(res, resolved?.error);
+        return;
+      }
+      const { hideLeaderboard, blockLookups, blockRegistration } =
+        req.body ?? {};
+      if (
+        typeof hideLeaderboard !== "boolean" ||
+        typeof blockLookups !== "boolean" ||
+        typeof blockRegistration !== "boolean"
+      ) {
+        res.status(400).json({
+          ok: false,
+          error:
+            "hideLeaderboard, blockLookups and blockRegistration must all be booleans",
+        });
+        return;
+      }
+      const state = await setVerificationOptions(resolved.userId, {
+        hideLeaderboard,
+        blockLookups,
+        blockRegistration,
+      });
+      res.json({ ok: true, ...state });
+    } catch (e) {
+      fail(res, e, "options");
+    }
+  },
+);
+
+// Deprecated alias for one deployed bundle: `blocked` used to mean all three.
 verificationRouter.post(
   "/verification/block",
   async (req: Request, res: Response) => {
@@ -104,7 +140,11 @@ verificationRouter.post(
         res.status(400).json({ ok: false, error: "blocked must be a boolean" });
         return;
       }
-      const state = await setVerificationBlock(resolved.userId, blocked);
+      const state = await setVerificationOptions(resolved.userId, {
+        hideLeaderboard: blocked,
+        blockLookups: blocked,
+        blockRegistration: blocked,
+      });
       res.json({ ok: true, ...state });
     } catch (e) {
       fail(res, e, "block");

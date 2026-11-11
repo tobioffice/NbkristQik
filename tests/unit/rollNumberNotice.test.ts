@@ -31,7 +31,7 @@ vi.mock("../../src/services/student.service.js", () => ({
 }));
 
 vi.mock("../../src/services/verification/otp.js", () => ({
-  isRollBlockedForViewer: vi.fn(async () => false),
+  isLookupBlockedForViewer: vi.fn(async () => false),
   isRegistrationBlockedFor: vi.fn(async () => false),
   getVerificationState: vi.fn(async () => ({
     verified: false,

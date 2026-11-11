@@ -15,9 +15,10 @@ import {
 import {
   getClaimForUser,
   getRollClaim,
-  setClaimBlocked,
+  setClaimOptions,
   upsertRollClaim,
   type RollClaim,
+  type RollClaimOptions,
 } from "../../db/rollClaim.model.js";
 import {
   deleteRegistrationsForRollExcept,
@@ -73,7 +74,11 @@ export interface VerificationState {
   verified: boolean;
   roll: string | null;
   email: string | null;
+  /** At least one switch is on (kept for older clients). */
   blocked: boolean;
+  hideLeaderboard: boolean;
+  blockLookups: boolean;
+  blockRegistration: boolean;
 }
 
 const toState = (claim: RollClaim | null): VerificationState =>
@@ -83,8 +88,19 @@ const toState = (claim: RollClaim | null): VerificationState =>
         roll: claim.roll_no,
         email: claim.email,
         blocked: claim.blocked === 1,
+        hideLeaderboard: claim.hide_leaderboard === 1,
+        blockLookups: claim.block_lookups === 1,
+        blockRegistration: claim.block_registration === 1,
       }
-    : { verified: false, roll: null, email: null, blocked: false };
+    : {
+        verified: false,
+        roll: null,
+        email: null,
+        blocked: false,
+        hideLeaderboard: false,
+        blockLookups: false,
+        blockRegistration: false,
+      };
 
 export const getVerificationState = async (
   userId: string,
@@ -219,12 +235,12 @@ export const confirmEmailVerification = async (
   return toState(await getClaimForUser(userId));
 };
 
-/** The owner's switch: hide the roll from the public register. */
-export const setVerificationBlock = async (
+/** The owner's three independent privacy switches. */
+export const setVerificationOptions = async (
   userId: string,
-  blocked: boolean,
+  options: RollClaimOptions,
 ): Promise<VerificationState> => {
-  const changed = await setClaimBlocked(userId, blocked);
+  const changed = await setClaimOptions(userId, options);
   if (!changed) {
     throw new VerificationError("Verify your college email first.", 404);
   }
@@ -232,15 +248,15 @@ export const setVerificationBlock = async (
 };
 
 /**
- * True when a blocked roll's data must not be shown to this viewer. The
- * owner and the admin always see it.
+ * True when a verified owner asked other accounts not to fetch this roll's
+ * data. The owner and the admin always see it.
  */
-export const isRollBlockedForViewer = async (
+export const isLookupBlockedForViewer = async (
   rollNo: string,
   viewerUserId?: string | number | null,
 ): Promise<boolean> => {
   const claim = await getRollClaim(rollNo);
-  if (!claim || claim.blocked !== 1) return false;
+  if (!claim || claim.block_lookups !== 1) return false;
   // No viewer at all is not the owner: refuse rather than fall open.
   if (viewerUserId == null) return true;
   if (String(viewerUserId) === claim.user_id) return false;
@@ -249,14 +265,16 @@ export const isRollBlockedForViewer = async (
 };
 
 /**
- * Registration is owner-only once a roll is verified, whether or not the
- * owner has hidden it. The block switch controls data visibility, not
- * ownership.
+ * True when the owner asked that only their account may register the roll.
+ * With the switch off, another account may save it again; the owner's own
+ * registration is not touched.
  */
 export const isRegistrationBlockedFor = async (
   rollNo: string,
   userId: string,
 ): Promise<boolean> => {
   const claim = await getRollClaim(rollNo);
-  return Boolean(claim && claim.user_id !== String(userId));
+  return Boolean(
+    claim && claim.block_registration === 1 && claim.user_id !== String(userId),
+  );
 };

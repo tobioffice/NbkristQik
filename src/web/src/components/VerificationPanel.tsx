@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
   confirmVerification,
   getVerification,
-  setRollBlocked,
+  setVerificationOptions,
   startVerification,
   type ApiIdentity,
   type VerificationState,
@@ -29,7 +29,7 @@ export default function VerificationPanel({
   const [state, setState] = useState<VerificationState | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [code, setCode] = useState("");
-  const [busy, setBusy] = useState<"send" | "confirm" | "block" | null>(null);
+  const [busy, setBusy] = useState<"send" | "confirm" | "options" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -62,35 +62,77 @@ export default function VerificationPanel({
   }
 
   if (state?.verified && state.roll === roll.toUpperCase()) {
+    const setOption =
+      (key: "hideLeaderboard" | "blockLookups" | "blockRegistration") =>
+      (checked: boolean) => {
+        setError(null);
+        setBusy("options");
+        setVerificationOptions(identity, {
+          hideLeaderboard: state.hideLeaderboard,
+          blockLookups: state.blockLookups,
+          blockRegistration: state.blockRegistration,
+          [key]: checked,
+        })
+          .then(setState)
+          .catch((e: Error) => setError(e.message))
+          .finally(() => setBusy(null));
+      };
+
     return (
       <div className="verify-panel">
         <p className="form-title">Verified</p>
         <div className="note note--ok">
-          {state.email} is proved for this roll. Only this account can use or
-          register it.
+          {state.email} is proved for this roll. Choose what the register may
+          do with it.
         </div>
+
         <label className="check-row">
           <input
             type="checkbox"
-            checked={state.blocked}
+            checked={state.hideLeaderboard}
             disabled={busy !== null}
-            onChange={(event) => {
-              const blocked = event.target.checked;
-              setError(null);
-              setBusy("block");
-              setRollBlocked(identity, blocked)
-                .then(setState)
-                .catch((e: Error) => setError(e.message))
-                .finally(() => setBusy(null));
-            }}
+            onChange={(event) => setOption("hideLeaderboard")(event.target.checked)}
           />
           <span>
-            <b>Hide my roll from others</b>
+            <b>Hide me in the leaderboard</b>
             <br />
-            Your name and figures leave the leaderboard, and nobody else can
-            check or register this roll.
+            Your row leaves the ranked register and its coverage counts. Nothing
+            else changes.
           </span>
         </label>
+
+        <label className="check-row">
+          <input
+            type="checkbox"
+            checked={state.blockLookups}
+            disabled={busy !== null}
+            onChange={(event) => setOption("blockLookups")(event.target.checked)}
+          />
+          <span>
+            <b>Stop anyone checking my data</b>
+            <br />
+            Attendance, mid marks and bunk refuse every other account. You and
+            the admin still see them.
+          </span>
+        </label>
+
+        <label className="check-row">
+          <input
+            type="checkbox"
+            checked={state.blockRegistration}
+            disabled={busy !== null}
+            onChange={(event) =>
+              setOption("blockRegistration")(event.target.checked)
+            }
+          />
+          <span>
+            <b>Only I can register this roll</b>
+            <br />
+            Another account cannot save this roll as its own. Your registration
+            stays either way.
+          </span>
+        </label>
+
         {error ? <div className="note note--err mt-4">{error}</div> : null}
       </div>
     );

@@ -35,8 +35,8 @@ const {
   startEmailVerification,
   confirmEmailVerification,
   getVerificationState,
-  setVerificationBlock,
-  isRollBlockedForViewer,
+  setVerificationOptions,
+  isLookupBlockedForViewer,
   isRegistrationBlockedFor,
   VerificationError,
 } = await import("../../src/services/verification/otp.js");
@@ -61,6 +61,9 @@ beforeAll(async () => {
         email TEXT NOT NULL,
         verified_at TEXT NOT NULL DEFAULT (datetime('now')),
         blocked INTEGER NOT NULL DEFAULT 0,
+        hide_leaderboard INTEGER NOT NULL DEFAULT 0,
+        block_lookups INTEGER NOT NULL DEFAULT 0,
+        block_registration INTEGER NOT NULL DEFAULT 0,
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )`,
       `CREATE TABLE email_verifications (
@@ -121,6 +124,9 @@ describe("college-email verification", () => {
       roll: ROLL,
       email: "99kb9a9999@nbkrist.org",
       blocked: false,
+      hideLeaderboard: false,
+      blockLookups: false,
+      blockRegistration: false,
     });
 
     const other = await client.execute({
@@ -136,19 +142,55 @@ describe("college-email verification", () => {
     expect(String(owner.rows[0].roll_no)).toBe(ROLL);
   });
 
-  it("blocks registration by another account, hidden or not", async () => {
+  it("leaves registration open until the owner restricts it", async () => {
+    expect(await isRegistrationBlockedFor(ROLL, OTHER)).toBe(false);
+
+    const state = await setVerificationOptions(OWNER, {
+      hideLeaderboard: false,
+      blockLookups: false,
+      blockRegistration: true,
+    });
+    expect(state.blockRegistration).toBe(true);
+
     expect(await isRegistrationBlockedFor(ROLL, OTHER)).toBe(true);
     expect(await isRegistrationBlockedFor(ROLL, OWNER)).toBe(false);
   });
 
-  it("hides the roll only after the owner flips the switch", async () => {
-    expect(await isRollBlockedForViewer(ROLL, OTHER)).toBe(false);
+  it("stops other lookups only when that switch is on", async () => {
+    // registration is still restricted from the previous test; the lookup
+    // switch is independent and starts off
+    expect(await isLookupBlockedForViewer(ROLL, OTHER)).toBe(false);
 
-    const state = await setVerificationBlock(OWNER, true);
-    expect(state.blocked).toBe(true);
+    const state = await setVerificationOptions(OWNER, {
+      hideLeaderboard: false,
+      blockLookups: true,
+      blockRegistration: true,
+    });
+    expect(state.blockLookups).toBe(true);
 
-    expect(await isRollBlockedForViewer(ROLL, OTHER)).toBe(true);
-    expect(await isRollBlockedForViewer(ROLL, OWNER)).toBe(false);
-    expect(await isRollBlockedForViewer(ROLL, "123456789")).toBe(false);
+    expect(await isLookupBlockedForViewer(ROLL, OTHER)).toBe(true);
+    expect(await isLookupBlockedForViewer(ROLL, OWNER)).toBe(false);
+    expect(await isLookupBlockedForViewer(ROLL, "123456789")).toBe(false);
+  });
+
+  it("hides from the leaderboard only when that switch is on", async () => {
+    const on = await setVerificationOptions(OWNER, {
+      hideLeaderboard: true,
+      blockLookups: false,
+      blockRegistration: false,
+    });
+    expect(on.hideLeaderboard).toBe(true);
+
+    const row = await client.execute(
+      `SELECT hide_leaderboard, block_lookups, block_registration, blocked
+       FROM roll_claims WHERE roll_no = ?`,
+      [ROLL],
+    );
+    expect({
+      hide: Number(row.rows[0].hide_leaderboard),
+      lookups: Number(row.rows[0].block_lookups),
+      registration: Number(row.rows[0].block_registration),
+      any: Number(row.rows[0].blocked),
+    }).toEqual({ hide: 1, lookups: 0, registration: 0, any: 1 });
   });
 });
