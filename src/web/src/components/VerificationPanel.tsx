@@ -109,10 +109,10 @@ export default function VerificationPanel({
             onChange={(event) => setOption("blockLookups")(event.target.checked)}
           />
           <span>
-            <b>Stop anyone checking my data</b>
+            <b>Stop other students checking my data</b>
             <br />
-            Attendance, mid marks and bunk refuse every other account. You and
-            the admin still see them.
+            Other students cannot check your attendance, mid marks or bunk
+            plan.
           </span>
         </label>
 

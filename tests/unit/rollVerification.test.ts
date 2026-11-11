@@ -170,6 +170,7 @@ describe("college-email verification", () => {
 
     expect(await isLookupBlockedForViewer(ROLL, OTHER)).toBe(true);
     expect(await isLookupBlockedForViewer(ROLL, OWNER)).toBe(false);
+    // the service admin keeps access
     expect(await isLookupBlockedForViewer(ROLL, "123456789")).toBe(false);
   });
 

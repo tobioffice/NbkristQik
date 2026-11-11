@@ -249,7 +249,7 @@ export const setVerificationOptions = async (
 
 /**
  * True when a verified owner asked other accounts not to fetch this roll's
- * data. The owner and the admin always see it.
+ * data. The owner and the service admin see it.
  */
 export const isLookupBlockedForViewer = async (
   rollNo: string,
