@@ -17,6 +17,19 @@
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-/home/ubuntu/nbkristqik}"
+
+# Operations values from an untracked file: an explicit BACKUP_ENV_FILE, the
+# app directory's .env.deploy, or the host's /etc/nbkristqik-backup.env.
+for env_file in "${BACKUP_ENV_FILE:-}" "$APP_DIR/.env.deploy" /etc/nbkristqik-backup.env; do
+  if [ -n "$env_file" ] && [ -r "$env_file" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    . "$env_file"
+    set +a
+    break
+  fi
+done
+
 DB_URL="${LOCAL_DB_URL:-file:$APP_DIR/data/qik.db}"
 OUT_DIR="${BACKUP_DIR:-/home/ubuntu/backups}"
 KEEP="${BACKUP_KEEP:-7}"
@@ -63,7 +76,7 @@ ls -1t "$OUT_DIR"/qik-*.db 2>/dev/null | tail -n +$((KEEP + 1)) | xargs -r rm -f
 # off-box copy: a second copy on another VM so a lost disk is survivable.
 # The local backup stays in place whatever happens below; a failure exits
 # non-zero so cron cannot mistake a local-only night for a successful backup.
-REMOTE="${BACKUP_REMOTE-ubuntu@140.245.255.152}"
+REMOTE="${BACKUP_REMOTE:-}"
 REMOTE_DIR="${BACKUP_REMOTE_DIR:-/home/ubuntu/qik-backups}"
 offbox_failed=0
 if [ -z "$REMOTE" ]; then

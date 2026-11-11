@@ -52,6 +52,17 @@ vi.mock("../../src/services/student.service.js", () => ({
   getBunkPlanCard: vi.fn(),
 }));
 
+vi.mock("../../src/services/verification/otp.js", () => ({
+  isRollBlockedForViewer: vi.fn(async () => false),
+  isRegistrationBlockedFor: vi.fn(async () => false),
+  getVerificationState: vi.fn(async () => ({
+    verified: false,
+    roll: null,
+    email: null,
+    blocked: false,
+  })),
+}));
+
 vi.mock("../../src/db/registration.model.js", () => ({
   getRegistration: vi.fn(),
   upsertRegistration: vi.fn(),

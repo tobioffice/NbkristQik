@@ -10,7 +10,7 @@ mid-term marks by scraping the college portal. One Node process serves:
 - the public status page at `/status`,
 - a private, password-protected admin panel for activity tracking and health.
 
-A second, standalone program on another host (oracle2) probes the production
+A second, standalone program on another host (monitor-host) probes the production
 API, the college portal and the private deep-health endpoint, then posts the
 results back.
 
@@ -22,7 +22,7 @@ Telegram users ──> bot handlers ──> portal scraper ──> college porta
                        └──> activity tracker ──> SQLite / Turso
 Students ──> Express /library/ + /api/* ──> Redis + SQLite / Turso
 Operator ──> Admin panel (Express, session cookie)
-Monitor (oracle2) ──> /health, /internal/health, portal
+Monitor (monitor-host) ──> /health, /internal/health, portal
                        └──> POST /internal/uptime ──> SQLite / Turso
 ```
 
@@ -71,7 +71,7 @@ Monitor (oracle2) ──> /health, /internal/health, portal
   endpoints require the `qik_admin` session cookie.
 - **Private monitor routes:** `/internal/health` and `/internal/uptime` exist
   only when `UPTIME_INGEST_SECRET` is at least 32 characters, require a
-  constant-time bearer check, and are additionally restricted to oracle2 at
+  constant-time bearer check, and are additionally restricted to monitor-host at
   nginx.
 
 ## Identity flow
@@ -160,7 +160,7 @@ historical rows cannot duplicate leaderboard rows.
 
 ## Deployment topology
 
-- **oracle3** runs the `nbkristqik` systemd service: bot, Express on
+- **Production host** runs the `nbkristqik` systemd service: bot, Express on
   `127.0.0.1:3000`, admin panel and status data. nginx terminates TLS for
   `checker.tobioffice.dev`, serves nothing itself beyond the proxy, and can
   restrict `/internal/` to the monitor host.
@@ -175,7 +175,7 @@ historical rows cannot duplicate leaderboard rows.
   service, and smoke-checks `/health`, `/status`, `/library/` and optionally
   the authenticated `/internal/health`. Any failure restores `dist.prev`,
   restarts the previous build and exits non-zero.
-- **oracle2** runs `nbkristqik-uptime` with `src/monitor/index.ts`: it probes
+- **monitor-host** runs `nbkristqik-uptime` with `src/monitor/index.ts`: it probes
   the public API, the portal and `/internal/health`, spools heartbeats locally
   while the API is unreachable, and posts them when it returns. It alerts only
   on a state transition (including a fresh-state down), and never invents

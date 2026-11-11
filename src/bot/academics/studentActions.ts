@@ -13,6 +13,7 @@ import { bot } from "../bot.js";
 import type { Message } from "node-telegram-bot-api";
 import { logger } from "../../config/logger.js";
 import { cardMarkup, isRollSaved, type CardMarkup } from "./cardMarkup.js";
+import { isRollBlockedForViewer } from "../../services/verification/otp.js";
 
 /**
  * Where a card should appear.
@@ -196,12 +197,36 @@ const fetchAndEdit = async (
   }
 };
 
+/**
+ * A verified owner can hide the roll. Anyone else asking for it gets one
+ * plain sentence, never a card: the refusal must not reveal whether the roll
+ * exists or who owns it.
+ */
+const ROLL_IS_PRIVATE =
+  "That roll's data is private. Only its owner can check it.";
+
+const refusePrivateRoll = async (
+  msg: Message,
+  rollno: string,
+  options?: CardOptions,
+): Promise<boolean> => {
+  const viewer = options?.userId ?? msg.from?.id;
+  if (!(await isRollBlockedForViewer(rollno, viewer))) return false;
+  await bot
+    .sendMessage(msg.chat.id, ROLL_IS_PRIVATE, {
+      reply_to_message_id: msg.message_id,
+    })
+    .catch(() => {});
+  return true;
+};
+
 export const sendAttendanceOrMidMarks = async (
   msg: Message,
   rollno: string,
   signal: Signal,
   options?: CardOptions,
 ): Promise<void> => {
+  if (await refusePrivateRoll(msg, rollno, options)) return;
   const replyMarkup = await resolveMarkup(msg, rollno, options);
   await fetchAndEdit(
     msg,
@@ -217,6 +242,7 @@ export const sendBunkPlan = async (
   rollno: string,
   options?: CardOptions,
 ): Promise<void> => {
+  if (await refusePrivateRoll(msg, rollno, options)) return;
   const replyMarkup = await resolveMarkup(msg, rollno, options);
   await fetchAndEdit(
     msg,

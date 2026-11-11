@@ -1,7 +1,7 @@
 /**
  * External uptime monitor.
  *
- * Runs on a host that is not the production box (oracle2 in this deployment)
+ * Runs on a host that is not the production box (monitor-host in this deployment)
  * so a dead production VM still produces a down transition, and so a paused
  * or overloaded API server cannot report itself healthy. It probes the public
  * API, the college portal and the private deep-health endpoint, then posts the

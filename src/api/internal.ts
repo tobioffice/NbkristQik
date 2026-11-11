@@ -9,7 +9,7 @@ import { createRateLimit, securityLogger } from "../middleware/security.js";
 import { logger } from "../config/logger.js";
 
 /**
- * Private endpoints for the uptime monitor on oracle2.
+ * Private endpoints for the uptime monitor on monitor-host.
  *
  * The monitor runs outside this host so a dead VM still raises an alert and
  * its missed checks are recorded. It reads the local dependency status here

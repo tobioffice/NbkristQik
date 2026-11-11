@@ -3,7 +3,7 @@ import request from "supertest";
 import { createClient } from "@libsql/client";
 import TelegramBot from "node-telegram-bot-api";
 
-process.env.ADMIN_ID = "1329532701";
+process.env.ADMIN_ID = "1000000001";
 process.env.TELEGRAM_BOT_TOKEN = "test_bot_token";
 void TelegramBot;
 
@@ -69,7 +69,7 @@ beforeAll(async () => {
          first_seen TEXT, last_seen TEXT, private_actions INTEGER DEFAULT 0,
          channel_actions INTEGER DEFAULT 0, group_actions INTEGER DEFAULT 0,
          total_actions INTEGER DEFAULT 0)`,
-      `INSERT INTO botusers (user_id, username, first_name) VALUES (6407457375, 'prasanth', 'PRASANTH')`,
+      `INSERT INTO botusers (user_id, username, first_name) VALUES (1000000002, 'test_user', 'TEST USER')`,
       `CREATE TABLE activity_log (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL,
          chat_type TEXT NOT NULL, action TEXT NOT NULL, detail TEXT,
          created_at TEXT NOT NULL DEFAULT (datetime('now')))`,
@@ -80,7 +80,7 @@ beforeAll(async () => {
 
 const { app } = await import("../../src/api/server.js");
 
-const USER = "6407457375";
+const USER = "1000000002";
 
 describe("report API", () => {
   it("rejects an unauthenticated submission", async () => {

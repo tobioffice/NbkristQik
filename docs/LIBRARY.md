@@ -67,7 +67,7 @@ GET  /api/library/document/:id →  the document's metadata, and may I read it
 GET  /api/library/page/:id/:n  →  ONE page, watermarked, no-store
   │
   ▼
-Express (oracle3, port 3000, behind nginx)
+Express (production host, port 3000, behind nginx)
   ├─ session store      Redis (already running)
   ├─ catalog            data/syllabus-catalog.json (committed snapshot)
   ├─ registry           SQLite  (library_documents, library_reads)
@@ -278,7 +278,7 @@ and the ink stays sharp at any zoom.
 When a document is ingested, the server renders every page to an SVG and
 keeps the pages on disk. The source PDF stays on the server.
 
-- Tool: poppler's `pdftocairo -svg` (`apt install poppler-utils` on oracle3;
+- Tool: poppler's `pdftocairo -svg` (`apt install poppler-utils` on the production host;
   sudo is available), run **outside** the systemd service so the 600 MB
   `MemoryMax` on `nbkristqik.service` is never in play.
 - Output: one SVG per PDF page, the page size in points (A4 is about
@@ -624,7 +624,7 @@ case.
 
 ## 11. Running it
 
-- **Server**: oracle3, Express on 3000 behind nginx at
+- **Server**: the production host, Express on 3000 behind nginx at
   `checker.tobioffice.dev`. The library SPA is served by Express from
   `$DIR/public/library`; nginx needs no change, the existing `location /`
   already proxies to Express. The SPA is a separate Vite build

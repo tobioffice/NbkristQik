@@ -42,8 +42,8 @@ describe("Security Middleware", () => {
     });
 
     it("leaves clean rolls untouched", () => {
-      expect(normalizeRollNumber("23KB1A0599")).toBe("23KB1A0599");
-      expect(normalizeRollNumber("  23KB1A0599  ")).toBe("23KB1A0599");
+      expect(normalizeRollNumber("99KB9A9999")).toBe("99KB9A9999");
+      expect(normalizeRollNumber("  99KB9A9999  ")).toBe("99KB9A9999");
     });
 
     it("makes O-typos pass validation", () => {

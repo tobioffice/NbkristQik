@@ -29,6 +29,14 @@ beforeAll(async () => {
       )`,
       // Deliberately no unique index on roll_no and two rows for the same
       // roll: the query must still return one leaderboard row per student.
+      `CREATE TABLE roll_claims (
+        roll_no TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        email TEXT NOT NULL,
+        verified_at TEXT NOT NULL DEFAULT (datetime('now')),
+        blocked INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
       `CREATE TABLE registrations (
         userId TEXT PRIMARY KEY,
         roll_no TEXT NOT NULL,

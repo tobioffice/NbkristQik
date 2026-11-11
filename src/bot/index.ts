@@ -73,7 +73,7 @@ async function startBot() {
     registerSyncDbCommand();
 
     // Keep the in-process probes running until the external monitor on
-    // oracle2 is verified in production. Until then this is the only
+    // monitor-host is verified in production. Until then this is the only
     // heartbeat source; remove it only after fresh external heartbeats are
     // observed in the 90-day history.
     const { startUptimeMonitor } = await import("../services/uptime.js");

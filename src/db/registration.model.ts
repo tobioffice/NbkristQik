@@ -80,3 +80,27 @@ export const getRegistrationByRoll = async (
   });
   return result.rows[0] ? toRegistration(result.rows[0]) : null;
 };
+
+/**
+ * Terminate every other registration for a roll, returning the accounts that
+ * lost it so their cached library context can be invalidated.
+ */
+export const deleteRegistrationsForRollExcept = async (
+  rollNo: string,
+  keepUserId: string,
+): Promise<string[]> => {
+  const roll = rollNo.toUpperCase();
+  const found = await turso.execute({
+    sql: `SELECT userId FROM registrations
+          WHERE UPPER(roll_no) = ? AND userId <> ?`,
+    args: [roll, String(keepUserId)],
+  });
+  const removed = found.rows.map((row) => String(row.userId));
+  if (removed.length === 0) return [];
+
+  await turso.execute({
+    sql: `DELETE FROM registrations WHERE UPPER(roll_no) = ? AND userId <> ?`,
+    args: [roll, String(keepUserId)],
+  });
+  return removed;
+};

@@ -13,7 +13,7 @@ describe("StudentRow", () => {
     const html = renderToStaticMarkup(
       React.createElement(StudentRow, {
         stat: {
-          roll_no: "23KB1A0599",
+          roll_no: "99KB9A9999",
           name: "Test Student",
           attendance_percentage: 82.4,
           mid_marks_avg: 24.1,
@@ -25,7 +25,7 @@ describe("StudentRow", () => {
       }),
     );
 
-    expect(html).toContain("23KB1A0599");
+    expect(html).toContain("99KB9A9999");
     expect(html).toContain("Test Student");
     expect(html).toContain("82.40");
     expect(html).toContain("YOU");

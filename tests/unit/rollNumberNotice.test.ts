@@ -29,6 +29,17 @@ vi.mock("../../src/services/student.service.js", () => ({
   getMidMarksCard: vi.fn(async () => ({ text: "Mid marks card" })),
   getBunkPlanCard: vi.fn(async () => ({ text: "Bunk plan card" })),
 }));
+
+vi.mock("../../src/services/verification/otp.js", () => ({
+  isRollBlockedForViewer: vi.fn(async () => false),
+  isRegistrationBlockedFor: vi.fn(async () => false),
+  getVerificationState: vi.fn(async () => ({
+    verified: false,
+    roll: null,
+    email: null,
+    blocked: false,
+  })),
+}));
 vi.mock("../../src/services/redis/utils.js", () => ({
   getStudentCached: vi.fn(async () => ({ roll_no: "25KB1A05AR" })),
 }));

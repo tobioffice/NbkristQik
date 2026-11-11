@@ -6,7 +6,7 @@
 # The bot runs as the systemd service "nbkristqik".
 #
 # Usage: scripts/deploy.sh
-# Requires: ssh access to $HOST (the "oracle3" ssh alias), rsync, curl on the
+# Requires: ssh access to $DEPLOY_HOST, rsync, curl on the
 #           server, and pnpm on the server (auto-installed to ~/.local if
 #           missing).
 #
@@ -17,7 +17,17 @@
 # working tree that is not committed (hotfix only).
 set -euo pipefail
 
-HOST="${DEPLOY_HOST:-oracle3}"
+# Local operations values, untracked. Copy .env.deploy.example to .env.deploy.
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+OPS_ENV="${DEPLOY_ENV_FILE:-$REPO_ROOT/.env.deploy}"
+if [ -f "$OPS_ENV" ]; then
+  set -a
+  # shellcheck disable=SC1090
+  . "$OPS_ENV"
+  set +a
+fi
+
+HOST="${DEPLOY_HOST:?set DEPLOY_HOST to the ssh host alias}"
 DIR="${DEPLOY_DIR:-/home/ubuntu/nbkristqik}"
 SERVICE="${DEPLOY_SERVICE:-nbkristqik}"
 # Smoke checks go to loopback so they do not depend on nginx, DNS or TLS.

@@ -22,6 +22,14 @@ vi.mock("../../src/services/tracker.js", () => ({
 beforeAll(async () => {
   await client.batch(
     [
+      `CREATE TABLE roll_claims (
+        roll_no TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        email TEXT NOT NULL,
+        verified_at TEXT NOT NULL DEFAULT (datetime('now')),
+        blocked INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
       `CREATE TABLE registrations (
         userId TEXT PRIMARY KEY,
         roll_no TEXT NOT NULL,
@@ -36,7 +44,7 @@ beforeAll(async () => {
         branch TEXT,
         year TEXT
       )`,
-      `INSERT INTO studentsnew VALUES ('26KB5A0218', 'BILLE PRANTH', '-', '2', '21')`,
+      `INSERT INTO studentsnew VALUES ('99KB9A9998', 'BILLE PRANTH', '-', '2', '21')`,
       `INSERT INTO studentsnew VALUES ('26KB5A0219', 'TEST NEIGHBOUR', '-', '2', '21')`,
       // kept for the registration flow's master rows
       `CREATE TABLE student_stats (
@@ -48,11 +56,11 @@ beforeAll(async () => {
         midmarks_updated_at TEXT,
         year_sem TEXT
       )`,
-      `INSERT INTO student_stats VALUES ('26KB5A0218', 91.5, 24.0, datetime('now'), datetime('now'), datetime('now'), '21')`,
+      `INSERT INTO student_stats VALUES ('99KB9A9998', 91.5, 24.0, datetime('now'), datetime('now'), datetime('now'), '21')`,
       `INSERT INTO student_stats VALUES ('26KB5A0219', 77.0, 18.5, datetime('now'), datetime('now'), datetime('now'), '21')`,
       `CREATE TABLE tgusers (userId TEXT PRIMARY KEY, rollNo TEXT)`,
       `INSERT INTO tgusers VALUES ('111222333', '26KB5A0219')`,
-      `INSERT INTO tgusers VALUES ('555666777', '26KB5A0218')`,
+      `INSERT INTO tgusers VALUES ('555666777', '99KB9A9998')`,
     ],
     "write",
   );
@@ -67,16 +75,16 @@ const ME = "444555666";
 
 describe("registration model", () => {
   it("inserts and reads a registration", async () => {
-    await upsertRegistration(ME, "26kb5a0218", "Prasanth");
+    await upsertRegistration(ME, "99kb9a9998", "Test Student");
     const reg = await getRegistration(ME);
 
-    expect(reg?.roll_no).toBe("26KB5A0218");
-    expect(reg?.display_name).toBe("Prasanth");
+    expect(reg?.roll_no).toBe("99KB9A9998");
+    expect(reg?.display_name).toBe("Test Student");
     expect(reg?.registered_at).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
   });
 
   it("updates on conflict, keeping registered_at", async () => {
-    await upsertRegistration(ME, "26KB5A0218", "Prasanth");
+    await upsertRegistration(ME, "99KB9A9998", "Test Student");
     const first = await getRegistration(ME);
 
     // wait a beat so datetime('now') differs
@@ -157,48 +165,52 @@ describe("profile endpoints", () => {
   });
 
   it("POST /api/register stores the registration and GET returns it", async () => {
-    const post = await request(app)
-      .post("/api/register")
-      .send({ userId: ME, rollNo: "26kb5a0218", displayName: "  Prasanth  " });
+    const post = await request(app).post("/api/register").send({
+      userId: ME,
+      rollNo: "99kb9a9998",
+      displayName: "  Test Student  ",
+    });
 
     expect(post.status).toBe(200);
     expect(post.body).toMatchObject({
       ok: true,
-      registered: { roll_no: "26KB5A0218" },
+      registered: { roll_no: "99KB9A9998" },
     });
 
     const get = await request(app).get(`/api/profile?userId=${ME}`);
     expect(get.status).toBe(200);
     expect(get.body.found).toBe(true);
     expect(get.body.registration).toMatchObject({
-      roll_no: "26KB5A0218",
-      display_name: "Prasanth", // trimmed; no angle brackets to strip
+      roll_no: "99KB9A9998",
+      display_name: "Test Student", // trimmed; no angle brackets to strip
     });
     expect(get.body.student).toMatchObject({ section: "-", branch: "2" });
   });
 
   it("POST /api/register lets a second account save a taken roll", async () => {
-    // ME owns 26KB5A0218 (the previous test registered it)
-    await upsertRegistration(ME, "26KB5A0218", "Prasanth");
+    // ME owns 99KB9A9998 (the previous test registered it)
+    await upsertRegistration(ME, "99KB9A9998", "Test Student");
 
     const res = await request(app)
       .post("/api/register")
-      .send({ userId: "777000111", rollNo: "26KB5A0218" });
+      .send({ userId: "777000111", rollNo: "99KB9A9998" });
 
     expect(res.status).toBe(200);
-    expect(res.body.registered.roll_no).toBe("26KB5A0218");
-    expect((await getRegistration("777000111"))?.roll_no).toBe("26KB5A0218");
+    expect(res.body.registered.roll_no).toBe("99KB9A9998");
+    expect((await getRegistration("777000111"))?.roll_no).toBe("99KB9A9998");
     // and the first account keeps its own row
-    expect((await getRegistration(ME))?.roll_no).toBe("26KB5A0218");
+    expect((await getRegistration(ME))?.roll_no).toBe("99KB9A9998");
   });
 
   it("POST /api/register lets the owner edit the same roll", async () => {
-    const res = await request(app)
-      .post("/api/register")
-      .send({ userId: ME, rollNo: "26KB5A0218", displayName: "Prasanth R" });
+    const res = await request(app).post("/api/register").send({
+      userId: ME,
+      rollNo: "99KB9A9998",
+      displayName: "Test Student R",
+    });
 
     expect(res.status).toBe(200);
-    expect((await getRegistration(ME))?.display_name).toBe("Prasanth R");
+    expect((await getRegistration(ME))?.display_name).toBe("Test Student R");
   });
 
   it("there is no delete endpoint", async () => {

@@ -7,6 +7,8 @@ testing
 .vscode/
 .zed/
 .env*
+!.env.example
+!.env.deploy.example
 package-lock.json
 src/web/package-lock.json
 src/web/dist

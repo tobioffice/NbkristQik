@@ -27,7 +27,7 @@ vi.mock("../../src/db/student_stats.model.js", () => ({
   getLeaderboard: vi.fn(async () => ({
     rows: [
       {
-        roll_no: "23KB1A0599",
+        roll_no: "99KB9A9999",
         name: "TEST",
         attendance_percentage: 90,
         mid_marks_avg: 24,
@@ -117,9 +117,9 @@ const leaderboard = (query: string) =>
 
 describe("leaderboard scope", () => {
   it("resolves each scope=me caller's own section", async () => {
-    state.registrations["101"] = "23KB1A0599";
-    state.students["23KB1A0599"] = {
-      roll_no: "23KB1A0599",
+    state.registrations["101"] = "99KB9A9999";
+    state.students["99KB9A9999"] = {
+      roll_no: "99KB9A9999",
       name: "A",
       section: "A",
       branch: "5",
@@ -159,9 +159,9 @@ describe("leaderboard scope", () => {
   });
 
   it("lets an explicit filter override the caller's section", async () => {
-    state.registrations["101"] = "23KB1A0599";
-    state.students["23KB1A0599"] = {
-      roll_no: "23KB1A0599",
+    state.registrations["101"] = "99KB9A9999";
+    state.students["99KB9A9999"] = {
+      roll_no: "99KB9A9999",
       name: "A",
       section: "A",
       branch: "5",
@@ -186,9 +186,9 @@ describe("leaderboard scope", () => {
   });
 
   it("treats an explicit all value as an override too", async () => {
-    state.registrations["101"] = "23KB1A0599";
-    state.students["23KB1A0599"] = {
-      roll_no: "23KB1A0599",
+    state.registrations["101"] = "99KB9A9999";
+    state.students["99KB9A9999"] = {
+      roll_no: "99KB9A9999",
       name: "A",
       section: "A",
       branch: "5",
@@ -213,9 +213,9 @@ describe("leaderboard scope", () => {
   });
 
   it("applies only explicit filters for scope=all", async () => {
-    state.registrations["101"] = "23KB1A0599";
-    state.students["23KB1A0599"] = {
-      roll_no: "23KB1A0599",
+    state.registrations["101"] = "99KB9A9999";
+    state.students["99KB9A9999"] = {
+      roll_no: "99KB9A9999",
       name: "A",
       section: "A",
       branch: "5",
@@ -263,9 +263,9 @@ describe("leaderboard scope", () => {
   });
 
   it("returns no coverage for a search", async () => {
-    state.registrations["101"] = "23KB1A0599";
-    state.students["23KB1A0599"] = {
-      roll_no: "23KB1A0599",
+    state.registrations["101"] = "99KB9A9999";
+    state.students["99KB9A9999"] = {
+      roll_no: "99KB9A9999",
       name: "A",
       section: "A",
       branch: "5",
@@ -280,9 +280,9 @@ describe("leaderboard scope", () => {
   });
 
   it("keeps coverage off later pages", async () => {
-    state.registrations["101"] = "23KB1A0599";
-    state.students["23KB1A0599"] = {
-      roll_no: "23KB1A0599",
+    state.registrations["101"] = "99KB9A9999";
+    state.students["99KB9A9999"] = {
+      roll_no: "99KB9A9999",
       name: "A",
       section: "A",
       branch: "5",
@@ -298,9 +298,9 @@ describe("leaderboard scope", () => {
 
   it("reports a zero known count rather than dropping coverage", async () => {
     state.coverage = 0;
-    state.registrations["101"] = "23KB1A0599";
-    state.students["23KB1A0599"] = {
-      roll_no: "23KB1A0599",
+    state.registrations["101"] = "99KB9A9999";
+    state.students["99KB9A9999"] = {
+      roll_no: "99KB9A9999",
       name: "A",
       section: "A",
       branch: "5",

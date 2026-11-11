@@ -16,7 +16,7 @@ Escape `&<>` in user text sent as Telegram HTML — unescaped names break sendin
 ## Operations
 
 - Don't commit, push, or deploy without being asked.
-- oracle2 is NOT spare (LiteLLM :4000, SearXNG :8080). Never repurpose it.
+- The uptime monitor host is not spare. Never repurpose it for app work.
 - Journal queries keyword/count-only — logs contain token-bearing URLs.
 - Tests: `pnpm exec vitest run` (bare `pnpm test` watches). Typecheck + lint before any deploy.
 - DB is embedded SQLite via `LOCAL_DB_URL` (unset = Turso). Turso reads blocked ~Nov 2026; merge tool ready: `scripts/import-turso-snapshot.mjs`.

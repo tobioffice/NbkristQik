@@ -36,13 +36,14 @@ import { isEmbeddedDatabase } from "../db/db.js";
 import { registerAdminRoutes } from "./admin/index.js";
 import { profileRouter } from "./profile.js";
 import { reportRouter } from "./report.js";
+import { verificationRouter } from "./verification.js";
 import { libraryRouter } from "./library.js";
 import { readSessionFromCookies } from "../services/library/session.js";
 import { registerInternalRoutes } from "./internal.js";
 
 export const app = express();
 
-// Behind nginx on oracle3: trust the single proxy hop so req.ip and
+// Behind nginx on the production host: trust the single proxy hop so req.ip and
 // express-rate-limit see the real client IP, not 127.0.0.1.
 app.set("trust proxy", 1);
 
@@ -158,7 +159,7 @@ app.use("/api/profile", privateNoStore);
 app.use("/api/myreports", privateNoStore);
 app.use("/api/thread", privateNoStore);
 
-// Private endpoints for the external uptime monitor on oracle2. Hidden
+// Private endpoints for the external uptime monitor on monitor-host. Hidden
 // unless UPTIME_INGEST_SECRET is configured.
 registerInternalRoutes(app);
 
@@ -172,6 +173,7 @@ const profileWriteLimit = createRateLimit(
 );
 app.use("/api/register", profileWriteLimit);
 app.use("/api", profileRouter);
+app.use("/api", verificationRouter);
 
 // Report endpoints: identity-authenticated; submits rate-limited per account
 // and further throttled per user in the service (60 s gate, fail-open).

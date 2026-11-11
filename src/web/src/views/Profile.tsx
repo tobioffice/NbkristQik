@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ROLL_REGEX } from "../api";
 import { useIdentity } from "../identity";
 import { useProfile } from "../useProfile";
+import VerificationPanel from "../components/VerificationPanel";
 
 interface ProfileViewProps {
   tgUser: string | null;
@@ -97,8 +98,8 @@ export default function ProfileView({
           <LockIcon />
           <p className="title">Open this inside Telegram</p>
           <p className="sub">
-            Your profile is tied to your Telegram account. Open the bot and
-            send /register to set it up.
+            Your profile is tied to your Telegram account. Open the bot and send
+            /register to set it up.
           </p>
         </div>
       </div>
@@ -151,7 +152,11 @@ export default function ProfileView({
       setError(saveError);
       if (sugg) setSuggestions(sugg);
     } else {
-      setSaved(registered ? "Saved" : "Saved. /attendance, /midmarks and /bunk are ready now.");
+      setSaved(
+        registered
+          ? "Saved"
+          : "Saved. /attendance, /midmarks and /bunk are ready now.",
+      );
       // the shell's identity is now this registration; ask it again once
       identity.refresh();
     }
@@ -166,9 +171,7 @@ export default function ProfileView({
       // keep the shared identity's suggestion in step with the profile
       identity.refresh();
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "Could not forget that roll.",
-      );
+      setError(e instanceof Error ? e.message : "Could not forget that roll.");
     } finally {
       setForgetting(false);
     }
@@ -179,8 +182,8 @@ export default function ProfileView({
       <div className="form-block">
         {stale && (
           <div className="note note--warn mb-5">
-            Your saved roll is no longer in the college records. If the
-            semester changed, update it below.
+            Your saved roll is no longer in the college records. If the semester
+            changed, update it below.
           </div>
         )}
 
@@ -229,7 +232,7 @@ export default function ProfileView({
               setRoll(e.target.value.toUpperCase());
               setSaved(null);
             }}
-            placeholder="26KB5A0218"
+            placeholder="99KB9A9998"
             autoComplete="off"
             spellCheck={false}
           />
@@ -290,6 +293,15 @@ export default function ProfileView({
           {saving ? "Saving..." : registered ? "Save changes" : "Register"}
         </button>
       </div>
+
+      {registered && roll.trim() ? (
+        <div className="form-block">
+          <VerificationPanel
+            identity={{ initData, userId: tgUser ?? undefined }}
+            roll={roll}
+          />
+        </div>
+      ) : null}
 
       <button className="foot-link" onClick={onReportIssue}>
         Found a problem with the bot? Report an issue

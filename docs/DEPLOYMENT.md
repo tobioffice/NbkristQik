@@ -17,7 +17,7 @@
 | `HOST` / `PORT` | API | Bind address and port; defaults `127.0.0.1:3000` |
 | `STATUS_PAGE_PATH` | `src/api/server.ts` | Optional override for the `/status` file; defaults to `public/status/index.html` |
 | `UPTIME_INGEST_SECRET` | `src/api/internal.ts` | Shared secret for `/internal/*`; unset disables both routes |
-| `MONITOR_*` | `src/monitor/index.ts` | Only read by the oracle2 monitor, not the bot |
+| `MONITOR_*` | `src/monitor/index.ts` | Only read by the monitor-host monitor, not the bot |
 
 Start from [`.env.example`](../.env.example).
 
@@ -102,7 +102,7 @@ automatically — the pre-restart backup is for a deliberate manual restore.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `DEPLOY_HOST` | `oracle3` | SSH alias of the production host |
+| `DEPLOY_HOST` | required | SSH alias of the production host |
 | `DEPLOY_DIR` | `/home/ubuntu/nbkristqik` | Application directory on the server |
 | `DEPLOY_SERVICE` | `nbkristqik` | systemd unit to restart |
 | `DEPLOY_BASE_URL` | `http://127.0.0.1:3000` | Base URL the smoke checks call from the server |
@@ -115,6 +115,18 @@ automatically — the pre-restart backup is for a deliberate manual restore.
 Otherwise `/internal/health` answers 401 (or 404 when the route is disabled)
 and the smoke check correctly rolls the release back. Leave it unset when the
 private routes are off.
+
+### Operations environment
+
+No host alias, address or ssh user is committed. Copy `.env.deploy.example` to
+`.env.deploy` at the repo root and fill in real values; it is gitignored, and
+`deploy.sh` and `deploy-monitor.sh` source it before reading their variables.
+`DEPLOY_ENV_FILE` points them at a different file.
+
+Required: `DEPLOY_HOST`, `MONITOR_RELAY`, `MONITOR_HOST`, `BACKUP_REMOTE`.
+Everything else has a usable default. On the server, `backup-db.sh` also reads
+`/etc/nbkristqik-backup.env` when it exists, so the cron job does not need the
+values inline.
 
 ### Database backup before restart
 
@@ -142,8 +154,10 @@ edited by the deploy script):
 15 2 * * * /home/ubuntu/nbkristqik/backup-db.sh >> /home/ubuntu/backups/backup.log 2>&1
 ```
 
-The backup exits non-zero if the off-box copy fails, so cron mail or an
-external check sees an incomplete night. Restore is manual:
+The off-box copy needs `BACKUP_REMOTE` (optionally `BACKUP_REMOTE_DIR`). Set it
+in `/etc/nbkristqik-backup.env` or the cron environment. The backup exits
+non-zero if the off-box copy fails or `BACKUP_REMOTE` is unset, so cron mail or
+an external check sees an incomplete night. Restore is manual:
 `sudo systemctl stop nbkristqik && /home/ubuntu/nbkristqik/restore-db.sh <backup>`.
 
 ### Status page and library
@@ -190,7 +204,7 @@ telegram.org — telegram.org is slow on Indian networks and the SDK was the
 render-blocking first script on the page. Re-vendor when bumping the revision;
 the rev is noted in the app's HTML head.
 
-## External uptime monitor (oracle2)
+## External uptime monitor (monitor-host)
 
 The probes are splitting in two. `src/monitor/index.ts` is a standalone,
 dependency-free Node program that runs on a second host, so a dead or paused
@@ -213,7 +227,7 @@ still has it.
 
 ### One-time host setup
 
-On oracle2, create a dedicated system user and the root-only environment file.
+On monitor-host, create a dedicated system user and the root-only environment file.
 The monitor never reads `/home`, so it cannot see the password manager or any
 other user data on that host.
 
@@ -226,7 +240,7 @@ sudo install -m 0600 /dev/null /etc/nbkristqik-uptime.env
 Put these in `/etc/nbkristqik-uptime.env` (root:root 0600):
 
 ```dotenv
-UPTIME_INGEST_SECRET=<same 64-hex value as oracle3>
+UPTIME_INGEST_SECRET=<same 64-hex value as the production host>
 MONITOR_TELEGRAM_BOT_TOKEN=<dedicated alert bot token>
 ADMIN_ID=<telegram id>
 MONITOR_BASE_URL=https://checker.tobioffice.dev
@@ -235,7 +249,7 @@ MONITOR_STATE_DIR=/var/lib/nbkristqik-uptime
 
 Use a dedicated bot for alerts. The monitor falls back to
 `TELEGRAM_BOT_TOKEN` only for a single-host development setup; keeping the
-production bot token off oracle2 means a compromise there cannot take over the
+production bot token off monitor-host means a compromise there cannot take over the
 student bot. The admin must have started the alert bot once.
 
 ### Deploy and verify
@@ -245,14 +259,15 @@ scripts/deploy-monitor.sh
 ```
 
 The script type-checks, lints and tests, builds `dist/monitor/index.js`, copies
-it and `scripts/nbkristqik-uptime.service` to oracle2 through the `oracle3`
-relay, installs the unit and restarts it. It expects
+it and `scripts/nbkristqik-uptime.service` to monitor-host through the
+`MONITOR_RELAY` relay, installs the unit and restarts it. `MONITOR_RELAY` and
+`MONITOR_HOST` are required; `MONITOR_USER` defaults to `ubuntu`. It expects
 `/etc/nbkristqik-uptime.env` to exist and to be root-owned 0600; it never reads
 or prints the secret.
 
 ```bash
-ssh oracle2 'systemctl status nbkristqik-uptime --no-pager'
-ssh oracle2 'journalctl -u nbkristqik-uptime -n 30 --no-pager'
+ssh monitor-host 'systemctl status nbkristqik-uptime --no-pager'
+ssh monitor-host 'journalctl -u nbkristqik-uptime -n 30 --no-pager'
 ```
 
 A healthy start logs `[monitor] starting`, then `[cycle] api=up portal=up
@@ -263,13 +278,13 @@ were stored.
 ### Security boundaries
 
 - `/internal/*` is protected by a constant-time bearer check, a rate limit and
-  an nginx `allow` rule for oracle2's address. Disabling the secret removes the
+  an nginx `allow` rule for monitor-host's address. Disabling the secret removes the
   routes entirely. Add this block to the
   `checker.tobioffice.dev` server before `location /`:
 
   ```nginx
   location /internal/ {
-      allow 140.245.255.152;
+      allow <monitor-host-ip>;
       deny all;
       proxy_pass http://127.0.0.1:3000;
       proxy_http_version 1.1;
@@ -295,10 +310,10 @@ were stored.
 - A watchdog exits the process if no cycle completes in time; systemd restarts
   it. This is what stops a silently hung monitor from looking healthy.
 
-The public status page still lives on oracle3, served by Express at `/status`.
+The public status page still lives on the production host, served by Express at `/status`.
 The external monitor makes the measurement independent and the alerts
-independent; it does not make the page itself survive an oracle3 outage. If the
-page must stay up during a full oracle3 failure, host the static page and
+independent; it does not make the page itself survive a production host outage. If the
+page must stay up during a full production host failure, host the static page and
 `/api/status` on a third origin.
 
 ## CI

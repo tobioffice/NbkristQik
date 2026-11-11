@@ -34,8 +34,12 @@ import { logger } from "../config/logger.js";
  * Version 4 drops the unique roll index. One roll may be saved by more than
  * one account until a college-email OTP proves who the student is; see
  * docs/ROADMAP.md. See migrateToV4().
+ *
+ * Version 5 adds college-email ownership: roll_claims (one verified owner per
+ * roll, with the optional hide switch) and email_verifications (hashed OTPs).
+ * The tables are created with IF NOT EXISTS on every boot.
  */
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 /** Reads the database's user_version, treating a missing row as 0. */
 const readSchemaVersion = async (): Promise<number> => {
@@ -142,6 +146,50 @@ export const initDatabase = async () => {
   // "who holds this roll" lookups.
   await turso.execute(
     `CREATE INDEX IF NOT EXISTS idx_registrations_roll ON registrations (roll_no);`,
+  );
+
+  // A roll proved by its college email has exactly one owner. `blocked` is
+  // the owner's switch: hide the roll's figures from the public register and
+  // from every other account. Ownership itself always terminates other
+  // registrations; see the verification service.
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS roll_claims (
+        roll_no TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        email TEXT NOT NULL,
+        verified_at TEXT NOT NULL DEFAULT (datetime('now')),
+        blocked INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+  await turso.execute(
+    `CREATE INDEX IF NOT EXISTS idx_roll_claims_user ON roll_claims (user_id);`,
+  );
+
+  // One row per code sent. The code is stored as a salted hash, never in the
+  // clear; the newest unconsumed row for a user and roll is the live one.
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS email_verifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        roll_no TEXT NOT NULL,
+        email TEXT NOT NULL,
+        code_salt TEXT NOT NULL,
+        code_hash TEXT NOT NULL,
+        attempts INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        expires_at TEXT NOT NULL,
+        consumed_at TEXT
+    );
+  `);
+  await turso.execute(
+    `CREATE INDEX IF NOT EXISTS idx_email_verifications_lookup
+       ON email_verifications (user_id, roll_no, consumed_at);`,
+  );
+  // Verification rows are only useful for a few minutes; a month is generous
+  // and keeps the table from growing forever.
+  await turso.execute(
+    `DELETE FROM email_verifications WHERE created_at < datetime('now', '-30 days')`,
   );
   await turso.execute(`
     CREATE TABLE IF NOT EXISTS reports (

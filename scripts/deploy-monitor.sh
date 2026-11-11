@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Deploys the external uptime monitor to oracle2.
+# Deploys the external uptime monitor to monitor-host.
 #
 # The monitor is a single dependency-free file (dist/monitor/index.js). It is
-# staged through the oracle3 relay because oracle2 is not expected to be
+# staged through the MONITOR_RELAY host because monitor-host is not expected to be
 # reachable directly from every workstation. The host-side environment file
 # (/etc/nbkristqik-uptime.env) is never copied to this workstation or printed
 # by this script.
@@ -18,16 +18,27 @@
 #   scripts/deploy-monitor.sh
 #
 # Overridable:
-#   MONITOR_RELAY   SSH alias used to reach oracle2 (default: oracle3)
-#   MONITOR_HOST    address of oracle2 as seen from the relay
-#                   (default: 140.245.255.152)
-#   MONITOR_DIR     install directory on oracle2 (default: /opt/nbkristqik-uptime)
+#   MONITOR_RELAY   SSH alias used to reach monitor-host (required)
+#   MONITOR_HOST    address of monitor-host as seen from the relay (required)
+#   MONITOR_USER    ssh user on monitor-host (default: ubuntu)
+#   MONITOR_DIR     install directory on monitor-host (default: /opt/nbkristqik-uptime)
 #   MONITOR_SERVICE systemd unit name (default: nbkristqik-uptime)
 #   MONITOR_ENV     root-only environment file (default: /etc/nbkristqik-uptime.env)
 set -euo pipefail
 
-RELAY="${MONITOR_RELAY:-oracle3}"
-HOST="${MONITOR_HOST:-140.245.255.152}"
+# Local operations values, untracked. Copy .env.deploy.example to .env.deploy.
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+OPS_ENV="${DEPLOY_ENV_FILE:-$REPO_ROOT/.env.deploy}"
+if [ -f "$OPS_ENV" ]; then
+  set -a
+  # shellcheck disable=SC1090
+  . "$OPS_ENV"
+  set +a
+fi
+
+RELAY="${MONITOR_RELAY:?set MONITOR_RELAY to the relay ssh alias}"
+HOST="${MONITOR_HOST:?set MONITOR_HOST to the monitor host address}"
+REMOTE_USER="${MONITOR_USER:-ubuntu}"
 DIR="${MONITOR_DIR:-/opt/nbkristqik-uptime}"
 SERVICE="${MONITOR_SERVICE:-nbkristqik-uptime}"
 ENV_FILE="${MONITOR_ENV:-/etc/nbkristqik-uptime.env}"
@@ -45,7 +56,7 @@ test -f dist/monitor/index.js
 echo "==> Staging through $RELAY"
 scp -q dist/monitor/index.js "$RELAY:/tmp/nbkristqik-monitor.mjs"
 scp -q scripts/nbkristqik-uptime.service "$RELAY:/tmp/nbkristqik-uptime.service"
-ssh "$RELAY" "scp -q /tmp/nbkristqik-monitor.mjs /tmp/nbkristqik-uptime.service ubuntu@$HOST:/tmp/"
+ssh "$RELAY" "scp -q /tmp/nbkristqik-monitor.mjs /tmp/nbkristqik-uptime.service ${REMOTE_USER}@${HOST}:/tmp/"
 
 echo "==> Installing on $HOST"
 REMOTE_SCRIPT="$(mktemp)"
@@ -183,8 +194,8 @@ sed -i \
   -e "s|__ENV_FILE__|$ENV_FILE|g" \
   "$REMOTE_SCRIPT"
 
-ssh "$RELAY" "ssh ubuntu@$HOST bash -s" <"$REMOTE_SCRIPT"
+ssh "$RELAY" "ssh ${REMOTE_USER}@${HOST} bash -s" <"$REMOTE_SCRIPT"
 
-ssh "$RELAY" "rm -f /tmp/nbkristqik-monitor.mjs /tmp/nbkristqik-uptime.service; ssh ubuntu@$HOST 'rm -f /tmp/nbkristqik-monitor.mjs /tmp/nbkristqik-uptime.service'"
+ssh "$RELAY" "rm -f /tmp/nbkristqik-monitor.mjs /tmp/nbkristqik-uptime.service; ssh ${REMOTE_USER}@${HOST} 'rm -f /tmp/nbkristqik-monitor.mjs /tmp/nbkristqik-uptime.service'"
 
 echo "==> Monitor deployed."

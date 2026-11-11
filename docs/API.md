@@ -361,20 +361,37 @@ requests / 15 min per account.
 | Method | Path | Purpose |
 |---|---|---|
 | `GET` | `/api/profile` | `{found:true, registration:{roll_no, display_name,...}, student}`; `{found:true, stale:true, registration, student:null}` when the saved roll left the college master table; or `{found:false, lastLookup, suggestion}` (the same roll for one release; a suggestion, never a prefill) |
-| `POST` | `/api/register` | Validate + upsert `{rollNo, displayName?}`; 400 on bad format, 404 + `suggestions` on a roll missing from college records |
+| `POST` | `/api/register` | Validate + upsert `{rollNo, displayName?}`; 400 on bad format, 404 + `suggestions` on a roll missing from college records, 403 when another account verified the roll, 409 when the caller verified a different roll |
 
 A successful registration answers
 `{ "ok": true, "registered": { "roll_no": "21B81A05E9", "name": "..." } }`.
 A non-empty `displayName` (trimmed, max 40 chars) is the name the leaderboard
 shows for that roll.
 
-Any number of accounts may save the same roll. Nothing on the server can tell
-a student from someone who typed their roll, so the earlier `409
-ROLL_ALREADY_REGISTERED` guard only blocked people sharing a roll and was
-removed in schema v4. A shared roll shows the newest non-empty `display_name`
-on the leaderboard. Proof of ownership (a college email OTP) is planned; see
-[`ROADMAP.md`](ROADMAP.md). There is no delete endpoint by design; registering
-again overwrites the caller's own registration.
+Any number of accounts may save the same roll until one of them proves it.
+Schema v5 adds college-email verification: once a roll has a verified owner,
+`POST /api/register` answers 403 for every other account, and a caller who has
+verified a different roll answers 409. A shared, unverified roll still shows
+the newest non-empty `display_name` on the leaderboard. There is no delete
+endpoint by design; registering again overwrites the caller's own
+registration.
+
+## College-email verification endpoints
+
+The only address a code is sent to is `<roll>@nbkrist.org`. The code is six
+digits, hashed with a per-code salt, single-use, expires after ten minutes and
+allows five wrong tries. One code a minute and five an hour per account.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/verification` | `{verified, roll, email, blocked}` for the caller |
+| `POST` | `/api/verification/start` | `{rollNo}`; sends the code, answers 404 for an unknown roll, 429 when rate-limited, 503 when SMTP is unset |
+| `POST` | `/api/verification/confirm` | `{rollNo, code}`; claims the roll, terminates other registrations for it, answers the new state |
+| `POST` | `/api/verification/block` | `{blocked}`; only a verified owner; hides or restores the roll |
+
+A blocked roll is excluded from `/api/leaderboard` rows, totals and coverage,
+and from the bot's attendance, mid-mark and bunk answers for every viewer except
+its owner and `ADMIN_ID`.
 
 ## Issue report endpoints
 

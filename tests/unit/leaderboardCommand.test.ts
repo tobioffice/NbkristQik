@@ -21,7 +21,7 @@ vi.mock("../../src/db/student_stats.model.js", () => ({
   getLeaderboard: vi.fn(async () => ({
     rows: [
       {
-        roll_no: "23KB1A0599",
+        roll_no: "99KB9A9999",
         name: "ASHA",
         attendance_percentage: 92.5,
         mid_marks_avg: 24,
@@ -35,7 +35,7 @@ vi.mock("../../src/db/student_stats.model.js", () => ({
 vi.mock("../../src/db/registration.model.js", () => ({
   getRegistration: vi.fn(async () => ({
     userId: "42",
-    roll_no: "23KB1A0599",
+    roll_no: "99KB9A9999",
     display_name: null,
     registered_at: "2026-01-01 00:00:00",
     updated_at: "2026-01-01 00:00:00",
@@ -43,7 +43,7 @@ vi.mock("../../src/db/registration.model.js", () => ({
 }));
 vi.mock("../../src/services/redis/utils.js", () => ({
   getStudentCached: vi.fn(async () => ({
-    roll_no: "23KB1A0599",
+    roll_no: "99KB9A9999",
     year: "31",
     branch: "5",
     section: "A",
@@ -85,7 +85,7 @@ describe("/leaderboard", () => {
   it("prints rolls, not names, in a group", async () => {
     const [, text] = await run("supergroup");
 
-    expect(text).toContain("23KB1A0599");
+    expect(text).toContain("99KB9A9999");
     expect(text).not.toContain("ASHA");
     expect(text).not.toContain("You are #");
   });

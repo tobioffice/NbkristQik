@@ -4,7 +4,7 @@ import { trackMessage } from "../../services/tracker.js";
 bot.onText(/\/help/, (msg) => {
   trackMessage(msg, "command:help");
   const helpMessage =
-    `Send me a roll number like <code>23KB1A0599</code> and I'll show your attendance and mid marks. That's the whole flow.\n` +
+    `Send me a roll number like <code>99KB9A9999</code> and I'll show your attendance and mid marks. That's the whole flow.\n` +
     `\n` +
     `In a hurry? /register saves your roll once, then /attendance, /midmarks and /bunk answer in one tap.\n` +
     `\n` +

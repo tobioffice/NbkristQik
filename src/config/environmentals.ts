@@ -22,6 +22,23 @@ const CHANNEL_ID =
 
 const REDIS_URL = process.env.REDIS_URL || "";
 
+// Gmail SMTP for the college-email verification codes. SMTP_PASS is an app
+// password, never the account password. With SMTP_USER/SMTP_PASS unset the
+// verification endpoint answers 503 instead of pretending a code was sent.
+const SMTP_HOST = process.env.SMTP_HOST?.trim() || "smtp.gmail.com";
+const SMTP_PORT = Number(process.env.SMTP_PORT) || 465;
+const SMTP_SECURE =
+  (process.env.SMTP_SECURE ?? "true").trim().toLowerCase() !== "false";
+const SMTP_USER = process.env.SMTP_USER?.trim() || "";
+const SMTP_PASS = process.env.SMTP_PASS?.trim() || "";
+const SMTP_FROM =
+  process.env.SMTP_FROM?.trim() ||
+  (SMTP_USER ? `NbkristQik <${SMTP_USER}>` : "");
+// Only this domain is accepted: the address is built from the roll, never
+// taken from the request.
+const VERIFY_EMAIL_DOMAIN =
+  process.env.VERIFY_EMAIL_DOMAIN?.trim().toLowerCase() || "nbkrist.org";
+
 const PORT = process.env.PORT || 3000;
 
 // Bind loopback by default: production is served through nginx on the same
@@ -29,7 +46,7 @@ const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST?.trim() || "127.0.0.1";
 
 // Shared secret for the private uptime endpoints. The external monitor on
-// oracle2 posts heartbeats and reads the deep health check with it. When it
+// monitor-host posts heartbeats and reads the deep health check with it. When it
 // is unset both endpoints are absent, so a dev box exposes nothing.
 const UPTIME_INGEST_SECRET = process.env.UPTIME_INGEST_SECRET?.trim() || "";
 
@@ -78,6 +95,13 @@ export {
   ADMIN_ID,
   CHANNEL_ID,
   REDIS_URL,
+  SMTP_HOST,
+  SMTP_PORT,
+  SMTP_SECURE,
+  SMTP_USER,
+  SMTP_PASS,
+  SMTP_FROM,
+  VERIFY_EMAIL_DOMAIN,
   PORT,
   HOST,
   UPTIME_INGEST_SECRET,

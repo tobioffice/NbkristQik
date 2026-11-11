@@ -12,6 +12,10 @@ import {
   upsertRegistration,
 } from "../../db/registration.model.js";
 import { invalidateStudentContext } from "../../services/library/entitlement.js";
+import {
+  getVerificationState,
+  isRegistrationBlockedFor,
+} from "../../services/verification/otp.js";
 
 import { ROLL_REGEX, CHIT_CHAT_ID } from "../../constants/index.js";
 import {
@@ -254,6 +258,15 @@ const handleSaveRoll = async (
   }
   if (!isValidRollNumber(rollNumber)) {
     await answer(BAD_ROLL);
+    return;
+  }
+  if (await isRegistrationBlockedFor(rollNumber, String(userId))) {
+    await answer("That roll is verified by another student.");
+    return;
+  }
+  const own = await getVerificationState(String(userId));
+  if (own.verified && own.roll?.toUpperCase() !== rollNumber.toUpperCase()) {
+    await answer(`You verified ${own.roll}. Verify the new roll first.`);
     return;
   }
 

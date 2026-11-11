@@ -27,8 +27,9 @@ reports `journal_mode = memory` instead of `wal`, which is expected.
 
 ## Schema versioning
 
-The schema version lives in `PRAGMA user_version` and is currently **1**
-(`SCHEMA_VERSION` in `src/db/init.ts`).
+The schema version lives in `PRAGMA user_version` and is currently **5**
+(`SCHEMA_VERSION` in `src/db/init.ts`). Version 5 added `roll_claims` and
+`email_verifications` for college-email verification.
 
 - `0` means a fresh or pre-versioning database. Every table is created first,
   then the version is stamped, so a crash mid-init leaves version 0 and the
@@ -84,6 +85,19 @@ boot-time dedupe that came with it, so two rows for one roll are now normal.
 Lookups by roll (`getRegistrationByRoll`, the leaderboard's name subquery)
 take the newest claim, `updated_at` descending then `rowid` descending.
 Ownership proof is planned; see [`ROADMAP.md`](ROADMAP.md).
+
+### `roll_claims` — verified roll ownership
+
+One row per roll proved by its college mailbox: `roll_no` (primary key),
+`user_id`, `email`, `verified_at`, `blocked` (1 = hidden from the register)
+and `updated_at`. Written only by the verification service; ownership always
+terminates other registrations for the roll.
+
+### `email_verifications` — one row per code sent
+
+`user_id`, `roll_no`, `email`, `code_salt`, `code_hash` (scrypt), `attempts`,
+`created_at`, `expires_at`, `consumed_at`. The newest unconsumed unexpired row
+is the live code; rows older than 30 days are deleted at boot.
 
 ### `student_stats` — projected scores for ranking
 
@@ -213,7 +227,7 @@ file directly under WAL, which can capture a torn write.
 3. Move the verified copy into place and keep the newest `BACKUP_KEEP`
    (default 7) files.
 4. Copy it off-box to `BACKUP_REMOTE` (default
-   `ubuntu@140.245.255.152`), pruning the remote set too.
+   `<backup-user>@<backup-host>`), pruning the remote set too.
 
 A failed off-box copy exits non-zero while keeping the verified local backup
 intact, so cron cannot mistake a local-only night for a complete backup. The

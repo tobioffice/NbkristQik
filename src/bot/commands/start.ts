@@ -22,7 +22,7 @@ const sendWelcome = async (msg: Message): Promise<void> => {
   const message =
     `${greeting}. I keep the NBKRIST attendance register here.\n` +
     `\n` +
-    `Send me a roll number like <code>23KB1A0599</code> and I'll pull your attendance and mid marks from the college portal.\n` +
+    `Send me a roll number like <code>99KB9A9999</code> and I'll pull your attendance and mid marks from the college portal.\n` +
     `\n` +
     `Save yours once with /register and /attendance answers in one tap. /help covers the rest.`;
 

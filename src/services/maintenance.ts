@@ -4,7 +4,7 @@ import { pruneDownloadCache } from "./library/pdf.js";
 
 /**
  * Daily housekeeping for the local database. The probes themselves now run
- * on oracle2, but the data still belongs to this process: it keeps the
+ * on monitor-host, but the data still belongs to this process: it keeps the
  * uptime history, the activity log, expired admin sessions and the library
  * read trail bounded.
  */

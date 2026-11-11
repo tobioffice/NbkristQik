@@ -347,6 +347,82 @@ export const registerRoll = async (req: RegisterRequest): Promise<void> => {
   await readJson(res);
 };
 
+// ---------- college-email verification ----------
+
+export interface VerificationState {
+  verified: boolean;
+  roll: string | null;
+  email: string | null;
+  blocked: boolean;
+}
+
+const verificationRequest = async (
+  path: string,
+  identity: ApiIdentity,
+  init: RequestInit = {},
+): Promise<VerificationState> => {
+  const res = await fetchWithTimeout(withQuery(path, devIdentityParams(identity)), {
+    ...init,
+    headers: {
+      ...(init.body ? { "Content-Type": "application/json" } : {}),
+      ...authHeaders(identity.initData),
+      ...init.headers,
+    },
+  });
+  return readJson<VerificationState>(res);
+};
+
+export const getVerification = (
+  identity: ApiIdentity,
+): Promise<VerificationState> =>
+  verificationRequest("/api/verification", identity);
+
+export const startVerification = async (
+  identity: ApiIdentity,
+  rollNo: string,
+): Promise<{ email: string; expiresInSeconds: number }> => {
+  const res = await fetchWithTimeout(`${API_BASE}/api/verification/start`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(identity.initData),
+    },
+    body: JSON.stringify({ rollNo, ...identityBody(identity) }),
+  });
+  return readJson<{ email: string; expiresInSeconds: number }>(res);
+};
+
+export const confirmVerification = async (
+  identity: ApiIdentity,
+  rollNo: string,
+  code: string,
+): Promise<VerificationState> => {
+  const res = await fetchWithTimeout(`${API_BASE}/api/verification/confirm`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(identity.initData),
+    },
+    body: JSON.stringify({ rollNo, code, ...identityBody(identity) }),
+  });
+  return readJson<VerificationState>(res);
+};
+
+export const setRollBlocked = async (
+  identity: ApiIdentity,
+  blocked: boolean,
+): Promise<VerificationState> => {
+  const res = await fetchWithTimeout(`${API_BASE}/api/verification/block`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(identity.initData),
+    },
+    body: JSON.stringify({ blocked, ...identityBody(identity) }),
+  });
+  return readJson<VerificationState>(res);
+};
+
 // ---------- issue reports ----------
 
 export interface MyReport {

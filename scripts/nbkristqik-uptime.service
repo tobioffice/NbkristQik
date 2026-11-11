@@ -18,7 +18,7 @@ TimeoutStopSec=15
 UMask=0077
 
 # The monitor only needs its own state directory. Hiding /home keeps the
-# password manager and every other user file on oracle2 out of its view.
+# password manager and every other user file on the monitor host out of its view.
 ProtectHome=true
 ProtectSystem=strict
 StateDirectory=nbkristqik-uptime

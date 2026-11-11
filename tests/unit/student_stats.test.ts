@@ -33,6 +33,14 @@ beforeAll(async () => {
   )`);
   // getLeaderboard reads explicit display names from registrations; the
   // privacy/name cases live in leaderboardPrivacy.test.ts.
+  await turso.execute(`CREATE TABLE roll_claims (
+    roll_no TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    email TEXT NOT NULL,
+    verified_at TEXT NOT NULL DEFAULT (datetime('now')),
+    blocked INTEGER NOT NULL DEFAULT 0,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`);
   await turso.execute(`CREATE TABLE registrations (
     userId TEXT PRIMARY KEY,
     roll_no TEXT NOT NULL,

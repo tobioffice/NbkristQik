@@ -187,6 +187,10 @@ const buildLeaderboardWhere = (
     // switches. year_sem is written with every stat; the migration backfills
     // it from studentsnew. Rows still null are excluded (and logged at boot).
     `st.year_sem = s.year`,
+    // A verified owner can hide the roll from the public register. Hidden
+    // rows are out of the ranking and the count, so the list stays honest.
+    `NOT EXISTS (SELECT 1 FROM roll_claims c
+                 WHERE c.roll_no = s.roll_no AND c.blocked = 1)`,
   ];
   const args: (string | number)[] = [];
 
@@ -412,6 +416,8 @@ export const getStudentRank = async (
         JOIN studentsnew s ON st.roll_no = s.roll_no
         WHERE ${column} IS NOT NULL
           AND st.year_sem = s.year
+          AND NOT EXISTS (SELECT 1 FROM roll_claims c
+                          WHERE c.roll_no = s.roll_no AND c.blocked = 1)
       )
       SELECT rank, total, score FROM ranked WHERE roll_no = ?
     `,
@@ -469,7 +475,10 @@ export const getLeaderboardFacets = async (
 export const getLeaderboardCoverage = async (
   filters: Pick<LeaderboardFilters, "year" | "branch" | "section">,
 ): Promise<number> => {
-  const conditions: string[] = [];
+  const conditions: string[] = [
+    // hidden rolls are not part of the denominator either
+    "NOT EXISTS (SELECT 1 FROM roll_claims c WHERE c.roll_no = studentsnew.roll_no AND c.blocked = 1)",
+  ];
   const args: string[] = [];
 
   if (filters.year) {

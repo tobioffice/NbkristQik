@@ -40,6 +40,10 @@ public status page for service health.
   and a bunk plan without leaving the chat.
 - **Optional registration** — save your roll once, then use `/attendance`,
   `/midmarks` and `/bunk` as one-tap commands. Edit it at any time.
+- **College-email verification** — prove your roll with the mailbox the
+  college gave you (`<roll>@nbkrist.org`). A verified roll belongs to one
+  Telegram account, other claims on it are removed, and you can hide your name
+  and figures from everyone else.
 - **Live leaderboard** — the attendance register ranks students by attendance
   or mid-term marks, filtered by year, branch and section. `/leaderboard`
   prints it in the chat; the button on any card opens it as a page.
@@ -54,7 +58,7 @@ public status page for service health.
 
 - **Admin panel** — overview, student search, live activity feed, report
   threads and 90-day health, behind a secret path and a password.
-- **Uptime monitoring** — five-minute probes from a second host (oracle2) for
+- **Uptime monitoring** — five-minute probes from a second host (monitor-host) for
   the API, database, Redis and college portal, with Telegram alerts on state
   changes and a replay spool for outages.
 - **Semester sync** — `/setsem` and `/syncdb` refresh sections from the portal
@@ -74,7 +78,7 @@ flowchart LR
     api --> db
     api --> admin["Admin panel"]
     api --> status["Status page"]
-    monitor["External monitor<br/>oracle2"] -->|probes| api
+    monitor["External monitor<br/>monitor-host"] -->|probes| api
     monitor -->|probes| portal
 ```
 
@@ -196,7 +200,7 @@ The full list, with defaults, lives in [`.env.example`](.env.example) and
 | `/report`      | File an issue, or `/report <message>` directly       |
 | `/help`        | How the bot works                                    |
 
-Sending a roll number such as `23KB1A0599` works for everyone, registered or
+Sending a roll number such as `99KB9A9999` works for everyone, registered or
 not.
 
 ### Admin
@@ -270,9 +274,10 @@ then promotes it to `dist.prev`; takes a `VACUUM INTO` backup when
 `src/status` → `public/status`, the library bundle and the syllabus catalogue;
 installs production dependencies with a frozen lockfile; restarts the service;
 and smoke-checks `/health`, `/status`, `/library/` and a hashed asset. A failed
-check restores `dist.old`, restarts the old build and exits non-zero. Defaults: host `oracle3`, directory `/home/ubuntu/nbkristqik`,
-service `nbkristqik`, loopback `http://127.0.0.1:3000`; override with
-`DEPLOY_HOST`, `DEPLOY_DIR`, `DEPLOY_SERVICE` and `DEPLOY_BASE_URL`. See
+check restores `dist.old`, restarts the old build and exits non-zero. `DEPLOY_HOST` (the ssh alias) is required; the rest default to directory
+`/home/ubuntu/nbkristqik`, service `nbkristqik` and loopback
+`http://127.0.0.1:3000`, overridable with `DEPLOY_DIR`, `DEPLOY_SERVICE` and
+`DEPLOY_BASE_URL`. See
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the backup and internal-check
 variables. The host must run Node 22 or 24; Node 20 is EOL.
 
@@ -295,7 +300,7 @@ pnpm deploy:site  # stages public/site/ and publishes it with gh-pages
 entry points and the old `pnpm deploy` command are gone; `deploy:site` is now
 the only gh-pages deploy.
 
-The uptime monitor deploys separately to oracle2 as the
+The uptime monitor deploys separately to monitor-host as the
 `nbkristqik-uptime` systemd service; it needs only
 `dist/monitor/index.js`, a root-owned environment file and a writable state
 directory. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the hardened
