@@ -299,7 +299,7 @@ if [[ -n "${DEPLOY_INTERNAL_SECRET:-}" ]]; then
   # curl reads the Authorization header from stdin (--config -), so the
   # secret never appears in the remote process list or the script output.
   internal_code="$(printf 'header = "Authorization: Bearer %s"\n' "$DEPLOY_INTERNAL_SECRET" |
-    ssh "$HOST" "curl -sS -o /dev/null -w '%{http_code}' --max-time 10 --config - '$BASE_URL'" || true)"
+    ssh "$HOST" "curl -sS -o /dev/null -w '%{http_code}' --max-time 10 --config - '$BASE_URL/internal/health'" || true)"
   if [[ "$internal_code" == "200" ]]; then
     echo "    OK   GET /internal/health -> 200"
   else
