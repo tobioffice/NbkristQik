@@ -1,6 +1,6 @@
 import { getRegistration } from "../../db/registration.model.js";
 import {
-  listLiveDocumentsForSemester,
+  listLiveDocumentsForRegulation,
   listLiveLibraryDocuments,
   type LibraryDocument,
 } from "../../db/library.model.js";
@@ -11,6 +11,7 @@ import {
   findSubjectName,
   regulationForEntryYear,
   siteDeptForBranch,
+  subjectCodesFor,
 } from "./catalog.js";
 
 /**
@@ -174,9 +175,13 @@ export const studentView = (ctx: StudentContext): StudentView => ({
 /**
  * May this student read this document?
  *
- * The shelf is our own material, so the rule is the document's own semester:
- * the reader's department, regulation and year-sem must match the document's.
- * A document id alone gets nothing.
+ * The shelf is our own material, so the rule is the student's own subject
+ * list: the document's code has to be on it. The code is the join, not the
+ * row's department, because one cut paper serves every branch that lists it
+ * (Chemistry is 23BS11T2 in CSE, IT, AIDS and both CSE variants; DBMS is
+ * 23AD22T1). A row whose code the snapshot cannot place falls back to the
+ * strict department and semester match, so a fresh ingest stays readable
+ * before the catalogue catches up.
  */
 export const mayReadDocument = (
   ctx: StudentContext,
@@ -185,11 +190,15 @@ export const mayReadDocument = (
   // the admin previews any live document while the library is theirs
   if (canPreviewEverything(ctx.userId)) return true;
   if (!ctx.dept) return false;
-  return (
-    doc.dept === ctx.dept &&
-    doc.regulation === ctx.regulation &&
-    doc.year_sem === ctx.yearSem
-  );
+  if (doc.regulation !== ctx.regulation) return false;
+  if (
+    subjectCodesFor(ctx.dept, ctx.regulation, ctx.yearSem).has(
+      doc.code.toUpperCase(),
+    )
+  ) {
+    return true;
+  }
+  return doc.dept === ctx.dept && doc.year_sem === ctx.yearSem;
 };
 
 export interface LibrarySubject {
@@ -243,13 +252,19 @@ export const listSubjectsForStudent = async (
 ): Promise<LibrarySubject[]> => {
   if (!ctx.dept) return [];
 
-  const documents = await listLiveDocumentsForSemester(
-    ctx.dept,
-    ctx.regulation,
-    ctx.yearSem,
-  ).catch((): LibraryDocument[] => []);
+  const documents = await listLiveDocumentsForRegulation(ctx.regulation).catch(
+    (): LibraryDocument[] => [],
+  );
+  const codes = subjectCodesFor(ctx.dept, ctx.regulation, ctx.yearSem);
 
-  return groupByCode(documents);
+  return groupByCode(
+    documents.filter(
+      (doc) =>
+        codes.has(doc.code.toUpperCase()) ||
+        // a code the snapshot cannot place: keep the row's own semester claim
+        (doc.dept === ctx.dept && doc.year_sem === ctx.yearSem),
+    ),
+  );
 };
 
 /**

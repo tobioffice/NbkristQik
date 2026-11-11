@@ -116,9 +116,17 @@ no subjects: the app shows the register sheet (or tells the student to run
 college master table, so a typed-in roll cannot be a ghost.
 
 **Gate 4 — entitlement (this subject only).** Every page request re-checks
-that the reader's year, sem and branch include the requested document. A
-student who somehow gets a document id still gets a 403 on the pages of a
-subject that is not theirs.
+that the requested document's subject code is on the reader's own list for
+their department, regulation and year-sem. A student who somehow gets a
+document id still gets a 403 on the pages of a subject that is not theirs.
+
+The join is the code, not the row's department. One paper is cut once and
+listed by every branch that follows it (Chemistry is 23BS11T2 in CSE, IT,
+AIDS and both CSE variants; DBMS is 23AD22T1), so an IT student at 3-1 reads
+the same Computer Networks file as a CSE student at 3-1. A row whose code the
+catalogue snapshot cannot place falls back to the strict department and
+semester match, which is also how a fresh ingest stays readable before the
+snapshot is refreshed.
 
 Why we host the app on our own origin: the cookie must be same-origin with
 the API. Served from GitHub Pages the API would be a third-party origin, and
@@ -571,6 +579,30 @@ watermark is the only thing on them that did not come from the PDF.
 ## 9. Ingest: how a subject gets into the library
 
 Manual and curated, like everything in `NbkristQik-docs`. No auto-publishing.
+
+### The whole corpus at once
+
+`scripts/ingest-docs.mjs` turns the docs checkout into rows: it reads each
+subject folder's code from `queue.json` (the six folders that predate the code
+column are mapped in the script), checks the code against the catalogue
+snapshot, and drives the ingest CLI for every `final/UNIT-<n>-retypeset.pdf`.
+Dry run is the default.
+
+```
+node scripts/ingest-docs.mjs --docs ~/Projects/NbkristQik-docs            # plan
+node scripts/ingest-docs.mjs --docs ~/Projects/NbkristQik-docs --run      # ingest
+node scripts/ingest-docs.mjs --docs ~/Projects/NbkristQik-docs --plan /tmp/plan.json
+```
+
+The corpus lives on the admin's box and the pages live on the server, so the
+plan can be carried over: copy each PDF to `data/incoming/<id>.pdf` on the
+server, rewrite `file` in the plan to that path, then run the script there
+with `--app /home/ubuntu/nbkristqik --run-plan /tmp/plan.json --run`. A unit
+whose bytes already match the installed copy is skipped, so a second run only
+touches what changed. Back up `data/docs/` into `data/docs/versions/<date>/`
+before a bulk run: re-ingesting overwrites the source PDF.
+
+### One unit by hand
 
 1. The docs pipeline finishes a unit and hands over the PDF (the printed
    `unitN-retypeset.pdf`).

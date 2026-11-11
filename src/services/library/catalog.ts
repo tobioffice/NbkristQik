@@ -99,6 +99,38 @@ export const getSubjectsFor = (
 };
 
 /**
+ * The codes on one student's own list, uppercased, ready for a Set lookup.
+ *
+ * A document is cut once and read by every branch whose R23 list carries the
+ * same code: Chemistry is the same paper in CSE, IT and AIDS, and the library
+ * holds one file for all of them. Cached per dept/regulation/year-sem because
+ * every page request asks this question.
+ */
+const codeCache = new Map<string, Set<string>>();
+
+export const subjectCodesFor = (
+  dept: string,
+  regulation: string,
+  yearSem: string,
+): Set<string> => {
+  const key = `${dept}|${regulation}|${yearSem}`;
+  const hit = codeCache.get(key);
+  if (hit) return hit;
+
+  const codes = new Set(
+    getSubjectsFor(dept, regulation, yearSem).map((s) => s.code.toUpperCase()),
+  );
+  if (codeCache.size >= 200) codeCache.clear();
+  codeCache.set(key, codes);
+  return codes;
+};
+
+/** Test seam: forget the memoised subject-code lists. */
+export const clearSubjectCodeCache = (): void => {
+  codeCache.clear();
+};
+
+/**
  * The college's name for a subject code, wherever it is listed.
  *
  * The shelf asks this when it shows a document that is not on the reader's

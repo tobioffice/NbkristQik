@@ -142,17 +142,21 @@ export const getLibraryDocument = async (
   return row ? toDocument(row as Record<string, unknown>) : null;
 };
 
-/** The live documents of one department, regulation and year-sem. */
-export const listLiveDocumentsForSemester = async (
-  dept: string,
+/**
+ * Every live document cut for one regulation.
+ *
+ * The shelf filters this list by the reader's own subject codes instead of by
+ * the row's `dept`: one document serves every branch whose R23 list carries
+ * the code. That is a few hundred rows, and the codes are already in memory.
+ */
+export const listLiveDocumentsForRegulation = async (
   regulation: string,
-  yearSem: string,
 ): Promise<LibraryDocument[]> => {
   const result = await turso.execute({
     sql: `SELECT * FROM library_documents
-          WHERE status = 'live' AND dept = ? AND regulation = ? AND year_sem = ?
+          WHERE status = 'live' AND regulation = ?
           ORDER BY code, unit`,
-    args: [dept, regulation, yearSem],
+    args: [regulation],
   });
   return toDocuments(result.rows as Record<string, unknown>[]);
 };
