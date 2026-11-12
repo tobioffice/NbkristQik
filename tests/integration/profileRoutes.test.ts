@@ -216,6 +216,33 @@ describe("profile endpoints", () => {
     expect((await getRegistration(ME))?.display_name).toBe("Test Student R");
   });
 
+  it("lets a verified account save a different roll", async () => {
+    await client.execute({
+      sql: `INSERT INTO roll_claims (roll_no, user_id, email)
+            VALUES (?, ?, ?)`,
+      args: ["99KB9A9998", ME, "99kb9a9998@nbkrist.org"],
+    });
+
+    const res = await request(app).post("/api/register").send({
+      userId: ME,
+      rollNo: "26KB5A0219",
+      displayName: "Moved",
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body.registered.roll_no).toBe("26KB5A0219");
+    expect((await getRegistration(ME))?.roll_no).toBe("26KB5A0219");
+
+    // the verification stays on the roll whose mailbox proved it
+    const claims = await client.execute({
+      sql: "SELECT roll_no FROM roll_claims WHERE user_id = ?",
+      args: [ME],
+    });
+    expect(claims.rows.map((row) => String(row.roll_no))).toEqual([
+      "99KB9A9998",
+    ]);
+  });
+
   it("there is no delete endpoint", async () => {
     const res = await request(app).delete(`/api/register`).send({ userId: ME });
 

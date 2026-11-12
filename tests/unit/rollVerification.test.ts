@@ -194,4 +194,45 @@ describe("college-email verification", () => {
       any: Number(row.rows[0].blocked),
     }).toEqual({ hide: 1, lookups: 0, registration: 0, any: 1 });
   });
+
+  it("applies the options to the newest claim only", async () => {
+    await client.execute({
+      sql: `INSERT INTO roll_claims
+              (roll_no, user_id, email, verified_at, blocked,
+               hide_leaderboard, block_lookups, block_registration)
+            VALUES (?, ?, ?, datetime('now', '-1 day'), 0, 0, 0, 0)`,
+      args: ["98KB9A0000", OWNER, "98kb9a0000@nbkrist.org"],
+    });
+
+    const state = await setVerificationOptions(OWNER, {
+      hideLeaderboard: false,
+      blockLookups: true,
+      blockRegistration: false,
+    });
+    expect(state).toMatchObject({
+      roll: ROLL,
+      hideLeaderboard: false,
+      blockLookups: true,
+      blockRegistration: false,
+    });
+
+    const rows = await client.execute({
+      sql: `SELECT roll_no, hide_leaderboard, block_lookups,
+                   block_registration, blocked
+            FROM roll_claims WHERE user_id = ? ORDER BY verified_at DESC`,
+      args: [OWNER],
+    });
+    expect(
+      rows.rows.map((row) => ({
+        roll: String(row.roll_no),
+        hide: Number(row.hide_leaderboard),
+        lookups: Number(row.block_lookups),
+        registration: Number(row.block_registration),
+        any: Number(row.blocked),
+      })),
+    ).toEqual([
+      { roll: ROLL, hide: 0, lookups: 1, registration: 0, any: 1 },
+      { roll: "98KB9A0000", hide: 0, lookups: 0, registration: 0, any: 0 },
+    ]);
+  });
 });

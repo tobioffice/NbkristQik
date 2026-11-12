@@ -61,7 +61,14 @@ export default function VerificationPanel({
     );
   }
 
-  if (state?.verified && state.roll === roll.toUpperCase()) {
+  const verifiedThisRoll =
+    state?.verified === true && state.roll === roll.toUpperCase();
+  const previousVerifiedRoll =
+    state?.verified === true && state.roll !== roll.toUpperCase()
+      ? state.roll
+      : null;
+
+  if (verifiedThisRoll) {
     const setOption =
       (key: "hideLeaderboard" | "blockLookups" | "blockRegistration") =>
       (checked: boolean) => {
@@ -82,8 +89,8 @@ export default function VerificationPanel({
       <div className="verify-panel">
         <p className="form-title">Verified</p>
         <div className="note note--ok">
-          {state.email} is proved for this roll. Choose what the register may
-          do with it.
+          {state.email} is proved for this roll. Choose what the register may do
+          with it.
         </div>
 
         <label className="check-row">
@@ -91,7 +98,9 @@ export default function VerificationPanel({
             type="checkbox"
             checked={state.hideLeaderboard}
             disabled={busy !== null}
-            onChange={(event) => setOption("hideLeaderboard")(event.target.checked)}
+            onChange={(event) =>
+              setOption("hideLeaderboard")(event.target.checked)
+            }
           />
           <span>
             <b>Hide me in the leaderboard</b>
@@ -105,13 +114,14 @@ export default function VerificationPanel({
             type="checkbox"
             checked={state.blockLookups}
             disabled={busy !== null}
-            onChange={(event) => setOption("blockLookups")(event.target.checked)}
+            onChange={(event) =>
+              setOption("blockLookups")(event.target.checked)
+            }
           />
           <span>
             <b>Stop other students checking my data</b>
             <br />
-            Other students cannot check your attendance, mid marks or bunk
-            plan.
+            Other students cannot check your attendance, mid marks or bunk plan.
           </span>
         </label>
 
@@ -133,18 +143,6 @@ export default function VerificationPanel({
         </label>
 
         {error ? <div className="note note--err mt-4">{error}</div> : null}
-      </div>
-    );
-  }
-
-  if (state?.verified && state.roll !== roll.toUpperCase()) {
-    return (
-      <div className="verify-panel">
-        <p className="form-title">Verified roll</p>
-        <div className="note note--warn">
-          You verified {state.roll}. Register that roll, or verify{" "}
-          {roll.toUpperCase()} to move your registration.
-        </div>
       </div>
     );
   }
@@ -176,11 +174,22 @@ export default function VerificationPanel({
 
   return (
     <div className="verify-panel">
-      <p className="form-title">Verify your college email</p>
+      <p className="form-title">
+        {previousVerifiedRoll
+          ? "Verify this roll too"
+          : "Verify your college email"}
+      </p>
+      {previousVerifiedRoll ? (
+        <div className="note">
+          You verified {previousVerifiedRoll}. This form is for{" "}
+          {roll.toUpperCase()}. The verification and privacy options stay with{" "}
+          {previousVerifiedRoll}. Verify this roll too if you want them here.
+        </div>
+      ) : null}
       <p className="form-note">
         A six-digit code goes to {roll.toLowerCase()}@nbkrist.org. Verifying
-        proves the roll is yours, ends every other registration for it, and
-        unlocks the option to hide it.
+        proves the roll is yours, ends every other registration for this roll,
+        and unlocks the privacy options.
       </p>
 
       {sentTo ? (

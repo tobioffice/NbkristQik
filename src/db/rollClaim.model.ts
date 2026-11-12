@@ -64,7 +64,8 @@ export const getClaimForUser = async (
   return result.rows[0] ? toClaim(result.rows[0]) : null;
 };
 
-/** Claim a roll for its verified owner. One claim per roll. */
+/** Claim a roll for its verified owner. One claim per roll; one account may
+ * hold claims on more than one roll. */
 export const upsertRollClaim = async (
   rollNo: string,
   userId: string,
@@ -94,6 +95,9 @@ export const setClaimOptions = async (
   userId: string,
   options: RollClaimOptions,
 ): Promise<boolean> => {
+  const claim = await getClaimForUser(userId);
+  if (!claim) return false;
+
   const hide = options.hideLeaderboard ? 1 : 0;
   const lookups = options.blockLookups ? 1 : 0;
   const registration = options.blockRegistration ? 1 : 0;
@@ -102,8 +106,8 @@ export const setClaimOptions = async (
     sql: `UPDATE roll_claims
           SET hide_leaderboard = ?, block_lookups = ?, block_registration = ?,
               blocked = ?, updated_at = datetime('now')
-          WHERE user_id = ?`,
-    args: [hide, lookups, registration, any, String(userId)],
+          WHERE roll_no = ? AND user_id = ?`,
+    args: [hide, lookups, registration, any, claim.roll_no, String(userId)],
   });
   return Number(result.rowsAffected ?? 0) > 0;
 };

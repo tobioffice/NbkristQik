@@ -108,6 +108,8 @@ const { trackActivity } = await import("../../src/services/tracker.js");
 const { upsertTgUser } = await import("../../src/db/student.model.js");
 const { getStudentCached } = await import("../../src/services/redis/utils.js");
 const { getLeaderboard } = await import("../../src/db/student_stats.model.js");
+const { getVerificationState } =
+  await import("../../src/services/verification/otp.js");
 const { takeGroupPrompts } =
   await import("../../src/bot/academics/groupPrompt.js");
 
@@ -352,6 +354,23 @@ describe("attendance card", () => {
     expect(answerCallbackQuery.mock.calls.at(-1)?.[1]?.text).toBe(
       "Saved already",
     );
+  });
+
+  it("saves a different roll after the account verified another one", async () => {
+    vi.mocked(getVerificationState).mockResolvedValueOnce({
+      verified: true,
+      roll: "25KB1A05AA",
+      email: "25kb1a05aa@nbkrist.org",
+      blocked: false,
+      hideLeaderboard: false,
+      blockLookups: false,
+      blockRegistration: false,
+    });
+
+    await tap(210, "save_25KB1A05AR", 9);
+
+    expect(upsertRegistration).toHaveBeenCalledWith("210", "25KB1A05AR", null);
+    expect(answerCallbackQuery.mock.calls.at(-1)?.[1]?.text).toContain("Saved");
   });
 
   it("saves a roll another account already holds", async () => {

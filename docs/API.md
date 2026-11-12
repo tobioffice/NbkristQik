@@ -361,20 +361,21 @@ requests / 15 min per account.
 | Method | Path | Purpose |
 |---|---|---|
 | `GET` | `/api/profile` | `{found:true, registration:{roll_no, display_name,...}, student}`; `{found:true, stale:true, registration, student:null}` when the saved roll left the college master table; or `{found:false, lastLookup, suggestion}` (the same roll for one release; a suggestion, never a prefill) |
-| `POST` | `/api/register` | Validate + upsert `{rollNo, displayName?}`; 400 on bad format, 404 + `suggestions` on a roll missing from college records, 403 when another account verified the roll, 409 when the caller verified a different roll |
+| `POST` | `/api/register` | Validate + upsert `{rollNo, displayName?}`; 400 on bad format, 404 + `suggestions` on a roll missing from college records, 403 when the roll's verified owner has turned on the registration lock |
 
 A successful registration answers
 `{ "ok": true, "registered": { "roll_no": "21B81A05E9", "name": "..." } }`.
 A non-empty `displayName` (trimmed, max 40 chars) is the name the leaderboard
 shows for that roll.
 
-Any number of accounts may save the same roll until one of them proves it.
-Schema v5 adds college-email verification: once a roll has a verified owner,
-`POST /api/register` answers 403 for every other account, and a caller who has
-verified a different roll answers 409. A shared, unverified roll still shows
-the newest non-empty `display_name` on the leaderboard. There is no delete
-endpoint by design; registering again overwrites the caller's own
-registration.
+Any number of accounts may save the same roll until its verified owner turns
+on the registration lock. Schema v5 adds college-email verification: with
+`blockRegistration` on, `POST /api/register` answers 403 for every other
+account. A caller who has verified a different roll may still save a new roll;
+the old claim and its privacy options stay on the old roll. A shared,
+unverified roll still shows the newest non-empty `display_name` on the
+leaderboard. There is no delete endpoint by design; registering again
+overwrites the caller's own registration.
 
 ## College-email verification endpoints
 

@@ -13,10 +13,7 @@ import {
 import { trackActivity } from "../services/tracker.js";
 import { ROLL_REGEX } from "../constants/index.js";
 import { logger } from "../config/logger.js";
-import {
-  getVerificationState,
-  isRegistrationBlockedFor,
-} from "../services/verification/otp.js";
+import { isRegistrationBlockedFor } from "../services/verification/otp.js";
 
 export const profileRouter = Router();
 
@@ -106,19 +103,13 @@ profileRouter.post("/register", async (req: Request, res: Response) => {
       throw e;
     }
 
-    // A verified student owns the roll: nobody else may register it, whether
-    // or not the owner has hidden the data.
+    // A verified owner can lock this roll against other accounts. Their own
+    // account may still save any roll it wants; a verified account is not
+    // pinned to that roll after it changes registration.
     if (await isRegistrationBlockedFor(rollNo, resolved.userId)) {
       res.status(403).json({
         error:
           "This roll number is verified by its owner. If it is yours, verify your college email from that account.",
-      });
-      return;
-    }
-    const own = await getVerificationState(resolved.userId);
-    if (own.verified && own.roll?.toUpperCase() !== rollNo) {
-      res.status(409).json({
-        error: `You verified ${own.roll}. Verify the new roll first to move your registration.`,
       });
       return;
     }

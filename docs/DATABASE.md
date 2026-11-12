@@ -95,7 +95,8 @@ One row per roll proved by its college mailbox: `roll_no` (primary key),
 `block_lookups`, `block_registration`), the legacy
 `blocked` mirror (1 when any switch is on) and `updated_at`. Written only by
 the verification service; verification terminates other registrations for the
-roll at the moment it is proved, not on every read.
+roll at the moment it is proved, not on every read. An account may hold claims
+on more than one roll; the API reports the newest one.
 
 ### `email_verifications` — one row per code sent
 
