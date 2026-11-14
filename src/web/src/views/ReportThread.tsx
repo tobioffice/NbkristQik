@@ -185,7 +185,9 @@ export default function ReportThreadView({
   const [draft, setDraft] = useState(() => readDraft(draftKey));
   const [sending, setSending] = useState(false);
   const bottom = useRef<HTMLDivElement | null>(null);
-  const seenCount = useRef(initial?.messageCount ?? 0);
+  // -1 makes the first painted thread count as new: opening a conversation
+  // lands on its newest message, not at the top of the history
+  const seenCount = useRef(-1);
   const threadRef = useRef(thread);
   const abortRef = useRef<AbortController | null>(null);
   const inFlightRef = useRef(false);
@@ -241,7 +243,6 @@ export default function ReportThreadView({
     const known = knownThread(issueId, seed);
     setThread(known);
     setLoading(known === null);
-    seenCount.current = known?.messageCount ?? 0;
     load(known !== null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [issueId]);
@@ -358,7 +359,6 @@ export default function ReportThreadView({
               </li>
             ))}
           </ol>
-          <div ref={bottom} />
 
           {thread.status === "resolved" ? (
             <div className="thread-closed">
@@ -401,6 +401,9 @@ export default function ReportThreadView({
               </button>
             </form>
           )}
+          {/* after the composer, so the initial scroll lands with the
+              composer in view and the newest message just above it */}
+          <div ref={bottom} />
         </>
       )}
     </div>

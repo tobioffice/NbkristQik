@@ -46,6 +46,7 @@ export default function Issues({
   const [reports, setReports] = useState<MyReport[] | null>(null);
   const [loadingReports, setLoadingReports] = useState(false);
   const [loadingError, setLoadingError] = useState(false);
+  const reportsInFlight = useRef(false);
 
   // a half-written report is worth more than a fast exit
   useClosingConfirmation(message.trim().length > 0 && !ticket);
@@ -81,9 +82,11 @@ export default function Issues({
     0;
   const unreadCount =
     orderedReports?.reduce((count, report) => count + report.unread, 0) ?? 0;
+  const charactersToSend = Math.max(0, 10 - message.trim().length);
 
   const loadReports = () => {
-    if (!identity.userId) return;
+    if (!identity.userId || reportsInFlight.current) return;
+    reportsInFlight.current = true;
     setLoadingReports(true);
     setLoadingError(false);
     fetchMyReports(identity)
@@ -92,7 +95,10 @@ export default function Issues({
         onOpenCount?.(rows.filter((row) => row.status !== "resolved").length);
       })
       .catch(() => setLoadingError(true))
-      .finally(() => setLoadingReports(false));
+      .finally(() => {
+        reportsInFlight.current = false;
+        setLoadingReports(false);
+      });
   };
 
   // every visit to the list refetches: a reply may have arrived in chat since
@@ -101,6 +107,26 @@ export default function Issues({
     if (route.view !== "history") return;
     loadReports();
     // deliberate: only on view switches, never on state changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route.view]);
+
+  // A Telegram notification can bring the Mini App back to the foreground
+  // with the list still open. Re-read then, so the reply that brought them
+  // back is on screen and the unread stamp is gone. The in-flight guard keeps
+  // focus and visibility from spending two requests for the same return.
+  useEffect(() => {
+    if (route.view !== "history") return;
+    const refresh = () => {
+      if (document.visibilityState === "visible") loadReports();
+    };
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+    // deliberate: the loader is recreated each render; this effect is about
+    // the screen becoming visible, not about a state change
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [route.view]);
 
@@ -354,7 +380,11 @@ export default function Issues({
                 maxLength={1000}
                 placeholder="Marks are showing wrong for my roll. The portal says 22 but the bot shows 13."
               />
-              <span className="char-count">{message.length}/1000</span>
+              <span className="char-count">
+                {charactersToSend > 0
+                  ? `${message.length}/1000 · ${charactersToSend} more to send`
+                  : `${message.length}/1000`}
+              </span>
             </label>
 
             {error && <p className="note note--err mt-4">{error}</p>}
