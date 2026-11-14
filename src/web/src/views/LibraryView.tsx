@@ -306,16 +306,11 @@ const SubjectList = ({
   subjects: LibrarySubject[];
   onOpen: (subject: LibrarySubject) => void;
 }) => (
-  <>
-    <div className="list-head lib-list-head">
-      <span>Code</span>
-      <span>Subject</span>
-      <span>State</span>
-    </div>
+  <div className="lib-group">
     {subjects.map((subject) => (
       <SubjectRow key={subject.code} subject={subject} onOpen={onOpen} />
     ))}
-  </>
+  </div>
 );
 
 /** A held subject opens; a subject we have nothing for says so, quietly. */
@@ -387,37 +382,34 @@ function UnitList({
       </div>
 
       <div className="page-body">
-        <div className="list-head lib-list-head lib-list-head--units">
-          <span>Unit</span>
-          <span>Pages</span>
-          <span aria-hidden="true" />
+        <div className="lib-group">
+          {subject.units.map((unit) => {
+            const label = unitLabel(unit);
+            return (
+              <div className="lib-row lib-row--pdf" key={unit.id}>
+                <button className="lib-row__open" onClick={() => onOpen(unit)}>
+                  <span className="lib-row__name">{label}</span>
+                  <span className="lib-row__state lib-row__state--live">
+                    {plural(unit.pages, "page")}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="lib-pdf"
+                  onClick={() => send(unit.id)}
+                  disabled={busyId === unit.id}
+                  aria-label={
+                    unit.unit
+                      ? `Send Unit ${unit.unit} PDF to my chat`
+                      : "Send the full subject PDF to my chat"
+                  }
+                >
+                  {busyId === unit.id ? "…" : "PDF"}
+                </button>
+              </div>
+            );
+          })}
         </div>
-        {subject.units.map((unit) => {
-          const label = unitLabel(unit);
-          return (
-            <div className="lib-row lib-row--pdf" key={unit.id}>
-              <button className="lib-row__open" onClick={() => onOpen(unit)}>
-                <span className="lib-row__name">{label}</span>
-                <span className="lib-row__state lib-row__state--live">
-                  {plural(unit.pages, "page")}
-                </span>
-              </button>
-              <button
-                type="button"
-                className="lib-pdf"
-                onClick={() => send(unit.id)}
-                disabled={busyId === unit.id}
-                aria-label={
-                  unit.unit
-                    ? `Send Unit ${unit.unit} PDF to my chat`
-                    : "Send the full subject PDF to my chat"
-                }
-              >
-                {busyId === unit.id ? "…" : "PDF"}
-              </button>
-            </div>
-          );
-        })}
 
         <div className="form-block">
           <button className="btn-outline w-full mt-5" onClick={onBack}>

@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
+import "./tg-native.css";
 import { bootstrapTelegram } from "./telegram";
 import AppShell from "./AppShell";
 

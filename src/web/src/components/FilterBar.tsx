@@ -20,6 +20,10 @@ const sectionLabel = (value: string): string =>
       ? `Section ${value.toUpperCase()}`
       : value;
 
+/**
+ * Three settings rows, not three floating selects: label on the left, value
+ * on the right, one surface group. This is the Telegram-native filter shape.
+ */
 export default function FilterBar({
   filters,
   onChange,
@@ -34,47 +38,60 @@ export default function FilterBar({
       : known;
 
   return (
-    <div className="filter-row">
-      <select
-        value={filters.year}
-        aria-label="Filter by year"
-        onChange={(e) => onChange({ year: e.target.value as YearFilter })}
-        className="field-select"
-      >
-        <option value="all">All Years</option>
-        <option value="1">1st Year</option>
-        <option value="2">2nd Year</option>
-        <option value="3">3rd Year</option>
-        <option value="4">4th Year</option>
-      </select>
+    <div
+      className="tg-filter-group"
+      role="group"
+      aria-label="Filter the register"
+    >
+      <label className="tg-select-row">
+        <span className="tg-select-row__label">Year</span>
+        <select
+          value={filters.year}
+          aria-label="Filter by year"
+          onChange={(e) => onChange({ year: e.target.value as YearFilter })}
+          className="tg-select"
+        >
+          <option value="all">All years</option>
+          <option value="1">1st year</option>
+          <option value="2">2nd year</option>
+          <option value="3">3rd year</option>
+          <option value="4">4th year</option>
+        </select>
+      </label>
 
-      <select
-        value={filters.branch}
-        aria-label="Filter by branch"
-        onChange={(e) => onChange({ branch: e.target.value })}
-        className="field-select"
-      >
-        <option value="all">All Branches</option>
-        {Object.entries(BRANCHES).map(([id, name]) => (
-          <option key={id} value={id}>
-            {name}
-          </option>
-        ))}
-      </select>
+      <label className="tg-select-row">
+        <span className="tg-select-row__label">Branch</span>
+        <select
+          value={filters.branch}
+          aria-label="Filter by branch"
+          onChange={(e) => onChange({ branch: e.target.value })}
+          className="tg-select"
+        >
+          <option value="all">All branches</option>
+          {Object.entries(BRANCHES).map(([id, name]) => (
+            <option key={id} value={id}>
+              {name}
+            </option>
+          ))}
+        </select>
+      </label>
 
-      <select
-        value={filters.section}
-        aria-label="Filter by section"
-        onChange={(e) => onChange({ section: e.target.value })}
-        className="field-select"
-      >
-        <option value="all">All Sections</option>
-        {options.map((value) => (
-          <option key={value} value={value}>
-            {sectionLabel(value)}
-          </option>
-        ))}
-      </select>
+      <label className="tg-select-row">
+        <span className="tg-select-row__label">Section</span>
+        <select
+          value={filters.section}
+          aria-label="Filter by section"
+          onChange={(e) => onChange({ section: e.target.value })}
+          className="tg-select"
+        >
+          <option value="all">All sections</option>
+          {options.map((value) => (
+            <option key={value} value={value}>
+              {sectionLabel(value)}
+            </option>
+          ))}
+        </select>
+      </label>
     </div>
   );
 }

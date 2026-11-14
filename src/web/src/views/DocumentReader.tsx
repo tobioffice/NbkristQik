@@ -226,91 +226,102 @@ export default function DocumentReader({
 
   const progress = pages > 1 ? (current - 1) / (pages - 1) : 0;
   const unitLabel = unit ? `Unit ${unit}` : "Material";
+  const pageLabel = `${pages} ${pages === 1 ? "page" : "pages"}`;
 
   return (
     <div className="reader">
       <div className="reader__head">
-        <button className="reader__back" onClick={onClose} aria-label="Back">
-          <svg
-            aria-hidden="true"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        <div className="reader__bar">
+          <button
+            className="reader__back"
+            onClick={onClose}
+            aria-label="Back to units"
           >
-            <path d="m14 6-6 6 6 6" />
-          </svg>
-          Back
-        </button>
-        <div className="reader__title">
-          <b>{title}</b>
-          <span>
-            {unitLabel} ·
-            <em aria-label={`Page ${current} of ${pages}`}>
-              {current} / {pages}
-            </em>
+            <svg
+              aria-hidden="true"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m14 6-6 6 6 6" />
+            </svg>
+          </button>
+          <div className="reader__title">
+            <b>{title}</b>
+            <span>
+              {unitLabel} · {pageLabel}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="reader__pdf"
+            onClick={() => send(docId)}
+            disabled={busyId === docId}
+            aria-label={`Send ${title}, ${unitLabel}, PDF to my chat`}
+          >
+            {busyId === docId ? "…" : "PDF"}
+          </button>
+        </div>
+        <div className="reader__tools">
+          <span
+            className="reader__count"
+            aria-label={`Page ${current} of ${pages}`}
+          >
+            <b>{current}</b> / {pages}
           </span>
-        </div>
-        <div className="reader__zoom">
-          <button
-            className="reader__zoom-btn"
-            onClick={viewport.zoomOut}
-            aria-label="Zoom out"
-          >
-            <svg
-              aria-hidden="true"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <div className="reader__zoom">
+            <button
+              className="reader__zoom-btn"
+              onClick={viewport.zoomOut}
+              aria-label="Zoom out"
             >
-              <path d="M5 12h14" />
-            </svg>
-          </button>
-          <button
-            className="reader__zoom-btn reader__zoom-value"
-            onClick={viewport.zoomFit}
-            aria-label="Fit the page to the screen"
-          >
-            {viewport.zoomText}
-          </button>
-          <button
-            className="reader__zoom-btn"
-            onClick={viewport.zoomIn}
-            aria-label="Zoom in"
-          >
-            <svg
-              aria-hidden="true"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              <svg
+                aria-hidden="true"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 12h14" />
+              </svg>
+            </button>
+            <button
+              className="reader__zoom-btn reader__zoom-value"
+              onClick={viewport.zoomFit}
+              aria-label="Fit the page to the screen"
             >
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-          </button>
+              {viewport.zoomText}
+            </button>
+            <button
+              className="reader__zoom-btn"
+              onClick={viewport.zoomIn}
+              aria-label="Zoom in"
+            >
+              <svg
+                aria-hidden="true"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <button
-          type="button"
-          className="reader__pdf"
-          onClick={() => send(docId)}
-          disabled={busyId === docId}
-          aria-label={`Send ${title}, ${unitLabel}, PDF to my chat`}
-        >
-          {busyId === docId ? "…" : "PDF"}
-        </button>
         <span
           className="reader__progress"
           style={{ transform: `scaleX(${progress})` }}

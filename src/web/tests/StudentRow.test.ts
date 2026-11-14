@@ -29,7 +29,7 @@ describe("StudentRow", () => {
     expect(html).toContain("Test Student");
     expect(html).toContain("82.40");
     expect(html).toContain("YOU");
-    expect(html).toContain("reg-row--me");
+    expect(html).toContain("tg-row--me");
   });
 
   it("falls back to the roll when an anonymous row has no name", () => {

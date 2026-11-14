@@ -1,16 +1,16 @@
 import type { LeaderboardCoverage, SortBy } from "../api";
 
 export const SkeletonRows = () => (
-  <>
+  <div className="tg-skeleton" aria-hidden="true">
     {[...Array(6)].map((_, i) => (
-      <div key={i} className="skeleton-row" aria-hidden="true">
+      <div key={i} className="skeleton-row">
         <span className="sk sk--rank" />
         <span className="sk sk--roll" />
         <span className="sk sk--name" />
         <span className="sk sk--score" />
       </div>
     ))}
-  </>
+  </div>
 );
 
 export const ErrorState = ({

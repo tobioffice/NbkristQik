@@ -289,7 +289,6 @@ export default function Issues({
                           {report.lastAuthor === "admin"
                             ? "admin wrote last"
                             : "you wrote last"}
-                          <span aria-hidden="true"> →</span>
                         </span>
                         {activity ? (
                           <span className="report-entry__when">

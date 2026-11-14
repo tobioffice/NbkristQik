@@ -60,22 +60,22 @@ const SECTIONS: SectionEntry[] = [
   {
     section: "profile",
     tab: "Profile",
-    icon: "M12 8.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM4.5 21c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4",
+    icon: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM5 21a7 7 0 0 1 14 0",
   },
   {
     section: "rank",
     tab: "Ranks",
-    icon: "M4 19V11M10 19V5M16 19V14M21 19H3",
+    icon: "M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM17 5h2a2 2 0 0 1 0 4h-1M7 5H5a2 2 0 0 0 0 4h1",
   },
   {
     section: "issues",
     tab: "Issues",
-    icon: "M4 5.5h16v10H12l-4 3.5v-3.5H4z",
+    icon: "M20 15a2 2 0 0 1-2 2H8l-4 3V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z",
   },
   {
     section: "library",
     tab: "Library",
-    icon: "M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z",
+    icon: "M12 6.5C10 5 7.5 4.5 4 4.5v14c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2v-14c-3.5 0-6 .5-8 2ZM12 6.5v14",
   },
 ];
 
@@ -109,7 +109,7 @@ const routeAtStartup = (): Route => {
 
 /** The band's context line, by section. */
 const BAND_SUB: Record<Section, string> = {
-  rank: "Attendance register",
+  rank: "Leaderboard",
   library: "Library",
   profile: "Student profile",
   issues: "Issue reports",
@@ -215,8 +215,8 @@ export default function AppShell() {
 
   return (
     <IdentityProvider>
-      <div className="app">
-        <div className="sheet">
+      <div className="app app--tg">
+        <div className="sheet sheet--tg">
           {!immersive && (
             <Band
               sub={BAND_SUB[route.section]}
@@ -263,23 +263,25 @@ export default function AppShell() {
 
           {!immersive && (
             <nav className="tabbar" aria-label="Sections">
-              {visibleSections.map((entry) => (
-                <Tab
-                  key={entry.section}
-                  label={entry.tab}
-                  icon={entry.icon}
-                  active={route.section === entry.section}
-                  onClick={() =>
-                    go({
-                      section: entry.section,
-                      issue: null,
-                      // the issue tab opens on the reports list, never an
-                      // empty form
-                      mine: entry.section === "issues",
-                    })
-                  }
-                />
-              ))}
+              <div className="tabbar__inner">
+                {visibleSections.map((entry) => (
+                  <Tab
+                    key={entry.section}
+                    label={entry.tab}
+                    icon={entry.icon}
+                    active={route.section === entry.section}
+                    onClick={() =>
+                      go({
+                        section: entry.section,
+                        issue: null,
+                        // the issue tab opens on the reports list, never an
+                        // empty form
+                        mine: entry.section === "issues",
+                      })
+                    }
+                  />
+                ))}
+              </div>
             </nav>
           )}
         </div>
@@ -308,11 +310,11 @@ const Tab = ({
     <svg
       aria-hidden="true"
       viewBox="0 0 24 24"
-      width="19"
-      height="19"
+      width="20"
+      height="20"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.6"
+      strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
@@ -389,8 +391,7 @@ const IssuesSection = ({
     );
   }
 
-  const eyebrow =
-    route.view === "thread" ? (route.issue ?? "Issues") : "Issues";
+  const eyebrow = "Issues";
   const title =
     route.view === "history"
       ? "My reports"

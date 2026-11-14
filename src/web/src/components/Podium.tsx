@@ -1,46 +1,41 @@
 import { formatScore } from "../format";
 import type { SortBy, StudentStat } from "../api";
 
-type MeritVariant = "first" | "second" | "third";
-
-const ScoreStat = ({ stat, sortBy }: { stat: StudentStat; sortBy: SortBy }) => {
+const MeritScore = ({
+  stat,
+  sortBy,
+}: {
+  stat: StudentStat;
+  sortBy: SortBy;
+}) => {
   const belowMinimum =
     sortBy === "attendance" && stat.attendance_percentage < 75;
   return (
-    <span className={`merit-score${belowMinimum ? " is-below" : ""}`}>
+    <span className={`tg-row__score${belowMinimum ? " is-below" : ""}`}>
       {formatScore(stat, sortBy)}
       {sortBy === "attendance" ? <span className="unit">%</span> : null}
-      <span className="metric">
-        {sortBy === "attendance" ? "Attendance" : "Mid Avg"}
-      </span>
     </span>
   );
 };
 
-const MeritEntry = ({
-  stat,
-  sortBy,
-  variant,
-}: {
-  stat: StudentStat;
-  sortBy: SortBy;
-  variant: MeritVariant;
-}) => {
-  // a tied rank shown on the second/third card is struck through in red ink
-  const struck =
-    (variant === "second" && stat.rank !== 2) ||
-    (variant === "third" && stat.rank !== 3);
-
+const MeritRow = ({ stat, sortBy }: { stat: StudentStat; sortBy: SortBy }) => {
+  const first = stat.rank === 1;
   return (
-    <div className={`merit-entry merit-entry--${variant}`}>
-      <span className={`merit-mark${struck ? " struck" : ""}`}>
+    <div className={`tg-row${first ? " tg-row--first" : ""}`}>
+      <span
+        className={`tg-rank-badge${first ? " tg-rank-badge--first" : ""}`}
+      >
         {stat.rank}
       </span>
-      <h3 className="merit-name">
-        {stat.hidden ? "Hidden student" : stat.name || stat.roll_no}
-      </h3>
-      <p className="merit-roll">{stat.hidden ? "Hidden" : stat.roll_no}</p>
-      <ScoreStat stat={stat} sortBy={sortBy} />
+      <span className="tg-row__body">
+        <span className="tg-row__title">
+          {stat.hidden ? "Hidden student" : stat.name || stat.roll_no}
+        </span>
+        <span className="tg-row__sub">
+          {stat.hidden ? "Identity hidden" : stat.roll_no}
+        </span>
+      </span>
+      <MeritScore stat={stat} sortBy={sortBy} />
     </div>
   );
 };
@@ -53,6 +48,10 @@ interface PodiumProps {
   total: number;
 }
 
+/**
+ * The top three as three ordinary Telegram rows, in rank order. The first
+ * row carries the filled blue badge; the other two stay quiet.
+ */
 export default function Podium({ stats, sortBy, loaded, total }: PodiumProps) {
   const [first, second, third] = stats;
 
@@ -64,19 +63,19 @@ export default function Podium({ stats, sortBy, loaded, total }: PodiumProps) {
   const tieTruncated = tiedCount === loaded && loaded < total;
 
   return (
-    <div className="merit" aria-label="Top three in this view">
-      {/* DOM order is 1-2-3 so a screen reader hears gold first; the grid
-          places them 2-1-3 the way a podium is drawn */}
-      {first && <MeritEntry stat={first} sortBy={sortBy} variant="first" />}
-      {second && <MeritEntry stat={second} sortBy={sortBy} variant="second" />}
-      {third && <MeritEntry stat={third} sortBy={sortBy} variant="third" />}
+    <>
+      <div className="tg-group" aria-label="Top three in this view">
+        {first && <MeritRow stat={first} sortBy={sortBy} />}
+        {second && <MeritRow stat={second} sortBy={sortBy} />}
+        {third && <MeritRow stat={third} sortBy={sortBy} />}
+      </div>
       {first && second && first.rank === second.rank && tiedCount > 1 && (
-        <p className="merit-ties">
+        <p className="tg-tie">
           {tieTruncated
             ? `Tied at #${first.rank}`
             : `${tiedCount} students tied at #${first.rank}`}
         </p>
       )}
-    </div>
+    </>
   );
 }

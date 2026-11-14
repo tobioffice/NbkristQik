@@ -31,10 +31,10 @@ describe("FilterBar year", () => {
     expect(yearSelect).not.toContain('value="41"');
   });
 
-  it("keeps All Years as the default", () => {
+  it("keeps All years as the default", () => {
     expect(html).toContain('value="all"');
-    expect(html).toContain("All Years");
-    expect(html).toContain("1st Year");
-    expect(html).toContain("4th Year");
+    expect(html).toContain("All years");
+    expect(html).toContain("1st year");
+    expect(html).toContain("4th year");
   });
 });

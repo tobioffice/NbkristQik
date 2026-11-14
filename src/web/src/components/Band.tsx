@@ -31,23 +31,25 @@ export default function Band({ sub, stamp, onHome }: BandProps) {
 
   return (
     <header className="reg-band">
-      {onHome ? (
-        <button
-          className="reg-band__home"
-          onClick={onHome}
-          aria-label="Back to the index"
-        >
-          {head}
-        </button>
-      ) : (
-        <div>{head}</div>
-      )}
-      {stamp ? (
-        <div className="reg-band__stamp">
-          <b>{stamp.value}</b>
-          <span>{stamp.label}</span>
-        </div>
-      ) : null}
+      <div className="reg-band__inner">
+        {onHome ? (
+          <button
+            className="reg-band__home"
+            onClick={onHome}
+            aria-label="Back to the index"
+          >
+            {head}
+          </button>
+        ) : (
+          <div>{head}</div>
+        )}
+        {stamp ? (
+          <div className="reg-band__stamp">
+            <b>{stamp.value}</b>
+            <span>{stamp.label}</span>
+          </div>
+        ) : null}
+      </div>
     </header>
   );
 }

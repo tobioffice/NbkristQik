@@ -5,11 +5,13 @@ interface SortTabsProps {
   onSortChange: (sort: SortBy) => void;
 }
 
+/** Telegram-style pill tabs: one quiet surface, one selected surface. */
 export default function SortTabs({ sortBy, onSortChange }: SortTabsProps) {
   return (
-    <div className="sort-tabs" role="group" aria-label="Sort the register by">
+    <div className="tg-pills" role="group" aria-label="Sort the register by">
       <button
         type="button"
+        className="tg-pill"
         aria-pressed={sortBy === "attendance"}
         onClick={() => onSortChange("attendance")}
       >
@@ -17,10 +19,11 @@ export default function SortTabs({ sortBy, onSortChange }: SortTabsProps) {
       </button>
       <button
         type="button"
+        className="tg-pill"
         aria-pressed={sortBy === "midmarks"}
         onClick={() => onSortChange("midmarks")}
       >
-        Mid Marks
+        Mid marks
       </button>
     </div>
   );

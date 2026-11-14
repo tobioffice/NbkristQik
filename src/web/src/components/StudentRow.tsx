@@ -10,6 +10,10 @@ interface StudentRowProps {
   lastElementRef?: (node: HTMLLIElement) => void;
 }
 
+/**
+ * One student in the Telegram-native register: a rank badge, a two-line
+ * identity, and the figure on the right. No column headers, no rules.
+ */
 const StudentRow = ({
   stat,
   sortBy,
@@ -23,19 +27,25 @@ const StudentRow = ({
   return (
     <li
       ref={isLast && lastElementRef ? lastElementRef : null}
-      className={`reg-row${isMe ? " reg-row--me" : ""}`}
+      className={`tg-row${isMe ? " tg-row--me" : ""}`}
     >
-      <span className="reg-row__rank">{stat.rank}</span>
-      <span className="reg-row__roll">
-        {stat.hidden ? "Hidden" : stat.roll_no}
+      <span
+        className={`tg-rank-badge${
+          stat.rank === 1 ? " tg-rank-badge--first" : ""
+        }`}
+      >
+        {stat.rank}
       </span>
-      {/* a name is not a heading: hundreds of h3s make the register
-          unnavigable for a screen reader */}
-      <span className="reg-row__name">
-        {stat.hidden ? "Hidden student" : stat.name || stat.roll_no}
-        {isMe && <span className="you-stamp">YOU</span>}
+      <span className="tg-row__body">
+        <span className="tg-row__title">
+          {stat.hidden ? "Hidden student" : stat.name || stat.roll_no}
+          {isMe && <span className="tg-you">YOU</span>}
+        </span>
+        <span className="tg-row__sub">
+          {stat.hidden ? "Identity hidden" : stat.roll_no}
+        </span>
       </span>
-      <span className={`reg-row__score${belowMinimum ? " is-below" : ""}`}>
+      <span className={`tg-row__score${belowMinimum ? " is-below" : ""}`}>
         {formatScore(stat, sortBy)}
         {sortBy === "attendance" ? <span className="unit">%</span> : null}
       </span>

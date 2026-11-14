@@ -305,8 +305,21 @@ export default function ReportThreadView({
   return (
     <div className="form-block">
       <div className="thread-head">
-        <button onClick={onBack} className="link-btn">
-          ← My reports
+        <button onClick={onBack} className="link-btn thread-back">
+          <svg
+            aria-hidden="true"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m14 6-6 6 6 6" />
+          </svg>
+          My reports
         </button>
         <div className="thread-head__ids">
           <span className="issue-id">{issueId}</span>

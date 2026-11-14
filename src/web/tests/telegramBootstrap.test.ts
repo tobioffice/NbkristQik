@@ -28,17 +28,47 @@ describe("bootstrapTelegram", () => {
     expect(() => bootstrapTelegram()).not.toThrow();
   });
 
-  it("paints the header and paper, then asks for the full height", () => {
+  it("paints the native header and ground, then asks for the full height", () => {
     const app = fakeApp();
     stubWindow(app);
 
     bootstrapTelegram();
 
-    expect(app.setHeaderColor).toHaveBeenCalledWith("#3f6457");
-    expect(app.setBackgroundColor).toHaveBeenCalledWith("#e7dcc3");
+    expect(app.setHeaderColor).toHaveBeenCalledWith("#212a33");
+    expect(app.setBackgroundColor).toHaveBeenCalledWith("#1a2026");
     expect(app.ready).toHaveBeenCalledTimes(1);
     expect(app.expand).toHaveBeenCalledTimes(1);
     expect(app.disableVerticalSwipes).toHaveBeenCalledTimes(1);
+  });
+
+  it("asks a phone client for the whole screen", () => {
+    const requestFullscreen = vi.fn();
+    const app = {
+      ...fakeApp(),
+      platform: "android",
+      isFullscreen: false,
+      requestFullscreen,
+    };
+    stubWindow(app);
+
+    bootstrapTelegram();
+
+    expect(requestFullscreen).toHaveBeenCalledTimes(1);
+    expect(app.ready).toHaveBeenCalled();
+  });
+
+  it("leaves a desktop client in its expanded window", () => {
+    const requestFullscreen = vi.fn();
+    const app = {
+      ...fakeApp(),
+      platform: "tdesktop",
+      requestFullscreen,
+    };
+    stubWindow(app);
+
+    bootstrapTelegram();
+
+    expect(requestFullscreen).not.toHaveBeenCalled();
   });
 
   it("keeps going when a client rejects one of the calls", () => {
@@ -75,7 +105,7 @@ describe("bootstrapTelegram", () => {
     stubWindow(app);
     listeners[0]!();
 
-    expect(app.setHeaderColor).toHaveBeenCalledWith("#3f6457");
+    expect(app.setHeaderColor).toHaveBeenCalledWith("#212a33");
     expect(app.ready).toHaveBeenCalled();
   });
 });

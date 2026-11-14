@@ -93,54 +93,57 @@ export default function VerificationPanel({
           with it.
         </div>
 
-        <label className="check-row">
-          <input
-            type="checkbox"
-            checked={state.hideLeaderboard}
-            disabled={busy !== null}
-            onChange={(event) =>
-              setOption("hideLeaderboard")(event.target.checked)
-            }
-          />
-          <span>
-            <b>Hide me in the leaderboard</b>
-            <br />
-            Your name and roll are hidden. Your rank and score still count.
-          </span>
-        </label>
+        <div className="check-group">
+          <label className="check-row">
+            <input
+              type="checkbox"
+              checked={state.hideLeaderboard}
+              disabled={busy !== null}
+              onChange={(event) =>
+                setOption("hideLeaderboard")(event.target.checked)
+              }
+            />
+            <span>
+              <b>Hide me in the leaderboard</b>
+              <br />
+              Your name and roll are hidden. Your rank and score still count.
+            </span>
+          </label>
 
-        <label className="check-row">
-          <input
-            type="checkbox"
-            checked={state.blockLookups}
-            disabled={busy !== null}
-            onChange={(event) =>
-              setOption("blockLookups")(event.target.checked)
-            }
-          />
-          <span>
-            <b>Stop other students checking my data</b>
-            <br />
-            Other students cannot check your attendance, mid marks or bunk plan.
-          </span>
-        </label>
+          <label className="check-row">
+            <input
+              type="checkbox"
+              checked={state.blockLookups}
+              disabled={busy !== null}
+              onChange={(event) =>
+                setOption("blockLookups")(event.target.checked)
+              }
+            />
+            <span>
+              <b>Stop other students checking my data</b>
+              <br />
+              Other students cannot check your attendance, mid marks or bunk
+              plan.
+            </span>
+          </label>
 
-        <label className="check-row">
-          <input
-            type="checkbox"
-            checked={state.blockRegistration}
-            disabled={busy !== null}
-            onChange={(event) =>
-              setOption("blockRegistration")(event.target.checked)
-            }
-          />
-          <span>
-            <b>Only I can register this roll</b>
-            <br />
-            Another account cannot save this roll as its own. Your registration
-            stays either way.
-          </span>
-        </label>
+          <label className="check-row">
+            <input
+              type="checkbox"
+              checked={state.blockRegistration}
+              disabled={busy !== null}
+              onChange={(event) =>
+                setOption("blockRegistration")(event.target.checked)
+              }
+            />
+            <span>
+              <b>Only I can register this roll</b>
+              <br />
+              Another account cannot save this roll as its own. Your
+              registration stays either way.
+            </span>
+          </label>
+        </div>
 
         {error ? <div className="note note--err mt-4">{error}</div> : null}
       </div>

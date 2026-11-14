@@ -13,7 +13,9 @@ export default function SearchBar({
   const label = identified
     ? "Search students by name or roll number"
     : "Search students by roll number";
-  const placeholder = identified ? "Name or roll number" : "Roll number";
+  const placeholder = identified
+    ? "Search name or roll number"
+    : "Search roll number";
   // one character is not a search: the server would reject it, and the
   // register stays unfiltered until a second character arrives
   const tooShort = value.trim().length === 1;
@@ -33,12 +35,12 @@ export default function SearchBar({
         <span aria-hidden="true" className="search-icon">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="17"
-            height="17"
+            width="20"
+            height="20"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
           >
@@ -54,12 +56,12 @@ export default function SearchBar({
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="15"
-              height="15"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2.5"
+              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             >

@@ -26,12 +26,19 @@ interface HapticFeedback {
 export interface TelegramWebApp {
   initData?: string;
   initDataUnsafe?: { user?: { id?: number } };
+  /** "android" | "ios" | "tdesktop" | "macos" | "web" | ... */
+  platform?: string;
+  /** True once Telegram's own header has stepped away. */
+  isFullscreen?: boolean;
   BackButton?: BackButton;
   HapticFeedback?: HapticFeedback;
   ready?: () => void;
   expand?: () => void;
+  requestFullscreen?: () => void;
+  exitFullscreen?: () => void;
   setHeaderColor?: (color: string) => void;
   setBackgroundColor?: (color: string) => void;
+  setBottomBarColor?: (color: string) => void;
   disableVerticalSwipes?: () => void;
   enableClosingConfirmation?: () => void;
   disableClosingConfirmation?: () => void;
@@ -46,9 +53,9 @@ export const telegramWebApp = (): TelegramWebApp | undefined => {
     .Telegram?.WebApp;
 };
 
-/** The cloth band and the paper, in the client's own chrome. */
-const HEADER_COLOR = "#3f6457";
-const PAPER_COLOR = "#e7dcc3";
+/** The app's chrome: the native header and the dark content ground. */
+const HEADER_COLOR = "#212a33";
+const BG_COLOR = "#1a2026";
 
 /** Apply the chrome once the SDK is there; true when it had a client to ask. */
 const applyTelegramChrome = (): boolean => {
@@ -61,7 +68,12 @@ const applyTelegramChrome = (): boolean => {
     // an older client may not know a call; the page still reads
   }
   try {
-    app.setBackgroundColor?.(PAPER_COLOR);
+    app.setBackgroundColor?.(BG_COLOR);
+  } catch {
+    // ignore
+  }
+  try {
+    app.setBottomBarColor?.(HEADER_COLOR);
   } catch {
     // ignore
   }
@@ -74,6 +86,16 @@ const applyTelegramChrome = (): boolean => {
     app.expand?.();
   } catch {
     // ignore
+  }
+  try {
+    // Fullscreen hands the app the whole screen: the native header steps
+    // away, its floating controls remain, and the client publishes the two
+    // safe-area insets the sheet pads itself with. BotFather asks for it on
+    // phones; desktop windows already fill their frame.
+    const mobile = app.platform === "android" || app.platform === "ios";
+    if (mobile && !app.isFullscreen) app.requestFullscreen?.();
+  } catch {
+    // an older client simply keeps the expanded app
   }
   try {
     // the register scrolls vertically: a swipe must scroll it, not shrink

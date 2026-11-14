@@ -1,4 +1,11 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { LeaderboardScope, SortBy, YearFilter } from "./api";
 import {
   AUTO_LOAD_LIMIT,
@@ -10,6 +17,7 @@ import { useTelegramIdentity } from "./useTelegramIdentity";
 import { formatFreshnessRange, formatGap, formatSyncedAt } from "./format";
 import { BRANCHES } from "./constants";
 import { haptic } from "./telegram";
+import { useBackHandler } from "./backButton";
 import Band from "./components/Band";
 import SearchBar from "./components/SearchBar";
 import SortTabs from "./components/SortTabs";
@@ -41,6 +49,8 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
   const [filterSection, setFilterSection] = useState("all");
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterSheetRef = useRef<HTMLDivElement | null>(null);
   const { initData } = useTelegramIdentity();
   const { myRoll, myRank, loading: identityLoading } = useTelegramUser();
 
@@ -108,6 +118,10 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
     filterSection !== "all";
   const narrowedByFilters =
     filterYear !== "all" || filterBranch !== "all" || filterSection !== "all";
+  const filterCount =
+    (filterYear !== "all" ? 1 : 0) +
+    (filterBranch !== "all" ? 1 : 0) +
+    (filterSection !== "all" ? 1 : 0);
 
   // when the empty state is on screen it carries its own Clear filters
   // button; a second one in the margin would be noise
@@ -225,6 +239,29 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
     setChosenScope("all");
   }, []);
 
+  const closeFilters = useCallback(() => {
+    haptic.select();
+    setFiltersOpen(false);
+  }, []);
+
+  // The sheet owns the screen while open: the native back arrow closes it,
+  // the page behind it does not scroll, and Escape is the keyboard equivalent.
+  useBackHandler(filtersOpen ? closeFilters : null);
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeFilters();
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKey);
+    filterSheetRef.current?.focus();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [filtersOpen, closeFilters]);
+
   const stripTotal =
     myRankInfo?.total && myRankInfo.total > 0 ? myRankInfo.total : total;
   const stripValue =
@@ -236,107 +273,145 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
 
   return (
     <>
-      {showBand && <Band sub="Attendance register" stamp={stamp} />}
+      {showBand && <Band sub="Leaderboard" stamp={stamp} />}
 
-      <div className="reg-body" aria-busy={initialLoading || loading}>
-        {/* the viewer's own entry, bracketed in the margin */}
+      <div
+        className="reg-body"
+        aria-busy={initialLoading || loading}
+      >
         {myRoll && myRankNow != null && (
-          <button
-            type="button"
-            className="entry-strip entry-strip--action"
-            onClick={findMe}
-            aria-label={`Your overall ${
-              sortBy === "attendance" ? "attendance" : "mid-mark"
-            } rank is ${myRankNow} of ${stripTotal.toLocaleString()}. Find your row.`}
-          >
-            <span className="entry-strip__id">
-              <span className="entry-strip__roll">{myRoll}</span>
-              <span className="entry-strip__rank">
-                #{myRankNow} <small>of {stripTotal.toLocaleString()}</small>
+          <section className="tg-section">
+            <h2 className="tg-section-title">Your rank</h2>
+            <button
+              type="button"
+              className="tg-row tg-your-rank"
+              onClick={findMe}
+              aria-label={`Your overall ${
+                sortBy === "attendance" ? "attendance" : "mid-mark"
+              } rank is ${myRankNow} of ${stripTotal.toLocaleString()}. Find your row.`}
+            >
+              <span className="tg-rank-badge tg-rank-badge--first">
+                {myRankNow}
               </span>
-            </span>
-            <span className="entry-strip__meta">
-              {stripValue ? (
-                <>
-                  <span className="entry-strip__score">{stripValue}</span>
-                  <span className="entry-strip__note">
+              <span className="tg-row__body">
+                <span className="tg-row__title">{myRoll}</span>
+                <span className="tg-row__sub">
+                  of {stripTotal.toLocaleString()} students
+                </span>
+              </span>
+              <span className="tg-row__score">
+                {stripValue ?? "—"}
+                {stripValue ? (
+                  <span className="tg-row__score-note">
                     {sortBy === "attendance" && myRankInfo?.value != null
                       ? formatGap(myRankInfo.value)
                       : "Mid-mark average"}
                   </span>
-                </>
-              ) : (
-                <span className="entry-strip__note">No figure yet</span>
-              )}
-            </span>
-          </button>
+                ) : null}
+              </span>
+            </button>
+          </section>
         )}
 
-        <SortTabs
-          sortBy={sortBy}
-          onSortChange={(next) => {
-            haptic.select();
-            setSortBy(next);
-          }}
-        />
-
-        {sortBy === "midmarks" && (
-          <p className="hint-line" style={{ margin: "0 16px 10px" }}>
-            Average of M1/M2 across subjects; compare within a section.
-          </p>
-        )}
-
-        <div className="controls">
-          {/* the saved roll's own section is the default; "All" is deliberate */}
-          {myRoll && (
-            <div
-              className="sort-tabs"
-              role="group"
-              aria-label="Register scope"
-              style={{ margin: 0 }}
-            >
-              <button
-                type="button"
-                aria-pressed={scopeMode === "me"}
-                title={scopeMode === "me" ? scopeTitle : undefined}
-                onClick={showMySection}
-              >
-                My section
-              </button>
-              <button
-                type="button"
-                aria-pressed={scopeMode === "all"}
-                onClick={showAllStudents}
-              >
-                All students
-              </button>
+        <div className="tg-controls">
+          <div className="tg-search-row">
+            <div className="tg-search">
+              <SearchBar
+                value={searchInput}
+                onChange={setSearchInput}
+                identified={Boolean(initData)}
+              />
             </div>
-          )}
+            <button
+              type="button"
+              className="tg-filter-button"
+              onClick={() => {
+                haptic.select();
+                setFiltersOpen(true);
+              }}
+              aria-label={
+                filterCount > 0
+                  ? `Filters, ${filterCount} active`
+                  : "Filters"
+              }
+              aria-haspopup="dialog"
+              aria-expanded={filtersOpen}
+              aria-controls="tg-filter-sheet"
+            >
+              <svg
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 7h8" />
+                <path d="M16 7h4" />
+                <circle cx="14" cy="7" r="2" />
+                <path d="M4 17h4" />
+                <path d="M12 17h8" />
+                <circle cx="10" cy="17" r="2" />
+              </svg>
+              {filterCount > 0 ? (
+                <span className="tg-filter-badge">{filterCount}</span>
+              ) : null}
+            </button>
+          </div>
 
-          <SearchBar
-            value={searchInput}
-            onChange={setSearchInput}
-            identified={Boolean(initData)}
-          />
-          <FilterBar
-            filters={filters}
-            sections={sections}
-            onChange={(patch) => {
+          <SortTabs
+            sortBy={sortBy}
+            onSortChange={(next) => {
               haptic.select();
-              // a custom slice of the register is a whole-register view, not
-              // the caller's section with one more filter
-              setChosenScope("all");
-              if (patch.year !== undefined) setFilterYear(patch.year);
-              if (patch.branch !== undefined) setFilterBranch(patch.branch);
-              if (patch.section !== undefined) setFilterSection(patch.section);
+              setSortBy(next);
             }}
           />
+
+          {sortBy === "midmarks" && (
+            <p className="tg-hint">
+              Average of M1/M2 across subjects; compare within a section.
+            </p>
+          )}
+
+          {/* Always present, as in the old register: without a saved roll
+              the first side is disabled and the whole register is the view. */}
+          <div className="tg-pills" role="group" aria-label="Register scope">
+            <button
+              type="button"
+              className="tg-pill"
+              aria-pressed={scopeMode === "me"}
+              disabled={!myRoll}
+              title={
+                !myRoll
+                  ? "Save your roll in Profile to open your section"
+                  : scopeMode === "me"
+                    ? scopeTitle
+                    : undefined
+              }
+              onClick={showMySection}
+            >
+              My section
+            </button>
+            <button
+              type="button"
+              className="tg-pill"
+              aria-pressed={scopeMode === "all"}
+              onClick={showAllStudents}
+            >
+              All students
+            </button>
+          </div>
+
           {(isFiltered || synced) && (
-            <div className="reg-meta">
+            <div className="tg-meta">
               {showMetaClear ? (
                 <button
                   type="button"
-                  className="link-btn reg-meta__clear"
+                  className="tg-link"
                   onClick={clearFilters}
                 >
                   Clear filters
@@ -346,7 +421,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
               )}
               {synced ? (
                 <span
-                  className="reg-meta__sync"
+                  className="tg-meta__sync"
                   title={
                     newestStamp ? `Last written ${newestStamp} UTC` : undefined
                   }
@@ -356,8 +431,9 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
               ) : null}
             </div>
           )}
+
           {coverageLabel && (
-            <p className="hint-line">
+            <p className="tg-hint">
               {coverageLabel}.
               {showFillNote
                 ? " This register fills as students check."
@@ -367,11 +443,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
         </div>
 
         {refreshing && (
-          <p
-            className="hint-line"
-            role="status"
-            style={{ padding: "0 16px 8px" }}
-          >
+          <p className="tg-hint tg-hint--status" role="status">
             Updating the register&hellip;
           </p>
         )}
@@ -383,51 +455,52 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
         )}
 
         {error && stats.length > 0 && !initialLoading && (
-          <p
-            className="note note--err"
-            role="alert"
-            style={{ margin: "0 16px 14px" }}
-          >
+          <p className="tg-error" role="alert">
             {errorMessage ?? "The register couldn’t refresh."}{" "}
-            <button type="button" className="link-btn" onClick={retry}>
+            <button type="button" className="tg-link" onClick={retry}>
               Try again
             </button>
           </p>
         )}
 
-        <div
-          style={
-            refreshing
-              ? { opacity: 0.55, transition: "opacity 0.12s ease" }
-              : undefined
-          }
-        >
+        <div className={refreshing ? "tg-refreshing" : undefined}>
           {podiumVisible && (
-            <Podium
-              stats={stats}
-              sortBy={sortBy}
-              loaded={stats.length}
-              total={total}
-            />
+            <section className="tg-section">
+              <h2 className="tg-section-title">Top three</h2>
+              <Podium
+                stats={stats}
+                sortBy={sortBy}
+                loaded={stats.length}
+                total={total}
+              />
+            </section>
           )}
 
           {listStats.length > 0 && (
-            <>
-              <div className="list-head" aria-hidden="true">
-                <span>Rnk</span>
-                <span>Roll</span>
-                <span>Name</span>
-                <span>{sortBy === "attendance" ? "Att %" : "Mid avg"}</span>
+            <section className="tg-section">
+              <div className="tg-section-head">
+                <h2 className="tg-section-title">
+                  {search ? "Search results" : "All students"}
+                </h2>
+                <span className="tg-section-count">
+                  {total.toLocaleString()}
+                </span>
               </div>
               <ol
-                className="reg-list"
+                className="reg-list tg-group"
                 aria-label={`Students ranked by ${
                   sortBy === "attendance" ? "attendance" : "mid-marks"
                 }`}
               >
                 {lineBeforeFirst && <TheLine />}
                 {listStats.map((stat, index) => (
-                  <Fragment key={stat.hidden ? `hidden-${stat.rank}-${index}` : stat.roll_no}>
+                  <Fragment
+                    key={
+                      stat.hidden
+                        ? `hidden-${stat.rank}-${index}`
+                        : stat.roll_no
+                    }
+                  >
                     <StudentRow
                       stat={stat}
                       sortBy={sortBy}
@@ -441,7 +514,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
                   </Fragment>
                 ))}
               </ol>
-            </>
+            </section>
           )}
         </div>
 
@@ -489,6 +562,86 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
             identified={Boolean(initData)}
             onClearFilters={clearFilters}
           />
+        )}
+
+        {filtersOpen && (
+          <div className="tg-sheet-backdrop" onClick={closeFilters}>
+            <div
+              id="tg-filter-sheet"
+              ref={filterSheetRef}
+              className="tg-sheet"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="tg-filter-title"
+              tabIndex={-1}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="tg-sheet-grabber" aria-hidden="true" />
+              <div className="tg-sheet-head">
+                <div>
+                  <h2 className="tg-sheet-title" id="tg-filter-title">
+                    Filters
+                  </h2>
+                  <p className="tg-sheet-desc">
+                    Year, branch and section.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="tg-sheet-close"
+                  onClick={closeFilters}
+                  aria-label="Close filters"
+                >
+                  <svg
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  >
+                    <path d="m6 6 12 12M18 6 6 18" />
+                  </svg>
+                </button>
+              </div>
+              <div className="tg-sheet-body">
+                <FilterBar
+                  filters={filters}
+                  sections={sections}
+                  onChange={(patch) => {
+                    haptic.select();
+                    // a custom slice of the register is a whole-register view,
+                    // not the caller's section with one more filter
+                    setChosenScope("all");
+                    if (patch.year !== undefined) setFilterYear(patch.year);
+                    if (patch.branch !== undefined)
+                      setFilterBranch(patch.branch);
+                    if (patch.section !== undefined)
+                      setFilterSection(patch.section);
+                  }}
+                />
+              </div>
+              <div className="tg-sheet-actions">
+                <button
+                  type="button"
+                  className="tg-link"
+                  onClick={clearFilters}
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  className="tg-sheet-done"
+                  onClick={closeFilters}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </>
