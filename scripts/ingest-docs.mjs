@@ -48,7 +48,7 @@ const LEGACY_CODES = {
   OS: "23CS22T1",
 };
 
-const ROMAN = ["I", "II", "III", "IV", "V"];
+const ROMAN = ["I", "II", "III", "IV", "V", "VI"];
 
 const parseArgs = (argv) => {
   const args = {
@@ -59,6 +59,7 @@ const parseArgs = (argv) => {
     only: [],
     plan: null,
     runPlan: null,
+    cli: null,
     jobs: 1,
   };
   for (let i = 0; i < argv.length; i++) {
@@ -87,6 +88,9 @@ const parseArgs = (argv) => {
         break;
       case "--run-plan":
         args.runPlan = argv[++i];
+        break;
+      case "--cli":
+        args.cli = argv[++i];
         break;
       case "--jobs":
         args.jobs = Math.max(1, Number(argv[++i]) || 1);
@@ -140,7 +144,9 @@ const planFromCorpus = () => {
   for (const [dept, byReg] of Object.entries(catalog.departments ?? {})) {
     for (const [regulation, bySem] of Object.entries(byReg)) {
       for (const [yearSem, lists] of Object.entries(bySem)) {
-        for (const subject of lists.core ?? []) {
+        // electives are placed too: the college data does not say which one
+        // a student picked, so the shelf offers the options we hold
+        for (const subject of [...(lists.core ?? []), ...(lists.elective ?? [])]) {
           const code = String(subject.code).toUpperCase();
           if (!codeIndex.has(code)) codeIndex.set(code, []);
           codeIndex.get(code).push({ dept, regulation, yearSem, name: subject.name });
@@ -266,7 +272,9 @@ if (!args.run) {
   process.exit(0);
 }
 
-const ingestCli = path.join(appRoot, "dist", "tools", "ingestLibrary.js");
+const ingestCli = path.resolve(
+  args.cli ?? path.join(appRoot, "dist", "tools", "ingestLibrary.js"),
+);
 if (!existsSync(ingestCli)) {
   die(`no built ingest CLI at ${ingestCli}: run the TypeScript build first`);
 }

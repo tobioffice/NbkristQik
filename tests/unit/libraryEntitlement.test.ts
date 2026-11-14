@@ -58,6 +58,19 @@ describe("who a document belongs to", () => {
     expect(mayReadDocument(it, doc({}))).toBe(true);
   });
 
+  it("offers the semester's elective options to every branch that lists them", () => {
+    // OOAD and Soft Computing are elective options at 3-1 in CSE and IT; the
+    // college data never says which one a student picked, so both are offered
+    const it = student({ branch: "22", dept: "IT", rollNo: "23IT1042" });
+    const ooad = doc({
+      id: "23CS31E1-ui",
+      code: "23CS31E1",
+      unit: "I",
+      title: "Object Oriented Analysis And Design",
+    });
+    expect(mayReadDocument(it, ooad)).toBe(true);
+  });
+
   it("keeps a subject the branch does not list off the shelf", () => {
     const it = student({ branch: "22", dept: "IT", rollNo: "23IT1042" });
     // ADSAA is on the CSE 2-1 list, not on IT 3-1's

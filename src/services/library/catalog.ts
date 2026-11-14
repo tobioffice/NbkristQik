@@ -87,7 +87,16 @@ const SITE_DEPT_BY_BRANCH: Record<string, string> = {
 export const siteDeptForBranch = (branch: string): string | null =>
   SITE_DEPT_BY_BRANCH[String(branch).trim()] ?? null;
 
-/** The core subjects of one year-sem, or an empty list. */
+/**
+ * The subjects the college lists for one year-sem: the core papers plus the
+ * elective options.
+ *
+ * Electives are included on purpose. The college data does not record which
+ * elective a student took, so the library cannot answer that better than the
+ * catalogue does; every student of that semester sees the elective options we
+ * hold. Keeping them out would hide Soft Computing from the students who did
+ * pick it.
+ */
 export const getSubjectsFor = (
   dept: string,
   regulation: string,
@@ -95,7 +104,9 @@ export const getSubjectsFor = (
 ): CatalogSubject[] => {
   const catalog = loadCatalog();
   if (!catalog) return [];
-  return catalog.departments?.[dept]?.[regulation]?.[yearSem]?.core ?? [];
+  const lists = catalog.departments?.[dept]?.[regulation]?.[yearSem];
+  if (!lists) return [];
+  return [...(lists.core ?? []), ...(lists.elective ?? [])];
 };
 
 /**

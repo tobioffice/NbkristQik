@@ -128,6 +128,12 @@ catalogue snapshot cannot place falls back to the strict department and
 semester match, which is also how a fresh ingest stays readable before the
 snapshot is refreshed.
 
+Elective options count as the reader's own list too. The college data records
+the year-sem and the branch, never which elective a student chose, so the
+shelf offers every elective the catalogue lists for that semester (OOAD and
+Soft Computing at 3-1); hiding them would hide Soft Computing from the
+students who did pick it.
+
 Why we host the app on our own origin: the cookie must be same-origin with
 the API. Served from GitHub Pages the API would be a third-party origin, and
 iOS WKWebView blocks those cookies by default, which would break the session
@@ -586,8 +592,9 @@ Manual and curated, like everything in `NbkristQik-docs`. No auto-publishing.
 `scripts/ingest-docs.mjs` turns the docs checkout into rows: it reads each
 subject folder's code from `queue.json` (the six folders that predate the code
 column are mapped in the script), checks the code against the catalogue
-snapshot, and drives the ingest CLI for every `final/UNIT-<n>-retypeset.pdf`.
-Dry run is the default.
+snapshot, and drives the ingest CLI for every `final/UNIT-<n>-retypeset.pdf`
+(units I to VI; Prompt Engineering is the one six-module subject). Dry run is
+the default.
 
 ```
 node scripts/ingest-docs.mjs --docs ~/Projects/NbkristQik-docs            # plan
