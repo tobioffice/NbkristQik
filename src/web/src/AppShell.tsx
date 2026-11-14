@@ -342,24 +342,11 @@ const PageLoading = () => (
 const ProfileSection = ({ onReportIssue }: { onReportIssue: () => void }) => {
   const { tgUser, initData } = useTelegramIdentity();
   return (
-    <div className="page">
-      <div className="page-head">
-        <p className="eyebrow">Profile</p>
-        <h2 className="page-title">Your roll</h2>
-        <p className="page-note">
-          Optional. Save it once and /attendance, /midmarks and /bunk answer in
-          one tap.
-        </p>
-      </div>
-      <div className="page-body">
-        <ProfileView
-          tgUser={tgUser}
-          initData={initData}
-          compact
-          onReportIssue={onReportIssue}
-        />
-      </div>
-    </div>
+    <ProfileView
+      tgUser={tgUser}
+      initData={initData}
+      onReportIssue={onReportIssue}
+    />
   );
 };
 

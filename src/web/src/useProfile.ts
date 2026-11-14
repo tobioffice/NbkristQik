@@ -4,6 +4,7 @@ import {
   getProfile,
   registerRoll,
   type ProfileResponse,
+  type StudentInfo,
 } from "./api";
 
 interface Profile {
@@ -13,7 +14,8 @@ interface Profile {
   roll: string | null;
   displayName: string | null;
   stale: boolean;
-  studentName: string | null;
+  /** The college's own record for the saved roll, when it still exists. */
+  student: StudentInfo | null;
   /** A suggestion for the empty form, not the caller's identity. */
   lastLookup: string | null;
 }
@@ -22,6 +24,37 @@ type ProfileStatus =
   | { state: "loading" }
   | { state: "ready"; profile: Profile }
   | { state: "error" };
+
+/** One shape for both the first read and the refresh after a save. */
+const toProfile = (data: ProfileResponse): Profile => {
+  if (data.found && "registration" in data) {
+    return {
+      found: true,
+      registered: true,
+      roll: data.registration.roll_no,
+      displayName: data.registration.display_name,
+      stale: "stale" in data ? Boolean(data.stale) : false,
+      student: data.student,
+      lastLookup: null,
+    };
+  }
+
+  // the form stays empty for an unregistered user; the past lookup is shown
+  // beside it and only fills the field when tapped
+  const unregistered = data as {
+    lastLookup?: string | null;
+    suggestion?: string | null;
+  };
+  return {
+    found: false,
+    registered: false,
+    roll: null,
+    displayName: null,
+    stale: false,
+    student: null,
+    lastLookup: unregistered.lastLookup ?? unregistered.suggestion ?? null,
+  };
+};
 
 /**
  * Profile/registration data layer: loads the caller's registration and
@@ -42,48 +75,20 @@ export const useProfile = (
 } => {
   const [status, setStatus] = useState<ProfileStatus>({ state: "loading" });
 
+  const fetchProfile = useCallback(
+    async (): Promise<Profile> =>
+      toProfile(await getProfile({ userId: tgUser ?? undefined, initData })),
+    [tgUser, initData],
+  );
+
   useEffect(() => {
     if (!tgUser) return;
     let cancelled = false;
 
-    getProfile({ userId: tgUser, initData })
-      .then((data: ProfileResponse) => {
+    fetchProfile()
+      .then((profile) => {
         if (cancelled) return;
-        if (data.found && "registration" in data) {
-          setStatus({
-            state: "ready",
-            profile: {
-              found: true,
-              registered: true,
-              roll: data.registration.roll_no,
-              displayName: data.registration.display_name,
-              stale: "stale" in data ? Boolean(data.stale) : false,
-              studentName: data.student?.name ?? null,
-              lastLookup: null,
-            },
-          });
-        } else {
-          // the form stays empty for an unregistered user; the past lookup
-          // is shown beside it and only fills the field when tapped
-          const unregistered = data as {
-            lastLookup?: string | null;
-            suggestion?: string | null;
-          };
-          const lastLookup =
-            unregistered.lastLookup ?? unregistered.suggestion ?? null;
-          setStatus({
-            state: "ready",
-            profile: {
-              found: false,
-              registered: false,
-              roll: null,
-              displayName: null,
-              stale: false,
-              studentName: null,
-              lastLookup,
-            },
-          });
-        }
+        setStatus({ state: "ready", profile });
       })
       .catch(() => {
         if (!cancelled) setStatus({ state: "error" });
@@ -92,7 +97,7 @@ export const useProfile = (
     return () => {
       cancelled = true;
     };
-  }, [tgUser, initData]);
+  }, [tgUser, fetchProfile]);
 
   const save = useCallback(
     async (
@@ -106,32 +111,46 @@ export const useProfile = (
           rollNo,
           displayName: displayName || undefined,
         });
+
+        // Paint the fresh record in one step: a successful save switches the
+        // screen to the read-only summary, so the college's branch/section/year
+        // should be there when it does. A failed re-read falls back to the
+        // values we already know.
+        let fresh: Profile | null = null;
+        try {
+          fresh = await fetchProfile();
+        } catch {
+          // the optimistic profile is enough; the next visit refetches
+        }
+
         setStatus((prev) =>
-          prev.state === "ready"
-            ? {
-                state: "ready",
-                profile: {
-                  ...prev.profile,
-                  found: true,
-                  registered: true,
-                  roll: rollNo.toUpperCase(),
-                  displayName: displayName || null,
-                  stale: false,
-                  lastLookup: null,
-                },
-              }
-            : prev,
+          fresh?.registered
+            ? { state: "ready", profile: fresh }
+            : prev.state === "ready"
+              ? {
+                  state: "ready",
+                  profile: {
+                    ...prev.profile,
+                    found: true,
+                    registered: true,
+                    roll: rollNo.toUpperCase(),
+                    displayName: displayName || null,
+                    stale: false,
+                    lastLookup: null,
+                  },
+                }
+              : prev,
         );
+
         return { error: null };
       } catch (e) {
         return {
-          error:
-            (e as Error).message || "Could not save your profile",
+          error: (e as Error).message || "Could not save your profile",
           suggestions: (e as Error & { suggestions?: string[] }).suggestions,
         };
       }
     },
-    [tgUser, initData],
+    [tgUser, initData, fetchProfile],
   );
 
   const forgetLookup = useCallback(async (): Promise<void> => {

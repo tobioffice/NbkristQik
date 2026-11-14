@@ -130,26 +130,26 @@ they are migrated.
 
 ## Colors
 
-| Token | Value | Use |
-| --- | --- | --- |
-| Ground | `#1a2026` | The content ground behind every group |
-| Footer | `#111417` | Outer ground; the 1px gap between rows, the rail's top edge |
-| Surface | `#212a33` | Rows, fields, the band, grouped panels |
-| Surface hover | `#293440` | Tappable rows and default buttons |
-| Surface active | `#2d3a47` | The selected segment, the stamp pill, pressed rows |
-| Text | `#ffffff` | Titles, row labels, values |
-| Text secondary | `#8794a1` | Descriptions, helper copy, metadata |
-| Text tertiary | `#8494a3` | Quiet secondary metadata |
-| Placeholder | `#8a98a6` | Input placeholders |
-| Accent | `#4cb2ff` | Links, icons, active tabs, trailing actions |
-| Action | `#248bda` | Filled primary buttons, unread badges, checked boxes |
-| Action hover | `#207cc2` | Primary button hover |
-| Disabled text | `#a6d8ff` | Disabled primary label |
-| Danger | `#f88277` | Below-minimum scores, destructive text, the 75% rule |
-| Warning | `#ff9953` | Answered tickets, degraded states |
-| Good | `#7ed176` | Confirmed, resolved, operational states |
-| Checkbox ring | `#838f9c` | Unchecked round checkbox border |
-| Dropdown | `#2e3a47` | Menus and popovers |
+| Token          | Value     | Use                                                         |
+| -------------- | --------- | ----------------------------------------------------------- |
+| Ground         | `#1a2026` | The content ground behind every group                       |
+| Footer         | `#111417` | Outer ground; the 1px gap between rows, the rail's top edge |
+| Surface        | `#212a33` | Rows, fields, the band, grouped panels                      |
+| Surface hover  | `#293440` | Tappable rows and default buttons                           |
+| Surface active | `#2d3a47` | The selected segment, the stamp pill, pressed rows          |
+| Text           | `#ffffff` | Titles, row labels, values                                  |
+| Text secondary | `#8794a1` | Descriptions, helper copy, metadata                         |
+| Text tertiary  | `#8494a3` | Quiet secondary metadata                                    |
+| Placeholder    | `#8a98a6` | Input placeholders                                          |
+| Accent         | `#4cb2ff` | Links, icons, active tabs, trailing actions                 |
+| Action         | `#248bda` | Filled primary buttons, unread badges, checked boxes        |
+| Action hover   | `#207cc2` | Primary button hover                                        |
+| Disabled text  | `#a6d8ff` | Disabled primary label                                      |
+| Danger         | `#f88277` | Below-minimum scores, destructive text, the 75% rule        |
+| Warning        | `#ff9953` | Answered tickets, degraded states                           |
+| Good           | `#7ed176` | Confirmed, resolved, operational states                     |
+| Checkbox ring  | `#838f9c` | Unchecked round checkbox border                             |
+| Dropdown       | `#2e3a47` | Menus and popovers                                          |
 
 ### Named Rules
 
@@ -284,6 +284,21 @@ secondary. It is the only line in the list, and it is never decorative.
   on desktop. Disabled keeps the fill and uses `#a6d8ff` text at reduced alpha.
 - Secondary action: `#212a33` ground, white text; hover `#293440`.
 - Link action: `#4cb2ff`, 13/500, underline only on hover.
+
+### Profile summary
+
+The saved profile is a read-only group, not a permanently open form:
+
+- Rows: Roll number (15/600 tabular), Display name (quiet "Not set" when empty),
+  College record, Class (year · section · branch).
+- A 12/16 secondary hint under the group explains that the leaderboard shows the
+  display name when set, otherwise the college record.
+- One full-width primary "Edit profile" with a 16px pencil icon.
+- Edit opens the standard form with "Save changes" and "Cancel"; a successful
+  save returns to the summary with a green "Saved." note, and an unregistered
+  user sees the form immediately.
+- A stale roll keeps the summary but adds the warning note and still offers
+  Edit.
 
 ### Issue reports
 

@@ -1966,6 +1966,62 @@ body {
   background: var(--tg-surface-hover);
 }
 
+/* ---------- the profile summary ---------- */
+
+.sheet--tg .profile-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+  border-radius: var(--tg-radius);
+  background: var(--tg-bg);
+}
+
+.sheet--tg .profile-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 48px;
+  padding: 10px 14px;
+  background: var(--tg-surface);
+}
+
+.sheet--tg .profile-row__label {
+  flex: none;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--tg-text);
+}
+
+.sheet--tg .profile-row__value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--tg-text);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.sheet--tg .profile-row__value--quiet {
+  font-weight: 400;
+  color: var(--tg-secondary);
+}
+
+.sheet--tg .profile-hint {
+  margin: 8px 2px 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--tg-secondary);
+}
+
+.sheet--tg .profile-edit {
+  gap: 8px;
+}
+
 /* ---------- verification and privacy ---------- */
 
 .sheet--tg .verify-panel {
