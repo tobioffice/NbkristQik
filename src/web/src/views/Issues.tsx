@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { submitReport, fetchMyReports, type MyReport } from "../api";
 import { clearDraft, readDraft, reportDraftKey, writeDraft } from "../drafts";
+import { dbUtcMs, istStampFromDb } from "../format";
+import { reportStatusLabel } from "../reportStatus";
 import { useClosingConfirmation } from "../telegram";
 import { FORM_ROUTE, HISTORY_ROUTE, type IssuesRoute } from "../issuesRoute";
 import ReportThreadView from "./ReportThread";
@@ -62,6 +64,23 @@ export default function Issues({
     }
     previousView.current = route.view;
   }, [route.view]);
+
+  // Replies on an older report matter more than a newer quiet one, so the
+  // list follows the last thing said in each thread, not the id.
+  const orderedReports = useMemo(() => {
+    if (!reports) return null;
+    const at = (report: MyReport) => {
+      const ms = dbUtcMs(report.lastMessageAt);
+      return Number.isNaN(ms) ? 0 : ms;
+    };
+    return [...reports].sort((a, b) => at(b) - at(a));
+  }, [reports]);
+
+  const openCount =
+    orderedReports?.filter((report) => report.status !== "resolved").length ??
+    0;
+  const unreadCount =
+    orderedReports?.reduce((count, report) => count + report.unread, 0) ?? 0;
 
   const loadReports = () => {
     if (!identity.userId) return;
@@ -133,15 +152,15 @@ export default function Issues({
                 setTicket(null);
                 onNavigate(FORM_ROUTE);
               }}
-              className="btn-outline btn-sm"
+              className="btn-ink btn-sm"
             >
               New report
             </button>
           </div>
         ) : null}
 
-        {loadingReports && (
-          <div aria-hidden="true">
+        {loadingReports && !orderedReports && (
+          <div role="status" aria-busy="true" aria-label="Loading your reports">
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
@@ -152,69 +171,112 @@ export default function Issues({
           </div>
         )}
 
-        {loadingError && (
-          <p className="form-note mt-4">
-            That didn't load.{" "}
-            <button onClick={loadReports} className="link-btn">
+        {loadingError && (!orderedReports || orderedReports.length === 0) && (
+          <div className="report-empty" role="alert">
+            <p className="report-empty__title">That didn't load</p>
+            <p className="form-note">
+              Check your connection and try once more.
+            </p>
+            <button onClick={loadReports} className="btn-outline btn-sm mt-4">
               Retry
             </button>
-          </p>
+          </div>
         )}
 
-        {reports && reports.length === 0 && (
-          <p className="form-note mt-4">
-            No reports yet. Anything you send shows up here with its status.
-          </p>
-        )}
+        {orderedReports &&
+          orderedReports.length === 0 &&
+          !loadingError && (
+            <div className="report-empty">
+              <p className="report-empty__title">No reports yet</p>
+              <p className="form-note">
+                Something wrong with your marks or the bot? File a report.
+                You'll get an issue id, and the reply lands here and in your
+                chat.
+              </p>
+              <button
+                onClick={() => {
+                  setTicket(null);
+                  onNavigate(FORM_ROUTE);
+                }}
+                className="btn-ink mt-4"
+              >
+                Report an issue
+              </button>
+            </div>
+          )}
 
-        {reports && reports.length > 0 && (
-          <ul className="report-list">
-            {reports.map((report) => (
-              <li key={report.issueId} className="report-entry">
-                <button
-                  onClick={() =>
-                    onNavigate({ view: "thread", issue: report.issueId })
-                  }
-                  className="report-entry__open"
-                  aria-label={`Open thread ${report.issueId}`}
-                >
-                  <span className="report-entry__head">
-                    <span className="issue-id">{report.issueId}</span>
-                    <span className="report-entry__marks">
-                      {report.unread > 0 && (
-                        <span className="report-entry__new">
-                          {report.unread} new
+        {orderedReports && orderedReports.length > 0 && (
+          <>
+            <p className="report-summary">
+              {orderedReports.length}{" "}
+              {orderedReports.length === 1 ? "report" : "reports"}
+              {openCount > 0 ? ` · ${openCount} active` : ""}
+              {unreadCount > 0
+                ? ` · ${unreadCount} new ${
+                    unreadCount === 1 ? "reply" : "replies"
+                  }`
+                : ""}
+            </p>
+            <ul className="report-list">
+              {orderedReports.map((report) => {
+                const activity = istStampFromDb(report.lastMessageAt);
+                return (
+                  <li key={report.issueId} className="report-entry">
+                    <button
+                      onClick={() =>
+                        onNavigate({ view: "thread", issue: report.issueId })
+                      }
+                      className="report-entry__open"
+                      aria-label={`Open report ${report.issueId}`}
+                    >
+                      <span className="report-entry__head">
+                        <span className="issue-id">{report.issueId}</span>
+                        <span className="report-entry__marks">
+                          {report.unread > 0 && (
+                            <span className="report-entry__new">
+                              {report.unread} new
+                            </span>
+                          )}
+                          <span
+                            className={`status-mark status-mark--${report.status}`}
+                          >
+                            <i aria-hidden="true" />
+                            {reportStatusLabel(report.status)}
+                          </span>
+                        </span>
+                      </span>
+                      <span className="report-entry__msg">
+                        {report.message}
+                      </span>
+                      {report.adminReply && (
+                        <span className="report-entry__reply">
+                          <b>reply from the admin</b>
+                          {report.adminReply}
                         </span>
                       )}
-                      <span
-                        className={`status-mark status-mark--${report.status}`}
-                      >
-                        <i aria-hidden="true" />
-                        {report.status}
+                      <span className="report-entry__foot">
+                        <span>
+                          {report.messageCount > 1
+                            ? `${report.messageCount} messages`
+                            : "1 message"}
+                          {" · "}
+                          {report.lastAuthor === "admin"
+                            ? "admin wrote last"
+                            : "you wrote last"}
+                          <span aria-hidden="true"> →</span>
+                        </span>
+                        {activity ? (
+                          <span className="report-entry__when">
+                            {activity}
+                          </span>
+                        ) : null}
                       </span>
-                    </span>
-                  </span>
-                  <span className="report-entry__msg">{report.message}</span>
-                  {report.adminReply && (
-                    <span className="report-entry__reply">
-                      <b>reply from the admin</b>
-                      {report.adminReply}
-                    </span>
-                  )}
-                  <span className="report-entry__foot">
-                    {report.messageCount > 1
-                      ? `${report.messageCount} messages`
-                      : "1 message"}
-                    {" · "}
-                    {report.lastAuthor === "admin"
-                      ? "admin wrote last"
-                      : "you wrote last"}
-                    <span aria-hidden="true"> →</span>
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
         )}
       </div>
     );
@@ -256,51 +318,58 @@ export default function Issues({
           </p>
         </>
       ) : (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            send();
-          }}
-          noValidate
-        >
+        <>
           {showTitle ? (
-            <p className="form-note">
-              Describe what went wrong. You'll get an issue id to track it, and
-              the reply lands in your Telegram chat.
-            </p>
+            <div className="head-row">
+              <h2 className="form-title">Report an issue</h2>
+              <button
+                type="button"
+                className="btn-outline btn-sm"
+                onClick={() => onNavigate(HISTORY_ROUTE)}
+              >
+                My reports
+              </button>
+            </div>
           ) : null}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              send();
+            }}
+            noValidate
+          >
+            {showTitle ? (
+              <p className="form-note">
+                Describe what went wrong. You'll get an issue id to track it,
+                and the reply lands in your Telegram chat.
+              </p>
+            ) : null}
 
-          <label className="field">
-            <span>What happened?</span>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={6}
-              maxLength={1000}
-              placeholder="Marks are showing wrong for my roll. The portal says 22 but the bot shows 13."
-            />
-            <span className="char-count">{message.length}/1000</span>
-          </label>
+            <label className="field">
+              <span>What happened?</span>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={6}
+                maxLength={1000}
+                placeholder="Marks are showing wrong for my roll. The portal says 22 but the bot shows 13."
+              />
+              <span className="char-count">{message.length}/1000</span>
+            </label>
 
-          {error && <p className="note note--err mt-4">{error}</p>}
+            {error && <p className="note note--err mt-4">{error}</p>}
 
-          <div className="btn-row mt-5">
-            <button
-              type="submit"
-              disabled={sending || message.trim().length < 10}
-              className="btn-ink"
-            >
-              {sending ? "Sending..." : "Send report"}
-            </button>
-            <button
-              type="button"
-              className="btn-outline"
-              onClick={() => onNavigate(HISTORY_ROUTE)}
-            >
-              My reports
-            </button>
-          </div>
-        </form>
+            <div className="btn-row mt-5">
+              <button
+                type="submit"
+                disabled={sending || message.trim().length < 10}
+                className="btn-ink"
+              >
+                {sending ? "Sending..." : "Send report"}
+              </button>
+            </div>
+          </form>
+        </>
       )}
     </div>
   );

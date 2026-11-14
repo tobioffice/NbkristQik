@@ -483,8 +483,9 @@ sheet:
   figure into the band's stamp (ready units on the shelf, students on the
   register) through `useBandStamp`.
 - **Routes** make every section reloadable and deep-linkable. The hash carries
-  `#/rank`, `#/library`, `#/profile`, `#/issues`, `#/issues/reports` and
-  `#/issues/QIK-0007`; the bot's buttons carry the same path in `?page=`, which
+  `#/rank`, `#/library`, `#/profile`, `#/issues` (the reports list),
+  `#/issues/new` (a new report) and `#/issues/QIK-0007`; the bot's buttons
+  carry the same path in `?page=`, which
   `takePageLink` folds into the hash on load. Telegram overwrites the fragment
   with its own launch data, so a hash written by a button never arrives.
 - **The reader takes the sheet.** While a page is open the band and the tabs

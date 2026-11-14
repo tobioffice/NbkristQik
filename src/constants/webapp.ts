@@ -39,8 +39,8 @@ export const LEADERBOARD_WEBAPP_URL = section("/rank");
 export const LIBRARY_WEBAPP_URL = section("/library");
 
 /** The issue form, and the reporter's own list. */
-export const REPORT_WEBAPP_URL = section("/issues");
-export const REPORT_LIST_WEBAPP_URL = section("/issues/reports");
+export const REPORT_WEBAPP_URL = section("/issues/new");
+export const REPORT_LIST_WEBAPP_URL = section("/issues");
 
 /** One conversation, for a reply notification. */
 export const reportThreadUrl = (issueId: string): string =>

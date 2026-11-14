@@ -34,10 +34,8 @@ describe("bot links to the app", () => {
     expect(REGISTER_WEBAPP_URL).toBe(`${APP_WEBAPP_URL}?page=profile`);
     expect(LEADERBOARD_WEBAPP_URL).toBe(`${APP_WEBAPP_URL}?page=rank`);
     expect(LIBRARY_WEBAPP_URL).toBe(`${APP_WEBAPP_URL}?page=library`);
-    expect(REPORT_WEBAPP_URL).toBe(`${APP_WEBAPP_URL}?page=issues`);
-    expect(REPORT_LIST_WEBAPP_URL).toBe(
-      `${APP_WEBAPP_URL}?page=issues/reports`,
-    );
+    expect(REPORT_WEBAPP_URL).toBe(`${APP_WEBAPP_URL}?page=issues/new`);
+    expect(REPORT_LIST_WEBAPP_URL).toBe(`${APP_WEBAPP_URL}?page=issues`);
     expect(reportThreadUrl("QIK-0007")).toBe(
       `${APP_WEBAPP_URL}?page=issues/QIK-0007`,
     );

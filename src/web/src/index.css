@@ -1165,6 +1165,31 @@ a:focus-visible {
 }
 
 /* ---------- report entries ---------- */
+.report-summary {
+  margin: 10px 0 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.report-empty {
+  margin-top: 16px;
+  padding: 18px 0 20px;
+  border-top: 1.5px solid var(--ink);
+  border-bottom: 1px solid var(--rule);
+}
+
+.report-empty__title {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 19px;
+  line-height: 1.15;
+}
+
 .report-list {
   margin: 4px 0 0;
   border-top: 1.5px solid var(--ink);
@@ -1302,7 +1327,11 @@ a:focus-visible {
 }
 
 .report-entry__foot {
-  display: block;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 12px;
+  flex-wrap: wrap;
   margin-top: 9px;
   font-size: 11px;
   font-weight: 700;
@@ -1310,6 +1339,11 @@ a:focus-visible {
   text-transform: uppercase;
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
+}
+
+.report-entry__when {
+  white-space: nowrap;
+  text-align: right;
 }
 
 /* ---------- report thread ---------- */

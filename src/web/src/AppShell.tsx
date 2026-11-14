@@ -41,8 +41,8 @@ const Leaderboard = lazy(() => import("./Leaderboard"));
  *   #/profile             the same form, by name
  *   #/rank                the attendance register
  *   #/library             the shelf
- *   #/issues              report an issue
- *   #/issues/reports      the reporter's own list
+ *   #/issues              the reporter's own list
+ *   #/issues/new          a new report
  *   #/issues/QIK-0007     one conversation
  */
 
@@ -191,12 +191,16 @@ export default function AppShell() {
   // goes to the list first, the same trail the buttons walk
   const goHome = useCallback(() => go(HOME_ROUTE), [go]);
   const goBack = useCallback(() => {
-    if (route.section === "issues" && route.issue) {
-      go({ section: "issues", issue: null, mine: true });
-      return;
+    if (route.section === "issues") {
+      // a thread and the form both sit on top of the reports list; the list
+      // itself is the section's home, so Back leaves the section from there
+      if (route.issue || !route.mine) {
+        go({ section: "issues", issue: null, mine: true });
+        return;
+      }
     }
     goHome();
-  }, [go, goHome, route.section, route.issue]);
+  }, [go, goHome, route.section, route.issue, route.mine]);
   useBackHandler(route.section === "profile" || immersive ? null : goBack);
 
   const onIssuesRoute = useCallback(
@@ -266,7 +270,13 @@ export default function AppShell() {
                   icon={entry.icon}
                   active={route.section === entry.section}
                   onClick={() =>
-                    go({ section: entry.section, issue: null, mine: false })
+                    go({
+                      section: entry.section,
+                      issue: null,
+                      // the issue tab opens on the reports list, never an
+                      // empty form
+                      mine: entry.section === "issues",
+                    })
                   }
                 />
               ))}
@@ -396,10 +406,17 @@ const IssuesSection = ({
           <h2 className="page-title">{title}</h2>
           {route.view === "history" ? (
             <button
-              className="btn-outline btn-sm"
+              className="btn-ink btn-sm"
               onClick={() => onRoute({ view: "form", issue: null })}
             >
               New report
+            </button>
+          ) : route.view === "form" ? (
+            <button
+              className="btn-outline btn-sm"
+              onClick={() => onRoute({ view: "history", issue: null })}
+            >
+              My reports
             </button>
           ) : null}
         </div>
@@ -407,6 +424,10 @@ const IssuesSection = ({
           <p className="page-note">
             Describe what went wrong. You'll get an issue id to track it, and
             the reply lands here and in your chat.
+          </p>
+        ) : route.view === "history" ? (
+          <p className="page-note">
+            Every report you've filed, with the latest activity first.
           </p>
         ) : null}
       </div>

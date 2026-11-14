@@ -19,7 +19,7 @@ export interface Route {
   section: Section;
   /** The opened conversation, for #/issues/<id>. */
   issue: string | null;
-  /** True for #/issues/reports: the reporter's own list. */
+  /** True for #/issues: the reporter's own list. */
   mine: boolean;
 }
 
@@ -36,8 +36,8 @@ const isSection = (value: string): value is Section =>
   (SECTIONS as string[]).includes(value);
 
 /**
- * A section path — `rank`, `/issues/reports`, `issues/QIK-0007` — as a route.
- * Anything unrecognised is the first screen, never a blank sheet.
+ * A section path — `rank`, `/issues`, `issues/new`, `issues/QIK-0007` — as a
+ * route. Anything unrecognised is the first screen, never a blank sheet.
  */
 export const parseRoutePath = (path: string): Route => {
   const parts = path.split("/").filter(Boolean);
@@ -46,9 +46,13 @@ export const parseRoutePath = (path: string): Route => {
   if (head !== "issues") return { section: head, issue: null, mine: false };
 
   const second = parts[1];
-  if (!second) return { section: "issues", issue: null, mine: false };
-  if (second === "reports")
+  // The section's home is the reports list; a new report has its own address.
+  // `reports` is the old list address, kept so bot messages already sent keep
+  // working.
+  if (!second || second === "reports")
     return { section: "issues", issue: null, mine: true };
+  if (second === "new")
+    return { section: "issues", issue: null, mine: false };
   return { section: "issues", issue: decodeIssue(second), mine: false };
 };
 
@@ -74,7 +78,7 @@ export const hashFor = (route: Route): string => {
   if (route.section === "profile") return "#/";
   if (route.section !== "issues") return `#/${route.section}`;
   if (route.issue) return `#/issues/${encodeURIComponent(route.issue)}`;
-  return route.mine ? "#/issues/reports" : "#/issues";
+  return route.mine ? "#/issues" : "#/issues/new";
 };
 
 export interface PageLink {

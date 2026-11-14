@@ -74,6 +74,9 @@ const parseDbUtc = (value: string): number => {
   return Date.parse(`${trimmed.replace(" ", "T")}Z`);
 };
 
+/** A SQLite UTC timestamp as epoch milliseconds; NaN when unreadable. */
+export const dbUtcMs = (value: string): number => parseDbUtc(value);
+
 /** An absolute stamp in IST, 12-hour, the way the register prints dates. */
 export const istStamp = (ms: number): string =>
   new Intl.DateTimeFormat("en-IN", {
@@ -84,6 +87,15 @@ export const istStamp = (ms: number): string =>
     minute: "2-digit",
     hour12: true,
   }).format(new Date(ms));
+
+/** An absolute IST stamp from a database timestamp; null when unreadable. */
+export const istStampFromDb = (
+  value: string | null | undefined,
+): string | null => {
+  if (!value) return null;
+  const ms = parseDbUtc(value);
+  return Number.isNaN(ms) ? null : istStamp(ms);
+};
 
 /**
  * "Synced 2 hours ago" — honest about stale data instead of implying the

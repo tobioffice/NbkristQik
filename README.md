@@ -221,7 +221,7 @@ public command menu.
 
 | Surface        | Location                                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Mini App       | [`/library/`](https://checker.tobioffice.dev/library/) — hash routes `#/` (my attendance), `#/rank`, `#/profile`, `#/library`, `#/issues` |
+| Mini App       | [`/library/`](https://checker.tobioffice.dev/library/) — hash routes `#/` (my attendance), `#/rank`, `#/profile`, `#/library`, `#/issues` (reports), `#/issues/new` (the report form) |
 | Status page    | [`/status`](https://checker.tobioffice.dev/status) — Express-served, live health and 90-day bars per component     |
 | Admin panel    | `/<ADMIN_PANEL_PATH>` — Overview, Students, Live, Health, Reports                                                   |
 | Marketing site | [NbkristQik site](https://tobioffice.github.io/NbkristQik/site/)                                                    |

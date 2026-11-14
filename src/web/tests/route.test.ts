@@ -31,8 +31,14 @@ describe("the hash router", () => {
     expect(parseRouteHash("#/issues")).toEqual({
       section: "issues",
       issue: null,
+      mine: true,
+    });
+    expect(parseRouteHash("#/issues/new")).toEqual({
+      section: "issues",
+      issue: null,
       mine: false,
     });
+    // the old list address still opens the list
     expect(parseRouteHash("#/issues/reports")).toEqual({
       section: "issues",
       issue: null,
@@ -43,6 +49,15 @@ describe("the hash router", () => {
       issue: "QIK-0007",
       mine: false,
     });
+  });
+
+  it("writes the list as the section home and the form under new", () => {
+    expect(
+      hashFor({ section: "issues", issue: null, mine: true }),
+    ).toBe("#/issues");
+    expect(
+      hashFor({ section: "issues", issue: null, mine: false }),
+    ).toBe("#/issues/new");
   });
 
   it("writes the hash a route came from", () => {
@@ -80,6 +95,17 @@ describe("a bot deep link", () => {
         "https://x.test/library/?page=issues/QIK-0007&tgWebAppStartParam=x",
       )?.href,
     ).toBe("/library/?tgWebAppStartParam=x#/issues/QIK-0007");
+  });
+
+  it("opens the reports list from the section link", () => {
+    expect(takePageLink("https://x.test/library/?page=issues")?.route).toEqual({
+      section: "issues",
+      issue: null,
+      mine: true,
+    });
+    expect(
+      takePageLink("https://x.test/library/?page=issues/new")?.route,
+    ).toEqual({ section: "issues", issue: null, mine: false });
   });
 
   it("carries an issue conversation", () => {

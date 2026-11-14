@@ -404,8 +404,8 @@ older clients and is not a separate switch.
 
 ## Issue report endpoints
 
-Reports moved to the web form (`#/issues` in the app; `/report` opens it and
-`/report <message>` still files directly). Every report gets an issue id
+Reports moved to the web (`#/issues` lists your reports, `#/issues/new` is the
+form; `/report` opens it and `/report <message>` still files directly). Every report gets an issue id
 formatted as `QIK-0007`, and every report is a **thread**: the opening message
 plus every follow-up from either side, oldest first. The admin answers from
 the panel or `/reply`; the reporter answers on the thread page. Both directions

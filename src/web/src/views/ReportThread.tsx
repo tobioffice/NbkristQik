@@ -7,6 +7,7 @@ import {
   type ReportThread,
 } from "../api";
 import { clearDraft, readDraft, threadDraftKey, writeDraft } from "../drafts";
+import { reportStatusLabel } from "../reportStatus";
 import { useClosingConfirmation } from "../telegram";
 
 interface ReportThreadViewProps {
@@ -311,7 +312,7 @@ export default function ReportThreadView({
           {thread && (
             <span className={`status-mark status-mark--${thread.status}`}>
               <i aria-hidden="true" />
-              {thread.status}
+              {reportStatusLabel(thread.status)}
             </span>
           )}
         </div>

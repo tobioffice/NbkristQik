@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
+  dbUtcMs,
   formatFreshnessRange,
   formatGap,
   formatScore,
   formatSyncedAt,
+  istStampFromDb,
 } from "../src/format";
 
 describe("formatScore", () => {
@@ -46,6 +48,23 @@ describe("formatGap", () => {
 
   it("names the line itself", () => {
     expect(formatGap(75)).toBe("on the 75% line");
+  });
+});
+
+describe("database timestamps", () => {
+  it("reads SQLite's UTC stamp as epoch milliseconds", () => {
+    expect(dbUtcMs("2026-10-25 11:58:00")).toBe(
+      Date.parse("2026-10-25T11:58:00Z"),
+    );
+  });
+
+  it("prints an absolute IST stamp for a report's last activity", () => {
+    expect(istStampFromDb("2026-10-25 11:58:00")).toMatch(/^25 Oct, 5:28/);
+  });
+
+  it("has nothing to print without a readable stamp", () => {
+    expect(istStampFromDb(null)).toBeNull();
+    expect(istStampFromDb("not a date")).toBeNull();
   });
 });
 
