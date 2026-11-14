@@ -41,9 +41,11 @@ src/web/public/site/
   assets/             fonts, page renders, diagrams, screenshots, social cards
 ```
 
-The design follows [`DESIGN.md`](../DESIGN.md) — paper, ink, cloth, red pen.
-Zilla Slab for display, Public Sans for text, square corners, hairline rules,
-tabular numerals on every figure.
+The design follows [`DESIGN.PAPER.md`](../DESIGN.PAPER.md) — paper, ink, cloth,
+red pen. Zilla Slab for display, Public Sans for text, square corners, hairline
+rules, tabular numerals on every figure. The Mini App itself has moved to the
+Telegram-native system in [`DESIGN.md`](../DESIGN.md); the marketing site keeps
+the paper register until it is redesigned.
 
 ## Publishing
 

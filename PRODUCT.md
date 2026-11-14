@@ -46,7 +46,7 @@ The product lives entirely inside Telegram â€” no install, no separate account â
 ## Brand Commitments
 
 - Keep the product name **NbkristQik**.
-- The current dark-slate + indigo/cyan look is explicitly the anti-reference for the upcoming redesign; free rein on the new visual world (user decision, this session).
+- The Mini App ships the Telegram-native visual system in `DESIGN.md` (user decision). The paper register in `DESIGN.PAPER.md` is legacy, kept for the admin panel and status page until they are migrated.
 
 ## Evidence on Hand
 

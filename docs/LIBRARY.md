@@ -568,20 +568,20 @@ it, so the whole document scales together and the scroll geometry stays true.
 
 ### Look
 
-Per `DESIGN.md` ("The Class Register, Open on the Desk"): paper background,
-one green head band per surface, hairline rules instead of shadows, square
-corners, tabular numerals for page numbers and counts, red used only for
-correction ink.
+Per `DESIGN.md` (the Telegram-native system): dark ground, one surface band per
+screen, 1px gaps between grouped rows, Figtree, sentence case, tabular numerals
+for page numbers and counts, and the two blues (`#4cb2ff` for pointers,
+`#248bda` for the one filled action).
 
-The reader's head band carries the way back, the subject in Zilla Slab, one
-tracked micro-label for the unit and the page position (`Unit I · 12 / 29`),
-and the zoom controls at the right. The page position lives there rather than
-in a box of its own so a long subject name is not cut to a stub on a phone.
-The zoom controls are three compact squares in the same hand as the way back:
-out, the zoom as a percentage, in; tapping the percentage fits the page to
-the screen again. A 2 px rule along the band's bottom edge fills as the unit
-is read. Pages sit on the manila ground as bright sheets with a hairline; the
-watermark is the only thing on them that did not come from the PDF.
+The reader's toolbar is two rows on the `#212a33` surface. The first carries the
+accent back chevron, the subject at 15/600 with a 12/16 "Unit 1 · 42 pages" line,
+and the accent PDF action. The second holds the page position (`12 / 29`, tabular,
+current page white) and the zoom controls: out, the zoom as a percentage, in;
+tapping the percentage fits the page to the screen again. The toolbar's top
+padding includes Telegram's safe-area and content-safe-area insets, and a 2px
+accent rule along its bottom edge fills as the unit is read. Pages sit on the dark
+ground as white sheets with a soft float shadow; the watermark is the only thing
+on them that did not come from the PDF.
 
 ## 9. Ingest: how a subject gets into the library
 

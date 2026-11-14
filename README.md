@@ -321,7 +321,8 @@ external monitor until fresh external heartbeats have been verified in the
 | [`docs/DOCUMENTS.md`](docs/DOCUMENTS.md)           | Document ingest and catalogue               |
 | [`docs/SITE.md`](docs/SITE.md)                     | Marketing site                              |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md)               | Decided but unbuilt work                    |
-| [`DESIGN.md`](DESIGN.md)                           | Design system, binding before any UI change |
+| [`DESIGN.md`](DESIGN.md)                           | Mini App design system, binding before any UI change |
+| [`DESIGN.PAPER.md`](DESIGN.PAPER.md)               | Paper register used by the admin panel and status page |
 | [`PRODUCT.md`](PRODUCT.md)                         | Product brief, users and principles         |
 
 If a hand-written guide and the code disagree, the code wins.

@@ -1,229 +1,395 @@
 ---
 name: NbkristQik
-description: A college attendance register you read on your phone, inside Telegram.
+description: A college attendance register you read inside Telegram. Fullscreen, dark, grouped rows, two blues.
 colors:
-  paper-sheet: "#e7dcc3"
-  paper-raised: "#efe5cd"
-  paper-bright: "#f6efdd"
-  ink-navy: "#1e2a38"
-  ink-soft: "#5a5140"
-  ink-faint: "#675d4b"
-  cloth-green: "#3f6457"
-  cloth-deep: "#33544a"
-  ballpoint-red: "#c33b2e"
-  ballpoint-red-text: "#a62f22"
-  marking-amber: "#8a6a12"
-  marking-amber-text: "#6e5410"
-  pass-green: "#2f5c46"
-  hairline: "rgba(30, 42, 56, 0.2)"
+  ground: "#1a2026"
+  footer: "#111417"
+  surface: "#212a33"
+  surface-hover: "#293440"
+  surface-active: "#2d3a47"
+  text: "#ffffff"
+  text-secondary: "#8794a1"
+  text-tertiary: "#8494a3"
+  placeholder: "#8a98a6"
+  accent: "#4cb2ff"
+  action: "#248bda"
+  action-hover: "#207cc2"
+  action-disabled-text: "#a6d8ff"
+  danger: "#f88277"
+  warning: "#ff9953"
+  good: "#7ed176"
+  checkbox-ring: "#838f9c"
+  dropdown: "#2e3a47"
 typography:
-  display:
-    fontFamily: "Zilla Slab, Roboto Slab, Georgia, serif"
-    fontSize: "24px"
-    fontWeight: 600
-    lineHeight: 1.05
-    letterSpacing: "0.01em"
   body:
-    fontFamily: "Public Sans, system-ui, -apple-system, Segoe UI, Roboto, sans-serif"
+    fontFamily: "Figtree, system-ui, sans-serif"
     fontSize: "15px"
     fontWeight: 400
-    lineHeight: 1.45
-  data:
-    fontFamily: "Public Sans, system-ui, sans-serif"
-    fontSize: "16px"
+    lineHeight: "20px"
+  page-title:
+    fontFamily: "Figtree, system-ui, sans-serif"
+    fontSize: "22px"
     fontWeight: 700
-    fontFeature: "tnum"
+    lineHeight: "30px"
+  section:
+    fontFamily: "Figtree, system-ui, sans-serif"
+    fontSize: "17px"
+    fontWeight: 600
+    lineHeight: "24px"
+  row:
+    fontFamily: "Figtree, system-ui, sans-serif"
+    fontSize: "15px"
+    fontWeight: 600
+    lineHeight: "20px"
+  description:
+    fontFamily: "Figtree, system-ui, sans-serif"
+    fontSize: "12px"
+    fontWeight: 400
+    lineHeight: "16px"
   label:
-    fontFamily: "Public Sans, system-ui, sans-serif"
-    fontSize: "11px"
+    fontFamily: "Figtree, system-ui, sans-serif"
+    fontSize: "13px"
+    fontWeight: 500
+    lineHeight: "18px"
+  button:
+    fontFamily: "Figtree, system-ui, sans-serif"
+    fontSize: "13px"
     fontWeight: 700
-    letterSpacing: "0.16em"
+    lineHeight: "18px"
 rounded:
-  sharp: "1px"
-  cell: "2px"
-  ring: "50%"
+  group: "8px"
+  field: "8px"
+  button: "8px"
+  sheet: "16px"
+  pill: "20px"
+  circle: "50%"
 spacing:
   xs: "4px"
   sm: "8px"
-  md: "16px"
-  lg: "24px"
-  xl: "44px"
+  md: "12px"
+  lg: "16px"
+  xl: "24px"
 components:
-  button-ink:
-    backgroundColor: "{colors.ink-navy}"
-    textColor: "{colors.paper-bright}"
-    rounded: "{rounded.cell}"
-    padding: "12px 22px"
-  button-ink-hover:
-    backgroundColor: "{colors.cloth-green}"
-    textColor: "{colors.paper-bright}"
-    rounded: "{rounded.cell}"
-    padding: "12px 22px"
-  button-outline:
-    backgroundColor: "{colors.paper-raised}"
-    textColor: "{colors.ink-navy}"
-    rounded: "{rounded.cell}"
-    padding: "12px 22px"
   band:
-    backgroundColor: "{colors.cloth-green}"
-    textColor: "{colors.paper-bright}"
-    padding: "17px 16px 14px"
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.text}"
+    padding: "8px 16px"
+  row:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.text}"
+    rounded: "0"
+    padding: "9px 14px"
   field:
-    backgroundColor: "{colors.paper-raised}"
-    textColor: "{colors.ink-navy}"
-    rounded: "{rounded.cell}"
-    padding: "11px 12px"
-  entry-strip:
-    backgroundColor: "{colors.paper-raised}"
-    textColor: "{colors.ink-navy}"
-    padding: "11px 14px 11px 23px"
-  register-row:
-    backgroundColor: "{colors.paper-sheet}"
-    textColor: "{colors.ink-navy}"
-    padding: "10px 16px"
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.field}"
+    padding: "12px 14px"
+  button-primary:
+    backgroundColor: "{colors.action}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.button}"
+    padding: "12px 15px"
+  pill:
+    backgroundColor: "{colors.surface-active}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.pill}"
+    padding: "5px 10px"
 ---
 
 # Design System: NbkristQik
 
 ## Overview
 
-**Creative North Star: "The Class Register, Open on the Desk."**
+**Creative North Star: "The Telegram Utility, Open on the Phone."**
 
-The product is the college's cloth-bound attendance register, run as a working table. Manila paper is the ground; a single cloth-green band binds the head; rows are ruled like a register page; the teacher's red ballpoint marks what matters — the 75% line, stamps, corrections. Nothing floats in glass, nothing glows: structure comes from hairlines and ink.
+The Mini App is a working tool, not a website in a frame. It fills the screen the
+way a native Telegram screen does: a dark ground, raised grouped rows separated by
+a 1px gap, one band at the head, one flat tab rail at the foot, and two blues that
+each mean one thing. Type is sentence case and quiet; the figures are tabular, so
+ranks, rolls, percentages and page numbers line up the way a register's do.
 
-Typography carries the register's two voices: Zilla Slab, a printed-form serif for heads and numbers read off the master page, and Public Sans, a form-and-data workhorse for everything read in a corridor between classes. Figures are tabular everywhere they can be compared, so columns align the way a register's do.
+The register's old paper-and-cloth language lives on in `DESIGN.PAPER.md`, where
+the server-rendered admin panel and status page still use it. The Mini App has
+moved to the native surface described here.
 
-The world serves the task, never the reverse: navigation, search, filters, and sorting are the platform's standard controls wearing the register's ink. The metaphor is carried by type, palette, density, and one signature move — the red 75% rule drawn across the list with the viewer's own entry bracketed in the margin.
+**Status:** shipped. The Ranks, Profile, Issues, Library and Reader screens in
+`src/web` follow this document. The admin panel (`src/api/admin/panel.css.ts`)
+and the status page (`src/status/index.html`) still follow the paper system until
+they are migrated.
 
 **Key Characteristics:**
-- Paper ground (#e7dcc3) with one cloth-green (#3f6457) head band per surface.
-- Ruled rows, not cards: 1px hairline rules, 1.5px ink head rules, squared corners (1-2px).
-- Red (#c33b2e / #a62f22) reserved for the 75% threshold, stamps, and corrections.
-- Tabular numerals on every rank, roll, percentage, count, and clock time.
-- Functional micro-labels: uppercase, tracked 0.14-0.22em, never under 11px.
-- All wall-clock times IST, 12-hour AM/PM.
+
+- Fullscreen on phones, safe-area aware; a 720px reading column on desktop.
+- Dark ground (`#1a2026`), raised surfaces (`#212a33`), 1px gaps showing the ground.
+- Grouped rows: 8px outer radius, square rows, 42px minimum tap target.
+- Sentence case everywhere; no tracked uppercase micro-labels.
+- Two blues: `#4cb2ff` is the link/icon accent, `#248bda` is the filled action.
+- Tabular numerals on every comparable figure.
+- Red (`#f88277`) is danger and correction ink, never decoration.
+- Flat chrome: no shadows except a PDF page on the reader's ground.
 
 ## Colors
 
-A restrained, warm palette of paper and ink with one marking pen.
-
-### Primary
-- **Cloth Green** (#3f6457): the register's binding. Head bands, active nav fills on the admin top bar, uptime ticks, pass states. Deep shade **Cloth Deep** (#33544a) is the desk ground behind the desktop sheet and the admin band's bottom rule.
-
-### Secondary
-- **Ballpoint Red** (#c33b2e, text-safe **#a62f22**): the teacher's pen. The 75% rule, below-minimum figures, the YOU stamp, the viewer's margin bracket, focus rings, fresh-activity cues, and service-down ticks — never decoration, never a background field.
-
-### Tertiary
-- **Marking Amber** (#8a6a12, text-safe **#6e5410**): degraded states, answered tickets, check-in series in charts, fresh live rows. **Pass Green** (#2f5c46): confirmed/resolved/operational states.
-
-### Neutral
-- **Paper Sheet** (#e7dcc3): the page ground of every register surface. **Paper Raised** (#efe5cd): entries, fields, tabs, stamps, toolbars. **Paper Bright** (#f6efdd): sheets and drawers that lift off the ground (admin drawer, tooltips, the desktop sheet).
-- **Ink Navy** (#1e2a38): primary text and rules. **Ink Soft** (#5a5140): secondary text (roll numbers, labels, hints). **Ink Faint** (#675d4b): placeholders and tertiary metadata — the lightest tone that still clears 4.5:1 on paper.
-- **Hairline** (rgba(30,42,56,0.2)): row rules; 0.45 alpha for stronger separators.
+| Token | Value | Use |
+| --- | --- | --- |
+| Ground | `#1a2026` | The content ground behind every group |
+| Footer | `#111417` | Outer ground; the 1px gap between rows, the rail's top edge |
+| Surface | `#212a33` | Rows, fields, the band, grouped panels |
+| Surface hover | `#293440` | Tappable rows and default buttons |
+| Surface active | `#2d3a47` | The selected segment, the stamp pill, pressed rows |
+| Text | `#ffffff` | Titles, row labels, values |
+| Text secondary | `#8794a1` | Descriptions, helper copy, metadata |
+| Text tertiary | `#8494a3` | Quiet secondary metadata |
+| Placeholder | `#8a98a6` | Input placeholders |
+| Accent | `#4cb2ff` | Links, icons, active tabs, trailing actions |
+| Action | `#248bda` | Filled primary buttons, unread badges, checked boxes |
+| Action hover | `#207cc2` | Primary button hover |
+| Disabled text | `#a6d8ff` | Disabled primary label |
+| Danger | `#f88277` | Below-minimum scores, destructive text, the 75% rule |
+| Warning | `#ff9953` | Answered tickets, degraded states |
+| Good | `#7ed176` | Confirmed, resolved, operational states |
+| Checkbox ring | `#838f9c` | Unchecked round checkbox border |
+| Dropdown | `#2e3a47` | Menus and popovers |
 
 ### Named Rules
-**The Red Pen Rule.** Red is correction ink: threshold rules, stamps, below-minimum figures, down states. It never paints a background, never decorates, and never marks something that is fine.
-**The Cloth Band Rule.** One cloth-green field per surface, at the head, carrying the wordmark and at most one stamp. It is the register's binding, not a utility bar.
+
+**The Two-Blue Rule.** `#4cb2ff` is never a filled button, and `#248bda` is never
+body text, an icon, or a link. One hue is the pointer; the other is the action.
+
+**The Danger Rule.** Red is text and rules, never a filled field. The 75% line, a
+below-minimum score and a destructive label may be `#f88277`; a red button ground
+is wrong.
+
+**The Tabular Register Rule.** Any figure that can be compared uses
+`font-variant-numeric: tabular-nums` and a right-aligned column: ranks, rolls,
+percentages, counts, page numbers and clock times.
+
+**The Flat Chrome Rule.** Structure comes from the surface tone shift and a 1px
+gap, not from shadows or borders. The only shadow in the app is the page sheet in
+the reader.
+
+**The Sentence Case Rule.** Sentence case everywhere. No uppercase tracked
+micro-labels, no `text-transform: uppercase`, no letter-spacing on body text.
 
 ## Typography
 
-**Display Font:** Zilla Slab (with Roboto Slab, Georgia fallbacks)
-**Body Font:** Public Sans (system-ui fallback stack)
-**Label Font:** Public Sans, uppercase tracked
+**Family:** Figtree, with `system-ui` and `sans-serif` behind it. The variable
+font is vendored at `src/web/src/assets/fonts/figtree.woff2` under the SIL Open
+Font License. It replaces Telegram's proprietary Product Sans: same rounded,
+compact utility feel, legally shippable.
 
-**Character:** A printed-form serif over a government-form grotesque: institutional without being cold, exact with figures, at home at 11px and at 34px.
+**Why Figtree:** the app needs a face that reads at 12px in a row description and
+at 22px as a page title, with a friendly but neutral tone. Figtree's open forms
+and tight cap height do that without the serif weight of the old register.
 
 ### Hierarchy
-- **Display** (600, 24px band wordmark / clamp(34-44px) issue ids, line-height 1.05): register heads and the big printed numbers read off the master page.
-- **Headline** (600, 17-22px): admin section heads and form titles.
-- **Title** (600-700, 14.5-16px): row names, scores, entry rank.
-- **Body** (400-500, 13-15px, measure 40-46ch in forms): lists, notes, descriptions.
-- **Data** (700, 16-27px tabular): every comparable figure — ranks, percentages, counts, uptimes.
-- **Label** (600-700, 11px, 0.14-0.22em, uppercase): column heads, states, counters, stamps.
+
+- **Page title** (700, 22/30): the one heading a screen opens with.
+- **Section / band title** (600, 17/24): band wordmark and section heads.
+- **Row title** (600, 15/20): names, subject titles, issue ids.
+- **Row value** (600, 15/20 tabular): scores and counts that sit at the right edge.
+- **Body** (400, 15/20): thread messages, notes, descriptions.
+- **Description** (400, 12/16): row subtitles, helper copy, metadata.
+- **Label** (500, 13/18): form labels, list captions.
+- **Button** (700, 13/18 phone / 15/18 desktop).
+- **Page eyebrow** (500, 12/16 secondary): the quiet kicker above a page title.
 
 ### Named Rules
-**The Tabular Register Rule.** Any figure that can be compared uses `font-variant-numeric: tabular-nums` and a right-aligned column. Columns align by their figures, not by luck.
-**The Printed Label Rule.** Functional micro-labels never drop below 11px and never run tracked body text above 0.05em. Tracking is for short uppercase labels only.
+
+**The Printed Label Rule is retired.** There are no all-caps tracking labels in
+the Mini App. If a label needs to stand apart, use weight and the secondary
+colour, not letter-spacing.
 
 ## Layout
 
-Phone-first single column, full-bleed on the sheet. At 720px and up the register sits as one 560px centered sheet on the cloth-deep desk; the admin panel becomes a full-width paper workspace (main capped at 1060px) under its cloth band. The leaderboard's row grid is fixed and narrow — rank 38px, roll 94px, name 1fr, score 62px — so the table scans identically on every phone. Rhythm: 4/8/16/24px in components, 44px between admin sections, more space above a heading than below it. Form controls on phones are 16px to prevent browser zoom.
+### Phones
 
-### Named Rules
-**The Sheet Rule.** Phones get the register edge to edge; desktops get one sheet on the desk. Never two overlapping panels, never a card grid.
+Full-bleed. The app requests Telegram fullscreen on iOS and Android; the band
+absorbs `safe-area-inset-top + content-safe-area-inset-top`, and the tab rail and
+bottom-sheet actions clear `safe-area-inset-bottom`. The sheet's minimum height is
+`--tg-viewport-stable-height`. Nothing sits under the status bar or the home
+indicator.
 
-## Elevation & Depth
+### Desktop
 
-Flat by default; hairlines and paper tone shifts carry structure. Shadows exist only for elements that genuinely float over the sheet: the desktop sheet on the cloth desk, the profile dock, and the admin drawer (which uses a border, not a shadow). No blur, no glass, no glow.
+The app owns the window. There is no floating 560px sheet and no desk around it:
+the surface is full width, and the band, page content, reader chrome and tab-rail
+items share a 720px centred column. The band and rail backgrounds stay full-bleed.
 
-### Shadow Vocabulary
-- **Sheet float** (`0 20px 44px -16px rgba(16, 24, 30, 0.55)`): the centered sheet on desktop and the status page.
-- **Dock float** (`0 10px 22px -10px rgba(16, 24, 30, 0.45)`): the floating "My profile" tab.
+### The band
 
-### Named Rules
-**The Hairline First Rule.** Before reaching for a shadow or a heavier border, reach for a rule. Structure is drawn, not elevated.
+One band per surface, at the head:
 
-## Shapes
+```
+surface #212a33
+  wordmark, 17/24 600, with a 12/16 secondary context line
+  optional stamp pill, right aligned
+```
 
-Printed-form geometry: square corners (1-2px on fields, buttons, stamps and cards; 1px on chips), 1-1.5px ink borders, and rules of 1px hairline / 1.5px structure / 2px threshold. Circles appear only as rank rings and status dots. Brackets are drawn marks — two 1.5px strokes forming `[` — at the viewer's entry, never a thick side border.
+The stamp pill is a 20px-radius `#2d3a47` field: value 13/600 tabular in white,
+label 11/400 in secondary. Pressing the wordmark returns to the index; the band
+is not a utility bar and holds nothing else.
 
-### Named Rules
-**The Printed Form Rule.** Corners are square unless the shape is a ring or a dot. A 6px colored side stripe is a costume; a drawn bracket is a mark.
+### The tab rail
+
+A flat `#212a33` strip with a 1px `#111417` top edge. Four tabs — Profile, Ranks,
+Issues, Library — each a 20px single-stroke icon over an 11px sentence-case label.
+The shelf tab appears only when the server opens the library. The active tab is accent-coloured, not filled. The rail is
+full width; its items are capped at 720px and centred.
 
 ## Components
 
-### Buttons
-- **Shape:** square (2px radius), 1.5px ink border, 12px 22px padding, 14px/700 label.
-- **Primary:** ink navy ground, paper-bright text; hover shifts to cloth green.
-- **Secondary:** paper-raised ground, ink text; hover brightens to paper-bright.
-- **Focus:** 2px ballpoint-red outline, 2px offset. Disabled: 40% opacity, no hover shift.
+### Grouped rows
 
-### Stamped Tabs
-Two-up segmented control (1.5px ink border, shared divider); the selected side fills ink with paper text — a stamp impression, not a pill.
+The core shape of the app:
 
-### Fields
-Paper-raised ground, 1.5px ink border, 2px radius, 16px text; selects carry a 1px drawn chevron. Focus is the shared red ring; placeholders use ink faint (still ≥4.5:1).
+- Outer group: 8px radius, `overflow: hidden`, the ground showing through 1px gaps.
+- Row: at least 42px tall (the app uses 56-58px for rank and shelf rows), square
+  corners, surface ground, full row is the tap target.
+- Hover: `#293440`; the viewer's own row: `#2d3a47`.
+- Leading rank badge: 32px circle, `#2d3a47`; first place and the viewer's rank
+  use the action blue.
+- Row body: title 15/600 white over a 12/400 secondary line; the title truncates.
+- Trailing value: right aligned, 15/600 tabular; a `%` unit is 11/500 secondary
+  and sits on the same line as the number.
+- Below-minimum attendance: the score only, in `#f88277`.
 
-### Register Row (signature)
-A 45px ruled row: rank (tabular, ink soft) · roll (12px tabular) · name (14.5px/600, truncating) · score (16px/700 tabular with a small % unit). The viewer's row is bracketed in red at the left margin and stamped YOU (11px red outline stamp, tilted 2°). Below-minimum scores print in red ink.
+### The 75% line
 
-### The 75% Line (signature)
-A 2px ballpoint-red rule drawn once (steps(7, end), 340ms) between the last confirmed row and the first row below the line, labelled "75% — minimum requirement" in Zilla Slab with "below this line" tracked caps at the right. Attendance views only.
+A 2px `#f88277` rule drawn inside the ranked group after the last confirmed row.
+Left label "75% minimum" 12/600 danger; right label "Below this line" 12/400
+secondary. It is the only line in the list, and it is never decorative.
 
-### Merit Entries
-The top three as register heads: paper-raised entries, rank rings (red 2px for first, ink 1.5px for second and third), name in Zilla Slab, score in tabular Public Sans. Tied ranks on lower cards are struck through in red ink.
+### Controls
 
-### Band
-Cloth-green head with the wordmark (Zilla Slab 24px), an 11px tracked context line, and an optional stamp block (border 1.5px at 50% paper, value in Zilla Slab, label at 11px).
+- **Search:** 48px field, 12px radius, `#212a33`; 20px search icon at the left;
+  clear button at the right. 16px input text so phones do not zoom.
+- **Segmented control:** a `#212a33` container with 2px padding and a 10px radius;
+  each segment is 13/500 secondary, 32px tall; the selected segment is a
+  `#2d3a47` fill at 8px radius and turns white/600.
+- **Filter button:** 48px square, 12px radius, surface ground, 20px sliders icon;
+  the active-filter count is a 16px action-blue badge at the top-right.
+- **Select rows:** 48px rows, 15/400 white label at the left, 14/500 secondary
+  value at the right with a 13px drawn chevron.
 
-### App shell (index page and tab rail)
+### Forms
 
-Every surface now lives on one sheet. The shell owns three things:
+- Label: 15/18 400 white, 8px below.
+- Field: `#212a33`, 8px radius, no border, 12px 14px padding, 16px text, white;
+  placeholder `#8a98a6`.
+- Focus: 2px `#4cb2ff` ring, 1px offset.
+- Textarea: 132px minimum, 22px line height.
+- Character count: 12/16 secondary, right aligned, tabular.
+- Primary action: filled `#248bda`, 8px radius, 13/18 700 on phones and 15/18 700
+  on desktop. Disabled keeps the fill and uses `#a6d8ff` text at reduced alpha.
+- Secondary action: `#212a33` ground, white text; hover `#293440`.
+- Link action: `#4cb2ff`, 13/500, underline only on hover.
 
-- **The band**, once per surface. A section cannot draw its own head; it publishes one figure into the band's stamp (`useBandStamp`), so the binding stays single.
-- **The page head**: an 11px tracked eyebrow, a Zilla Slab 22px title, an optional 42-46ch note, and a 1.5px ink rule under all of it. Sections start here, never with a card.
-- **The index page** (the app's cover): eyebrow, the register's title in Zilla Slab at `clamp(30-38px)`, one note, the viewer's own entry bracketed in red, then the section entries as ruled index rows — section number in Zilla Slab in a 34px margin, the entry title at 17px, a 12px explanation under it, a drawn chevron at the right. No icons in boxes, no card grid.
+### Issue reports
 
-**Index tabs.** The foot of the sheet is a ruled rail of five tabs (Index, Ranks, Library, Profile, Issues). Each carries a 19px single-stroke icon over an 11px tracked label; the open tab fills ink with paper-bright text — a stamp impression, not a pill. The rail is full-bleed on phones and centred with the 560px sheet on desktop.
+- List: one grouped surface, 1px gaps, 8px outer radius. Each tile is a full-row
+  button with 12px 14px padding.
+- Issue id 13/600 tabular white; status 12/500 with a 7px dot (open secondary,
+  answered `#ff9953`, resolved `#7ed176`); unread count is an action-blue pill.
+- Message preview: 14/20 white, clamped to two lines.
+- Admin reply: an accent wash (`rgba(76,178,255,0.10)`) with a 6px radius and an
+  "reply from the admin" line in `#4cb2ff` 11/600.
+- Foot: 12/16 secondary, tabular time.
 
-**The reader is the exception.** When a page is open, the reader takes the sheet and the band and tabs step away; a reading surface carries only its own head.
+### Conversation
 
-### Admin Ledger
-Tables, feed rows, weights, and health ticks reuse the same rules: paper grounds, hairline rows, ink data, amber check-in series, cloth-green uptime ticks, and red pen for down states and fresh cues. The drawer is a paper-bright sheet with a 1.5px ink edge.
+- Messages sit in one grouped surface with 1px gaps; the admin's side carries the
+  same accent wash as the reply block. No chat bubbles, no tails.
+- Meta line: 12/16 secondary; the author is 12/600 white (admin: accent).
+- Body: 14/20 white, pre-wrap.
+- Composer: the standard field and primary button, 12px above.
+- A resolved thread replaces the composer with the closed note and a primary
+  "File a new report".
+
+### Library
+
+- Subject row: title 15/600 white over the subject code 12/400 secondary; the
+  trailing state is 13/400 secondary with a small chevron. Held subjects open;
+  "not yet" subjects are quiet and not buttons.
+- Unit row: the whole left side opens the reader; a separated right column is the
+  accent "PDF" action, divided by the 1px ground gap.
+- The reader owns the screen: the band and tab rail step away.
+
+### Reader
+
+- Head: surface `#212a33`, full width, padding-top includes the safe area.
+- Row one: 40px accent back chevron, title 15/600 white with a 12/16 secondary
+  "Unit 1 · 42 pages" line, accent "PDF" action at the right.
+- Row two: page count `n / total` 12/16 tabular (current page white), zoom controls
+  as 32px surface-hover targets.
+- Progress: 2px accent rule along the head's bottom edge.
+- Pages: white sheets on the dark ground, square, with a soft float shadow; the
+  PDF's own layout is the page.
+- End: secondary "End of Unit" and a surface "Back to units" button.
+
+### Verification and privacy
+
+- Verified note: surface panel, 13/18, `#7ed176`.
+- Privacy options: one grouped surface with 1px gaps; each row is 12/14 padding,
+  13/18 secondary with a 600 white title. The checkbox is a 24px circle with a
+  1.6px `#838f9c` ring; checked fills `#248bda` with a white check.
+
+### Empty and error states
+
+- Centred, 56px single-stroke icon in secondary, title 15/600 white, description
+  13/18 secondary, one action button.
+- Errors keep the surface shape: a 13/18 danger sentence inside a surface panel,
+  with an accent "Try again" link.
+
+## Motion
+
+- Default transition: 200ms ease. Row and button hovers may use 120ms.
+- Bottom sheet: 200ms, opacity 0.6 to 1 and translateY 24px to 0.
+- Reader progress: 140ms linear.
+- Haptics: selection change on tabs and filters, notification feedback on a sent
+  report or a failed send.
+- No decorative loops, no bouncing cards. Loading is a skeleton row or a spinner.
 
 ## Do's and Don'ts
 
-### Do:
-- **Do** keep rows ruled: 1px hairline rules between rows, a 1.5px ink rule under column heads.
-- **Do** keep figures tabular and columns right-aligned; ranks, rolls, percentages, counts, uptimes, and clock times.
-- **Do** keep the viewer visible: bracketed entry strip when ranks are known, bracketed row + YOU stamp in the list, bracketed strip on the app's index page.
-- **Do** keep one band per surface: a section publishes a figure into the shell's stamp instead of drawing its own head.
-- **Do** keep times IST 12-hour AM/PM everywhere, including tooltips.
-- **Do** keep form controls at 16px on phones and focus rings 2px red at 2px offset.
+### Do
 
-### Don't:
-- **Don't** use red as a background, gradient, or decoration; it is correction ink only.
-- **Don't** introduce cards with rounded corners, glass blur, gradient text, or dark backgrounds — the discarded look is the anti-reference.
-- **Don't** use emoji or unicode glyphs as icons; draw SVG in one stroke voice (1.5-2px, round caps).
-- **Don't** use monospace faces; tabular Public Sans carries all data.
-- **Don't** let functional labels fall under 11px or track body text above 0.05em.
+- **Do** fill the screen: fullscreen on phones, safe-area padding, a 720px column
+  on desktop.
+- **Do** separate rows with a 1px ground gap inside an 8px group.
+- **Do** keep figures tabular and right aligned.
+- **Do** use `#248bda` only for filled actions and `#4cb2ff` only for pointers.
+- **Do** sentence case everything.
+- **Do** keep red for danger, thresholds and corrections.
+- **Do** let the native Telegram back button and the app's back chevron do the
+  same thing.
+
+### Don't
+
+- **Don't** draw a fake Telegram header, a floating card, or a 560px desk sheet.
+- **Don't** use tracked uppercase labels or serif display type in the Mini App.
+- **Don't** use red as a background, gradient or decoration.
+- **Don't** use the action blue as decoration; it marks the one primary action, an
+  unread badge, or a checked state.
+- **Don't** use unicode glyphs as icons; draw single-stroke SVG at 1.5-2px with
+  round caps.
+- **Don't** use monospace faces; tabular Figtree carries the data.
+- **Don't** float the tab rail or give it a shadow.
+
+## Source
+
+The native surface was extracted on 2026-11-14 from the publicly served shell
+and assets of the BotFather Mini App:
+
+- `https://webappinternal.telegram.org/botfather`
+- `/css/botfather.css?55`
+- `/js/webapp-common.js?5`
+- `/js/botfather.js?70`
+
+The `tgWebAppData` fragment from the session link is a Telegram credential and is
+intentionally not reproduced. The extraction is based on the unauthenticated shell
+plus the shipped CSS/JS.
+
+NbkristQik's adaptations: Figtree instead of Product Sans, tabular numerals on all
+rank figures, the 75% rule, the band's stamp pill, the issue/thread surfaces and
+the reader toolbar. The paper register it replaced is kept in `DESIGN.PAPER.md`.
