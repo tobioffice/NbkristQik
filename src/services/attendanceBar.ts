@@ -8,8 +8,10 @@ import { deflateSync } from "node:zlib";
  * portion and the 75% target line instead of a row of characters.
  *
  * Telegram rejects an 18px-tall photo for its aspect ratio, so the bar is
- * centred in a 640x64 transparent canvas. The image is uploaded with the
- * rich message; it is not a public URL.
+ * centred in a 640x64 canvas. The canvas uses the Telegram dark background:
+ * the photo pipeline flattens transparency to white, which is exactly the
+ * white band we do not want. On a light theme the strip will be dark; the
+ * chat text meter and the Mini App are the theme-aware fallbacks.
  */
 
 const BAR_WIDTH = 640;
@@ -20,6 +22,7 @@ const BAR_RADIUS = 9;
 const IMAGE_HEIGHT = 64;
 const BAR_TOP = Math.round((IMAGE_HEIGHT - BAR_HEIGHT) / 2);
 
+const DARK: readonly [number, number, number, number] = [27, 39, 51, 255];
 const TRACK: readonly [number, number, number, number] = [142, 142, 147, 56];
 const GREEN: readonly [number, number, number, number] = [52, 199, 89, 255];
 const AMBER: readonly [number, number, number, number] = [255, 159, 10, 255];
@@ -122,6 +125,11 @@ export const renderAttendanceBarPng = ({
   const pct = Math.max(0, Math.min(100, percentage));
   const at = Math.max(0, Math.min(100, target));
   const pixels = Buffer.alloc(BAR_WIDTH * IMAGE_HEIGHT * 4);
+  for (let y = 0; y < IMAGE_HEIGHT; y += 1) {
+    for (let x = 0; x < BAR_WIDTH; x += 1) {
+      put(pixels, x, y, DARK);
+    }
+  }
 
   // The track, then the fill over it. The fill is a capsule so a low
   // percentage still ends in a clean round cap.
