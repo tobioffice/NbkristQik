@@ -46,8 +46,8 @@ public status page for service health.
   whether to hide your name and roll in the leaderboard, refuse other accounts' lookups, or refuse
   their registrations.
 - **Live leaderboard** — the attendance register ranks students by attendance
-  or mid-term marks, filtered by year, branch and section. `/leaderboard`
-  prints it in the chat; the button on any card opens it as a page.
+  or mid-term marks, filtered by year, branch and section. `/leaderboard` and
+  the button on any card open it as a page in the app.
 - **Library** — read your semester's syllabus units as paged documents,
   watermarked for the signed-in reader. Download a watermarked PDF, or open
   the shelf on a computer with a one-time link from the bot. The shelf is
@@ -196,7 +196,7 @@ The full list, with defaults, lives in [`.env.example`](.env.example) and
 | `/midmarks`    | Mid-term marks for your saved roll number            |
 | `/bunk`        | How many classes you can skip and stay above 75%     |
 | `/register`    | Save your roll number once, edit it any time         |
-| `/leaderboard` | Print the attendance register in the chat            |
+| `/leaderboard` | Open the attendance register in the app              |
 | `/library`     | Open your semester's library, when the shelf is open |
 | `/report`      | File an issue, or `/report <message>` directly       |
 | `/help`        | How the bot works                                    |

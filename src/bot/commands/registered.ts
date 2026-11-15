@@ -26,7 +26,7 @@ import { logger } from "../../config/logger.js";
 import { trackMessage } from "../../services/tracker.js";
 import { isAuthorizedUser } from "../authorization.js";
 import { TOO_FAST, SOMETHING_BROKE } from "../replies.js";
-import { appPageButton } from "./register.js";
+import { appPageButton } from "../appButton.js";
 
 /** A lookup the student can ask for by command. */
 type Lookup = "att" | "mid" | "bunk";

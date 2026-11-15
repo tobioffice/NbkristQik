@@ -19,7 +19,7 @@ const USER_COMMANDS: BotCommand[] = [
   { command: "register", description: "Save your roll number" },
   { command: "report", description: "Tell me something's broken" },
   { command: "help", description: "How this works" },
-  { command: "leaderboard", description: "Print the attendance register" },
+  { command: "leaderboard", description: "Open the attendance register" },
   { command: "five", description: "Play today's five" },
   { command: "league", description: "This week's section board" },
   { command: "duel", description: "Your duel record" },

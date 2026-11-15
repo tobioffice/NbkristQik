@@ -3,7 +3,7 @@ import type { Context, Message } from "node-telegram-bot-api";
 
 import { sendAttendanceOrMidMarks, sendBunkPlan } from "./studentActions.js";
 import { cardMarkup, withTextCard } from "./cardMarkup.js";
-import { leaderboardText } from "./leaderboardCard.js";
+import { LEADERBOARD_TEXT, leaderboardMarkup } from "../leaderboardRedirect.js";
 import { sendPrivateCardLink } from "./groupLink.js";
 import { widgetKind } from "../../services/student.utils/widget.js";
 import { getStudentCached } from "../../services/redis/utils.js";
@@ -400,20 +400,24 @@ const handleCallbackQuery = async (ctx: Context): Promise<void> => {
     return;
   }
 
-  // the register has no roll in its callback: it is the same answer for
-  // everyone in the chat
+  // Legacy Leaderboard buttons on cards already in the chat. The register is
+  // a page now; no top-ten list is printed in the room.
   if (data === "lb") {
-    const text = await leaderboardText({
-      userId,
-      withNames: msg.chat.type === "private",
-    });
     await ctx.answerCallbackQuery().catch(() => {});
-    await bot.api.sendMessage({
-      chat_id: msg.chat.id,
-      text,
-      parse_mode: "HTML",
-      reply_parameters: { message_id: msg.message_id },
-    });
+    await bot.api
+      .sendMessage({
+        chat_id: msg.chat.id,
+        text: LEADERBOARD_TEXT,
+        parse_mode: "HTML",
+        reply_markup: leaderboardMarkup(msg.chat.type === "private"),
+        reply_parameters: { message_id: msg.message_id },
+      })
+      .catch((e: Error) =>
+        logger.warn(
+          "[academicHandler] register redirect failed:",
+          e?.message ?? e,
+        ),
+      );
     return;
   }
 

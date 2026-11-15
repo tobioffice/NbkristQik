@@ -115,21 +115,6 @@ vi.mock("../../src/services/redis/utils.js", () => ({
   getStudentCached: vi.fn(async () => ({ roll_no: "25KB1A05AR" })),
 }));
 vi.mock("../../src/db/student.model.js", () => ({ upsertTgUser: vi.fn() }));
-vi.mock("../../src/db/student_stats.model.js", () => ({
-  getLeaderboard: vi.fn(async () => ({
-    rows: [
-      {
-        roll_no: "25KB1A05AA",
-        name: "FIRST STUDENT",
-        attendance_percentage: 91.5,
-        mid_marks_avg: 24.5,
-        rank: 1,
-      },
-    ],
-    total: 1,
-  })),
-  getStudentRank: vi.fn(async () => ({ rank: 4, total: 60, value: 88.1 })),
-}));
 vi.mock("../../src/services/tracker.js", () => ({ trackActivity: vi.fn() }));
 vi.mock("../../src/bot/authorization.js", () => ({
   isAuthorizedUser: vi.fn(async () => true),
@@ -150,9 +135,10 @@ const { getRegistration, upsertRegistration } =
 const { trackActivity } = await import("../../src/services/tracker.js");
 const { upsertTgUser } = await import("../../src/db/student.model.js");
 const { getStudentCached } = await import("../../src/services/redis/utils.js");
-const { getLeaderboard } = await import("../../src/db/student_stats.model.js");
 const { getVerificationState } =
   await import("../../src/services/verification/otp.js");
+const { LEADERBOARD_WEBAPP_URL, appDirectLink } =
+  await import("../../src/constants/webapp.js");
 const { takeGroupPrompts } =
   await import("../../src/bot/academics/groupPrompt.js");
 
@@ -332,32 +318,30 @@ describe("attendance card", () => {
     expect(takeGroupPrompts(218, "25KB1A05AR")).toEqual([]);
   });
 
-  it("answers a Leaderboard tap in the chat, by roll in a group", async () => {
+  it("routes a Leaderboard tap to the app with a direct link in a group", async () => {
     await tap(210, "lb", 9, "group");
 
     const params = sentMessage(sendMessage);
     expect(params.text).toContain("Attendance register");
-    expect(params.text).toContain("25KB1A05AA");
-    // a group message is forwarded: no classmate's name
     expect(params.text).not.toContain("FIRST STUDENT");
-    expect(params.parse_mode).toBe("HTML");
-    expect(getLeaderboard).toHaveBeenCalled();
+    expect(params.reply_markup?.inline_keyboard[0][0]).toEqual({
+      text: "Open the register",
+      url: appDirectLink("rank"),
+      style: "primary",
+    });
+    expect(JSON.stringify(params.reply_markup)).not.toContain("web_app");
   });
 
-  it("names the register's top rows in a private chat, and the caller's rank", async () => {
-    vi.mocked(getRegistration).mockResolvedValue({
-      userId: "211",
-      roll_no: "25KB1A05AR",
-      display_name: null,
-      registered_at: "2026-01-01 00:00:00",
-      updated_at: "2026-01-01 00:00:00",
-    });
-
+  it("opens the app from a private Leaderboard tap", async () => {
     await tap(211, "lb");
 
     const params = sentMessage(sendMessage);
-    expect(params.text).toContain("FIRST STUDENT");
-    expect(params.text).toContain("You are #4 of 60 at 88.10%.");
+    expect(params.text).toContain("Attendance register");
+    expect(params.reply_markup?.inline_keyboard[0][0]).toEqual({
+      text: "Open the register",
+      web_app: { url: LEADERBOARD_WEBAPP_URL },
+      style: "primary",
+    });
   });
 
   it("edits the tapped card in place and never deletes it", async () => {

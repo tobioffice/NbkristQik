@@ -18,9 +18,10 @@ vi.mock("../../src/bot/bot.js", () => ({
 }));
 vi.mock("../../src/services/tracker.js", () => ({ trackMessage: vi.fn() }));
 
-const { appPageButton } = await import("../../src/bot/commands/register.js");
+const { appPageButton } = await import("../../src/bot/appButton.js");
 const { REGISTER_WEBAPP_URL, appDirectLink } =
   await import("../../src/constants/webapp.js");
+await import("../../src/bot/commands/register.js");
 
 const register = registeredCommandHandler<(ctx: unknown) => unknown>(
   command,
