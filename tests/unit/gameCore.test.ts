@@ -13,12 +13,14 @@ import {
 import {
   fastestCorrect,
   duelInviteCard,
+  duelRecordCard,
   duelResultCard,
   fiveResultCard,
   leagueCard,
   morningPost,
   questionCard,
   resultsPost,
+  weeklyPost,
 } from "../../src/games/cards.js";
 import { istStamp, isoWeekKey, previousDateKey } from "../../src/games/time.js";
 import type {
@@ -356,5 +358,104 @@ describe("the cards", () => {
     ];
     expect(fastestCorrect(answers)).toBe(2_800);
     expect(fastestCorrect([[]])).toBeNull();
+  });
+});
+
+describe("the empty and edge cards", () => {
+  it("says first instead of one of one", () => {
+    const card = fiveResultCard({
+      attempt: { ...attempt, points: attempt.score, streak: 1 },
+      rank: 1,
+      total: 1,
+      section: { label: "4 CSE C", rank: 1, total: 1 },
+      alreadyPlayed: false,
+    });
+
+    expect(card.text).toContain("571</b> points");
+    expect(card.text).toContain("First today");
+    expect(card.text).toContain("4 CSE C · first this week");
+    expect(card.text).not.toContain("streak");
+    expect(card.rich).toContain("first this week");
+  });
+
+  it("shows the empty weekly board", () => {
+    const card = leagueCard({
+      label: "Week of 10 Nov",
+      sections: [],
+      players: [],
+      me: { points: 0, rank: null, players: 0 },
+      mySection: null,
+    });
+
+    expect(card.text).toContain("No one has played this week");
+    expect(card.rich).toContain("No one has played this week");
+    expect(card.text).not.toContain("You haven't scored");
+  });
+
+  it("writes a draw in the duel result", () => {
+    const draw: GameDuel = {
+      id: 12,
+      challengerId: 42,
+      challengerRoll: "23KB1A0599",
+      challengerName: "Asha",
+      challengerSectionKey: "4|CSE|C",
+      challengerSectionLabel: "4 CSE C",
+      challengerScore: 600,
+      questionIds: [1, 2, 3, 4, 5],
+      dayKey: "2026-11-15",
+      weekKey: "2026-W46",
+      season: "S1",
+      status: "done",
+      opponentId: 43,
+      opponentRoll: "23KB1A0600",
+      opponentName: null,
+      opponentScore: 600,
+      winnerId: null,
+      createdAt: "2026-11-15T03:00:00.000Z",
+      finishedAt: "2026-11-15T04:00:00.000Z",
+      expiresAt: "2026-11-17T03:00:00.000Z",
+    };
+
+    const card = duelResultCard({ duel: draw, userId: 42 });
+
+    expect(card.text).toContain("It's a draw.");
+    expect(card.rich).toContain("It's a draw.");
+  });
+
+  it("offers a run when there is no duel attempt", () => {
+    const card = duelRecordCard({
+      record: { wins: 0, losses: 0, draws: 0 },
+      attemptId: null,
+    });
+
+    expect(card.text).toContain("Finish today's five first");
+    expect(card.markup?.inline_keyboard).toHaveLength(1);
+  });
+
+  it("skips the fastest and section lines when they are missing", () => {
+    const card = resultsPost({
+      label: "15 Nov",
+      top: [],
+      played: 0,
+      fastestMs: null,
+      section: null,
+    });
+
+    expect(card.text).toContain("0 played");
+    expect(card.text).not.toContain("Fastest answer");
+    expect(card.text).not.toContain("Section of the day");
+  });
+
+  it("writes the weekly board with no champion", () => {
+    const card = weeklyPost({
+      label: "Week of 10 Nov",
+      sections: [
+        { key: "4|CSE|C", label: "4 CSE C", points: 4_820, players: 9 },
+      ],
+      players: [],
+    });
+
+    expect(card.text).toContain("4 CSE C");
+    expect(card.text).not.toContain("Player of the week");
   });
 });

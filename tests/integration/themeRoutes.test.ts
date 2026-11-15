@@ -31,9 +31,34 @@ describe("POST /api/theme", () => {
     expect(res.status).toBe(400);
   });
 
+  it("stores a dark theme too", async () => {
+    const res = await request(app)
+      .post("/api/theme?userId=4244")
+      .send({ bgColor: "#1e2a36", colorScheme: "dark" });
+
+    expect(res.status).toBe(200);
+    expect(await getUserTheme(4244)).toEqual({
+      bgColor: "#1e2a36",
+      colorScheme: "dark",
+    });
+  });
+
+  it("returns null for a user who never synced", async () => {
+    expect(await getUserTheme(9999)).toBeNull();
+  });
+
   it("requires a Telegram identity", async () => {
     const res = await request(app)
       .post("/api/theme")
+      .send({ bgColor: "#ffffff", colorScheme: "light" });
+
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects a bad identity", async () => {
+    const res = await request(app)
+      .post("/api/theme")
+      .set("X-Telegram-Init-Data", "bad")
       .send({ bgColor: "#ffffff", colorScheme: "light" });
 
     expect(res.status).toBe(401);

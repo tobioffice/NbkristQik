@@ -2,11 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Context } from "node-telegram-bot-api";
 import { turso } from "../../src/db/db.js";
 import {
+  createAttempt,
   getAttempt,
   getAttemptForRound,
   getDuel,
   getDuelByAttempt,
+  getGamePlayer,
   initGameTables,
+  upsertGamePlayer,
 } from "../../src/db/game.model.js";
 import { istStamp } from "../../src/games/time.js";
 
@@ -16,6 +19,8 @@ const users: Record<
 > = {
   42: { roll: "23KB1A0599", section: "C", branch: "CSE", year: "42" },
   43: { roll: "23KB1A0600", section: "C", branch: "CSE", year: "42" },
+  44: { roll: "23KB1A0601", section: "C", branch: "CSE", year: "42" },
+  46: { roll: "23KB1A0602", section: "-", branch: "CSE", year: "42" },
 };
 
 const mocks = vi.hoisted(() => ({
@@ -28,6 +33,8 @@ const mocks = vi.hoisted(() => ({
   getStudentCached: vi.fn(),
   trackActivity: vi.fn(),
   trackMessage: vi.fn(),
+  command: vi.fn(),
+  on: vi.fn(),
 }));
 
 vi.mock("../../src/bot/bot.js", () => ({
@@ -37,8 +44,8 @@ vi.mock("../../src/bot/bot.js", () => ({
       editMessageText: mocks.editMessageText,
       answerCallbackQuery: mocks.answerCallbackQuery,
     },
-    command: vi.fn(),
-    on: vi.fn(),
+    command: mocks.command,
+    on: mocks.on,
   },
 }));
 
@@ -55,10 +62,26 @@ vi.mock("../../src/services/tracker.js", () => ({
   trackMessage: mocks.trackMessage,
 }));
 
+vi.mock("../../src/bot/authorization.js", () => ({
+  isAuthorizedUser: vi.fn(async () => true),
+  rememberStudent: vi.fn(async () => undefined),
+}));
+
 const { startDailyFive } = await import("../../src/games/five.js");
-const { startDuel, sendDuelRecord } = await import("../../src/games/duel.js");
-const { handleGameCallback } = await import("../../src/games/handler.js");
+const { createDuelFromAttempt, finishDuelAttempt, startDuel, sendDuelRecord } =
+  await import("../../src/games/duel.js");
+const { handleGameCallback, isGameCallback } =
+  await import("../../src/games/handler.js");
 const { recordAnswer, sendOrEdit } = await import("../../src/games/play.js");
+
+type CommandHandler = (ctx: unknown) => Promise<void> | void;
+const commandHandler = (name: string): CommandHandler | undefined => {
+  const call = mocks.command.mock.calls.find(([command]) => command === name);
+  return call?.[1] as CommandHandler | undefined;
+};
+const fiveCommand = commandHandler("five");
+const leagueCommand = commandHandler("league");
+const duelCommand = commandHandler("duel");
 
 const clear = async (): Promise<void> => {
   for (const table of [
@@ -88,20 +111,34 @@ const seedQuestions = async (): Promise<void> => {
   }
 };
 
-const context = (userId: number, data: string, chatId = 900): Context =>
+const context = (
+  userId: number,
+  data: string,
+  chatId = 900,
+  chatType = "private",
+): Context =>
   ({
     callbackQuery: {
       id: `cb-${data}`,
       from: { id: userId, is_bot: false, first_name: "Test" },
       data,
       message: {
-        chat: { id: chatId, type: "private" },
+        chat: { id: chatId, type: chatType },
         message_id: 100,
         date: 0,
       },
     },
     answerCallbackQuery: mocks.answerCallbackQuery,
   }) as unknown as Context;
+
+const commandContext = (chatType: string) => ({
+  message: {
+    chat: { id: 900, type: chatType },
+    from: { id: 42 },
+    message_id: 9,
+  },
+  match: "",
+});
 
 const lastSent = () =>
   mocks.sendMessage.mock.calls.at(-1)?.[0] as
@@ -336,5 +373,353 @@ describe("the Five flow", () => {
     await sendDuelRecord({ chatId: 900, userId: 42 });
     expect(lastSent()?.text).toContain("1 win");
     expect(lastSent()?.text).toContain("0 losses");
+  });
+});
+
+const playFive = async (userId: number, chatId = 900) => {
+  await startDailyFive({ chatId, userId });
+  const attempt = await getAttemptForRound(
+    "five",
+    `five-${istStamp().date}`,
+    userId,
+  );
+  if (!attempt) throw new Error("the Five attempt was not created");
+  await answerAll(attempt.id, userId, chatId);
+  const done = await getAttempt(attempt.id);
+  if (!done) throw new Error("the finished Five was not read back");
+  return done;
+};
+
+const makeDuel = async (userId = 42, chatId = 900) => {
+  const attempt = await playFive(userId, chatId);
+  await handleGameCallback(context(userId, `duel_new_${attempt.id}`, chatId));
+  const duel = await getDuelByAttempt(attempt.id);
+  if (!duel) throw new Error("the duel was not created");
+  return { attempt, duel };
+};
+
+describe("game edge paths", () => {
+  it("asks an unregistered player to save a roll", async () => {
+    await startDailyFive({ chatId: 900, userId: 45 });
+
+    expect(lastSent()?.text).toContain("Save your roll first");
+  });
+
+  it("stops when the daily question bank is empty", async () => {
+    await turso.execute("UPDATE game_questions SET active = 0");
+
+    await startDailyFive({ chatId: 900, userId: 42 });
+
+    expect(lastSent()?.text).toContain("isn't ready");
+  });
+
+  it("finishes a run for a player without a section", async () => {
+    const attempt = await playFive(46);
+
+    expect((await getAttempt(attempt.id))?.status).toBe("done");
+    expect(lastEditHtml()).toContain("No section on record");
+  });
+
+  it("still starts when the section lookup fails", async () => {
+    mocks.getStudentCached.mockRejectedValueOnce(new Error("portal down"));
+
+    await startDailyFive({ chatId: 900, userId: 42 });
+
+    expect(lastSent()?.text).toContain("Question 1 of 5");
+  });
+
+  it("resets the section when the saved roll changes", async () => {
+    await upsertGamePlayer({
+      userId: 42,
+      rollNo: "23KB1A0000",
+      displayName: null,
+      sectionKey: "4|ECE|A",
+      sectionLabel: "4 ECE A",
+    });
+
+    await startDailyFive({ chatId: 900, userId: 42 });
+
+    const player = await getGamePlayer(42);
+    expect(player?.rollNo).toBe("23KB1A0599");
+    expect(player?.sectionKey).toBe("4|CSE|C");
+  });
+
+  it("explains a missing duel link", async () => {
+    await startDuel({ chatId: 900, userId: 43, duelId: 999999 });
+
+    expect(lastSent()?.text).toContain("doesn't exist");
+  });
+
+  it("refuses the challenger's own duel link", async () => {
+    const { duel } = await makeDuel();
+
+    await startDuel({ chatId: 900, userId: 42, duelId: duel.id });
+
+    expect(lastSent()?.text).toContain("your own challenge");
+  });
+
+  it("lets only the first friend claim a duel link", async () => {
+    const { duel } = await makeDuel();
+    await startDuel({ chatId: 901, userId: 43, duelId: duel.id });
+
+    await startDuel({ chatId: 902, userId: 44, duelId: duel.id });
+
+    expect(lastSent()?.text).toContain("Someone already took");
+  });
+
+  it("asks an unregistered friend to save a roll", async () => {
+    const { duel } = await makeDuel();
+
+    await startDuel({ chatId: 903, userId: 45, duelId: duel.id });
+
+    expect(lastSent()?.text).toContain("Save your roll first");
+  });
+
+  it("expires a duel link after its window", async () => {
+    const { duel } = await makeDuel();
+    await turso.execute({
+      sql: "UPDATE game_duels SET expires_at = ? WHERE id = ?",
+      args: ["2020-01-01T00:00:00.000Z", duel.id],
+    });
+
+    await startDuel({ chatId: 901, userId: 43, duelId: duel.id });
+
+    expect(lastSent()?.text).toContain("expired");
+    expect((await getDuel(duel.id))?.status).toBe("expired");
+  });
+
+  it("resumes the opponent's question on a second tap", async () => {
+    const { duel } = await makeDuel();
+    await startDuel({ chatId: 901, userId: 43, duelId: duel.id });
+
+    await startDuel({ chatId: 901, userId: 43, duelId: duel.id });
+
+    expect(lastSent()?.text).toContain("Duel · Question 1 of 5");
+  });
+
+  it("shows a finished duel to its players only", async () => {
+    const { duel } = await makeDuel();
+    await startDuel({ chatId: 901, userId: 43, duelId: duel.id });
+    const opponent = await getAttemptForRound("duel", `d${duel.id}`, 43);
+    await answerAll(opponent!.id, 43, 901, 0);
+
+    await startDuel({ chatId: 901, userId: 43, duelId: duel.id });
+    expect(lastSent()?.text).toContain("Duel result");
+
+    await startDuel({ chatId: 902, userId: 44, duelId: duel.id });
+    expect(lastSent()?.text).toContain("already finished");
+  });
+
+  it("requires a finished run before a challenge", async () => {
+    await startDailyFive({ chatId: 900, userId: 42 });
+    const attempt = await getAttemptForRound(
+      "five",
+      `five-${istStamp().date}`,
+      42,
+    );
+
+    await createDuelFromAttempt({ attempt: attempt!, chatId: 900 });
+
+    expect(lastSent()?.text).toContain("Finish today's five");
+  });
+
+  it("reuses an open challenge and refuses a finished one", async () => {
+    const { attempt, duel } = await makeDuel();
+
+    await createDuelFromAttempt({ attempt, chatId: 900 });
+    expect(lastSent()?.text).toContain("Challenge ready");
+
+    await startDuel({ chatId: 901, userId: 43, duelId: duel.id });
+    const opponent = await getAttemptForRound("duel", `d${duel.id}`, 43);
+    await answerAll(opponent!.id, 43, 901, 0);
+
+    await createDuelFromAttempt({ attempt, chatId: 900 });
+    expect(lastSent()?.text).toContain("already finished");
+  });
+
+  it("rejects a finish with no challenge attached", async () => {
+    await startDailyFive({ chatId: 900, userId: 42 });
+    const attempt = await getAttemptForRound(
+      "five",
+      `five-${istStamp().date}`,
+      42,
+    );
+
+    await finishDuelAttempt({ attempt: attempt!, chatId: 900 });
+
+    expect(lastSent()?.text).toContain("missing its challenge");
+  });
+
+  it("refuses the challenger's own duel attempt", async () => {
+    const { duel } = await makeDuel();
+    const stamp = istStamp();
+    const attemptId = await createAttempt({
+      game: "duel",
+      roundKey: `own-${duel.id}`,
+      dayKey: stamp.date,
+      weekKey: stamp.week,
+      season: "S1",
+      userId: 42,
+      rollNo: "23KB1A0599",
+      sectionKey: "4|CSE|C",
+      sectionLabel: "4 CSE C",
+      questionIds: duel.questionIds,
+      duelId: duel.id,
+      startedAt: new Date().toISOString(),
+    });
+    const attempt = await getAttempt(attemptId);
+
+    await finishDuelAttempt({ attempt: attempt!, chatId: 900 });
+
+    expect(lastSent()?.text).toContain("your own challenge");
+  });
+
+  it("refuses a finish after the duel expired", async () => {
+    const { duel } = await makeDuel();
+    await startDuel({ chatId: 901, userId: 43, duelId: duel.id });
+    const opponent = await getAttemptForRound("duel", `d${duel.id}`, 43);
+    await turso.execute({
+      sql: "UPDATE game_duels SET expires_at = ? WHERE id = ?",
+      args: ["2020-01-01T00:00:00.000Z", duel.id],
+    });
+    await startDuel({ chatId: 901, userId: 43, duelId: duel.id });
+
+    await finishDuelAttempt({ attempt: opponent!, chatId: 901 });
+
+    expect(lastSent()?.text).toContain("expired");
+  });
+
+  it("shows the result when a finished duel is finished again", async () => {
+    const { duel } = await makeDuel();
+    await startDuel({ chatId: 901, userId: 43, duelId: duel.id });
+    const opponent = await getAttemptForRound("duel", `d${duel.id}`, 43);
+    await answerAll(opponent!.id, 43, 901, 0);
+
+    await finishDuelAttempt({ attempt: opponent!, chatId: 901 });
+
+    expect(lastEditHtml()).toContain("Duel result");
+  });
+
+  it("shows the duel record with no run yet", async () => {
+    await sendDuelRecord({ chatId: 900, userId: 44 });
+
+    expect(lastSent()?.text).toContain("Finish today's five");
+  });
+
+  it("starts today's five from the result button", async () => {
+    await handleGameCallback(context(42, "five_play"));
+
+    expect(lastSent()?.text).toContain("Question 1 of 5");
+  });
+
+  it("opens the weekly board from a result button", async () => {
+    await handleGameCallback(context(42, "league_show"));
+
+    expect(lastSent()?.text).toContain("Section Wars");
+  });
+
+  it("refuses another player's question card", async () => {
+    await startDailyFive({ chatId: 900, userId: 42 });
+    const attempt = await getAttemptForRound(
+      "five",
+      `five-${istStamp().date}`,
+      42,
+    );
+
+    await handleGameCallback(context(43, `q5_${attempt!.id}_0_0`, 901));
+
+    expect(mocks.answerCallbackQuery).toHaveBeenCalledWith({
+      text: "That's not your card.",
+      show_alert: true,
+    });
+  });
+
+  it("shows the result when an old question is tapped", async () => {
+    const attempt = await playFive(42);
+
+    await handleGameCallback(context(42, `q5_${attempt.id}_0_0`));
+
+    expect(mocks.answerCallbackQuery).toHaveBeenCalledWith({
+      text: "This run is already finished.",
+    });
+    expect(lastEditHtml()).toContain("Five done");
+  });
+
+  it("rejects a question that already moved on", async () => {
+    await startDailyFive({ chatId: 900, userId: 42 });
+    const attempt = await getAttemptForRound(
+      "five",
+      `five-${istStamp().date}`,
+      42,
+    );
+
+    await handleGameCallback(context(42, `q5_${attempt!.id}_1_0`));
+
+    expect(mocks.answerCallbackQuery).toHaveBeenCalledWith({
+      text: "That question already moved on.",
+      show_alert: true,
+    });
+  });
+
+  it("rejects a stale challenge button", async () => {
+    await handleGameCallback(context(42, "duel_new_999999"));
+
+    expect(mocks.answerCallbackQuery).toHaveBeenCalledWith({
+      text: "That run is gone. Play today's five.",
+      show_alert: true,
+    });
+  });
+
+  it("refuses a game card in a group", async () => {
+    await handleGameCallback(context(42, "five_play", 900, "group"));
+
+    expect(mocks.answerCallbackQuery).toHaveBeenCalledWith({
+      text: "That card is private now. Open the bot to play.",
+      show_alert: true,
+    });
+  });
+
+  it("recognizes the game callbacks", () => {
+    expect(isGameCallback("five_play")).toBe(true);
+    expect(isGameCallback("league_show")).toBe(true);
+    expect(isGameCallback("q5_1_0_2")).toBe(true);
+    expect(isGameCallback("duel_new_12")).toBe(true);
+    expect(isGameCallback("save_23KB1A0599")).toBe(false);
+  });
+
+  it("routes a group's five command to the private chat", async () => {
+    await fiveCommand!(commandContext("supergroup"));
+
+    expect(lastSent()?.text).toContain("Today's five is private");
+  });
+
+  it("starts the five from a private command", async () => {
+    await fiveCommand!(commandContext("private"));
+
+    expect(lastSent()?.text).toContain("Question 1 of 5");
+  });
+
+  it("routes a group's league command to the private chat", async () => {
+    await leagueCommand!(commandContext("supergroup"));
+
+    expect(lastSent()?.text).toContain("The board is in the private chat");
+  });
+
+  it("opens the weekly board from a private command", async () => {
+    await leagueCommand!(commandContext("private"));
+
+    expect(lastSent()?.text).toContain("Section Wars");
+  });
+
+  it("routes a group's duel command to the private chat", async () => {
+    await duelCommand!(commandContext("supergroup"));
+
+    expect(lastSent()?.text).toContain("Duels are private");
+  });
+
+  it("opens the duel record from a private command", async () => {
+    await duelCommand!(commandContext("private"));
+
+    expect(lastSent()?.text).toContain("Your duels");
   });
 });

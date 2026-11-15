@@ -28,4 +28,15 @@ describe("the attendance bar image", () => {
 
     expect(dark.equals(light)).toBe(false);
   });
+
+  it("falls back to the dark strip for an invalid colour", () => {
+    const fallback = renderAttendanceBarPng({
+      percentage: 77.12,
+      target: 75,
+      background: "not-a-colour",
+    });
+    const dark = renderAttendanceBarPng({ percentage: 77.12, target: 75 });
+
+    expect(fallback.equals(dark)).toBe(true);
+  });
 });
