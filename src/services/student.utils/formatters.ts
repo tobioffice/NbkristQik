@@ -5,6 +5,7 @@ import {
   Midmarks,
 } from "../../types/index.js";
 import { escapeHtml } from "../text.js";
+import type { WidgetCard, WidgetState } from "./widget.js";
 
 /**
  * The replies a student gets about their own numbers.
@@ -133,6 +134,17 @@ const belowTargetLine = (
   return (
     `Below ${TARGET_PERCENT}% in ${risky.length} subject` +
     `${risky.length === 1 ? "" : "s"}: ${names.join(", ")}`
+  );
+};
+
+/** The same warning as plain text, for the widget state. */
+const belowTargetPlain = (subjects: AttendanceBySubject[]): string => {
+  const risky = subjectsBelowTarget(subjects);
+  if (risky.length === 0) return "";
+  const names = risky.map((subject) => subject.subject).join(", ");
+  return (
+    `Below ${TARGET_PERCENT}% in ${risky.length} subject` +
+    `${risky.length === 1 ? "" : "s"}: ${names}`
   );
 };
 
@@ -447,4 +459,165 @@ export const formatBunkPlanRich = (data: Attendance): string => {
   );
 
   return blocks.join("\n");
+};
+
+/**
+ * The attendance card as widget state. The widget code is fixed; this object
+ * is the part that changes, so it stays small enough for Telegram's 1024-byte
+ * chat state.
+ */
+export const formatAttendanceWidget = (
+  data: Attendance,
+  notice?: string,
+): WidgetCard => {
+  const { rollno, year_branch_section, percentage, totalClasses, subjects } =
+    data;
+
+  const rows = subjects.map((subject) => {
+    const percent = percentOf(subject);
+    return [
+      subject.subject,
+      `${subject.attended}/${subject.conducted}`,
+      percent === null ? "—" : `${Math.round(percent)}%`,
+      formatLastUpdated(subject.lastUpdated),
+    ];
+  });
+
+  const warning = belowTargetPlain(subjects);
+  const state: WidgetState = {
+    v: 1,
+    kind: "att",
+    lines: [
+      { label: "ROLL", value: rollno },
+      { label: "Branch", value: cleanBranch(year_branch_section) },
+      {
+        label: "Attended",
+        value: `${totalClasses.attended}/${totalClasses.conducted}`,
+      },
+      { label: "Percentage", value: `${percentage.toFixed(2)}%` },
+    ],
+    meter: { value: percentage, threshold: TARGET_PERCENT },
+    ...(rows.length
+      ? {
+          table: {
+            headers: ["Subject", "Att/Tot", "Now", "Last"],
+            rows,
+          },
+        }
+      : {}),
+    ...(warning ? { warning } : {}),
+    footer: `Stay above ${TARGET_PERCENT}% and you're safe.`,
+    ...(notice ? { notice } : {}),
+  };
+
+  return {
+    state,
+    caption:
+      `Attendance · ${rollno} · ${percentage.toFixed(2)}%` +
+      (notice ? ` · ${notice}` : ""),
+  };
+};
+
+/** The mid-marks card as widget state, one column per paper. */
+export const formatMidmarksWidget = (
+  data: Midmarks,
+  notice?: string,
+): WidgetCard => {
+  const { rollno, year_branch_section, subjects } = data;
+
+  const rows = subjects.map((subject) => [
+    subject.subject,
+    subject.type,
+    subject.M1 == null ? "—" : String(subject.M1),
+    subject.M2 == null ? "—" : String(subject.M2),
+    subject.average == null ? "—" : String(subject.average),
+  ]);
+
+  const state: WidgetState = {
+    v: 1,
+    kind: "mid",
+    lines: [
+      { label: "ROLL", value: rollno },
+      { label: "Branch", value: cleanBranch(year_branch_section) },
+    ],
+    ...(rows.length
+      ? {
+          table: {
+            headers: ["Subject", "Type", "M1", "M2", "Avg"],
+            rows,
+          },
+        }
+      : {}),
+    footer: "Give the low ones some extra time.",
+    ...(notice ? { notice } : {}),
+  };
+
+  return {
+    state,
+    caption:
+      `Mid marks · ${rollno} · ${cleanBranch(year_branch_section)}` +
+      (notice ? ` · ${notice}` : ""),
+  };
+};
+
+/** The bunk plan as widget state, with the same forecast as the text card. */
+export const formatBunkWidget = (
+  data: Attendance,
+  notice?: string,
+): WidgetCard => {
+  const { rollno, year_branch_section, percentage, totalClasses, subjects } =
+    data;
+
+  const rows = subjects.map((subject) => {
+    const percent = percentOf(subject);
+    return [
+      subject.subject,
+      percent === null ? "0%" : `${percent.toFixed(0)}%`,
+      percent === null
+        ? "0"
+        : String(skipsAffordable(subject.attended, subject.conducted)),
+      percent === null
+        ? "0"
+        : String(classesNeeded(subject.attended, subject.conducted)),
+    ];
+  });
+
+  const warning = belowTargetPlain(subjects);
+  const state: WidgetState = {
+    v: 1,
+    kind: "bunk",
+    lines: [
+      { label: "ROLL", value: rollno },
+      { label: "Branch", value: cleanBranch(year_branch_section) },
+      {
+        label: "Attended",
+        value: `${totalClasses.attended}/${totalClasses.conducted}`,
+      },
+      { label: "Percentage", value: `${percentage.toFixed(2)}%` },
+    ],
+    meter: { value: percentage, threshold: TARGET_PERCENT },
+    headline: buildBunkHeadline(
+      skipsAffordable(totalClasses.attended, totalClasses.conducted),
+      classesNeeded(totalClasses.attended, totalClasses.conducted),
+    ).trim(),
+    ...(rows.length
+      ? {
+          table: {
+            headers: ["Subject", "Now", "Bunk", "Need"],
+            rows,
+          },
+        }
+      : {}),
+    ...(warning ? { warning } : {}),
+    footer:
+      "Bunk means classes you can skip, need means classes in a row. Six classes make a day.",
+    ...(notice ? { notice } : {}),
+  };
+
+  return {
+    state,
+    caption:
+      `Bunk plan · ${rollno} · ${percentage.toFixed(2)}%` +
+      (notice ? ` · ${notice}` : ""),
+  };
 };

@@ -11,11 +11,15 @@ import { logger } from "../../config/logger.js";
 import {
   formatAttendanceMessage,
   formatAttendanceRich,
+  formatAttendanceWidget,
   formatMidmarksMessage,
   formatMidmarksRich,
+  formatMidmarksWidget,
   formatBunkPlanMessage,
   formatBunkPlanRich,
+  formatBunkWidget,
 } from "./formatters.js";
+import { widgetFits, type WidgetCard } from "./widget.js";
 import {
   buildServerDownMessage,
   buildNoDataMessage,
@@ -70,6 +74,23 @@ export class AcademicTG extends Academic {
   }
 
   /**
+   * A widget's chat state is capped at 1024 bytes. If the card outgrows it,
+   * the text/rich card is the honest fallback.
+   */
+  private widgetOrUndefined(render: () => WidgetCard): WidgetCard | undefined {
+    try {
+      const card = render();
+      return widgetFits(card.state) ? card : undefined;
+    } catch (e) {
+      logger.warn(
+        "[AcademicTG] widget card skipped:",
+        e instanceof Error ? e.message : e,
+      );
+      return undefined;
+    }
+  }
+
+  /**
    * Gets attendance data formatted for Telegram. Text-only callers keep this
    * shape; the bot uses `getAttendanceResult` so it can carry the suggestion
    * buttons on a "roll not found" answer.
@@ -86,6 +107,9 @@ export class AcademicTG extends Academic {
         text: this.withFreshnessNotice(formatAttendanceMessage(data)),
         rich: this.richOrUndefined(() =>
           this.withRichFreshness(formatAttendanceRich(data)),
+        ),
+        widget: this.widgetOrUndefined(() =>
+          formatAttendanceWidget(data, this.getDataNotice() ?? undefined),
         ),
       };
     } catch (error) {
@@ -110,6 +134,9 @@ export class AcademicTG extends Academic {
         rich: this.richOrUndefined(() =>
           this.withRichFreshness(formatBunkPlanRich(data)),
         ),
+        widget: this.widgetOrUndefined(() =>
+          formatBunkWidget(data, this.getDataNotice() ?? undefined),
+        ),
       };
     } catch (error) {
       logger.error("[AcademicTG] Bunk plan error:", error);
@@ -132,6 +159,9 @@ export class AcademicTG extends Academic {
         text: this.withFreshnessNotice(formatMidmarksMessage(data)),
         rich: this.richOrUndefined(() =>
           this.withRichFreshness(formatMidmarksRich(data)),
+        ),
+        widget: this.widgetOrUndefined(() =>
+          formatMidmarksWidget(data, this.getDataNotice() ?? undefined),
         ),
       };
     } catch (error) {

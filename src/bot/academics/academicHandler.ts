@@ -2,9 +2,10 @@ import { bot } from "../bot.js";
 import type { Context, Message } from "node-telegram-bot-api";
 
 import { sendAttendanceOrMidMarks, sendBunkPlan } from "./studentActions.js";
-import { cardMarkup } from "./cardMarkup.js";
+import { cardMarkup, withTextCard } from "./cardMarkup.js";
 import { leaderboardText } from "./leaderboardCard.js";
 import { sendPrivateCardLink } from "./groupLink.js";
+import { widgetKind } from "../../services/student.utils/widget.js";
 import { getStudentCached } from "../../services/redis/utils.js";
 import { upsertTgUser } from "../../db/student.model.js";
 import {
@@ -27,6 +28,7 @@ import { TOO_FAST, SOMETHING_BROKE, BAD_ROLL } from "../replies.js";
 import { BOT_USERNAME } from "../../constants/telegram.js";
 
 const SAVE_PREFIX = "save_";
+const TEXT_PREFIX = "text_";
 
 /** What a tapped card button needs to replace the card in place. */
 interface ActionContext {
@@ -260,15 +262,19 @@ const handleSaveRoll = async (ctx: Context, msg: Message): Promise<void> => {
   if (!saved) return;
 
   // The card stays on screen; only the Save button goes away.
+  const markup = cardMarkup({
+    roll: rollNumber,
+    showSave: false,
+    isPrivate: msg.chat.type === "private",
+  });
   await bot.api
     .editMessageReplyMarkup({
       chat_id: msg.chat.id,
       message_id: msg.message_id,
-      reply_markup: cardMarkup({
-        roll: rollNumber,
-        showSave: false,
-        isPrivate: msg.chat.type === "private",
-      }),
+      reply_markup:
+        "widget" in msg && msg.widget
+          ? withTextCard(markup, rollNumber)
+          : markup,
     })
     .catch((e: Error) =>
       logger.debug(
@@ -336,6 +342,38 @@ const handleCallbackQuery = async (ctx: Context): Promise<void> => {
         show_alert: true,
       })
       .catch(() => {});
+    return;
+  }
+
+  // The widget's escape hatch: send the same card as a normal message for a
+  // client that cannot render widgets, or for a reader who prefers text.
+  if (data.startsWith(TEXT_PREFIX) && "widget" in msg) {
+    const roll = data.slice(TEXT_PREFIX.length);
+    if (!isValidRollNumber(roll)) {
+      await ctx
+        .answerCallbackQuery({ text: BAD_ROLL, show_alert: true })
+        .catch(() => {});
+      return;
+    }
+
+    const kind = widgetKind(msg.widget?.chat_data);
+    await ctx.answerCallbackQuery({ text: "Text card sent" }).catch(() => {});
+    const options = {
+      userId,
+      replyToMessageId: msg.message_id,
+      forceText: true,
+    };
+
+    if (kind === "bunk") {
+      await sendBunkPlan(msg, roll, options);
+    } else {
+      await sendAttendanceOrMidMarks(
+        msg,
+        roll,
+        kind === "mid" ? "mid" : "att",
+        options,
+      );
+    }
     return;
   }
 

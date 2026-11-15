@@ -63,6 +63,17 @@ export const cardMarkup = ({
 };
 
 /**
+ * The widget card's keyboard: the same actions, plus the escape hatch to the
+ * text card for clients that do not render widgets.
+ */
+export const withTextCard = (markup: CardMarkup, roll: string): CardMarkup => ({
+  inline_keyboard: [
+    ...markup.inline_keyboard,
+    [{ text: "Text card", callback_data: `text_${roll}` }],
+  ],
+});
+
+/**
  * True when this reader has already saved this exact roll.
  *
  * A database hiccup must not hide the button: showing Save again is harmless

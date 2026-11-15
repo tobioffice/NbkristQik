@@ -18,6 +18,7 @@
 | `STATUS_PAGE_PATH` | `src/api/server.ts` | Optional override for the `/status` file; defaults to `public/status/index.html` |
 | `UPTIME_INGEST_SECRET` | `src/api/internal.ts` | Shared secret for `/internal/*`; unset disables both routes |
 | `MONITOR_*` | `src/monitor/index.ts` | Only read by the monitor-host monitor, not the bot |
+| `ATTENDANCE_WIDGET` | `src/bot/academics/widgetCard.ts` | `admin` (default) gives the HTML widget to `ADMIN_ID` only; `all` gives it to every private chat; `off` disables it |
 
 Start from [`.env.example`](../.env.example).
 
@@ -76,6 +77,19 @@ for groups. The command and the "open in the bot" link are visible only to the
 student who sent it, and the card itself is rendered in the DM. If the client
 cannot do ephemeral commands, the same link is posted publicly; either way the
 bot never puts the card in the room. No BotFather setting is required.
+
+### Attendance widget
+
+`ATTENDANCE_WIDGET` controls the HTML widget card. The default, `admin`, gives
+it to `ADMIN_ID` only, so the operator can confirm the client renders it while
+students keep the text/rich card. Set `all` to turn it on for every private
+chat, or `off` to disable it.
+
+The widget is one fixed HTML/CSS/JS document; the bot changes its `chat_data`
+on Attendance, Mid marks and Bunk taps, and the card redraws in place. It fits
+under Telegram's 600px cap for a normal semester; a card whose state exceeds
+the 1024-byte chat-state limit points at the Text card button instead. The
+message caption is the fallback for clients without widget support.
 
 ## Production deployment
 

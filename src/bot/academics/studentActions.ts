@@ -12,7 +12,23 @@ import type {
 import { bot } from "../bot.js";
 import type { Message } from "node-telegram-bot-api";
 import { logger } from "../../config/logger.js";
-import { cardMarkup, isRollSaved, type CardMarkup } from "./cardMarkup.js";
+import {
+  cardMarkup,
+  isRollSaved,
+  withTextCard,
+  type CardMarkup,
+} from "./cardMarkup.js";
+import {
+  editWidgetCaption,
+  editWidgetState,
+  isWidgetMessage,
+  sendLoadingWidget,
+  widgetEnabledFor,
+} from "./widgetCard.js";
+import {
+  widgetFits,
+  type WidgetState,
+} from "../../services/student.utils/widget.js";
 import { isLookupBlockedForViewer } from "../../services/verification/otp.js";
 
 /**
@@ -36,6 +52,10 @@ export interface CardOptions {
   replyMarkup?: CardMarkup;
   /** A line to keep above the card, e.g. the O/0 correction notice. */
   notice?: string;
+  /** Use the text/rich card even when the widget is available. */
+  forceText?: boolean;
+  /** The widget keyboard; defaults to the normal card plus a Text card row. */
+  widgetMarkup?: CardMarkup;
 }
 
 /**
@@ -149,7 +169,7 @@ const editCard = async (
  * out as HTML, then as plain text, so a card never dies on a formatting
  * rejection.
  */
-const fetchAndEdit = async (
+const fetchAndEditText = async (
   msg: Message,
   placeholder: string,
   fetchContent: () => Promise<LookupResult>,
@@ -230,6 +250,143 @@ const fetchAndEdit = async (
   }
 };
 
+const widgetMarkupFor = (options: CardOptions): CardMarkup | undefined =>
+  options.widgetMarkup ?? options.replyMarkup;
+
+/**
+ * The widget flow: one card, a loading state, then the state the widget
+ * redraws from. The text/rich card is the fallback if the widget cannot be
+ * sent or updated.
+ */
+const fetchWidgetAndEdit = async (
+  msg: Message,
+  placeholder: string,
+  fetchContent: () => Promise<LookupResult>,
+  options: CardOptions = {},
+): Promise<void> => {
+  const chatId = msg.chat.id;
+  const replyTo = options.replyToMessageId ?? msg.reply_to_message?.message_id;
+  const markup = widgetMarkupFor(options);
+  let messageId = options.editMessageId;
+
+  try {
+    const loading: WidgetState = { v: 1, loading: placeholder };
+    if (messageId) {
+      await editWidgetState(chatId, messageId, loading);
+    } else {
+      const sent = await sendLoadingWidget({
+        chatId,
+        state: loading,
+        caption: placeholder,
+        markup,
+        replyTo,
+      });
+      messageId = sent.message_id;
+    }
+
+    const content = await fetchContent();
+    const note = options.notice ? toPlainText(options.notice) : undefined;
+
+    if (content.widget) {
+      const state = note
+        ? { ...content.widget.state, note }
+        : content.widget.state;
+
+      if (widgetFits(state)) {
+        await editWidgetState(chatId, messageId, state);
+        await editWidgetCaption(chatId, messageId, content.widget.caption);
+
+        if (content.markup) {
+          const merged = mergeMarkup(markup, content.markup);
+          if (merged) {
+            await bot.api
+              .editMessageReplyMarkup({
+                chat_id: chatId,
+                message_id: messageId,
+                reply_markup: merged,
+              })
+              .catch(() => undefined);
+          }
+        }
+        return;
+      }
+
+      await editWidgetState(chatId, messageId, {
+        v: 1,
+        error: "This card is too long for the widget. Tap Text card.",
+      });
+      await editWidgetCaption(
+        chatId,
+        messageId,
+        "The full card is available as text.",
+      );
+      return;
+    }
+
+    // A successful card without widget state means its table outgrew the
+    // 1024-byte chat state. Point at the text card instead of dumping the
+    // whole card into the error slot. A text-only lookup is a real error.
+    const tooLarge = Boolean(content.rich);
+    const plain = tooLarge
+      ? "This card is too long for the widget. Tap Text card."
+      : toPlainText(displayText(content.text, options.notice));
+    await editWidgetState(chatId, messageId, { v: 1, error: plain });
+    await editWidgetCaption(
+      chatId,
+      messageId,
+      tooLarge ? "The full card is available as text." : plain,
+    );
+
+    if (content.markup) {
+      const merged = mergeMarkup(markup, content.markup);
+      if (merged) {
+        await bot.api
+          .editMessageReplyMarkup({
+            chat_id: chatId,
+            message_id: messageId,
+            reply_markup: merged,
+          })
+          .catch(() => undefined);
+      }
+    }
+  } catch (e: unknown) {
+    logger.warn(
+      "[studentActions] widget card failed, falling back to text:",
+      (e as Error)?.message,
+    );
+    // The widget may already be on screen. Send the text card as a new
+    // message rather than trying to turn a widget into text.
+    await fetchAndEditText(msg, placeholder, fetchContent, {
+      ...options,
+      forceText: true,
+      editMessageId: undefined,
+      replyToMessageId: options.editMessageId ? msg.message_id : replyTo,
+    });
+  }
+};
+
+/**
+ * Pick the card surface once: a widget in a private chat when it is enabled
+ * (or when the tapped message already is one), otherwise the text/rich card.
+ */
+const fetchAndEdit = async (
+  msg: Message,
+  placeholder: string,
+  fetchContent: () => Promise<LookupResult>,
+  options: CardOptions = {},
+): Promise<void> => {
+  const userId = options.userId ?? msg.from?.id;
+  const useWidget =
+    !options.forceText &&
+    msg.chat.type === "private" &&
+    (isWidgetMessage(msg) || widgetEnabledFor(userId));
+
+  if (useWidget) {
+    return fetchWidgetAndEdit(msg, placeholder, fetchContent, options);
+  }
+  return fetchAndEditText(msg, placeholder, fetchContent, options);
+};
+
 /**
  * A verified owner can hide the roll. Anyone else asking for it gets one
  * plain sentence, never a card: the refusal must not reveal whether the roll
@@ -263,12 +420,15 @@ export const sendAttendanceOrMidMarks = async (
 ): Promise<void> => {
   if (await refusePrivateRoll(msg, rollno, options)) return;
   const replyMarkup = await resolveMarkup(msg, rollno, options);
+  const widgetMarkup = replyMarkup
+    ? withTextCard(replyMarkup, rollno)
+    : undefined;
   await fetchAndEdit(
     msg,
     `Getting ${signal == "att" ? "your attendance" : "your mid marks"}...`,
     () =>
       signal == "att" ? getAttendanceCard(rollno) : getMidMarksCard(rollno),
-    { ...options, replyMarkup },
+    { ...options, replyMarkup, widgetMarkup },
   );
 };
 
@@ -279,10 +439,13 @@ export const sendBunkPlan = async (
 ): Promise<void> => {
   if (await refusePrivateRoll(msg, rollno, options)) return;
   const replyMarkup = await resolveMarkup(msg, rollno, options);
+  const widgetMarkup = replyMarkup
+    ? withTextCard(replyMarkup, rollno)
+    : undefined;
   await fetchAndEdit(
     msg,
     "Working out what you can bunk...",
     () => getBunkPlanCard(rollno),
-    { ...options, replyMarkup },
+    { ...options, replyMarkup, widgetMarkup },
   );
 };

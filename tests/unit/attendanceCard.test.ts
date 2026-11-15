@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   createHearsMock,
   createOnMock,
@@ -44,6 +44,32 @@ const answerCallbackQuery = vi.fn<
     show_alert?: boolean;
   }) => Promise<unknown>
 >(async () => true);
+const sendWidget = vi.fn<
+  (params: {
+    chat_id: number;
+    html: string;
+    chat_data?: string;
+    caption?: string;
+    width?: number;
+    height?: number;
+    reply_markup?: ReplyKeyboard;
+    reply_parameters?: { message_id: number };
+  }) => Promise<{ message_id: number; widget: { html: string } }>
+>(async () => ({ message_id: 70, widget: { html: "" } }));
+const editMessageWidgetData = vi.fn<
+  (params: {
+    chat_id: number;
+    message_id: number;
+    chat_data?: string;
+  }) => Promise<boolean>
+>(async () => true);
+const editMessageCaption = vi.fn<
+  (params: {
+    chat_id: number;
+    message_id: number;
+    caption?: string;
+  }) => Promise<boolean>
+>(async () => true);
 
 vi.mock("../../src/bot/bot.js", () => ({
   bot: {
@@ -51,8 +77,11 @@ vi.mock("../../src/bot/bot.js", () => ({
     on,
     api: {
       sendMessage,
+      sendWidget,
       editMessageText,
       editMessageReplyMarkup,
+      editMessageWidgetData,
+      editMessageCaption,
       deleteMessage,
       answerCallbackQuery,
     },
@@ -150,6 +179,7 @@ const tap = (
   data: string,
   messageId = 9,
   chatType = "private",
+  widget?: { chat_data?: string },
 ) => {
   const callbackQuery = {
     id: `callback-${userId}-${data}`,
@@ -159,6 +189,7 @@ const tap = (
       chat: { id: userId, type: chatType },
       message_id: messageId,
       text: "card",
+      ...(widget ? { widget: { html: "", chat_data: widget.chat_data } } : {}),
     },
   };
   return callbackHandler(
@@ -200,6 +231,10 @@ beforeEach(() => {
   vi.mocked(getRegistration).mockResolvedValue(null);
   vi.mocked(upsertRegistration).mockReset();
   vi.mocked(upsertRegistration).mockResolvedValue(undefined);
+});
+
+afterEach(() => {
+  process.env.ATTENDANCE_WIDGET = "off";
 });
 
 describe("attendance card", () => {
@@ -459,6 +494,104 @@ describe("attendance card", () => {
     expect(final.rich_message?.html).toContain("<table");
     expect(final.rich_message?.html).toContain("25KB1A05AR");
     expect(final.text).toBeUndefined();
+  });
+
+  it("sends the HTML widget when it is enabled", async () => {
+    process.env.ATTENDANCE_WIDGET = "all";
+    vi.mocked(getAttendanceCard).mockResolvedValueOnce({
+      text: "Attendance text",
+      widget: {
+        state: {
+          v: 1,
+          kind: "att",
+          lines: [{ label: "Roll", value: "25KB1A05AR" }],
+          meter: { value: 88.1, threshold: 75 },
+          footer: "Stay above 75% and you're safe.",
+        },
+        caption: "Attendance · 25KB1A05AR · 88.10%",
+      },
+    });
+
+    await sendRoll(230);
+
+    const sent = sendWidget.mock.calls[0][0];
+    expect(sent.chat_id).toBe(230);
+    expect(sent.html).toContain("TelegramWidget");
+    expect(JSON.parse(sent.chat_data ?? "{}").loading).toContain(
+      "Getting your attendance",
+    );
+    expect(sent.caption).toContain("Getting your attendance");
+    expect(callbackData(sent.reply_markup)).toContain("text_25KB1A05AR");
+    expect(sent.width).toBe(0);
+    expect(sent.height).toBe(0);
+
+    const final = JSON.parse(
+      editMessageWidgetData.mock.calls.at(-1)?.[0].chat_data ?? "{}",
+    );
+    expect(final.kind).toBe("att");
+    expect(final.meter.value).toBe(88.1);
+    expect(editMessageCaption.mock.calls.at(-1)?.[0].caption).toBe(
+      "Attendance · 25KB1A05AR · 88.10%",
+    );
+    expect(editMessageText).not.toHaveBeenCalled();
+    expect(sendMessage).not.toHaveBeenCalled();
+  });
+
+  it("sends a text card from a widget's Text card button", async () => {
+    vi.mocked(getAttendanceCard).mockResolvedValueOnce({
+      text: "The text card",
+    });
+
+    await tap(231, "text_25KB1A05AR", 70, "private", {
+      chat_data: JSON.stringify({ v: 1, kind: "att" }),
+    });
+
+    await vi.waitFor(() => expect(editMessageText).toHaveBeenCalled());
+
+    const placeholder = sentMessage(sendMessage);
+    expect(placeholder.chat_id).toBe(231);
+    expect(placeholder.reply_parameters?.message_id).toBe(70);
+
+    const final = lastEdit();
+    expect(final.text).toContain("The text card");
+    expect(answerCallbackQuery.mock.calls.at(-1)?.[0].text).toBe(
+      "Text card sent",
+    );
+    expect(sendWidget).not.toHaveBeenCalled();
+    expect(editMessageWidgetData).not.toHaveBeenCalled();
+  });
+
+  it("updates an existing widget on a card tap instead of editing text", async () => {
+    vi.mocked(getMidMarksCard).mockResolvedValueOnce({
+      text: "Mid marks text",
+      widget: {
+        state: {
+          v: 1,
+          kind: "mid",
+          lines: [{ label: "Roll", value: "25KB1A05AR" }],
+        },
+        caption: "Mid marks · 25KB1A05AR · 4 CSE C",
+      },
+    });
+
+    await tap(232, "mid_25KB1A05AR", 70, "private", {
+      chat_data: JSON.stringify({ v: 1, kind: "att" }),
+    });
+
+    await vi.waitFor(() => expect(editMessageWidgetData).toHaveBeenCalled());
+
+    const final = JSON.parse(
+      editMessageWidgetData.mock.calls.at(-1)?.[0].chat_data ?? "{}",
+    );
+    expect(final.kind).toBe("mid");
+    expect(editMessageWidgetData.mock.calls.at(-1)?.[0].chat_id).toBe(232);
+    expect(editMessageWidgetData.mock.calls.at(-1)?.[0].message_id).toBe(70);
+    expect(editMessageCaption.mock.calls.at(-1)?.[0].caption).toContain(
+      "Mid marks",
+    );
+    expect(editMessageText).not.toHaveBeenCalled();
+    expect(sendWidget).not.toHaveBeenCalled();
+    expect(answerCallbackQuery).toHaveBeenCalled();
   });
 
   it("falls back to the HTML card when the client rejects rich", async () => {

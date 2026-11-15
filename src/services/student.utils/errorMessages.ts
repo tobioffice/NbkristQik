@@ -1,4 +1,5 @@
 import { StudentNotFoundError } from "../redis/utils.js";
+import type { WidgetCard } from "./widget.js";
 
 /**
  * A lookup's text plus the buttons that belong with it.
@@ -18,6 +19,8 @@ export interface LookupResult {
    * clients fall back to `text`; the bot tries this first.
    */
   rich?: string;
+  /** The card as widget state, for the chat's HTML widget. */
+  widget?: WidgetCard;
   markup?: LookupReplyMarkup;
 }
 

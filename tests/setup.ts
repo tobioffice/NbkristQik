@@ -11,6 +11,8 @@ process.env.N_PASSWORD = "test_pass";
 process.env.ADMIN_ID = "123456789";
 // the library suites exercise the app itself, not the admin gate
 process.env.LIBRARY_ACCESS = "all";
+// Widget cards are opt-in in tests; the widget suite turns them on.
+process.env.ATTENDANCE_WIDGET = "off";
 process.env.REDIS_URL = "redis://localhost:6379";
 process.env.TURSO_DATABASE_URL = "file::memory:";
 process.env.TURSO_AUTH_TOKEN = "test_token";
