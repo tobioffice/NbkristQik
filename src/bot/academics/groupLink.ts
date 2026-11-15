@@ -1,4 +1,4 @@
-import type { Message } from "node-telegram-bot-api";
+import type { InlineKeyboardMarkup, Message } from "node-telegram-bot-api";
 import { bot } from "../bot.js";
 import type { DeepLinkSignal } from "../commands/startPayload.js";
 import { botLink } from "../../constants/telegram.js";
@@ -19,22 +19,24 @@ const COPY: Record<DeepLinkSignal, { line: string; button: string }> = {
   },
 };
 
+export interface PrivateCardPrompt {
+  text: string;
+  markup: InlineKeyboardMarkup;
+}
+
 /**
- * A group is a shared room, so it gets the way into the bot and nothing else.
- * The roll rides in the button's deep link, not in the visible text; the card
- * itself waits in private.
+ * The one line a group gets for a personal lookup: where to go, never what
+ * the roll says. The roll travels in the button's deep link; the card itself
+ * waits in the bot.
  */
-export const sendPrivateCardLink = async (
-  msg: Message,
+export const privateCardPrompt = (
   rollNumber: string,
   signal: DeepLinkSignal = "att",
-): Promise<void> => {
+): PrivateCardPrompt => {
   const copy = COPY[signal];
-  const prompt = await bot.api.sendMessage({
-    chat_id: msg.chat.id,
+  return {
     text: copy.line,
-    reply_parameters: { message_id: msg.message_id },
-    reply_markup: {
+    markup: {
       inline_keyboard: [
         [
           {
@@ -45,14 +47,30 @@ export const sendPrivateCardLink = async (
         ],
       ],
     },
+  };
+};
+
+/**
+ * A public group prompt. It exists only to carry the student into the bot, so
+ * it is parked under user + roll and cleared when the private `/start` lands.
+ */
+export const sendPrivateCardLink = async (
+  msg: Message,
+  rollNumber: string,
+  signal: DeepLinkSignal = "att",
+): Promise<void> => {
+  const prompt = privateCardPrompt(rollNumber, signal);
+  const sent = await bot.api.sendMessage({
+    chat_id: msg.chat.id,
+    text: prompt.text,
+    reply_parameters: { message_id: msg.message_id },
+    reply_markup: prompt.markup,
   });
 
-  // the prompt exists only to carry the student into the bot; park it and
-  // the roll it answers so the private `/start` can clear both from the room
-  if (msg.from && typeof prompt?.message_id === "number") {
+  if (msg.from && typeof sent?.message_id === "number") {
     rememberGroupPrompt(msg.from.id, rollNumber, {
       chatId: msg.chat.id,
-      messageId: prompt.message_id,
+      messageId: sent.message_id,
       sourceMessageId: msg.message_id,
     });
   }

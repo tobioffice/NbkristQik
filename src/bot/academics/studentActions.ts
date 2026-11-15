@@ -13,11 +13,6 @@ import { bot } from "../bot.js";
 import type { Message } from "node-telegram-bot-api";
 import { logger } from "../../config/logger.js";
 import { cardMarkup, isRollSaved, type CardMarkup } from "./cardMarkup.js";
-import {
-  editEphemeral,
-  sendEphemeral,
-  type EphemeralTarget,
-} from "./ephemeral.js";
 import { isLookupBlockedForViewer } from "../../services/verification/otp.js";
 
 /**
@@ -41,11 +36,6 @@ export interface CardOptions {
   replyMarkup?: CardMarkup;
   /** A line to keep above the card, e.g. the O/0 correction notice. */
   notice?: string;
-  /**
-   * Answer inside a group with a message only this student can see. Set by
-   * the group command and by every button on the card it produced.
-   */
-  ephemeral?: EphemeralTarget;
 }
 
 /**
@@ -117,26 +107,12 @@ const resolveMarkup = async (
 const displayRich = (rich: string, notice?: string): string =>
   notice ? `<p>${notice}</p>${rich}` : rich;
 
-/**
- * Where the card lives: an ordinary chat message, or an ephemeral message
- * that only the student can see. These two writes are the only places the
- * difference shows.
- */
 const postCard = async (
   chatId: number,
   text: string,
   markup: CardMarkup | undefined,
   replyTo: number | undefined,
-  ephemeral: EphemeralTarget | undefined,
 ): Promise<number> => {
-  if (ephemeral) {
-    const id = await sendEphemeral(chatId, ephemeral, text, markup);
-    if (id === null) {
-      throw new Error("Telegram returned no ephemeral message id");
-    }
-    return id;
-  }
-
   const sent = await bot.api.sendMessage({
     chat_id: chatId,
     text,
@@ -153,19 +129,7 @@ const editCard = async (
   messageId: number,
   content: { text: string; rich?: string },
   markup: CardMarkup | undefined,
-  ephemeral: EphemeralTarget | undefined,
 ): Promise<void> => {
-  if (ephemeral) {
-    await editEphemeral(
-      chatId,
-      ephemeral,
-      messageId,
-      content.rich ? { rich: content.rich } : { text: content.text },
-      markup,
-    );
-    return;
-  }
-
   await bot.api.editMessageText({
     chat_id: chatId,
     message_id: messageId,
@@ -194,7 +158,6 @@ const fetchAndEdit = async (
   const chatId = msg.chat.id;
   const replyMarkup = options.replyMarkup;
   const replyTo = options.replyToMessageId ?? msg.reply_to_message?.message_id;
-  const ephemeral = options.ephemeral;
   let messageId = options.editMessageId;
 
   try {
@@ -210,20 +173,13 @@ const fetchAndEdit = async (
           messageId,
           { text: placeholderText },
           replyMarkup,
-          ephemeral,
         );
       } catch (e: unknown) {
         // A rapid second tap can arrive while the card already says this.
         if (!isNotModified(e)) throw e;
       }
     } else {
-      messageId = await postCard(
-        chatId,
-        placeholderText,
-        replyMarkup,
-        replyTo,
-        ephemeral,
-      );
+      messageId = await postCard(chatId, placeholderText, replyMarkup, replyTo);
     }
 
     const content = await fetchContent();
@@ -234,13 +190,7 @@ const fetchAndEdit = async (
       : undefined;
 
     try {
-      await editCard(
-        chatId,
-        messageId,
-        { text: finalText, rich },
-        markup,
-        ephemeral,
-      );
+      await editCard(chatId, messageId, { text: finalText, rich }, markup);
     } catch (e: unknown) {
       // The placeholder is already gone from the reader's view if the edit
       // landed; a repeat tap simply has nothing new to show.
@@ -257,32 +207,26 @@ const fetchAndEdit = async (
           messageId,
           { text: toPlainText(finalText) },
           markup,
-          ephemeral,
         );
       } catch (plainError: unknown) {
         logger.warn(
           "[studentActions] plain-text edit failed, sending a new card:",
           (plainError as Error)?.message,
         );
-        await postCard(
-          chatId,
-          toPlainText(finalText),
-          markup,
-          replyTo,
-          ephemeral,
-        ).catch(() => {});
+        await postCard(chatId, toPlainText(finalText), markup, replyTo).catch(
+          () => {},
+        );
       }
     }
   } catch (error: unknown) {
     const err = error as Error;
     logger.error("Error in student action:", error);
-    const text =
-      err?.message || "Something broke on my side. Try again in a bit.";
-    if (ephemeral) {
-      await sendEphemeral(chatId, ephemeral, text).catch(() => {});
-    } else {
-      bot.api.sendMessage({ chat_id: chatId, text }).catch(() => {});
-    }
+    bot.api
+      .sendMessage({
+        chat_id: chatId,
+        text: err?.message || "Something broke on my side. Try again in a bit.",
+      })
+      .catch(() => {});
   }
 };
 
@@ -301,12 +245,6 @@ const refusePrivateRoll = async (
 ): Promise<boolean> => {
   const viewer = options?.userId ?? msg.from?.id;
   if (!(await isLookupBlockedForViewer(rollno, viewer))) return false;
-  if (options?.ephemeral) {
-    await sendEphemeral(msg.chat.id, options.ephemeral, ROLL_IS_PRIVATE).catch(
-      () => {},
-    );
-    return true;
-  }
   await bot.api
     .sendMessage({
       chat_id: msg.chat.id,

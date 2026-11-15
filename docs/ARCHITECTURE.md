@@ -37,13 +37,13 @@ Monitor (monitor-host) ──> /health, /internal/health, portal
 - **Shutdown:** `SIGINT`/`SIGTERM` stop polling, disconnect Redis, and exit 0.
 - **Bot:** `node-telegram-bot-api` v2 (`Bot`/`Api`, middleware, typed params).
   Commands register with `bot.command`, the roll regex with `bot.hears`, and
-  every Telegram call goes through `bot.api`. Group lookups are ephemeral
-  commands, so `/attendance`, `/midmarks` and `/bunk` answer only their sender;
-  every other group path sends a private deep link. Cards are rich messages
-  with a real table, with the HTML card as the fallback. See `src/bot/` for
-  commands, the academic menu flow, the channel-membership gate, and `/syncdb`.
-  Channel membership is the gate for non-admin students; there is no daily
-  check-in.
+  every Telegram call goes through `bot.api`. Group lookups send a private
+  deep link into the bot, never the card; `/attendance`, `/midmarks` and
+  `/bunk` are ephemeral commands, so even that link is visible only to the
+  sender. Cards are rich messages with a real table, with the HTML card as the
+  fallback. See `src/bot/` for commands, the academic menu flow, the
+  channel-membership gate, and `/syncdb`. Channel membership is the gate for
+  non-admin students; there is no daily check-in.
 - **Web shell:** one shipped app at `/library/` with hash routes `#/rank`,
   `#/profile`, `#/library`, `#/issues` (reports) and `#/issues/new` (form).
   Bot buttons in private chats name the section in `?page=`, because Telegram

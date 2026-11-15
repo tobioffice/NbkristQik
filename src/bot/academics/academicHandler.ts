@@ -5,12 +5,6 @@ import { sendAttendanceOrMidMarks, sendBunkPlan } from "./studentActions.js";
 import { cardMarkup } from "./cardMarkup.js";
 import { leaderboardText } from "./leaderboardCard.js";
 import { sendPrivateCardLink } from "./groupLink.js";
-import {
-  editEphemeralMarkup,
-  ephemeralCallback,
-  sendEphemeral,
-  type EphemeralTarget,
-} from "./ephemeral.js";
 import { getStudentCached } from "../../services/redis/utils.js";
 import { upsertTgUser } from "../../db/student.model.js";
 import {
@@ -40,8 +34,6 @@ interface ActionContext {
   editMessageId: number;
   /** The student who tapped; the card's Save button depends on their roll. */
   userId: number;
-  /** Set when the card itself is ephemeral, so the answer stays private. */
-  ephemeral?: EphemeralTarget;
 }
 
 /**
@@ -71,7 +63,6 @@ const CALLBACK_ACTIONS: CallbackAction[] = [
       sendAttendanceOrMidMarks(msg, rollNumber, "att", {
         editMessageId: context.editMessageId,
         userId: context.userId,
-        ephemeral: context.ephemeral,
       }),
   },
   {
@@ -81,7 +72,6 @@ const CALLBACK_ACTIONS: CallbackAction[] = [
       sendAttendanceOrMidMarks(msg, rollNumber, "mid", {
         editMessageId: context.editMessageId,
         userId: context.userId,
-        ephemeral: context.ephemeral,
       }),
   },
   {
@@ -91,7 +81,6 @@ const CALLBACK_ACTIONS: CallbackAction[] = [
       sendBunkPlan(msg, rollNumber, {
         editMessageId: context.editMessageId,
         userId: context.userId,
-        ephemeral: context.ephemeral,
       }),
   },
 ];
@@ -271,34 +260,22 @@ const handleSaveRoll = async (ctx: Context, msg: Message): Promise<void> => {
   if (!saved) return;
 
   // The card stays on screen; only the Save button goes away.
-  const markup = cardMarkup({
-    roll: rollNumber,
-    showSave: false,
-    isPrivate: msg.chat.type === "private",
-  });
-  const ephemeralMessageId =
-    "ephemeral_message_id" in msg ? msg.ephemeral_message_id : undefined;
-  const ephemeral = ephemeralCallback(
-    ephemeralMessageId,
-    userId,
-    callbackQuery.id,
-  );
-
-  const hideSave =
-    ephemeral && ephemeralMessageId
-      ? editEphemeralMarkup(msg.chat.id, ephemeral, ephemeralMessageId, markup)
-      : bot.api.editMessageReplyMarkup({
-          chat_id: msg.chat.id,
-          message_id: msg.message_id,
-          reply_markup: markup,
-        });
-
-  await hideSave.catch((e: Error) =>
-    logger.debug(
-      "[academicHandler] save button hide skipped:",
-      e?.message ?? e,
-    ),
-  );
+  await bot.api
+    .editMessageReplyMarkup({
+      chat_id: msg.chat.id,
+      message_id: msg.message_id,
+      reply_markup: cardMarkup({
+        roll: rollNumber,
+        showSave: false,
+        isPrivate: msg.chat.type === "private",
+      }),
+    })
+    .catch((e: Error) =>
+      logger.debug(
+        "[academicHandler] save button hide skipped:",
+        e?.message ?? e,
+      ),
+    );
 };
 
 bot.on("callback_query", async (ctx) => {
@@ -330,13 +307,6 @@ const handleCallbackQuery = async (ctx: Context): Promise<void> => {
   }
 
   const userId = callbackQuery.from?.id || msg.chat.id;
-  const ephemeralMessageId =
-    "ephemeral_message_id" in msg ? msg.ephemeral_message_id : undefined;
-  const ephemeral = ephemeralCallback(
-    ephemeralMessageId,
-    userId,
-    callbackQuery.id,
-  );
 
   if (!(await botSecurityHandler(userId, "callback"))) {
     await ctx.answerCallbackQuery({ text: TOO_FAST, show_alert: true });
@@ -357,12 +327,12 @@ const handleCallbackQuery = async (ctx: Context): Promise<void> => {
 
   const data = callbackQuery.data ?? "";
 
-  // A card from before the ephemeral switch, or any card that somehow landed
-  // in a group, must not be re-rendered in front of the room.
-  if (msg.chat.type !== "private" && !ephemeral && data !== "lb") {
+  // Any card that somehow landed in a group must not be re-rendered in front
+  // of the room. The register is the one public answer.
+  if (msg.chat.type !== "private" && data !== "lb") {
     await ctx
       .answerCallbackQuery({
-        text: "That card is private now. Send /attendance here and I'll answer privately.",
+        text: "That card is private now. Send /attendance here and I'll take you to the bot.",
         show_alert: true,
       })
       .catch(() => {});
@@ -392,10 +362,6 @@ const handleCallbackQuery = async (ctx: Context): Promise<void> => {
       withNames: msg.chat.type === "private",
     });
     await ctx.answerCallbackQuery().catch(() => {});
-    if (ephemeral) {
-      await sendEphemeral(msg.chat.id, ephemeral, text).catch(() => undefined);
-      return;
-    }
     await bot.api.sendMessage({
       chat_id: msg.chat.id,
       text,
@@ -438,9 +404,8 @@ const handleCallbackQuery = async (ctx: Context): Promise<void> => {
   const results = await Promise.allSettled([
     ctx.answerCallbackQuery(),
     action.run(msg, rollNumber, {
-      editMessageId: ephemeralMessageId ?? msg.message_id,
+      editMessageId: msg.message_id,
       userId,
-      ephemeral: ephemeral ?? undefined,
     }),
   ]);
   for (const result of results) {

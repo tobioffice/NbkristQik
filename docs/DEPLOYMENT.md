@@ -72,11 +72,10 @@ not break old links.
 ### Group privacy
 
 `/attendance`, `/midmarks` and `/bunk` are registered as **ephemeral** commands
-for groups. The command and the card are visible only to the student who sent
-it. Telegram may fail to deliver an ephemeral message (the student is offline,
-or the client is old), but the bot never falls back to posting the card in the
-room; the public command path sends the private link instead. No BotFather
-setting is required.
+for groups. The command and the "open in the bot" link are visible only to the
+student who sent it, and the card itself is rendered in the DM. If the client
+cannot do ephemeral commands, the same link is posted publicly; either way the
+bot never puts the card in the room. No BotFather setting is required.
 
 ## Production deployment
 

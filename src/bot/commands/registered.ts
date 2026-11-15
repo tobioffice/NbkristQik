@@ -5,7 +5,10 @@ import {
   sendAttendanceOrMidMarks,
   sendBunkPlan,
 } from "../academics/studentActions.js";
-import { sendPrivateCardLink } from "../academics/groupLink.js";
+import {
+  sendPrivateCardLink,
+  privateCardPrompt,
+} from "../academics/groupLink.js";
 import {
   ephemeralCommand,
   sendEphemeral,
@@ -166,18 +169,23 @@ const handleLookup = async (msg: Message, lookup: Lookup): Promise<void> => {
   );
   if (!rollNo) return;
 
-  // A group is a shared room. An ephemeral command answers the sender alone;
-  // any other group command gets the private link and never the card.
-  if (!isPrivate && !ephemeral) {
-    await sendPrivateCardLink(msg, rollNo, lookup);
+  // A group is a shared room. The student gets the way into the bot; the
+  // card is rendered only in the DM. An ephemeral command keeps even that
+  // prompt private.
+  if (!isPrivate) {
+    if (ephemeral) {
+      const prompt = privateCardPrompt(rollNo, lookup);
+      await sendEphemeral(chat.id, ephemeral, prompt.text, prompt.markup);
+    } else {
+      await sendPrivateCardLink(msg, rollNo, lookup);
+    }
     return;
   }
 
-  const options = ephemeral ? { ephemeral } : undefined;
   if (lookup === "bunk") {
-    await sendBunkPlan(msg, rollNo, options);
+    await sendBunkPlan(msg, rollNo);
   } else {
-    await sendAttendanceOrMidMarks(msg, rollNo, lookup, options);
+    await sendAttendanceOrMidMarks(msg, rollNo, lookup);
   }
 };
 

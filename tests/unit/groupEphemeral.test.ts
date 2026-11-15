@@ -14,36 +14,18 @@ interface SendParams {
     ephemeral_message_id?: number;
   };
   ephemeral_message_parameters?: { receiver_user_id?: number };
-  reply_markup?: { inline_keyboard: { url?: string }[][] };
+  reply_markup?: {
+    inline_keyboard: { text?: string; url?: string; style?: string }[][];
+  };
 }
 
-interface EditParams {
-  chat_id?: number | string;
-  receiver_user_id?: number;
-  ephemeral_message_id?: number;
-  text?: string;
-  rich_message?: { html: string };
-}
-
-const {
-  sendMessage,
-  editMessageText,
-  editEphemeralMessageText,
-  editEphemeralMessageReplyMarkup,
-  answerCallbackQuery,
-} = vi.hoisted(() => ({
-  sendMessage: vi.fn(async (params: SendParams) =>
-    params.ephemeral_message_parameters
-      ? { message_id: 0, ephemeral_message_id: 77 }
-      : { message_id: 1 },
-  ),
-  editMessageText: vi.fn(async (_params: EditParams) => true),
-  editEphemeralMessageText: vi.fn(async (_params: EditParams) => true),
-  editEphemeralMessageReplyMarkup: vi.fn(
-    async (_params: EditParams & { reply_markup?: unknown }) => true,
-  ),
-  answerCallbackQuery: vi.fn(async () => true),
-}));
+const { sendMessage, editMessageText, answerCallbackQuery } = vi.hoisted(
+  () => ({
+    sendMessage: vi.fn(async (_params: SendParams) => ({ message_id: 1 })),
+    editMessageText: vi.fn(async (_params: unknown) => true),
+    answerCallbackQuery: vi.fn(async (_params: unknown) => true),
+  }),
+);
 
 const command = createCommandMock();
 const on = createOnMock();
@@ -56,8 +38,6 @@ vi.mock("../../src/bot/bot.js", () => ({
     api: {
       sendMessage,
       editMessageText,
-      editEphemeralMessageText,
-      editEphemeralMessageReplyMarkup,
       editMessageReplyMarkup: vi.fn(async () => true),
       answerCallbackQuery,
       deleteMessage: vi.fn(async () => true),
@@ -141,19 +121,24 @@ const groupMessage = (extra: Record<string, unknown> = {}) => ({
   ...extra,
 });
 
-const run = async (message: unknown) =>
-  (attendance as (ctx: { message: unknown }) => unknown)({ message });
-
-const lastEphemeralEdit = (): EditParams => {
-  const call = editEphemeralMessageText.mock.calls.at(-1);
-  if (!call) throw new Error("the ephemeral card was never edited");
-  return call[0];
+const run = async (
+  handler: (ctx: unknown) => unknown,
+  message: unknown,
+): Promise<void> => {
+  await (handler as (ctx: { message: unknown }) => unknown)({ message });
 };
+
+const lastSend = (): SendParams => {
+  const call = sendMessage.mock.calls.at(-1);
+  if (!call) throw new Error("sendMessage was not called");
+  return call[0] as SendParams;
+};
+
+const lastButton = () => lastSend().reply_markup?.inline_keyboard[0][0];
 
 beforeEach(() => {
   sendMessage.mockClear();
   editMessageText.mockClear();
-  editEphemeralMessageText.mockClear();
   answerCallbackQuery.mockClear();
   getRegistration.mockReset();
   getRegistration.mockResolvedValue({
@@ -180,72 +165,75 @@ beforeEach(() => {
 });
 
 describe("a group lookup command", () => {
-  it("sends the private link, never the card, when the command is public", async () => {
-    await run(groupMessage());
+  it("sends the public link, never the card, when the command is public", async () => {
+    await run(attendance, groupMessage());
 
     expect(getAttendanceCard).not.toHaveBeenCalled();
-    expect(sendMessage).toHaveBeenCalledTimes(1);
-    const params = sendMessage.mock.calls[0][0] as SendParams;
+    const params = lastSend();
     expect(params.chat_id).toBe(-100123);
     expect(params.text).toContain("private");
     expect(params.reply_parameters).toEqual({ message_id: 7 });
-    expect(params.reply_markup?.inline_keyboard[0][0].url).toBe(
-      "https://t.me/NbkristQik_bot?start=att_25KB1A05AR",
+    expect(lastButton()).toMatchObject({
+      url: "https://t.me/NbkristQik_bot?start=att_25KB1A05AR",
+      style: "primary",
+    });
+  });
+
+  it("keeps the link private when the command itself is ephemeral", async () => {
+    await run(
+      attendance,
+      groupMessage({
+        message_id: 0,
+        ephemeral_message_id: 55,
+      }),
     );
+
+    expect(getAttendanceCard).not.toHaveBeenCalled();
+    expect(editMessageText).not.toHaveBeenCalled();
+
+    const params = lastSend();
+    expect(params.chat_id).toBe(-100123);
+    expect(params.text).toContain("private");
+    expect(params.reply_parameters).toEqual({ ephemeral_message_id: 55 });
+    expect(params.ephemeral_message_parameters).toEqual({
+      receiver_user_id: 42,
+    });
+    expect(lastButton()).toMatchObject({
+      url: "https://t.me/NbkristQik_bot?start=att_25KB1A05AR",
+    });
   });
 
   it("names the mid-mark card in the private link", async () => {
-    await (midmarks as (ctx: { message: unknown }) => unknown)({
-      message: groupMessage({ text: "/midmarks" }),
-    });
+    await run(midmarks, groupMessage({ text: "/midmarks" }));
 
-    const params = sendMessage.mock.calls[0][0] as SendParams;
+    const params = lastSend();
     expect(params.text).toContain("mid marks");
-    expect(params.reply_markup?.inline_keyboard[0][0].url).toBe(
+    expect(lastButton()?.url).toBe(
       "https://t.me/NbkristQik_bot?start=mid_25KB1A05AR",
     );
   });
 
-  it("answers an ephemeral bunk command privately", async () => {
-    await (bunk as (ctx: { message: unknown }) => unknown)({
-      message: groupMessage({
+  it("names the bunk card in the private link", async () => {
+    await run(
+      bunk,
+      groupMessage({
         text: "/bunk",
         message_id: 0,
         ephemeral_message_id: 56,
       }),
-    });
+    );
 
-    await vi.waitFor(() => expect(editEphemeralMessageText).toHaveBeenCalled());
-
-    const sent = sendMessage.mock.calls[0][0] as SendParams;
-    expect(sent.reply_parameters).toEqual({ ephemeral_message_id: 56 });
-    expect(lastEphemeralEdit().text).toContain("Bunk card");
-  });
-
-  it("answers an ephemeral command with a card only its sender can see", async () => {
-    await run(groupMessage({ message_id: 0, ephemeral_message_id: 55 }));
-
-    await vi.waitFor(() => expect(editEphemeralMessageText).toHaveBeenCalled());
-
-    expect(sendMessage).toHaveBeenCalledTimes(1);
-    const sent = sendMessage.mock.calls[0][0] as SendParams;
-    expect(sent.chat_id).toBe(-100123);
-    expect(sent.reply_parameters).toEqual({ ephemeral_message_id: 55 });
-    expect(sent.ephemeral_message_parameters).toEqual({
-      receiver_user_id: 42,
-    });
-
-    const edited = lastEphemeralEdit();
-    expect(edited.chat_id).toBe(-100123);
-    expect(edited.receiver_user_id).toBe(42);
-    expect(edited.ephemeral_message_id).toBe(77);
-    expect(edited.text).toContain("Attendance card");
-    expect(editMessageText).not.toHaveBeenCalled();
+    const params = lastSend();
+    expect(params.text).toContain("bunk plan");
+    expect(params.reply_parameters).toEqual({ ephemeral_message_id: 56 });
+    expect(lastButton()?.url).toBe(
+      "https://t.me/NbkristQik_bot?start=bunk_25KB1A05AR",
+    );
   });
 });
 
-describe("a tap on an ephemeral card", () => {
-  it("edits the ephemeral message, not a public one", async () => {
+describe("a tap on a card in the group", () => {
+  it("refuses to re-render a public group card", async () => {
     await callback({
       callbackQuery: {
         id: "cb-1",
@@ -253,20 +241,15 @@ describe("a tap on an ephemeral card", () => {
         data: "mid_25KB1A05AR",
         message: {
           chat: { id: -100123, type: "supergroup" },
-          message_id: 0,
-          ephemeral_message_id: 77,
+          message_id: 9,
         },
       },
       answerCallbackQuery,
     });
 
-    await vi.waitFor(() => expect(editEphemeralMessageText).toHaveBeenCalled());
-
-    const edited = lastEphemeralEdit();
-    expect(edited.ephemeral_message_id).toBe(77);
-    expect(edited.receiver_user_id).toBe(42);
-    expect(edited.text).toContain("Mid marks card");
     expect(editMessageText).not.toHaveBeenCalled();
-    expect(answerCallbackQuery).toHaveBeenCalled();
+    const answer = answerCallbackQuery.mock.calls.at(-1)?.[0] as
+      { text?: string } | undefined;
+    expect(answer?.text).toContain("private");
   });
 });
