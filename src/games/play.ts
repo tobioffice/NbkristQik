@@ -17,6 +17,69 @@ import type { AttemptAnswer, GameAttempt } from "./types.js";
  * back to a fresh message, so an old message that cannot be edited never
  * stops the run.
  */
+const isNotModified = (error: unknown): boolean =>
+  error instanceof Error && /message is not modified/i.test(error.message);
+
+const editHtml = async ({
+  chatId,
+  messageId,
+  text,
+  markup,
+}: {
+  chatId: number;
+  messageId: number;
+  text: string;
+  markup?: Card["markup"];
+}): Promise<void> => {
+  await bot.api.editMessageText({
+    chat_id: chatId,
+    message_id: messageId,
+    text,
+    parse_mode: "HTML",
+    ...(markup ? { reply_markup: markup } : {}),
+  });
+};
+
+const editRich = async ({
+  chatId,
+  messageId,
+  html,
+  markup,
+}: {
+  chatId: number;
+  messageId: number;
+  html: string;
+  markup?: Card["markup"];
+}): Promise<void> => {
+  await bot.api.editMessageText({
+    chat_id: chatId,
+    message_id: messageId,
+    rich_message: { html },
+    ...(markup ? { reply_markup: markup } : {}),
+  });
+};
+
+const sendHtml = async ({
+  chatId,
+  text,
+  markup,
+  replyTo,
+}: {
+  chatId: number;
+  text: string;
+  markup?: Card["markup"];
+  replyTo?: number;
+}): Promise<number> => {
+  const sent = await bot.api.sendMessage({
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    ...(markup ? { reply_markup: markup } : {}),
+    ...(replyTo ? { reply_parameters: { message_id: replyTo } } : {}),
+  });
+  return sent.message_id;
+};
+
 export const sendOrEdit = async ({
   chatId,
   messageId,
@@ -29,29 +92,55 @@ export const sendOrEdit = async ({
   card: Card;
 }): Promise<number> => {
   if (messageId) {
+    if (card.rich) {
+      try {
+        await editRich({
+          chatId,
+          messageId,
+          html: card.rich,
+          markup: card.markup,
+        });
+        return messageId;
+      } catch (e) {
+        // The message is already correct, or the client refused rich. Fall
+        // through to the HTML card in the second case.
+        if (isNotModified(e)) return messageId;
+      }
+    }
+
     try {
-      await bot.api.editMessageText({
-        chat_id: chatId,
-        message_id: messageId,
+      await editHtml({
+        chatId,
+        messageId,
         text: card.text,
-        parse_mode: "HTML",
-        ...(card.markup ? { reply_markup: card.markup } : {}),
+        markup: card.markup,
       });
       return messageId;
-    } catch {
+    } catch (e) {
+      if (isNotModified(e)) return messageId;
       // The card may be too old to edit, or the client may have replaced it.
       // A new message is the honest next step.
     }
   }
 
-  const sent = await bot.api.sendMessage({
-    chat_id: chatId,
+  const newId = await sendHtml({
+    chatId,
     text: card.text,
-    parse_mode: "HTML",
-    ...(card.markup ? { reply_markup: card.markup } : {}),
-    ...(replyTo ? { reply_parameters: { message_id: replyTo } } : {}),
+    markup: card.markup,
+    replyTo,
   });
-  return sent.message_id;
+
+  // The Bot API has no rich `sendMessage`; send the text once, then upgrade
+  // the same message. A refusal leaves the text in place.
+  if (card.rich) {
+    await editRich({
+      chatId,
+      messageId: newId,
+      html: card.rich,
+      markup: card.markup,
+    }).catch(() => undefined);
+  }
+  return newId;
 };
 
 /** Show the attempt's current question. Returns the card's message id. */

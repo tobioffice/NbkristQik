@@ -58,7 +58,7 @@ vi.mock("../../src/services/tracker.js", () => ({
 const { startDailyFive } = await import("../../src/games/five.js");
 const { startDuel, sendDuelRecord } = await import("../../src/games/duel.js");
 const { handleGameCallback } = await import("../../src/games/handler.js");
-const { recordAnswer } = await import("../../src/games/play.js");
+const { recordAnswer, sendOrEdit } = await import("../../src/games/play.js");
 
 const clear = async (): Promise<void> => {
   for (const table of [
@@ -109,7 +109,18 @@ const lastSent = () =>
 
 const lastEdit = () =>
   mocks.editMessageText.mock.calls.at(-1)?.[0] as
-    { text?: string; message_id?: number } | undefined;
+    | {
+        text?: string;
+        message_id?: number;
+        rich_message?: { html: string };
+      }
+    | undefined;
+
+/** The last edit as HTML: the rich card when it was accepted, else the text. */
+const lastEditHtml = (): string => {
+  const call = lastEdit();
+  return call?.rich_message?.html ?? call?.text ?? "";
+};
 
 const answerAll = async (
   attemptId: number,
@@ -179,9 +190,10 @@ describe("the Five flow", () => {
 
     await answerAll(attempt!.id, 42);
 
-    const result = lastEdit();
-    expect(result?.text).toContain("Five done");
-    expect(result?.text).toContain("5 of 5 correct");
+    const result = lastEditHtml();
+    expect(result).toContain("Five done");
+    expect(result).toContain("<table");
+    expect(result).toContain("5 of 5");
     expect(mocks.sendMessage).toHaveBeenCalledTimes(1);
 
     const done = await getAttempt(attempt!.id);
@@ -216,6 +228,31 @@ describe("the Five flow", () => {
     const saved = await getAttempt(attempt!.id);
     expect(saved?.score).toBe(0);
     expect(saved?.answers[0]).toMatchObject({ correct: false, points: 0 });
+  });
+
+  it("falls back to the text card when rich is refused", async () => {
+    mocks.editMessageText.mockRejectedValueOnce(
+      new Error("Bad Request: rich unsupported"),
+    );
+
+    const id = await sendOrEdit({
+      chatId: 900,
+      messageId: 100,
+      card: {
+        text: "<b>fallback</b>",
+        rich: "<table><tr><td>rich</td></tr></table>",
+      },
+    });
+
+    expect(id).toBe(100);
+    expect(mocks.editMessageText).toHaveBeenCalledTimes(2);
+    const [richCall, textCall] = mocks.editMessageText.mock.calls;
+    expect(richCall[0].rich_message).toBeTruthy();
+    expect(textCall[0]).toMatchObject({
+      text: "<b>fallback</b>",
+      parse_mode: "HTML",
+    });
+    expect(textCall[0].rich_message).toBeUndefined();
   });
 
   it("resumes the same five instead of starting a second run", async () => {
@@ -286,8 +323,8 @@ describe("the Five flow", () => {
     expect(closed?.opponentScore).toBeLessThan(duel!.challengerScore);
     expect(closed?.winnerId).toBe(42);
 
-    expect(lastEdit()?.text).toContain("Duel result");
-    expect(lastEdit()?.text).toContain("You <b>");
+    expect(lastEditHtml()).toContain("Duel result");
+    expect(lastEditHtml()).toContain("You");
 
     const challengerDm = mocks.sendMessage.mock.calls.find(
       ([params]) =>

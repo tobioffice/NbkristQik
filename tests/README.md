@@ -62,7 +62,7 @@ Vitest resolves those `.js` specifiers to the TypeScript sources.
 
 ## Test layout
 
-The suite currently has **78 test files (64 unit, 14 integration) and 614
+The suite currently has **78 test files (64 unit, 14 integration) and 615
 tests**. The tree below names the recurring categories, not every file:
 
 ```

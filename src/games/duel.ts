@@ -368,18 +368,12 @@ export const finishDuelAttempt = async ({
       duel: fresh,
       userId: fresh.challengerId,
     });
-    await bot.api
-      .sendMessage({
-        chat_id: fresh.challengerId,
-        text: challengerCard.text,
-        parse_mode: "HTML",
-        ...(challengerCard.markup
-          ? { reply_markup: challengerCard.markup }
-          : {}),
-      })
-      .catch((e: Error) =>
-        logger.debug("[games] challenger result skipped:", e?.message ?? e),
-      );
+    await sendOrEdit({
+      chatId: fresh.challengerId,
+      card: challengerCard,
+    }).catch((e: Error) =>
+      logger.debug("[games] challenger result skipped:", e?.message ?? e),
+    );
   }
 
   await showDuelResult({

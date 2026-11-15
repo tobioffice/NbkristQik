@@ -211,6 +211,10 @@ describe("the cards", () => {
     expect(card.text).toContain("#7 of 143 today");
     expect(card.text).toContain("2-day streak");
     expect(card.text).toContain("4 CSE C · <b>#5</b> of 12 this week");
+    expect(card.rich).toContain("<table");
+    expect(card.rich).toContain("Run score");
+    expect(card.rich).toContain("Season points");
+    expect(card.rich).toContain("4 CSE C");
     expect(card.markup?.inline_keyboard[0]).toHaveLength(2);
     expect(card.markup?.inline_keyboard[0][0].callback_data).toBe("duel_new_7");
     expect(card.markup?.inline_keyboard[0][1].callback_data).toBe(
@@ -230,6 +234,7 @@ describe("the cards", () => {
     expect(card.text).toContain("Played today. Back tomorrow.");
     expect(card.text).toContain("No section on record");
     expect(card.text).not.toContain("1-day streak");
+    expect(card.rich).toContain("Played today. Back tomorrow.");
   });
 
   const duel: GameDuel = {
@@ -305,6 +310,10 @@ describe("the cards", () => {
     expect(card.text).toContain("&lt;Asha&gt;");
     expect(card.text).toContain("23KB1A0•••");
     expect(card.text).toContain("You: <b>#37</b> of 143");
+    expect(card.rich).toContain("<table");
+    expect(card.rich).toContain("4 CSE C");
+    expect(card.rich).toContain("Asha");
+    expect(card.rich).toContain("23KB1A0•••");
   });
 
   it("keeps the channel posts on URL buttons only", () => {

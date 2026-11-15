@@ -13,6 +13,8 @@ import { formatDuration, publicName, QUESTION_LIMIT_MS } from "./scoring.js";
 
 export interface Card {
   text: string;
+  /** The rich-message HTML. The text is the fallback for clients that refuse it. */
+  rich?: string;
   markup?: InlineKeyboardMarkup;
 }
 
@@ -49,6 +51,36 @@ const formatNumber = (value: number): string =>
 
 const nameCell = (player: BoardPlayer): string =>
   escapeHtml(publicName(player.displayName, player.rollNo));
+
+/** A bordered table for the rich renderer. */
+const richTable = (
+  headers: { label: string; align: "left" | "right" }[],
+  rows: string[][],
+): string => {
+  const head = headers
+    .map((column) => `<th align="${column.align}">${column.label}</th>`)
+    .join("");
+  const body = rows
+    .map(
+      (cells) =>
+        `<tr>${cells
+          .map(
+            (cell, index) => `<td align="${headers[index].align}">${cell}</td>`,
+          )
+          .join("")}</tr>`,
+    )
+    .join("");
+  return `<table bordered striped compact><tr>${head}</tr>${body}</table>`;
+};
+
+/** A two-column label/value table, also for the rich renderer. */
+const richPairs = (rows: [string, string][]): string =>
+  `<table bordered striped compact>${rows
+    .map(
+      ([label, value]) =>
+        `<tr><td>${label}</td><td align="right">${value}</td></tr>`,
+    )
+    .join("")}</table>`;
 
 /** The live question, one message edited in place as the run goes. */
 export const questionCard = ({
@@ -144,8 +176,45 @@ export const fiveResultCard = ({
     lines.push("", "<i>Played today. Back tomorrow.</i>");
   }
 
+  const rows: [string, string][] = [
+    ["Correct", `${correct} of ${attempt.answers.length}`],
+  ];
+  if (bonus > 0) {
+    rows.push(
+      ["Run score", `<b>${formatNumber(attempt.score)}</b>`],
+      ["Season points", `<b>${formatNumber(attempt.points)}</b>`],
+      ["Streak bonus", `+${formatNumber(bonus)} · ${attempt.streak} days`],
+    );
+  } else {
+    rows.push(["Points", `<b>${formatNumber(attempt.points)}</b>`]);
+    if (attempt.streak > 1) rows.push(["Streak", `${attempt.streak} days`]);
+  }
+  rows.push(["Today", total <= 1 ? "First" : `<b>#${rank}</b> of ${total}`]);
+  if (section) {
+    rows.push([
+      "Section",
+      `${escapeHtml(section.label)} · ${
+        section.total <= 1
+          ? "first this week"
+          : `<b>#${section.rank}</b> of ${section.total} this week`
+      }`,
+    ]);
+  }
+
+  const rich = [
+    "<p><b>Five done</b></p>",
+    richPairs(rows),
+    section
+      ? ""
+      : "<p><i>No section on record. This run counts for you only.</i></p>",
+    alreadyPlayed ? "<p><i>Played today. Back tomorrow.</i></p>" : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
   return {
     text: lines.join("\n"),
+    rich,
     markup: {
       inline_keyboard: [
         [
@@ -215,9 +284,18 @@ export const duelResultCard = ({
     `You <b>${me}</b> · ${escapeHtml(themName)} <b>${them}</b>`,
     verdict,
   ];
+  const rich = [
+    "<p><b>Duel result</b></p>",
+    richPairs([
+      ["You", `<b>${me}</b>`],
+      [escapeHtml(themName), `<b>${them}</b>`],
+    ]),
+    `<p>${verdict}</p>`,
+  ].join("");
 
   return {
     text: lines.join("\n"),
+    rich,
     markup: {
       inline_keyboard: [
         [
@@ -273,7 +351,7 @@ export const leagueCard = ({
         me.points,
       )} points`,
     );
-  } else if (me.points === 0) {
+  } else if (me.points === 0 && sections.length > 0) {
     lines.push("", "You haven't scored yet. Play today's five.");
   }
 
@@ -285,8 +363,69 @@ export const leagueCard = ({
     );
   }
 
+  const sectionRows = sections
+    .slice(0, 5)
+    .map((section, index) => [
+      String(index + 1),
+      escapeHtml(section.label),
+      `<b>${formatNumber(section.points)}</b>`,
+    ]);
+  const playerRows = players
+    .slice(0, 5)
+    .map((player, index) => [
+      String(index + 1),
+      nameCell(player),
+      `<b>${formatNumber(player.points)}</b>`,
+    ]);
+
+  const meRows: [string, string][] = [];
+  if (me.rank) {
+    meRows.push([
+      "You",
+      `<b>#${me.rank}</b> of ${me.players} · ${formatNumber(me.points)} points`,
+    ]);
+  }
+  if (mySection) {
+    meRows.push([
+      "Section",
+      `${escapeHtml(mySection.label)} · <b>#${mySection.rank}</b> of ${
+        mySection.total
+      }`,
+    ]);
+  }
+
+  const rich = [
+    `<p><b>Section Wars</b> · ${escapeHtml(label)}</p>`,
+    sections.length
+      ? richTable(
+          [
+            { label: "#", align: "left" },
+            { label: "Section", align: "left" },
+            { label: "Points", align: "right" },
+          ],
+          sectionRows,
+        )
+      : "<p>No one has played this week. Be the first.</p>",
+    players.length
+      ? "<p><b>Players</b></p>" +
+        richTable(
+          [
+            { label: "#", align: "left" },
+            { label: "Player", align: "left" },
+            { label: "Points", align: "right" },
+          ],
+          playerRows,
+        )
+      : "",
+    meRows.length ? richPairs(meRows) : "",
+    me.points === 0 ? "<p>You haven't scored yet. Play today's five.</p>" : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
   return {
     text: lines.join("\n"),
+    rich,
     markup: {
       inline_keyboard: [
         [{ text: "Play today's five", callback_data: "five_play" }],
