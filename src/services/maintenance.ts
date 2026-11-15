@@ -10,6 +10,8 @@ import { pruneDownloadCache } from "./library/pdf.js";
  */
 const RETENTION_DAYS = 95;
 const LIBRARY_RETENTION_DAYS = 365;
+const GAME_RETENTION_DAYS = 180;
+const DUEL_RETENTION_DAYS = 90;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 let started = false;
@@ -51,6 +53,31 @@ export const prune = async (): Promise<void> => {
     `DELETE FROM library_reads WHERE at < datetime('now', '-${LIBRARY_RETENTION_DAYS} days')`,
   );
 
+  // League history is useful for a full season and the weekly boards, not
+  // forever. Attempts and score rows are the bulky ones (one JSON answer set
+  // per run); a day key is a plain YYYY-MM-DD string, so a date compare is
+  // enough. Duels and round rows are smaller but still bounded.
+  await pruneTable(
+    "game_attempts",
+    `DELETE FROM game_attempts WHERE day_key < date('now', '-${GAME_RETENTION_DAYS} days')`,
+  );
+  await pruneTable(
+    "game_scores",
+    `DELETE FROM game_scores WHERE day_key < date('now', '-${GAME_RETENTION_DAYS} days')`,
+  );
+  await pruneTable(
+    "game_duels",
+    `DELETE FROM game_duels WHERE day_key < date('now', '-${DUEL_RETENTION_DAYS} days')`,
+  );
+  await pruneTable(
+    "game_rounds",
+    `DELETE FROM game_rounds WHERE day_key < date('now', '-${GAME_RETENTION_DAYS} days')`,
+  );
+  await pruneTable(
+    "game_posts",
+    `DELETE FROM game_posts WHERE posted_at < datetime('now', '-30 days')`,
+  );
+
   // Stamped PDFs expire on their own seven-day clock and a disk budget; this
   // is housekeeping, not retention evidence, so a failure stays a warning.
   try {
@@ -72,6 +99,6 @@ export const startMaintenance = (): void => {
   const timer = setInterval(() => void prune(), DAY_MS);
   timer.unref();
   logger.info(
-    "[maintenance] startup prune done, daily prune scheduled (95-day retention, 365-day library)",
+    "[maintenance] startup prune done, daily prune scheduled (95-day retention, 365-day library, 180-day league)",
   );
 };

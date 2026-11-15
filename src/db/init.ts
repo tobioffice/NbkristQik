@@ -5,6 +5,7 @@ import {
   initLeaderboardIndexes,
 } from "./student_stats.model.js";
 import { initLibraryTables } from "./library.model.js";
+import { initGameTables, seedGameQuestions } from "./game.model.js";
 import { logger } from "../config/logger.js";
 
 /**
@@ -42,8 +43,12 @@ import { logger } from "../config/logger.js";
  * Version 6 splits the single hide switch into three independent choices:
  * hide_leaderboard, block_lookups and block_registration. `blocked` stays as
  * an "any option is on" mirror so older readers keep working.
+ *
+ * Version 7 adds the league: questions, daily rounds, attempts, duels, season
+ * points and the channel-post claims. Every table is CREATE IF NOT EXISTS, so
+ * an older database only needs the stamp.
  */
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 /** Reads the database's user_version, treating a missing row as 0. */
 const readSchemaVersion = async (): Promise<number> => {
@@ -253,6 +258,8 @@ export const initDatabase = async () => {
   await initUptimeTable();
   await initLeaderboardIndexes();
   await initLibraryTables();
+  await initGameTables();
+  await seedGameQuestions();
   await backfillReportThreads();
 
   // Additive v2 columns. Guarded by the version and by PRAGMA table_info, so

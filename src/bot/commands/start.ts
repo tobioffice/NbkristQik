@@ -18,6 +18,11 @@ import {
 } from "../../middleware/security.js";
 import { logger } from "../../config/logger.js";
 import { TOO_FAST, SOMETHING_BROKE } from "../replies.js";
+import {
+  startDuelFromMessage,
+  startFiveFromMessage,
+  startLeagueFromMessage,
+} from "../../games/handler.js";
 
 const sendWelcome = async (msg: Message): Promise<void> => {
   const first = msg.from?.first_name?.trim();
@@ -134,6 +139,34 @@ bot.command("start", (ctx) => {
     return sendLibraryEntry(msg).catch((e) =>
       logger.error("[start] library entry failed:", e),
     );
+  }
+
+  const gamePayload = payload?.trim() ?? "";
+  if (gamePayload.toLowerCase() === "five") {
+    return startFiveFromMessage(msg).catch((e) => {
+      logger.error("[start] five entry failed:", e);
+      return bot.api
+        .sendMessage({ chat_id: msg.chat.id, text: SOMETHING_BROKE })
+        .catch(() => undefined);
+    });
+  }
+  if (gamePayload.toLowerCase() === "league") {
+    return startLeagueFromMessage(msg).catch((e) => {
+      logger.error("[start] league entry failed:", e);
+      return bot.api
+        .sendMessage({ chat_id: msg.chat.id, text: SOMETHING_BROKE })
+        .catch(() => undefined);
+    });
+  }
+
+  const duelPayload = /^duel_(\d+)$/i.exec(gamePayload);
+  if (duelPayload) {
+    return startDuelFromMessage(msg, Number(duelPayload[1])).catch((e) => {
+      logger.error("[start] duel entry failed:", e);
+      return bot.api
+        .sendMessage({ chat_id: msg.chat.id, text: SOMETHING_BROKE })
+        .catch(() => undefined);
+    });
   }
 
   const link = deepLink(payload);

@@ -4,6 +4,7 @@ import {
   getRegistration,
   upsertRegistration,
 } from "../db/registration.model.js";
+import { syncGameDisplayName } from "../db/game.model.js";
 import { invalidateStudentContext } from "../services/library/entitlement.js";
 import { getTgUserRoll } from "../db/student.model.js";
 import {
@@ -115,6 +116,12 @@ profileRouter.post("/register", async (req: Request, res: Response) => {
     }
 
     await upsertRegistration(resolved.userId, rollNo, displayName);
+    // The league's public name follows the profile, including a cleared name.
+    // A missing league table or a hiccup must never fail the registration.
+    await syncGameDisplayName(Number(resolved.userId), displayName).catch(
+      (e: Error) =>
+        logger.debug("[profile] game name sync skipped:", e?.message ?? e),
+    );
     // A library session opened before this save must see the new roll on its
     // next page, not after the 60 s context cache window.
     invalidateStudentContext(resolved.userId);

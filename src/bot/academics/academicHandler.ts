@@ -26,6 +26,7 @@ import { trackActivity, ChatSurface } from "../../services/tracker.js";
 import { isAuthorizedUser, rememberStudent } from "../authorization.js";
 import { TOO_FAST, SOMETHING_BROKE, BAD_ROLL } from "../replies.js";
 import { BOT_USERNAME } from "../../constants/telegram.js";
+import { handleGameCallback, isGameCallback } from "../../games/handler.js";
 
 const SAVE_PREFIX = "save_";
 const TEXT_PREFIX = "text_";
@@ -332,6 +333,13 @@ const handleCallbackQuery = async (ctx: Context): Promise<void> => {
   }
 
   const data = callbackQuery.data ?? "";
+
+  // League cards own their prefixes and their own privacy guard. The
+  // dispatcher has already paid the rate limit and the channel gate.
+  if (isGameCallback(data)) {
+    await handleGameCallback(ctx);
+    return;
+  }
 
   // Any card that somehow landed in a group must not be re-rendered in front
   // of the room. The register is the one public answer.

@@ -25,6 +25,7 @@ const editMessageText = vi.fn<
 
 vi.mock("../../src/bot/bot.js", () => ({
   bot: {
+    command: vi.fn(),
     hears,
     on: vi.fn(),
     api: {

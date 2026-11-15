@@ -65,6 +65,8 @@ async function startBot() {
       import("./commands/library.js"),
       import("./commands/postopen.js"),
       import("./academics/academicHandler.js"),
+      import("../games/handler.js"),
+      import("../games/channel.js"),
       import("./syncdb.js"),
       import("../services/uptime.js"),
       import("../api/server.js"),
@@ -82,6 +84,8 @@ async function startBot() {
 
     const { startMaintenance } = await import("../services/maintenance.js");
     startMaintenance();
+    const { startGameScheduler } = await import("../games/channel.js");
+    startGameScheduler();
     const { startServer } = await import("../api/server.js");
     startServer();
 

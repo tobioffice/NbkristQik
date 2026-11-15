@@ -19,6 +19,8 @@
 | `UPTIME_INGEST_SECRET` | `src/api/internal.ts` | Shared secret for `/internal/*`; unset disables both routes |
 | `MONITOR_*` | `src/monitor/index.ts` | Only read by the monitor-host monitor, not the bot |
 | `ATTENDANCE_WIDGET` | `src/bot/academics/widgetCard.ts` | `off` (default) while Telegram rejects widgets; `admin` tests it on `ADMIN_ID`; `all` opens it to every private chat |
+| `GAME_CHANNEL_POSTS` | `src/games/channel.ts` | `on` enables the 8:30am prompt, 1:15pm result and Sunday board; default off |
+| `GAME_SEASON` | `src/games/config.ts` | Season key for the weekly boards; default `S1` |
 
 Start from [`.env.example`](../.env.example).
 
@@ -91,6 +93,42 @@ on Attendance, Mid marks and Bunk taps, and the card redraws in place. It fits
 under Telegram's 600px cap for a normal semester; a card whose state exceeds
 the 1024-byte chat-state limit points at the Text card button instead. The
 message caption is the fallback for clients without widget support.
+
+### League
+
+The league adds three private commands: `/five` (today's five questions),
+`/duel` (the duel record and today's challenge) and `/league` (the weekly
+board). A group gets a private deep link instead of a card.
+
+The channel posts are opt-in:
+
+```bash
+# .env on the bot host
+GAME_CHANNEL_POSTS=on
+# GAME_SEASON=S1
+```
+
+With `GAME_CHANNEL_POSTS=on` and the bot an admin in `PROD_CHANNEL`, the bot
+posts:
+
+- **08:30 IST**: today's five, with a Play button.
+- **13:15 IST**: the day's top three, fastest answer and section of the day.
+- **Sunday 19:00 IST**: the Section Wars board and player of the week.
+
+Each post is claimed in `game_posts` before sending, so a restart cannot
+duplicate it. A failed send releases the claim and retries inside the window.
+`/gamepost` sends all three cards to the admin DM as a preview;
+`/gamepost channel` posts today's prompt to the channel immediately, which is
+the launch path outside the 8:30 window.
+
+`GAME_SEASON` groups the weekly boards; change it when a new season starts.
+The question bank is seeded from `src/games/questions.ts` once, keyed by slug.
+Add questions by appending new slugs (a restart seeds them) or by inserting
+rows directly; `active = 0` retires a question without deleting history.
+
+League rules: one Five attempt per account per IST day; duels last 48 hours;
+only the best ten players per section count on the weekly board; channel names
+are the student's chosen display name or a masked roll, never the portal name.
 
 ## Production deployment
 

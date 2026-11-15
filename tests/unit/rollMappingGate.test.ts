@@ -15,6 +15,7 @@ const isAuthorizedUser = vi.fn(async () => false);
 
 vi.mock("../../src/bot/bot.js", () => ({
   bot: {
+    command: vi.fn(),
     hears,
     on: vi.fn(),
     api: {
