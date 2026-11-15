@@ -4,7 +4,9 @@ import {
   MidmarksBySubject,
   Midmarks,
 } from "../../types/index.js";
+import { InputFile, type InputRichMessage } from "node-telegram-bot-api";
 import { escapeHtml } from "../text.js";
+import { renderAttendanceBarPng } from "../attendanceBar.js";
 import type { WidgetCard, WidgetState } from "./widget.js";
 
 /**
@@ -347,11 +349,30 @@ const truncateText = (text: string, maxLength: number): string => {
  * instead of a monospaced block. `text` stays alongside it as the fallback for
  * a client that does not render rich messages yet.
  */
-export const formatAttendanceRich = (data: Attendance): string => {
+export const formatAttendanceRich = (data: Attendance): InputRichMessage => {
   const { rollno, year_branch_section, percentage, totalClasses, subjects } =
     data;
 
-  const bar = `<p>${buildProgressBar(percentage)}</p>`;
+  const barPng = renderAttendanceBarPng({
+    percentage,
+    target: TARGET_PERCENT,
+  });
+  const bar =
+    `<img src="tg://photo?id=attendance-bar" ` +
+    `alt="Attendance ${percentage.toFixed(2)}%"/>`;
+  const media: InputRichMessage["media"] = [
+    {
+      id: "attendance-bar",
+      media: {
+        type: "photo",
+        media: new InputFile(barPng, {
+          filename: "attendance-bar.png",
+          contentType: "image/png",
+        }),
+      },
+    },
+  ];
+
   const blocks = [
     `<p>🧑‍🎓 ROLL: <code>${escapeHtml(rollno)}</code></p>`,
     `<p>🏫 Branch: ${escapeHtml(cleanBranch(year_branch_section))}</p>`,
@@ -360,7 +381,7 @@ export const formatAttendanceRich = (data: Attendance): string => {
     bar,
   ];
 
-  if (subjects.length === 0) return blocks.join("\n");
+  if (subjects.length === 0) return { html: blocks.join("\n"), media };
 
   blocks.push(
     richTable(
@@ -388,7 +409,7 @@ export const formatAttendanceRich = (data: Attendance): string => {
     `<footer>Stay above ${TARGET_PERCENT}% and you're safe.</footer>`,
   );
 
-  return blocks.join("\n");
+  return { html: blocks.join("\n"), media };
 };
 
 /** The mid-marks card as a rich message, one column per paper. */

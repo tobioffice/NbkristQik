@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { InputFile } from "node-telegram-bot-api";
 import {
   formatAttendanceRich,
   formatBunkPlanRich,
@@ -42,25 +43,45 @@ const midmarks: Midmarks = {
 };
 
 describe("rich attendance card", () => {
-  it("uses a real table and a solid meter", () => {
+  it("uses a real table instead of a monospaced block", () => {
     const card = formatAttendanceRich(attendance);
 
-    expect(card).toContain("<table bordered striped compact>");
-    expect(card).toContain('<th align="right">Att/Tot</th>');
-    expect(card).toContain("🧑‍🎓 ROLL:");
-    expect(card).toContain("📈 Percentage: <b>82.50%</b>");
-    expect(card).toContain("████████░░");
-    expect(card).toContain("Stay above 75% and you're safe.");
-    expect(card).not.toContain("You can bunk");
-    expect(card).not.toContain("<pre>");
-    expect(card).not.toContain("<img");
+    expect(card.html).toContain("<table bordered striped compact>");
+    expect(card.html).toContain('<th align="right">Att/Tot</th>');
+    expect(card.html).toContain("🧑‍🎓 ROLL:");
+    expect(card.html).toContain("📈 Percentage: <b>82.50%</b>");
+    expect(card.html).toContain('<img src="tg://photo?id=attendance-bar"');
+    expect(card.html).toContain('alt="Attendance 82.50%"');
+    expect(card.html).toContain("Stay above 75% and you're safe.");
+    expect(card.html).not.toContain("You can bunk");
+    expect(card.html).not.toContain("<pre>");
+  });
+
+  it("uploads the bar as rich media, not a public url", () => {
+    const card = formatAttendanceRich(attendance);
+
+    expect(card.media).toHaveLength(1);
+    expect(card.media?.[0]?.id).toBe("attendance-bar");
+
+    const photo = card.media?.[0]?.media;
+    expect(photo).toMatchObject({ type: "photo" });
+    if (!photo || !("media" in photo)) {
+      throw new Error("the bar media is missing");
+    }
+    expect(photo.media).toBeInstanceOf(InputFile);
+
+    const file = photo.media as InputFile;
+    const bytes = Buffer.from(file.data as Uint8Array);
+    expect(bytes.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+    expect(bytes.readUInt32BE(16)).toBe(640);
+    expect(bytes.readUInt32BE(20)).toBe(64);
   });
 
   it("keeps the subject name and escapes its ampersand", () => {
     const card = formatAttendanceRich(attendance);
 
-    expect(card).toContain("OS &amp; DBMS");
-    expect(card).toContain("99/120");
+    expect(card.html).toContain("OS &amp; DBMS");
+    expect(card.html).toContain("99/120");
   });
 });
 
