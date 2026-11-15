@@ -62,7 +62,7 @@ Vitest resolves those `.js` specifiers to the TypeScript sources.
 
 ## Test layout
 
-The suite currently has **78 test files (64 unit, 14 integration) and 615
+The suite currently has **80 test files (65 unit, 15 integration) and 620
 tests**. The tree below names the recurring categories, not every file:
 
 ```
@@ -71,22 +71,24 @@ tests/
 ├── mocks/
 │   ├── academic.mock.ts         # attendance/midmarks fixtures
 │   └── telegram.mock.ts         # typed sendMessage/onText/on mocks
-├── unit/                        # 64 files: modules tested in isolation
+├── unit/                        # 65 files: modules tested in isolation
 │   ├── academic*.test.ts        # portal parsing/orchestration
 │   ├── adminPanel*.test.ts      # panel CSP/nonce + embedded JS/CSS syntax
 │   ├── student_stats.test.ts    # leaderboard/uptime SQL against libSQL
 │   ├── syncdb.test.ts           # scrape/sync orchestration
 │   ├── gameCore.test.ts         # IST clock, scoring, cards
 │   ├── fiveGame.test.ts         # a full Five run and a duel
+│   ├── attendanceBar.test.ts    # the generated bar PNG and URL signing
 │   └── ...                      # bot commands, auth, middleware, library,
 │                                #   maintenance, monitor, registration, ...
-└── integration/                 # 14 files: Express routes and the league store
+└── integration/                 # 15 files: Express routes and the league store
     ├── adminRoutes.test.ts
     ├── apiRoutes.test.ts
     ├── libraryRoutes.test.ts
     ├── profileRoutes.test.ts
     ├── reportRoutes.test.ts
     ├── gameModel.test.ts        # attempts, duels, ranks, section board
+    ├── barImage.test.ts         # the public signed bar endpoint
     ├── staticRoutes.test.ts
     └── ...
 ```

@@ -49,6 +49,10 @@ describe("rich attendance card", () => {
     expect(card).toContain('<th align="right">Att/Tot</th>');
     expect(card).toContain("🧑‍🎓 ROLL:");
     expect(card).toContain("📈 Percentage: <b>82.50%</b>");
+    expect(card).toContain(
+      "/bar/attendance.png?pct=82.50&amp;target=75&amp;t=",
+    );
+    expect(card).toContain('alt="Attendance 82.50%"');
     expect(card).toContain("Stay above 75% and you're safe.");
     expect(card).not.toContain("You can bunk");
     expect(card).not.toContain("<pre>");

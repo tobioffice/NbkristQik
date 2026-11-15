@@ -5,6 +5,7 @@ import {
   Midmarks,
 } from "../../types/index.js";
 import { escapeHtml } from "../text.js";
+import { attendanceBarUrl } from "../attendanceBar.js";
 import type { WidgetCard, WidgetState } from "./widget.js";
 
 /**
@@ -351,13 +352,17 @@ export const formatAttendanceRich = (data: Attendance): string => {
   const { rollno, year_branch_section, percentage, totalClasses, subjects } =
     data;
 
+  const barUrl = attendanceBarUrl(percentage, TARGET_PERCENT);
+  const bar = barUrl
+    ? `<img src="${escapeHtml(barUrl)}" alt="Attendance ${percentage.toFixed(2)}%"/>`
+    : `<p>${buildProgressBar(percentage)}</p>`;
+
   const blocks = [
     `<p>🧑‍🎓 ROLL: <code>${escapeHtml(rollno)}</code></p>`,
     `<p>🏫 Branch: ${escapeHtml(cleanBranch(year_branch_section))}</p>`,
     `<p>📚 Attended: ${totalClasses.attended}/${totalClasses.conducted}</p>`,
     `<p>📈 Percentage: <b>${percentage.toFixed(2)}%</b></p>`,
-    `<p>&nbsp;</p>`,
-    `<p>${buildProgressBar(percentage)}</p>`,
+    bar,
     `<p>&nbsp;</p>`,
   ];
 
