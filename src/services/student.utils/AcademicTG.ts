@@ -6,6 +6,7 @@ import {
   NoDataFoundError,
 } from "./academicErrors.js";
 import { StudentNotFoundError } from "../redis/utils.js";
+import type { InputRichMessage } from "node-telegram-bot-api";
 import { escapeHtml } from "../text.js";
 import { logger } from "../../config/logger.js";
 import {
@@ -52,16 +53,23 @@ export class AcademicTG extends Academic {
    * The same stamp for the rich card. A paragraph keeps it a block of its
    * own; the text card's `<i>` tail would merge into the table's paragraph.
    */
-  private withRichFreshness(body: string): string {
+  private withRichFreshness(
+    body: string | InputRichMessage,
+  ): string | InputRichMessage {
     const notice = this.getDataNotice();
-    return notice ? `${body}\n<p><i>${escapeHtml(notice)}</i></p>` : body;
+    if (!notice) return body;
+    const suffix = `<p><i>${escapeHtml(notice)}</i></p>`;
+    if (typeof body === "string") return `${body}\n${suffix}`;
+    return { ...body, html: `${body.html ?? ""}\n${suffix}` };
   }
 
   /**
    * A rich card must never cost the student the text card. If the renderer
    * trips on an unexpected portal shape, the caller keeps the HTML fallback.
    */
-  private richOrUndefined(render: () => string): string | undefined {
+  private richOrUndefined(
+    render: () => string | InputRichMessage,
+  ): string | InputRichMessage | undefined {
     try {
       return render();
     } catch (e) {

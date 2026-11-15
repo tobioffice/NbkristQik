@@ -1,3 +1,4 @@
+import type { InputRichMessage } from "node-telegram-bot-api";
 import { StudentNotFoundError } from "../redis/utils.js";
 import type { WidgetCard } from "./widget.js";
 
@@ -18,7 +19,7 @@ export interface LookupResult {
    * The same card as rich-message HTML, when the card has a table. Older
    * clients fall back to `text`; the bot tries this first.
    */
-  rich?: string;
+  rich?: string | InputRichMessage;
   /** The card as widget state, for the chat's HTML widget. */
   widget?: WidgetCard;
   markup?: LookupReplyMarkup;

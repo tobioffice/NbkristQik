@@ -41,7 +41,6 @@ import { verificationRouter } from "./verification.js";
 import { libraryRouter } from "./library.js";
 import { readSessionFromCookies } from "../services/library/session.js";
 import { registerInternalRoutes } from "./internal.js";
-import { barRouter } from "./bar.js";
 
 export const app = express();
 
@@ -143,10 +142,6 @@ app.get("/status", (_req: Request, res: Response) => {
     },
   );
 });
-
-// The attendance bar is a public image fetched by Telegram's loader, not a
-// student API call. Mount it before the identity/rate-limit middleware.
-app.use("/bar", barRouter);
 
 // Apply security middleware to all routes
 app.use(apiSecurityMiddlewares);

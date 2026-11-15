@@ -1,24 +1,24 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { deflateSync } from "node:zlib";
-import { LIBRARY_WATERMARK_SECRET } from "../config/environmentals.js";
-import { APP_WEBAPP_URL } from "../constants/webapp.js";
 
 /**
  * The attendance bar as a real image.
  *
- * Rich messages do not allow inline SVG, but they do render an `<img>` from a
- * URL. The bot serves this small PNG from its own origin, so the chat card
- * gets a rounded bar, a filled portion and the 75% target line instead of a
- * row of characters.
+ * Rich messages do not allow inline SVG. They do accept a photo as an
+ * uploaded rich-media attachment, so the card gets a rounded bar, a filled
+ * portion and the 75% target line instead of a row of characters.
  *
- * The URL carries an HMAC of the two numbers. The endpoint is public because
- * Telegram's image loader has no bot identity, but a caller cannot ask for
- * arbitrary percentages without the token.
+ * Telegram rejects an 18px-tall photo for its aspect ratio, so the bar is
+ * centred in a 640x64 transparent canvas. The image is uploaded with the
+ * rich message; it is not a public URL.
  */
 
 const BAR_WIDTH = 640;
 const BAR_HEIGHT = 18;
 const BAR_RADIUS = 9;
+// Telegram rejects a 640x18 photo: the aspect ratio is too extreme. The bar
+// stays 18px tall, centred in a 640x64 transparent canvas (10:1).
+const IMAGE_HEIGHT = 64;
+const BAR_TOP = Math.round((IMAGE_HEIGHT - BAR_HEIGHT) / 2);
 
 const TRACK: readonly [number, number, number, number] = [142, 142, 147, 56];
 const GREEN: readonly [number, number, number, number] = [52, 199, 89, 255];
@@ -59,7 +59,7 @@ const pngChunk = (type: string, data: Buffer): Buffer => {
 const pixelIndex = (x: number, y: number): number => (y * BAR_WIDTH + x) * 4;
 
 const put = (pixels: Buffer, x: number, y: number, color: Rgba): void => {
-  if (x < 0 || x >= BAR_WIDTH || y < 0 || y >= BAR_HEIGHT) return;
+  if (x < 0 || x >= BAR_WIDTH || y < 0 || y >= IMAGE_HEIGHT) return;
   const index = pixelIndex(x, y);
   pixels[index] = color[0];
   pixels[index + 1] = color[1];
@@ -100,7 +100,7 @@ const roundedRect = (
         const dy = y - (height - r) + 0.5;
         inside = dx * dx + dy * dy <= r * r;
       }
-      if (inside) put(pixels, x0 + x, y, color);
+      if (inside) put(pixels, x0 + x, BAR_TOP + y, color);
     }
   }
 };
@@ -121,7 +121,7 @@ export const renderAttendanceBarPng = ({
 }): Buffer => {
   const pct = Math.max(0, Math.min(100, percentage));
   const at = Math.max(0, Math.min(100, target));
-  const pixels = Buffer.alloc(BAR_WIDTH * BAR_HEIGHT * 4);
+  const pixels = Buffer.alloc(BAR_WIDTH * IMAGE_HEIGHT * 4);
 
   // The track, then the fill over it. The fill is a capsule so a low
   // percentage still ends in a clean round cap.
@@ -146,8 +146,8 @@ export const renderAttendanceBarPng = ({
     put(pixels, tickX + 1, y, RED);
   }
 
-  const raw = Buffer.alloc((BAR_WIDTH * 4 + 1) * BAR_HEIGHT);
-  for (let y = 0; y < BAR_HEIGHT; y += 1) {
+  const raw = Buffer.alloc((BAR_WIDTH * 4 + 1) * IMAGE_HEIGHT);
+  for (let y = 0; y < IMAGE_HEIGHT; y += 1) {
     const rowStart = y * (BAR_WIDTH * 4 + 1);
     raw[rowStart] = 0; // filter: none
     pixels.copy(raw, rowStart + 1, y * BAR_WIDTH * 4, (y + 1) * BAR_WIDTH * 4);
@@ -155,7 +155,7 @@ export const renderAttendanceBarPng = ({
 
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(BAR_WIDTH, 0);
-  ihdr.writeUInt32BE(BAR_HEIGHT, 4);
+  ihdr.writeUInt32BE(IMAGE_HEIGHT, 4);
   ihdr[8] = 8; // bit depth
   ihdr[9] = 6; // RGBA
   ihdr[10] = 0; // compression
@@ -168,39 +168,4 @@ export const renderAttendanceBarPng = ({
     pngChunk("IDAT", deflateSync(raw, { level: 9 })),
     pngChunk("IEND", Buffer.alloc(0)),
   ]);
-};
-
-const barToken = (pct: string, target: string): string =>
-  createHmac("sha256", LIBRARY_WATERMARK_SECRET)
-    .update(`${pct}:${target}`)
-    .digest("hex")
-    .slice(0, 32);
-
-/** The public bar URL for a card, or null when no signing secret is set. */
-export const attendanceBarUrl = (
-  percentage: number,
-  target: number,
-): string | null => {
-  if (!LIBRARY_WATERMARK_SECRET) return null;
-  if (!Number.isFinite(percentage) || !Number.isFinite(target)) return null;
-
-  const pct = percentage.toFixed(2);
-  const at = target.toFixed(0);
-  const origin = new URL(APP_WEBAPP_URL).origin;
-  return `${origin}/bar/attendance.png?pct=${pct}&target=${at}&t=${barToken(
-    pct,
-    at,
-  )}`;
-};
-
-/** True when the URL's numbers and token belong together. */
-export const verifyAttendanceBarToken = (
-  pct: string,
-  target: string,
-  token: string,
-): boolean => {
-  if (!LIBRARY_WATERMARK_SECRET || !token) return false;
-  const expected = barToken(pct, target);
-  if (token.length !== expected.length) return false;
-  return timingSafeEqual(Buffer.from(token), Buffer.from(expected));
 };

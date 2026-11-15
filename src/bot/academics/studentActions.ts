@@ -10,7 +10,7 @@ import type {
 } from "../../services/student.utils/errorMessages.js";
 
 import { bot } from "../bot.js";
-import type { Message } from "node-telegram-bot-api";
+import type { InputRichMessage, Message } from "node-telegram-bot-api";
 import { logger } from "../../config/logger.js";
 import {
   cardMarkup,
@@ -124,8 +124,18 @@ const resolveMarkup = async (
   });
 };
 
-const displayRich = (rich: string, notice?: string): string =>
-  notice ? `<p>${notice}</p>${rich}` : rich;
+const asRich = (rich: string | InputRichMessage): InputRichMessage =>
+  typeof rich === "string" ? { html: rich } : rich;
+
+const displayRich = (
+  rich: string | InputRichMessage,
+  notice?: string,
+): InputRichMessage => {
+  const card = asRich(rich);
+  return notice
+    ? { ...card, html: `<p>${notice}</p>${card.html ?? ""}` }
+    : card;
+};
 
 const postCard = async (
   chatId: number,
@@ -147,14 +157,14 @@ const postCard = async (
 const editCard = async (
   chatId: number,
   messageId: number,
-  content: { text: string; rich?: string },
+  content: { text: string; rich?: string | InputRichMessage },
   markup: CardMarkup | undefined,
 ): Promise<void> => {
   await bot.api.editMessageText({
     chat_id: chatId,
     message_id: messageId,
     ...(content.rich
-      ? { rich_message: { html: content.rich } }
+      ? { rich_message: asRich(content.rich) }
       : { text: content.text, parse_mode: "HTML" }),
     ...(markup ? { reply_markup: markup } : {}),
   });
