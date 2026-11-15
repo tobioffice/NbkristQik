@@ -74,7 +74,7 @@ describe("rich attendance card", () => {
     const bytes = Buffer.from(file.data as Uint8Array);
     expect(bytes.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
     expect(bytes.readUInt32BE(16)).toBe(640);
-    expect(bytes.readUInt32BE(20)).toBe(64);
+    expect(bytes.readUInt32BE(20)).toBe(40);
   });
 
   it("keeps the subject name and escapes its ampersand", () => {

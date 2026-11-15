@@ -13,14 +13,15 @@ import { deflateSync } from "node:zlib";
  */
 
 const BAR_WIDTH = 640;
-const BAR_HEIGHT = 18;
-const BAR_RADIUS = 9;
-// Telegram rejects a 640x18 photo: the aspect ratio is too extreme. The bar
-// stays 18px tall, centred in a 640x64 transparent canvas (10:1).
-const IMAGE_HEIGHT = 64;
-const BAR_TOP = Math.round((IMAGE_HEIGHT - BAR_HEIGHT) / 2);
+// Telegram rejects a very short photo for its aspect ratio. At 640x40 the bar
+// fills the whole canvas (16:1), so the client has no transparent padding to
+// flatten into a white band above and below it.
+const IMAGE_HEIGHT = 40;
+const BAR_HEIGHT = IMAGE_HEIGHT;
+const BAR_RADIUS = Math.floor(IMAGE_HEIGHT / 2);
+const BAR_TOP = 0;
 
-const TRACK: readonly [number, number, number, number] = [142, 142, 147, 56];
+const TRACK: readonly [number, number, number, number] = [230, 230, 232, 255];
 const GREEN: readonly [number, number, number, number] = [52, 199, 89, 255];
 const AMBER: readonly [number, number, number, number] = [255, 159, 10, 255];
 const RED: readonly [number, number, number, number] = [255, 59, 48, 255];
@@ -122,10 +123,14 @@ export const renderAttendanceBarPng = ({
   const pct = Math.max(0, Math.min(100, percentage));
   const at = Math.max(0, Math.min(100, target));
   const pixels = Buffer.alloc(BAR_WIDTH * IMAGE_HEIGHT * 4);
+  for (let y = 0; y < IMAGE_HEIGHT; y += 1) {
+    for (let x = 0; x < BAR_WIDTH; x += 1) {
+      put(pixels, x, y, TRACK);
+    }
+  }
 
-  // The track, then the fill over it. The fill is a capsule so a low
-  // percentage still ends in a clean round cap.
-  roundedRect(pixels, 0, BAR_WIDTH, BAR_HEIGHT, BAR_RADIUS, TRACK);
+  // The track is the whole canvas; the fill is a capsule so a low percentage
+  // still ends in a clean round cap.
   const fillWidth = Math.round((BAR_WIDTH * pct) / 100);
   if (fillWidth > 0) {
     roundedRect(

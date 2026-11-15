@@ -379,7 +379,6 @@ export const formatAttendanceRich = (data: Attendance): InputRichMessage => {
     `<p>📚 Attended: ${totalClasses.attended}/${totalClasses.conducted}</p>`,
     `<p>📈 Percentage: <b>${percentage.toFixed(2)}%</b></p>`,
     bar,
-    `<p>&nbsp;</p>`,
   ];
 
   if (subjects.length === 0) return { html: blocks.join("\n"), media };
