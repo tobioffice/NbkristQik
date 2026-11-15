@@ -76,11 +76,11 @@ const semester: Attendance = {
 describe("attendance: the card and the half that explains it", () => {
   const message = formatAttendanceMessage(semester);
 
-  it("opens the way the mid marks and bunk replies open", () => {
-    expect(message).toContain("Attendance for <code>23KB1A1229</code>");
-    expect(message).toContain("· 4 IT");
+  it("opens with the labels students already know", () => {
+    expect(message).toContain("🧑‍🎓 ROLL: <code>23KB1A1229</code>");
+    expect(message).toContain("🏫 Branch: 4 IT");
     expect(message).not.toContain("4_IT_-");
-    expect(message).toContain("<b>82.22%</b> · 148/180");
+    expect(message).toContain("📈 Percentage: 82.22%");
   });
 
   it("prints a row for every subject the portal returned", () => {
@@ -103,10 +103,9 @@ describe("attendance: the card and the half that explains it", () => {
     expect(message).toContain("DATABASE MANAGEMENT SYSTEMS");
   });
 
-  it("carries the target, said in college days, not raw classes", () => {
-    // 17 classes of room is two whole days at six classes a day
-    expect(message).toContain("You can bunk 2 days.");
-    expect(message).not.toContain("Stay above 75% and you're safe.");
+  it("does not tell the student how much they can bunk", () => {
+    expect(message).not.toContain("You can bunk");
+    expect(message).toContain("Stay above 75% and you're safe.");
   });
 
   it("leaves the table out only when there is nothing to put in it", () => {

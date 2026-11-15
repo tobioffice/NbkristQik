@@ -12,14 +12,14 @@ const sample: Attendance = {
 };
 
 describe("formatAttendanceMessage", () => {
-  it("prints the compact card students see in chat", () => {
+  it("prints the labelled card students see in chat", () => {
     expect(formatAttendanceMessage(sample)).toBe(
-      "Attendance for <code>23KB1A3061</code> · 4 AI DS B\n" +
-        "<b>91.26%</b> · 188/206\n" +
+      "🧑‍🎓 ROLL: <code>23KB1A3061</code>\n" +
+        "🏫 Branch: 4 AI DS B\n" +
+        "📚 Attended: 188/206\n" +
         "\n" +
-        "You can bunk 7 days.\n" +
-        "\n" +
-        "<i>Six classes make a day.</i>",
+        "📈 Percentage: 91.26%\n" +
+        "🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜",
     );
   });
 
@@ -29,45 +29,12 @@ describe("formatAttendanceMessage", () => {
       year_branch_section: "2_ECE_D",
     });
 
-    expect(message).toContain("· 2 ECE D");
+    expect(message).toContain("🏫 Branch: 2 ECE D");
     expect(message).not.toContain("2_ECE_D");
   });
 
-  it("says which side of the 75% line the numbers are on, in days", () => {
-    // behind: 340 classes in a row is 57 college days at six a day
-    expect(
-      formatAttendanceMessage({
-        ...sample,
-        percentage: 48.78,
-        totalClasses: { attended: 191, conducted: 368 },
-      }),
-    ).toContain("57 days straight to get back to 75%.");
-
-    // ahead: 41 classes of bunk is six whole days of classes
-    expect(
-      formatAttendanceMessage({
-        ...sample,
-        percentage: 90.24,
-        totalClasses: { attended: 185, conducted: 205 },
-      }),
-    ).toContain("You can bunk 6 days.");
-  });
-
-  it("falls back to a class count when a day would round to nothing", () => {
-    expect(
-      formatAttendanceMessage({
-        ...sample,
-        percentage: 76,
-        totalClasses: { attended: 76, conducted: 100 },
-      }),
-    ).toContain("You can bunk 1 class.");
-  });
-
-  it("leaves the target out before the portal has counted anything", () => {
-    const message = formatAttendanceMessage({
-      ...sample,
-      totalClasses: { attended: 0, conducted: 0 },
-    });
+  it("does not tell the student how much they can bunk", () => {
+    const message = formatAttendanceMessage(sample);
 
     expect(message).not.toContain("You can bunk");
     expect(message).not.toContain("straight to get back");
@@ -79,12 +46,18 @@ describe("formatAttendanceMessage", () => {
 
     expect(
       message.startsWith(
-        "Attendance for <code>23KB1A3061</code> · 4 AI DS B\n<b>91.26%</b> · 188/206\n\n",
+        "🧑‍🎓 ROLL: <code>23KB1A3061</code>\n" +
+          "🏫 Branch: 4 AI DS B\n" +
+          "📚 Attended: 188/206\n" +
+          "\n" +
+          "📈 Percentage: 91.26%\n",
       ),
     ).toBe(true);
     expect(message).toContain("<pre>");
     // a closing line, the way mid marks and the bunk plan close
-    expect(message.endsWith("<i>Six classes make a day.</i>")).toBe(true);
+    expect(message.endsWith("<i>Stay above 75% and you're safe.</i>")).toBe(
+      true,
+    );
   });
 
   it("prints the other half: a row per subject under the card", () => {

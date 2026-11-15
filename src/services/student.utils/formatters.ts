@@ -149,30 +149,14 @@ const cleanBranch = (raw: string): string =>
     .trim();
 
 /**
- * The 75% line said in days, so the percentage has something to be measured
- * against and the answer is a thing a student can do.
- *
- * Behind the line: the college days of straight attendance it takes to climb
- * back. Ahead of it: the days of classes that can still be bunked. Six
- * classes make a day, and both numbers come from the same arithmetic the bunk
- * plan uses, so the card and the plan can never disagree.
+ * Ten blocks, green above the line, amber near it, red behind it. The number
+ * beside it is the exact figure; the bar is only a glance.
  */
-const targetLine = (attended: number, conducted: number): string | null => {
-  if (conducted <= 0) return null;
-
-  const need = classesNeeded(attended, conducted);
-  if (need > 0) {
-    return `${dayWord(Math.ceil(need / CLASSES_PER_DAY))} straight to get back to 75%.`;
-  }
-
-  const bunk = skipsAffordable(attended, conducted);
-  if (bunk >= CLASSES_PER_DAY) {
-    return `You can bunk ${dayWord(Math.floor(bunk / CLASSES_PER_DAY))}.`;
-  }
-  if (bunk > 0) {
-    return `You can bunk ${bunk} class${bunk === 1 ? "" : "es"}.`;
-  }
-  return `Right on the 75% line.`;
+const buildProgressBar = (percentage: number): string => {
+  const filled = Math.max(0, Math.min(10, Math.floor(percentage / 10)));
+  const block =
+    percentage >= TARGET_PERCENT ? "🟩" : percentage >= 50 ? "🟨" : "🟥";
+  return block.repeat(filled) + "⬜".repeat(10 - filled);
 };
 
 /**
@@ -184,21 +168,20 @@ export const formatAttendanceMessage = (data: Attendance): string => {
     data;
 
   let msg =
-    `Attendance for <code>${escapeHtml(rollno)}</code> · ${escapeHtml(cleanBranch(year_branch_section))}\n` +
-    `<b>${percentage.toFixed(2)}%</b> · ${totalClasses.attended}/${totalClasses.conducted}\n\n`;
+    `🧑‍🎓 ROLL: <code>${escapeHtml(rollno)}</code>\n` +
+    `🏫 Branch: ${escapeHtml(cleanBranch(year_branch_section))}\n` +
+    `📚 Attended: ${totalClasses.attended}/${totalClasses.conducted}\n\n` +
+    `📈 Percentage: ${percentage.toFixed(2)}%\n` +
+    buildProgressBar(percentage);
 
-  const status = targetLine(totalClasses.attended, totalClasses.conducted);
-  if (status) msg += `${status}\n\n`;
+  if (subjects.length === 0) return msg.trimEnd();
 
-  if (subjects.length > 0) {
-    msg += `${buildAttendanceTable(subjects)}\n\n`;
+  msg += `\n${buildAttendanceTable(subjects)}`;
 
-    const warning = belowTargetLine(subjects, (subject) => subject.subject);
-    if (warning) msg += `${warning}\n\n`;
-  }
+  const warning = belowTargetLine(subjects, (subject) => subject.subject);
+  if (warning) msg += `\n${warning}\n`;
 
-  // the day is an assumption, so the card says it out loud
-  if (status) msg += `<i>Six classes make a day.</i>`;
+  msg += `\n<i>Stay above ${TARGET_PERCENT}% and you're safe.</i>`;
 
   return msg.trimEnd();
 };
@@ -358,40 +341,40 @@ export const formatAttendanceRich = (data: Attendance): string => {
     data;
 
   const blocks = [
-    `<p><b>Attendance for <code>${escapeHtml(rollno)}</code></b> · ${escapeHtml(cleanBranch(year_branch_section))}</p>`,
-    `<p><b>${percentage.toFixed(2)}%</b> · ${totalClasses.attended}/${totalClasses.conducted}</p>`,
+    `<p>🧑‍🎓 ROLL: <code>${escapeHtml(rollno)}</code></p>`,
+    `<p>🏫 Branch: ${escapeHtml(cleanBranch(year_branch_section))}</p>`,
+    `<p>📚 Attended: ${totalClasses.attended}/${totalClasses.conducted}</p>`,
+    `<p>📈 Percentage: <b>${percentage.toFixed(2)}%</b></p>`,
+    `<p>${buildProgressBar(percentage)}</p>`,
   ];
 
-  const status = targetLine(totalClasses.attended, totalClasses.conducted);
-  if (status) blocks.push(`<p>${status}</p>`);
+  if (subjects.length === 0) return blocks.join("\n");
 
-  if (subjects.length > 0) {
-    blocks.push(
-      richTable(
-        [
-          { label: "Subject", align: "left" },
-          { label: "Att/Tot", align: "right" },
-          { label: "Now", align: "right" },
-          { label: "Last", align: "left" },
-        ],
-        subjects.map((subject) => {
-          const percent = percentOf(subject);
-          return [
-            escapeHtml(subject.subject),
-            `${subject.attended}/${subject.conducted}`,
-            percent === null ? "—" : `${Math.round(percent)}%`,
-            escapeHtml(formatLastUpdated(subject.lastUpdated)),
-          ];
-        }),
-      ),
-    );
+  blocks.push(
+    richTable(
+      [
+        { label: "Subject", align: "left" },
+        { label: "Att/Tot", align: "right" },
+        { label: "Now", align: "right" },
+        { label: "Last", align: "left" },
+      ],
+      subjects.map((subject) => {
+        const percent = percentOf(subject);
+        return [
+          escapeHtml(subject.subject),
+          `${subject.attended}/${subject.conducted}`,
+          percent === null ? "—" : `${Math.round(percent)}%`,
+          escapeHtml(formatLastUpdated(subject.lastUpdated)),
+        ];
+      }),
+    ),
+  );
 
-    const warning = belowTargetLine(subjects, (subject) => subject.subject);
-    if (warning) blocks.push(`<p>${warning}</p>`);
-  }
-
-  // the day is an assumption, so the card says it out loud
-  if (status) blocks.push(`<footer>Six classes make a day.</footer>`);
+  const warning = belowTargetLine(subjects, (subject) => subject.subject);
+  if (warning) blocks.push(`<p>${warning}</p>`);
+  blocks.push(
+    `<footer>Stay above ${TARGET_PERCENT}% and you're safe.</footer>`,
+  );
 
   return blocks.join("\n");
 };
