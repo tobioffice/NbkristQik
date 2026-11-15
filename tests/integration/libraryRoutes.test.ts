@@ -13,15 +13,16 @@ vi.mock("../../src/db/db.js", () => ({ turso: client }));
 // the bot is a network edge: a send records the call here instead
 const { sendDocument } = vi.hoisted(() => ({
   sendDocument: vi.fn(
-    async (
-      _chatId: number | string,
-      _file: string,
-      _options?: { caption?: string },
-      _fileOptions?: { filename?: string },
-    ) => ({ message_id: 1 }),
+    async (_params: {
+      chat_id: number | string;
+      document: unknown;
+      caption?: string;
+    }) => ({ message_id: 1 }),
   ),
 }));
-vi.mock("../../src/bot/bot.js", () => ({ bot: { sendDocument } }));
+vi.mock("../../src/bot/bot.js", () => ({
+  bot: { api: { sendDocument } },
+}));
 
 // in-memory session store
 const sessions = new Map<string, string>();
@@ -720,11 +721,15 @@ describe("downloading a document", () => {
     expect(res.body.fileName).toBe("NbkristQik-23CS31T2-uII.pdf");
 
     expect(sendDocument).toHaveBeenCalledTimes(1);
-    const [chatId, file, options, fileOptions] = sendDocument.mock.calls[0];
-    expect(String(chatId)).toBe(String(REGISTERED));
-    expect(file).toBe(downloadFixture);
-    expect(options?.caption).toContain("Computer Networks");
-    expect(fileOptions?.filename).toBe("NbkristQik-23CS31T2-uII.pdf");
+    const params = sendDocument.mock.calls[0][0] as {
+      chat_id: number | string;
+      document: { meta?: { filename?: string } };
+      caption?: string;
+    };
+    expect(String(params.chat_id)).toBe(String(REGISTERED));
+    expect(params.document).toBeDefined();
+    expect(params.caption).toContain("Computer Networks");
+    expect(params.document.meta?.filename).toBe("NbkristQik-23CS31T2-uII.pdf");
   });
 
   it("refuses another semester's document before sending", async () => {

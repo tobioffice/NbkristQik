@@ -2,9 +2,13 @@ import { bot } from "../bot.js";
 import type { Message } from "node-telegram-bot-api";
 import { trackMessage } from "../../services/tracker.js";
 import { sendLibraryEntry } from "./library.js";
-import { attendanceRoll, startPayload } from "./startPayload.js";
+import { deepLink, type DeepLink } from "./startPayload.js";
+import { commandArgs } from "./args.js";
 import { escapeHtml } from "../../services/text.js";
-import { sendAttendanceOrMidMarks } from "../academics/studentActions.js";
+import {
+  sendAttendanceOrMidMarks,
+  sendBunkPlan,
+} from "../academics/studentActions.js";
 import { takeGroupPrompts } from "../academics/groupPrompt.js";
 import { isAuthorizedUser, rememberStudent } from "../authorization.js";
 import {
@@ -26,7 +30,11 @@ const sendWelcome = async (msg: Message): Promise<void> => {
     `\n` +
     `Save yours once with /register and /attendance answers in one tap. /help covers the rest.`;
 
-  await bot.sendMessage(msg.chat.id, message, { parse_mode: "HTML" });
+  await bot.api.sendMessage({
+    chat_id: msg.chat.id,
+    text: message,
+    parse_mode: "HTML",
+  });
 };
 
 /**
@@ -45,12 +53,14 @@ const clearGroupPrompts = (userId: number, rollNumber: string): void => {
     rollNumber,
   )) {
     for (const id of [messageId, sourceMessageId]) {
-      void bot.deleteMessage(chatId, id).catch((e: unknown) => {
-        logger.debug(
-          "[start] group message could not be deleted:",
-          e instanceof Error ? e.message : e,
-        );
-      });
+      void bot.api
+        .deleteMessage({ chat_id: chatId, message_id: id })
+        .catch((e: unknown) => {
+          logger.debug(
+            "[start] group message could not be deleted:",
+            e instanceof Error ? e.message : e,
+          );
+        });
     }
   }
 };
@@ -65,13 +75,13 @@ const clearGroupPrompts = (userId: number, rollNumber: string): void => {
  */
 const answerDeepLinkRoll = async (
   msg: Message,
-  rawRoll: string,
+  link: DeepLink,
 ): Promise<void> => {
   const userId = msg.from?.id;
   if (!userId) return;
 
   // letter O never appears in real rolls, so a payload O is a zero
-  const typed = rawRoll.trim().toUpperCase();
+  const typed = link.roll.trim().toUpperCase();
   const rollNumber = normalizeRollNumber(typed);
 
   // A stale or mistyped link is a plain /start, never an error.
@@ -85,7 +95,7 @@ const answerDeepLinkRoll = async (
   clearGroupPrompts(userId, rollNumber);
 
   if (!(await botSecurityHandler(userId, "start_attendance"))) {
-    await bot.sendMessage(msg.chat.id, TOO_FAST);
+    await bot.api.sendMessage({ chat_id: msg.chat.id, text: TOO_FAST });
     return;
   }
 
@@ -95,38 +105,45 @@ const answerDeepLinkRoll = async (
 
   trackMessage(msg, "roll_lookup", rollNumber);
 
-  await sendAttendanceOrMidMarks(msg, rollNumber, "att", {
+  const options = {
     replyToMessageId: msg.message_id,
     notice:
       rollNumber !== typed
         ? `Heads up, I read that O as 0, showing <code>${rollNumber}</code>.`
         : undefined,
-  });
+  };
+
+  if (link.signal === "bunk") {
+    await sendBunkPlan(msg, rollNumber, options);
+  } else {
+    await sendAttendanceOrMidMarks(msg, rollNumber, link.signal, options);
+  }
 };
 
-bot.onText(/^\/start/, (msg) => {
-  trackMessage(msg, "command:start");
+bot.command("start", (ctx) => {
+  const msg = ctx.message;
+  if (!msg) return;
 
-  const payload = startPayload(msg.text ?? "");
+  trackMessage(msg, "command:start");
+  const payload = commandArgs(ctx) || null;
 
   // the channel's "Open the library" button is a deep link with this
   // payload: the student lands on the same one-tap library entry. Any other
   // payload falls through to the welcome.
   if (payload?.toLowerCase() === "library") {
-    void sendLibraryEntry(msg).catch((e) =>
+    return sendLibraryEntry(msg).catch((e) =>
       logger.error("[start] library entry failed:", e),
     );
-    return;
   }
 
-  const roll = attendanceRoll(payload);
+  const link = deepLink(payload);
   // The group reply links here, in private. A `/start att_...` typed in a
   // group must never answer with the card, so it reads as a plain welcome.
-  if (roll !== null && msg.chat.type === "private") {
-    return answerDeepLinkRoll(msg, roll).catch((e: unknown) => {
-      logger.error("[start] attendance deep link failed:", e);
-      return bot
-        .sendMessage(msg.chat.id, SOMETHING_BROKE)
+  if (link && msg.chat.type === "private") {
+    return answerDeepLinkRoll(msg, link).catch((e: unknown) => {
+      logger.error("[start] card deep link failed:", e);
+      return bot.api
+        .sendMessage({ chat_id: msg.chat.id, text: SOMETHING_BROKE })
         .catch(() => undefined);
     });
   }

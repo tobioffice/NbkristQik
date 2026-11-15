@@ -62,7 +62,7 @@ Vitest resolves those `.js` specifiers to the TypeScript sources.
 
 ## Test layout
 
-The suite currently has **54 test files (45 unit, 9 integration) and 379
+The suite currently has **74 test files (61 unit, 13 integration) and 571
 tests**. The tree below names the recurring categories, not every file:
 
 ```
@@ -116,17 +116,25 @@ mock at the module boundary instead of reaching for the network.
 
   ```ts
   import {
-    createOnTextMock,
+    createCommandMock,
     createSendMessageMock,
-    registeredTextHandler,
+    contextFor,
+    registeredCommandHandler,
     sentMessage,
   } from "../mocks/telegram.mock.js";
 
-  const onText = createOnTextMock();
+  const command = createCommandMock();
   const sendMessage = createSendMessageMock();
-  const handler = registeredTextHandler<(msg: unknown) => void>(onText, "/cmd");
+  const handler = registeredCommandHandler<(ctx: unknown) => void>(
+    command,
+    "cmd",
+  );
+
+  const message = { chat: { id: 42, type: "private" }, from: { id: 42 } };
+  handler(contextFor({ message, match: "", api: { sendMessage } }));
   // ...
-  const [, text, options] = sentMessage(sendMessage);
+  const params = sentMessage(sendMessage);
+  expect(params.chat_id).toBe(42);
   ```
 
 - Mock modules before dynamically importing the code under test; `vi.mock`

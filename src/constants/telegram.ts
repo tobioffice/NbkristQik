@@ -1,4 +1,7 @@
 import { CHANNEL_ID } from "../config/environmentals.js";
+import { BOT_USERNAME } from "./bot.js";
+
+export { BOT_USERNAME } from "./bot.js";
 
 /**
  * The bot's own handles, in one place.
@@ -8,9 +11,6 @@ import { CHANNEL_ID } from "../config/environmentals.js";
  * join cards. Both are spelled out here so a rename is one edit and no link is
  * left pointing at the old name.
  */
-
-/** The bot's Telegram username, without the @. */
-export const BOT_USERNAME = "NbkristQik_bot";
 
 /** The channel's username, without the @. Falls back to the bot. */
 export const CHANNEL_USERNAME =

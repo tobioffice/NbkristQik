@@ -25,13 +25,19 @@ interface HapticFeedback {
 
 export interface TelegramWebApp {
   initData?: string;
-  initDataUnsafe?: { user?: { id?: number } };
+  initDataUnsafe?: {
+    user?: { id?: number };
+    /** The `startapp` value of a direct link, when the app was opened by one. */
+    start_param?: string;
+  };
   /** "android" | "ios" | "tdesktop" | "macos" | "web" | ... */
   platform?: string;
   /** True once Telegram's own header has stepped away. */
   isFullscreen?: boolean;
   BackButton?: BackButton;
   HapticFeedback?: HapticFeedback;
+  /** Opens the native share sheet for a prepared inline message. */
+  shareMessage?: (msgId: string, callback?: (sent: boolean) => void) => void;
   ready?: () => void;
   expand?: () => void;
   requestFullscreen?: () => void;

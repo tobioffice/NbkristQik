@@ -1,15 +1,18 @@
 import { describe, it, expect, vi } from "vitest";
 import {
-  createOnTextMock,
+  createCommandMock,
   createSendMessageMock,
-  registeredTextHandler,
+  contextFor,
+  registeredCommandHandler,
   sentMessage,
 } from "../mocks/telegram.mock.js";
 
-const onText = createOnTextMock();
+const command = createCommandMock();
 const sendMessage = createSendMessageMock();
 
-vi.mock("../../src/bot/bot.js", () => ({ bot: { onText, sendMessage } }));
+vi.mock("../../src/bot/bot.js", () => ({
+  bot: { command, api: { sendMessage } },
+}));
 vi.mock("../../src/services/tracker.js", () => ({
   trackActivity: vi.fn(),
   trackMessage: vi.fn(),
@@ -52,41 +55,42 @@ vi.mock("../../src/services/redis/utils.js", () => ({
 
 await import("../../src/bot/commands/leaderboard.js");
 
-const handler = registeredTextHandler<(msg: unknown) => void>(
-  onText,
-  "/leaderboard",
+const handler = registeredCommandHandler<(ctx: unknown) => unknown>(
+  command,
+  "leaderboard",
 );
 
 const run = async (chatType: string) => {
   sendMessage.mockClear();
-  await handler({
+  const message = {
     chat: { id: 42, type: chatType },
     from: { id: 42 },
     message_id: 9,
-  });
+  };
+  await handler(contextFor({ message, match: "", api: { sendMessage } }));
   return sentMessage(sendMessage);
 };
 
 describe("/leaderboard", () => {
   it("prints the register in the chat instead of opening a page", async () => {
-    const [chatId, text, options] = await run("private");
+    const params = await run("private");
 
-    expect(chatId).toBe(42);
-    expect(text).toContain("Attendance register");
-    expect(text).toContain("ASHA");
-    expect(text).toContain("92.50%");
-    expect(text).toContain("You are #3 of 12 at 88.10%.");
-    expect(text).toContain("3rd year · CSE · A");
-    expect(options.parse_mode).toBe("HTML");
-    expect(options.reply_to_message_id).toBe(9);
-    expect(options.reply_markup).toBeUndefined();
+    expect(params.chat_id).toBe(42);
+    expect(params.text).toContain("Attendance register");
+    expect(params.text).toContain("ASHA");
+    expect(params.text).toContain("92.50%");
+    expect(params.text).toContain("You are #3 of 12 at 88.10%.");
+    expect(params.text).toContain("3rd year · CSE · A");
+    expect(params.parse_mode).toBe("HTML");
+    expect(params.reply_parameters?.message_id).toBe(9);
+    expect(params.reply_markup).toBeUndefined();
   });
 
   it("prints rolls, not names, in a group", async () => {
-    const [, text] = await run("supergroup");
+    const params = await run("supergroup");
 
-    expect(text).toContain("99KB9A9999");
-    expect(text).not.toContain("ASHA");
-    expect(text).not.toContain("You are #");
+    expect(params.text).toContain("99KB9A9999");
+    expect(params.text).not.toContain("ASHA");
+    expect(params.text).not.toContain("You are #");
   });
 });

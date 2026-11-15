@@ -1,10 +1,16 @@
 import { bot } from "../bot.js";
-import type { CallbackQuery, Message } from "node-telegram-bot-api";
+import type { Context, Message } from "node-telegram-bot-api";
 
 import { sendAttendanceOrMidMarks, sendBunkPlan } from "./studentActions.js";
 import { cardMarkup } from "./cardMarkup.js";
 import { leaderboardText } from "./leaderboardCard.js";
-import { rememberGroupPrompt } from "./groupPrompt.js";
+import { sendPrivateCardLink } from "./groupLink.js";
+import {
+  editEphemeralMarkup,
+  ephemeralCallback,
+  sendEphemeral,
+  type EphemeralTarget,
+} from "./ephemeral.js";
 import { getStudentCached } from "../../services/redis/utils.js";
 import { upsertTgUser } from "../../db/student.model.js";
 import {
@@ -24,7 +30,7 @@ import { logger } from "../../config/logger.js";
 import { trackActivity, ChatSurface } from "../../services/tracker.js";
 import { isAuthorizedUser, rememberStudent } from "../authorization.js";
 import { TOO_FAST, SOMETHING_BROKE, BAD_ROLL } from "../replies.js";
-import { BOT_USERNAME, botLink } from "../../constants/telegram.js";
+import { BOT_USERNAME } from "../../constants/telegram.js";
 
 const SAVE_PREFIX = "save_";
 
@@ -34,6 +40,8 @@ interface ActionContext {
   editMessageId: number;
   /** The student who tapped; the card's Save button depends on their roll. */
   userId: number;
+  /** Set when the card itself is ephemeral, so the answer stays private. */
+  ephemeral?: EphemeralTarget;
 }
 
 /**
@@ -63,6 +71,7 @@ const CALLBACK_ACTIONS: CallbackAction[] = [
       sendAttendanceOrMidMarks(msg, rollNumber, "att", {
         editMessageId: context.editMessageId,
         userId: context.userId,
+        ephemeral: context.ephemeral,
       }),
   },
   {
@@ -72,6 +81,7 @@ const CALLBACK_ACTIONS: CallbackAction[] = [
       sendAttendanceOrMidMarks(msg, rollNumber, "mid", {
         editMessageId: context.editMessageId,
         userId: context.userId,
+        ephemeral: context.ephemeral,
       }),
   },
   {
@@ -81,6 +91,7 @@ const CALLBACK_ACTIONS: CallbackAction[] = [
       sendBunkPlan(msg, rollNumber, {
         editMessageId: context.editMessageId,
         userId: context.userId,
+        ephemeral: context.ephemeral,
       }),
   },
 ];
@@ -96,39 +107,6 @@ const persistRollMapping = (userId: number, rollNumber: string): void => {
     .catch((e) => logger.debug("tg user upsert skipped:", e?.message ?? e));
 };
 
-/** The one line a group gets: where to go, never what the roll says. */
-const ATTENDANCE_IS_PRIVATE =
-  "Your attendance is private. Tap to open it in the bot.";
-
-/**
- * A group is a shared room, so it gets the way into the bot and nothing else.
- * The roll rides in the button's deep link, not in the visible text; the card
- * itself waits in private.
- */
-const sendPrivateAttendanceLink = async (
-  msg: Message,
-  rollNumber: string,
-): Promise<void> => {
-  const prompt = await bot.sendMessage(msg.chat.id, ATTENDANCE_IS_PRIVATE, {
-    reply_to_message_id: msg.message_id,
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "Open attendance", url: botLink(`att_${rollNumber}`) }],
-      ],
-    },
-  });
-
-  // the prompt exists only to carry the student into the bot; park it and
-  // the roll it answers so the private `/start` can clear both from the room
-  if (msg.from && typeof prompt?.message_id === "number") {
-    rememberGroupPrompt(msg.from.id, rollNumber, {
-      chatId: msg.chat.id,
-      messageId: prompt.message_id,
-      sourceMessageId: msg.message_id,
-    });
-  }
-};
-
 const handleRollNumberMessage = async (msg: Message): Promise<void> => {
   const chatId = msg.chat.id;
   const from = msg.from;
@@ -142,12 +120,12 @@ const handleRollNumberMessage = async (msg: Message): Promise<void> => {
   const corrected = rollNumber !== rawRoll;
 
   if (!(await botSecurityHandler(userId, "roll_number"))) {
-    await bot.sendMessage(chatId, TOO_FAST);
+    await bot.api.sendMessage({ chat_id: chatId, text: TOO_FAST });
     return;
   }
 
   if (!isValidRollNumber(rollNumber)) {
-    await bot.sendMessage(chatId, BAD_ROLL);
+    await bot.api.sendMessage({ chat_id: chatId, text: BAD_ROLL });
     return;
   }
 
@@ -164,7 +142,7 @@ const handleRollNumberMessage = async (msg: Message): Promise<void> => {
   // attendance, marks and below-75% warning to everyone. The room gets a
   // deep link instead; the lookup itself happens in private.
   if (msg.chat.type !== "private") {
-    await sendPrivateAttendanceLink(msg, rollNumber);
+    await sendPrivateCardLink(msg, rollNumber, "att");
     return;
   }
 
@@ -194,37 +172,49 @@ const handleRollNumberMessage = async (msg: Message): Promise<void> => {
 
 // chit chat group: delete roll numbers, brief in-group notice that self-deletes
 const handleChitChatRoll = (msg: Message) => {
-  bot.deleteMessage(msg.chat.id, msg.message_id).catch(() => {});
-  bot
-    .sendMessage(
-      msg.chat.id,
-      `I can't check rolls in this group. Tap @${BOT_USERNAME} and send it there.`,
-      { disable_notification: true },
-    )
+  bot.api
+    .deleteMessage({ chat_id: msg.chat.id, message_id: msg.message_id })
+    .catch(() => {});
+  bot.api
+    .sendMessage({
+      chat_id: msg.chat.id,
+      text: `I can't check rolls in this group. Tap @${BOT_USERNAME} and send it there.`,
+      disable_notification: true,
+    })
     .then((notice: Message) => {
       setTimeout(() => {
-        bot.deleteMessage(msg.chat.id, notice.message_id).catch(() => {});
+        bot.api
+          .deleteMessage({
+            chat_id: msg.chat.id,
+            message_id: notice.message_id,
+          })
+          .catch(() => {});
       }, 15000);
     })
     .catch(() => {});
 };
 
-bot.onText(ROLL_REGEX, (msg) => {
+bot.hears(ROLL_REGEX, (ctx) => {
+  const msg = ctx.message;
+  if (!msg) return;
+
   if (msg.chat.id === CHIT_CHAT_ID) {
     handleChitChatRoll(msg);
     return;
   }
-  handleRollNumberMessage(msg).catch((e) => {
+  return handleRollNumberMessage(msg).catch((e) => {
     logger.error("[academicHandler] roll message failed:", e);
-    bot.sendMessage(msg.chat.id, SOMETHING_BROKE).catch(() => {});
+    bot.api
+      .sendMessage({ chat_id: msg.chat.id, text: SOMETHING_BROKE })
+      .catch(() => {});
   });
 });
 
-//HANDLE CALLBACK QUERY
+// HANDLE CALLBACK QUERY
 // chit chat group: bot never responds there
-const handleChitChatCallback = async (callbackQueryId: string) => {
-  await bot
-    .answerCallbackQuery(callbackQueryId, {
+const handleChitChatCallback = async (ctx: Context): Promise<void> => {
+  await ctx
+    .answerCallbackQuery({
       text: `I don't reply in this group. Message @${BOT_USERNAME} instead`,
       show_alert: true,
     })
@@ -237,17 +227,17 @@ const handleChitChatCallback = async (callbackQueryId: string) => {
  * The toast is the result. A roll held by another account gets the same copy
  * as the web form and never reveals which account holds it.
  */
-const handleSaveRoll = async (
-  callbackQuery: CallbackQuery,
-  msg: Message,
-): Promise<void> => {
+const handleSaveRoll = async (ctx: Context, msg: Message): Promise<void> => {
+  const callbackQuery = ctx.callbackQuery;
+  if (!callbackQuery) return;
+
   const data = callbackQuery.data ?? "";
   const rollNumber = data.slice(SAVE_PREFIX.length);
   const userId =
     callbackQuery.from?.id ??
     (msg.chat.type === "private" ? msg.chat.id : undefined);
   const answer = (text: string) =>
-    bot.answerCallbackQuery(callbackQuery.id, { text }).catch(() => {});
+    ctx.answerCallbackQuery({ text }).catch(() => undefined);
 
   if (userId === undefined) {
     await answer(SOMETHING_BROKE);
@@ -281,65 +271,75 @@ const handleSaveRoll = async (
   if (!saved) return;
 
   // The card stays on screen; only the Save button goes away.
-  await bot
-    .editMessageReplyMarkup(
-      cardMarkup({
-        roll: rollNumber,
-        showSave: false,
-        isPrivate: msg.chat.type === "private",
-      }),
-      {
-        chat_id: msg.chat.id,
-        message_id: msg.message_id,
-      },
-    )
-    .catch((e: Error) =>
-      logger.debug(
-        "[academicHandler] save button hide skipped:",
-        e?.message ?? e,
-      ),
-    );
+  const markup = cardMarkup({
+    roll: rollNumber,
+    showSave: false,
+    isPrivate: msg.chat.type === "private",
+  });
+  const ephemeralMessageId =
+    "ephemeral_message_id" in msg ? msg.ephemeral_message_id : undefined;
+  const ephemeral = ephemeralCallback(
+    ephemeralMessageId,
+    userId,
+    callbackQuery.id,
+  );
+
+  const hideSave =
+    ephemeral && ephemeralMessageId
+      ? editEphemeralMarkup(msg.chat.id, ephemeral, ephemeralMessageId, markup)
+      : bot.api.editMessageReplyMarkup({
+          chat_id: msg.chat.id,
+          message_id: msg.message_id,
+          reply_markup: markup,
+        });
+
+  await hideSave.catch((e: Error) =>
+    logger.debug(
+      "[academicHandler] save button hide skipped:",
+      e?.message ?? e,
+    ),
+  );
 };
 
-bot.on("callback_query", async (callbackQuery) => {
+bot.on("callback_query", async (ctx) => {
   try {
-    await handleCallbackQuery(callbackQuery);
+    await handleCallbackQuery(ctx);
   } catch (e) {
     logger.error("[academicHandler] callback failed:", e);
-    bot
-      .answerCallbackQuery(callbackQuery.id, {
-        text: SOMETHING_BROKE,
-        show_alert: true,
-      })
+    ctx
+      .answerCallbackQuery({ text: SOMETHING_BROKE, show_alert: true })
       .catch(() => {});
   }
 });
 
-const handleCallbackQuery = async (
-  callbackQuery: CallbackQuery,
-): Promise<void> => {
-  const { data = "", message: msg } = callbackQuery;
+const handleCallbackQuery = async (ctx: Context): Promise<void> => {
+  const callbackQuery = ctx.callbackQuery;
+  const msg = callbackQuery?.message;
 
-  if (!msg) return;
+  if (!callbackQuery || !msg) return;
 
   // channel taps: dismiss the spinner, serve nothing (broadcast, not a chat)
   if (msg.chat.type === "channel") {
-    await bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
+    await ctx.answerCallbackQuery().catch(() => {});
     return;
   }
 
   if (msg.chat.id === CHIT_CHAT_ID) {
-    await handleChitChatCallback(callbackQuery.id);
+    await handleChitChatCallback(ctx);
     return;
   }
 
   const userId = callbackQuery.from?.id || msg.chat.id;
+  const ephemeralMessageId =
+    "ephemeral_message_id" in msg ? msg.ephemeral_message_id : undefined;
+  const ephemeral = ephemeralCallback(
+    ephemeralMessageId,
+    userId,
+    callbackQuery.id,
+  );
 
   if (!(await botSecurityHandler(userId, "callback"))) {
-    await bot.answerCallbackQuery(callbackQuery.id, {
-      text: TOO_FAST,
-      show_alert: true,
-    });
+    await ctx.answerCallbackQuery({ text: TOO_FAST, show_alert: true });
     return;
   }
 
@@ -348,10 +348,24 @@ const handleCallbackQuery = async (
     chatId: msg.chat.id,
   });
   if (!authorized) {
-    await bot.answerCallbackQuery(callbackQuery.id, {
+    await ctx.answerCallbackQuery({
       text: "Join the channel first, then try again.",
       show_alert: true,
     });
+    return;
+  }
+
+  const data = callbackQuery.data ?? "";
+
+  // A card from before the ephemeral switch, or any card that somehow landed
+  // in a group, must not be re-rendered in front of the room.
+  if (msg.chat.type !== "private" && !ephemeral && data !== "lb") {
+    await ctx
+      .answerCallbackQuery({
+        text: "That card is private now. Send /attendance here and I'll answer privately.",
+        show_alert: true,
+      })
+      .catch(() => {});
     return;
   }
 
@@ -366,7 +380,7 @@ const handleCallbackQuery = async (
         detail: data.slice(SAVE_PREFIX.length),
       });
     }
-    await handleSaveRoll(callbackQuery, msg);
+    await handleSaveRoll(ctx, msg);
     return;
   }
 
@@ -377,10 +391,16 @@ const handleCallbackQuery = async (
       userId,
       withNames: msg.chat.type === "private",
     });
-    await bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
-    await bot.sendMessage(msg.chat.id, text, {
+    await ctx.answerCallbackQuery().catch(() => {});
+    if (ephemeral) {
+      await sendEphemeral(msg.chat.id, ephemeral, text).catch(() => undefined);
+      return;
+    }
+    await bot.api.sendMessage({
+      chat_id: msg.chat.id,
+      text,
       parse_mode: "HTML",
-      reply_to_message_id: msg.message_id,
+      reply_parameters: { message_id: msg.message_id },
     });
     return;
   }
@@ -389,7 +409,7 @@ const handleCallbackQuery = async (
   // the channel itself, so the actor is always callbackQuery.from
   const action = actionFor(data);
   if (!action) {
-    await bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
+    await ctx.answerCallbackQuery().catch(() => {});
     return;
   }
 
@@ -407,11 +427,8 @@ const handleCallbackQuery = async (
 
   // A mutated or stale callback is rejected before any portal request.
   if (!isValidRollNumber(rollNumber)) {
-    await bot
-      .answerCallbackQuery(callbackQuery.id, {
-        text: BAD_ROLL,
-        show_alert: true,
-      })
+    await ctx
+      .answerCallbackQuery({ text: BAD_ROLL, show_alert: true })
       .catch(() => {});
     return;
   }
@@ -419,10 +436,11 @@ const handleCallbackQuery = async (
   // The card is edited in place, never deleted: the action surface must stay
   // on screen. Answering first stops the button's spinner.
   const results = await Promise.allSettled([
-    bot.answerCallbackQuery(callbackQuery.id),
+    ctx.answerCallbackQuery(),
     action.run(msg, rollNumber, {
-      editMessageId: msg.message_id,
+      editMessageId: ephemeralMessageId ?? msg.message_id,
       userId,
+      ephemeral: ephemeral ?? undefined,
     }),
   ]);
   for (const result of results) {

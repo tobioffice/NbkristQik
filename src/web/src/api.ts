@@ -116,6 +116,33 @@ export interface RankInfo {
   value: number | null;
 }
 
+/** A prepared message the Mini App can hand to the native share sheet. */
+export interface RankShare {
+  id: string;
+  expiresAt: number;
+}
+
+/**
+ * Store a rank card for the caller, ready to share. The student's own
+ * Telegram client is the only sender; the server never posts it anywhere.
+ */
+export const requestRankShare = async (
+  identity: ApiIdentity & { sort: SortBy },
+): Promise<RankShare> => {
+  const res = await fetchWithTimeout(
+    withQuery("/api/rank/share", devIdentityParams(identity)),
+    {
+      method: "POST",
+      headers: {
+        ...authHeaders(identity.initData),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ...identityBody(identity), sort: identity.sort }),
+    },
+  );
+  return readJson<RankShare>(res);
+};
+
 /** What page 1 adds to the envelope: sync freshness and live filter options. */
 export interface LeaderboardMeta {
   updated_at: string | null;
@@ -374,14 +401,17 @@ const verificationRequest = async (
   identity: ApiIdentity,
   init: RequestInit = {},
 ): Promise<VerificationState> => {
-  const res = await fetchWithTimeout(withQuery(path, devIdentityParams(identity)), {
-    ...init,
-    headers: {
-      ...(init.body ? { "Content-Type": "application/json" } : {}),
-      ...authHeaders(identity.initData),
-      ...init.headers,
+  const res = await fetchWithTimeout(
+    withQuery(path, devIdentityParams(identity)),
+    {
+      ...init,
+      headers: {
+        ...(init.body ? { "Content-Type": "application/json" } : {}),
+        ...authHeaders(identity.initData),
+        ...init.headers,
+      },
     },
-  });
+  );
   return readJson<VerificationState>(res);
 };
 

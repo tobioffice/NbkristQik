@@ -7,16 +7,13 @@ import {
   useState,
 } from "react";
 import type { LeaderboardScope, SortBy, YearFilter } from "./api";
-import {
-  AUTO_LOAD_LIMIT,
-  searchQuery,
-  useLeaderboard,
-} from "./useLeaderboard";
+import { requestRankShare } from "./api";
+import { AUTO_LOAD_LIMIT, searchQuery, useLeaderboard } from "./useLeaderboard";
 import { useTelegramUser } from "./useTelegramUser";
 import { useTelegramIdentity } from "./useTelegramIdentity";
 import { formatFreshnessRange, formatGap, formatSyncedAt } from "./format";
 import { BRANCHES } from "./constants";
-import { haptic } from "./telegram";
+import { haptic, telegramWebApp } from "./telegram";
 import { useBackHandler } from "./backButton";
 import Band from "./components/Band";
 import SearchBar from "./components/SearchBar";
@@ -50,16 +47,15 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const filterSheetRef = useRef<HTMLDivElement | null>(null);
-  const { initData } = useTelegramIdentity();
+  const { initData, tgUser } = useTelegramIdentity();
   const { myRoll, myRank, loading: identityLoading } = useTelegramUser();
 
   // null means automatic: the saved roll's section once the identity answers,
   // otherwise the whole register. A filter change or "All students" pins the
   // choice to `all`; "My section" pins it back and clears the filters.
-  const [chosenScope, setChosenScope] = useState<LeaderboardScope | null>(
-    null,
-  );
+  const [chosenScope, setChosenScope] = useState<LeaderboardScope | null>(null);
   const scopeMode: LeaderboardScope = chosenScope ?? (myRoll ? "me" : "all");
 
   // stable identity so the fetch effect only fires on real filter changes
@@ -110,6 +106,40 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
       : myRank?.midmarks
     : null;
   const myRankNow = myRankInfo?.rank ?? null;
+
+  /**
+   * Share the caller's own rank. The server stores a prepared message, then
+   * Telegram's native sheet asks which chat to send it to. Nothing is posted
+   * unless the student picks a chat.
+   */
+  const shareRank = useCallback(async () => {
+    if (sharing) return;
+    const app = telegramWebApp();
+    if (!app?.shareMessage) {
+      app?.showAlert?.("Sharing needs a newer Telegram app.");
+      return;
+    }
+    setSharing(true);
+    haptic.select();
+    try {
+      const prepared = await requestRankShare({
+        initData,
+        userId: tgUser ?? undefined,
+        sort: sortBy,
+      });
+      app.shareMessage(prepared.id, (sent) => {
+        if (sent) haptic.tap();
+      });
+    } catch (e) {
+      app.showAlert?.(
+        e instanceof Error
+          ? e.message
+          : "Could not prepare the share. Try again.",
+      );
+    } finally {
+      setSharing(false);
+    }
+  }, [initData, tgUser, sortBy, sharing]);
 
   const isFiltered =
     search !== "" ||
@@ -275,13 +305,20 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
     <>
       {showBand && <Band sub="Leaderboard" stamp={stamp} />}
 
-      <div
-        className="reg-body"
-        aria-busy={initialLoading || loading}
-      >
+      <div className="reg-body" aria-busy={initialLoading || loading}>
         {myRoll && myRankNow != null && (
           <section className="tg-section">
-            <h2 className="tg-section-title">Your rank</h2>
+            <div className="tg-section-head">
+              <h2 className="tg-section-title">Your rank</h2>
+              <button
+                type="button"
+                className="tg-link"
+                onClick={shareRank}
+                disabled={sharing}
+              >
+                {sharing ? "Preparing…" : "Share"}
+              </button>
+            </div>
             <button
               type="button"
               className="tg-row tg-your-rank"
@@ -330,9 +367,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
                 setFiltersOpen(true);
               }}
               aria-label={
-                filterCount > 0
-                  ? `Filters, ${filterCount} active`
-                  : "Filters"
+                filterCount > 0 ? `Filters, ${filterCount} active` : "Filters"
               }
               aria-haspopup="dialog"
               aria-expanded={filtersOpen}
@@ -435,9 +470,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
           {coverageLabel && (
             <p className="tg-hint">
               {coverageLabel}.
-              {showFillNote
-                ? " This register fills as students check."
-                : null}
+              {showFillNote ? " This register fills as students check." : null}
             </p>
           )}
         </div>
@@ -582,9 +615,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
                   <h2 className="tg-sheet-title" id="tg-filter-title">
                     Filters
                   </h2>
-                  <p className="tg-sheet-desc">
-                    Year, branch and section.
-                  </p>
+                  <p className="tg-sheet-desc">Year, branch and section.</p>
                 </div>
                 <button
                   type="button"

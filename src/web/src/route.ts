@@ -51,8 +51,7 @@ export const parseRoutePath = (path: string): Route => {
   // working.
   if (!second || second === "reports")
     return { section: "issues", issue: null, mine: true };
-  if (second === "new")
-    return { section: "issues", issue: null, mine: false };
+  if (second === "new") return { section: "issues", issue: null, mine: false };
   return { section: "issues", issue: decodeIssue(second), mine: false };
 };
 
@@ -102,6 +101,33 @@ export const takePageLink = (href: string): PageLink | null => {
 
   const route = parseRoutePath(page);
   url.searchParams.delete("page");
+  const query = url.searchParams.toString();
+  return {
+    route,
+    href: `${url.pathname}${query ? `?${query}` : ""}${hashFor(route)}`,
+  };
+};
+
+/**
+ * The section a `startapp` direct link names, spent once.
+ *
+ * `https://t.me/<bot>?startapp=rank` opens the Main Mini App in the current
+ * chat and hands it `start_param=rank`. The value is a route with underscores
+ * in place of slashes (`issues_new`), because Telegram links only accept
+ * letters, digits, underscores and hyphens. The parameter is removed from the
+ * address bar like `?page=`, so a later tab tap is not overruled by it.
+ */
+export const takeStartParam = (
+  href: string,
+  startParam?: string | null,
+): PageLink | null => {
+  const url = new URL(href);
+  const param =
+    startParam?.trim() || url.searchParams.get("tgWebAppStartParam");
+  if (!param) return null;
+
+  const route = parseRoutePath(param.replace(/_/g, "/"));
+  url.searchParams.delete("tgWebAppStartParam");
   const query = url.searchParams.toString();
   return {
     route,

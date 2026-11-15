@@ -1,27 +1,39 @@
 import { describe, it, expect, vi } from "vitest";
 import {
-  createOnTextMock,
+  createHearsMock,
   createSendMessageMock,
+  contextFor,
+  firstHearsHandler,
   replyKeyboard,
   sentMessage,
-  type SendMessageOptions,
+  type ReplyKeyboard,
 } from "../mocks/telegram.mock.js";
 
 // Capture the handler the module registers and the messages it sends instead
 // of talking to Telegram.
-const onText = createOnTextMock();
+const hears = createHearsMock();
 const sendMessage = createSendMessageMock();
-const editMessageText = vi.fn(async () => true);
+const editMessageText = vi.fn<
+  (params: {
+    chat_id: number | string;
+    message_id: number;
+    text: string;
+    parse_mode?: string;
+    reply_markup?: ReplyKeyboard;
+  }) => Promise<unknown>
+>(async () => true);
 
 vi.mock("../../src/bot/bot.js", () => ({
   bot: {
-    onText,
+    hears,
     on: vi.fn(),
-    sendMessage,
-    editMessageText,
-    editMessageReplyMarkup: vi.fn(async () => true),
-    deleteMessage: vi.fn(async () => true),
-    answerCallbackQuery: vi.fn(async () => true),
+    api: {
+      sendMessage,
+      editMessageText,
+      editMessageReplyMarkup: vi.fn(async () => true),
+      deleteMessage: vi.fn(async () => true),
+      answerCallbackQuery: vi.fn(async () => true),
+    },
   },
 }));
 vi.mock("../../src/services/student.service.js", () => ({
@@ -59,20 +71,29 @@ vi.mock("../../src/bot/authorization.js", () => ({
 
 await import("../../src/bot/academics/academicHandler.js");
 
-const rollHandler = onText.mock.calls[0][1] as (msg: unknown) => void;
+const rollHandler = firstHearsHandler<(ctx: unknown) => void>(hears);
 
 const sendRoll = (text: string) =>
-  rollHandler({
-    chat: { id: 42, type: "private" },
-    from: { id: 42, username: "student", first_name: "Student" },
-    text,
-    message_id: 7,
-  });
+  rollHandler(
+    contextFor({
+      message: {
+        chat: { id: 42, type: "private" },
+        from: { id: 42, username: "student", first_name: "Student" },
+        text,
+        message_id: 7,
+      },
+      api: { sendMessage },
+    }),
+  );
 
 const finalCard = () => {
   const call = editMessageText.mock.calls.at(-1);
   if (!call) throw new Error("the card was never edited");
-  return call as unknown as [string, SendMessageOptions];
+  return call[0] as {
+    text: string;
+    parse_mode?: string;
+    reply_markup?: { inline_keyboard: { text: string }[][] };
+  };
 };
 
 describe("roll number O/0 notice", () => {
@@ -84,26 +105,28 @@ describe("roll number O/0 notice", () => {
 
     await vi.waitFor(() =>
       expect(sendMessage).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.stringContaining("<code>Getting your attendance...</code>"),
-        expect.anything(),
+        expect.objectContaining({
+          text: expect.stringContaining(
+            "<code>Getting your attendance...</code>",
+          ),
+        }),
       ),
     );
 
-    const [, placeholder, placeholderOptions] = sentMessage(sendMessage);
-    expect(placeholder).toContain("<code>25KB1A05AR</code>");
+    const placeholder = sentMessage(sendMessage);
+    expect(placeholder.text).toContain("<code>25KB1A05AR</code>");
     // the tags only render when the message is sent as HTML
-    expect(placeholderOptions.parse_mode).toBe("HTML");
-    expect(placeholderOptions.reply_to_message_id).toBe(7);
+    expect(placeholder.parse_mode).toBe("HTML");
+    expect(placeholder.reply_parameters?.message_id).toBe(7);
 
     await vi.waitFor(() => expect(editMessageText).toHaveBeenCalled());
 
-    const [text, options] = finalCard();
-    expect(text).toContain("<code>25KB1A05AR</code>");
-    expect(options.parse_mode).toBe("HTML");
+    const card = finalCard();
+    expect(card.text).toContain("<code>25KB1A05AR</code>");
+    expect(card.parse_mode).toBe("HTML");
 
     // the card carries its actions, not a dead end
-    const buttons = replyKeyboard(options).inline_keyboard.flat();
+    const buttons = replyKeyboard(card).inline_keyboard.flat();
     expect(buttons.map((button) => button.callback_data)).toEqual(
       expect.arrayContaining([
         "att_25KB1A05AR",
@@ -125,12 +148,10 @@ describe("roll number O/0 notice", () => {
 
     await vi.waitFor(() => expect(editMessageText).toHaveBeenCalled());
 
-    const [, placeholder] = sentMessage(sendMessage);
-    expect(placeholder).not.toContain("Heads up");
+    expect(sentMessage(sendMessage).text).not.toContain("Heads up");
 
-    const [text] = finalCard();
-    expect(text).not.toContain("Heads up");
-    expect(text).not.toContain("<code>25KB1A05AR</code>");
+    expect(finalCard().text).not.toContain("Heads up");
+    expect(finalCard().text).not.toContain("<code>25KB1A05AR</code>");
   });
 
   it("does not send the old menu", async () => {
@@ -141,7 +162,7 @@ describe("roll number O/0 notice", () => {
 
     await vi.waitFor(() => expect(editMessageText).toHaveBeenCalled());
 
-    const texts = sendMessage.mock.calls.map(([, text]) => text);
+    const texts = sendMessage.mock.calls.map(([params]) => params.text);
     expect(texts.join("\n")).not.toContain("What do you want to check?");
   });
 });

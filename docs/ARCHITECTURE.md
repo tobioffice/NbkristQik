@@ -35,14 +35,22 @@ Monitor (monitor-host) ──> /health, /internal/health, portal
   maintenance and the Express server, and only then calls
   `bot.startPolling()`.
 - **Shutdown:** `SIGINT`/`SIGTERM` stop polling, disconnect Redis, and exit 0.
-- **Bot:** `node-telegram-bot-api`; see `src/bot/` for commands, the academic
-  menu flow, the channel-membership gate, and `/syncdb`. Channel membership is
-  the gate for non-admin students; there is no daily check-in.
+- **Bot:** `node-telegram-bot-api` v2 (`Bot`/`Api`, middleware, typed params).
+  Commands register with `bot.command`, the roll regex with `bot.hears`, and
+  every Telegram call goes through `bot.api`. Group lookups are ephemeral
+  commands, so `/attendance`, `/midmarks` and `/bunk` answer only their sender;
+  every other group path sends a private deep link. Cards are rich messages
+  with a real table, with the HTML card as the fallback. See `src/bot/` for
+  commands, the academic menu flow, the channel-membership gate, and `/syncdb`.
+  Channel membership is the gate for non-admin students; there is no daily
+  check-in.
 - **Web shell:** one shipped app at `/library/` with hash routes `#/rank`,
   `#/profile`, `#/library`, `#/issues` (reports) and `#/issues/new` (form).
-  Bot buttons name the section in
-  `?page=` because Telegram replaces the fragment with its own launch data;
-  the shell folds it into the hash at startup (`takePageLink`). `/api/config`
+  Bot buttons in private chats name the section in `?page=`, because Telegram
+  replaces the fragment with its own launch data; group buttons use the Main
+  Mini App direct link (`?startapp=`). The shell folds either into the hash at
+  startup (`takePageLink` / `takeStartParam`). The rank page can share a
+  prepared rank card through the native Telegram share sheet. `/api/config`
   decides whether the library tab exists for this caller; the server enforces
   the same gate on the library API. The legacy GitHub Pages app build is
   retired; the marketing site remains a separate static surface.
@@ -63,9 +71,9 @@ Monitor (monitor-host) ──> /health, /internal/health, portal
   with `Cache-Control: no-store` and a clean JSON 404 if the deploy did not
   copy it.
 - **API:** `/health`, `/api/*` including `/api/config`, `/api/leaderboard`,
-  `/api/me`, profile/registration, reports and library endpoints. They pass
-  through suspicious-request logging, body sanitization and an IP rate limit;
-  validation and route-specific limits sit on top.
+  `/api/me`, `/api/rank/share`, profile/registration, reports and library
+  endpoints. They pass through suspicious-request logging, body sanitization
+  and an IP rate limit; validation and route-specific limits sit on top.
 - **Admin:** mounted at the secret `ADMIN_PANEL_PATH`, before the global API
   sanitizer and limiter. The panel document carries a fresh nonce CSP,
   `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` and `nosniff`; data

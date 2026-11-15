@@ -3,7 +3,7 @@ import { bot } from "../bot.js";
 import { trackMessage } from "../../services/tracker.js";
 import { canOpenLibrary } from "../../services/library/access.js";
 import { createPcLoginToken } from "../../services/library/session.js";
-import { LIBRARY_WEBAPP_URL } from "../../constants/webapp.js";
+import { appDirectLink, LIBRARY_WEBAPP_URL } from "../../constants/webapp.js";
 import { logger } from "../../config/logger.js";
 import { botSecurityHandler } from "../../middleware/security.js";
 import { TOO_FAST } from "../replies.js";
@@ -43,14 +43,17 @@ export const sendLibraryEntry = async (msg: Message): Promise<void> => {
   // must not turn that into a write loop.
   if (!(await botSecurityHandler(from, "library"))) {
     if (msg.chat.type === "private") {
-      await bot.sendMessage(msg.chat.id, TOO_FAST);
+      await bot.api.sendMessage({ chat_id: msg.chat.id, text: TOO_FAST });
     }
     return;
   }
 
   if (!canOpenLibrary(from)) {
     if (msg.chat.type === "private") {
-      await bot.sendMessage(msg.chat.id, "The library isn't open yet.");
+      await bot.api.sendMessage({
+        chat_id: msg.chat.id,
+        text: "The library isn't open yet.",
+      });
     }
     return;
   }
@@ -59,8 +62,16 @@ export const sendLibraryEntry = async (msg: Message): Promise<void> => {
   const keyboard: InlineKeyboardButton[][] = [
     [
       isPrivate
-        ? { text: "Open the library", web_app: { url: LIBRARY_WEBAPP_URL } }
-        : { text: "Open the library", url: LIBRARY_WEBAPP_URL },
+        ? {
+            text: "Open the library",
+            web_app: { url: LIBRARY_WEBAPP_URL },
+            style: "primary",
+          }
+        : {
+            text: "Open the library",
+            url: appDirectLink("library"),
+            style: "primary",
+          },
     ],
   ];
 
@@ -79,18 +90,21 @@ export const sendLibraryEntry = async (msg: Message): Promise<void> => {
     }
   }
 
-  await bot.sendMessage(
-    msg.chat.id,
-    computerLink
+  await bot.api.sendMessage({
+    chat_id: msg.chat.id,
+    text: computerLink
       ? "Your subjects, ready to read. The computer link is for you, works once, and expires in five minutes."
       : "Your subjects, ready to read.",
-    { reply_markup: { inline_keyboard: keyboard } },
-  );
+    reply_markup: { inline_keyboard: keyboard },
+  });
 };
 
-bot.onText(/^\/library$/, (msg) => {
+bot.command("library", (ctx) => {
+  const msg = ctx.message;
+  if (!msg) return;
+
   trackMessage(msg, "command:library");
-  void sendLibraryEntry(msg).catch((e) =>
+  return sendLibraryEntry(msg).catch((e) =>
     logger.error("[library] could not send the entry:", e),
   );
 });

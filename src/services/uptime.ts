@@ -173,12 +173,14 @@ const notifyAdmin = async (result: ProbeResult): Promise<boolean> => {
   const icon = wentDown ? "🔴" : "🟢";
   const verb = wentDown ? "DOWN" : "back UP";
   try {
-    await bot.sendMessage(
-      ADMIN_ID,
-      `${icon} <b>${result.component}</b> is ${verb}\n` +
+    await bot.api.sendMessage({
+      chat_id: ADMIN_ID,
+      text:
+        `${icon} <b>${result.component}</b> is ${verb}\n` +
         `Probe latency: ${result.latencyMs ?? "timeout"}${result.latencyMs ? "ms" : ""}`,
-      { parse_mode: "HTML", disable_notification: !wentDown },
-    );
+      parse_mode: "HTML",
+      disable_notification: !wentDown,
+    });
     return true;
   } catch (e) {
     logger.warn("[uptime] admin alert failed:", e);

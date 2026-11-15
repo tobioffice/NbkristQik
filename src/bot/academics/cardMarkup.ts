@@ -1,6 +1,9 @@
 import { getRegistration } from "../../db/registration.model.js";
 import { logger } from "../../config/logger.js";
-import { LEADERBOARD_WEBAPP_URL } from "../../constants/webapp.js";
+import {
+  appDirectLink,
+  LEADERBOARD_WEBAPP_URL,
+} from "../../constants/webapp.js";
 
 /**
  * The keyboard that travels with every attendance card.
@@ -44,7 +47,7 @@ export const cardMarkup = ({
           text: "Leaderboard",
           web_app: { url: LEADERBOARD_WEBAPP_URL },
         }
-      : { text: "Leaderboard", url: LEADERBOARD_WEBAPP_URL },
+      : { text: "Leaderboard", url: appDirectLink("rank") },
   );
 
   return {

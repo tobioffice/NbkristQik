@@ -9,9 +9,9 @@ import { escapeHtml } from "../text.js";
 /**
  * The replies a student gets about their own numbers.
  *
- * Every table here is built by `preTable`, so the three of them line up the
- * same way on a phone and a new column is one row of a declaration rather
- * than a new set of padStart calls.
+ * The text card builds its tables with `preTable`; the rich card uses the same
+ * rows in a real Telegram table via `richTable`. A new column is one row of a
+ * declaration either way, not a new set of padStart calls.
  */
 
 /** The pass mark the college enforces, and the one every warning compares to. */
@@ -81,6 +81,31 @@ const preTable = (columns: Column[], rows: string[][]): string => {
     rule,
     `</pre>`,
   ].join("\n");
+};
+
+/**
+ * A real table for a rich message. The cells must already be escaped HTML;
+ * a subject name is escaped when its row is built, not here, because some
+ * cells carry deliberate inline tags.
+ */
+const richTable = (
+  headers: { label: string; align: "left" | "right" }[],
+  rows: string[][],
+): string => {
+  const head = headers
+    .map((column) => `<th align="${column.align}">${column.label}</th>`)
+    .join("");
+  const body = rows
+    .map(
+      (cells) =>
+        `<tr>${cells
+          .map(
+            (cell, index) => `<td align="${headers[index].align}">${cell}</td>`,
+          )
+          .join("")}</tr>`,
+    )
+    .join("");
+  return `<table bordered striped compact><tr>${head}</tr>${body}</table>`;
 };
 
 /** A subject's own percentage, or null before the portal has marked anything. */
@@ -321,4 +346,122 @@ const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text;
   // trim first: "COMPUTER .." reads like a typo, "COMPUTER.." reads like a cut
   return text.substring(0, maxLength - 2).trimEnd() + "..";
+};
+
+/**
+ * The attendance card as a rich message: the same figures, with a real table
+ * instead of a monospaced block. `text` stays alongside it as the fallback for
+ * a client that does not render rich messages yet.
+ */
+export const formatAttendanceRich = (data: Attendance): string => {
+  const { rollno, year_branch_section, percentage, totalClasses, subjects } =
+    data;
+
+  const blocks = [
+    `<p><b>Attendance for <code>${escapeHtml(rollno)}</code></b> · ${escapeHtml(cleanBranch(year_branch_section))}</p>`,
+    `<p><b>${percentage.toFixed(2)}%</b> · ${totalClasses.attended}/${totalClasses.conducted}</p>`,
+  ];
+
+  const status = targetLine(totalClasses.attended, totalClasses.conducted);
+  if (status) blocks.push(`<p>${status}</p>`);
+
+  if (subjects.length > 0) {
+    blocks.push(
+      richTable(
+        [
+          { label: "Subject", align: "left" },
+          { label: "Att/Tot", align: "right" },
+          { label: "Now", align: "right" },
+          { label: "Last", align: "left" },
+        ],
+        subjects.map((subject) => {
+          const percent = percentOf(subject);
+          return [
+            escapeHtml(subject.subject),
+            `${subject.attended}/${subject.conducted}`,
+            percent === null ? "—" : `${Math.round(percent)}%`,
+            escapeHtml(formatLastUpdated(subject.lastUpdated)),
+          ];
+        }),
+      ),
+    );
+
+    const warning = belowTargetLine(subjects, (subject) => subject.subject);
+    if (warning) blocks.push(`<p>${warning}</p>`);
+  }
+
+  // the day is an assumption, so the card says it out loud
+  if (status) blocks.push(`<footer>Six classes make a day.</footer>`);
+
+  return blocks.join("\n");
+};
+
+/** The mid-marks card as a rich message, one column per paper. */
+export const formatMidmarksRich = (data: Midmarks): string => {
+  const { rollno, year_branch_section, subjects } = data;
+
+  return [
+    `<p><b>Mid marks for <code>${escapeHtml(rollno)}</code></b> · ${escapeHtml(cleanBranch(year_branch_section))}</p>`,
+    richTable(
+      [
+        { label: "Subject", align: "left" },
+        { label: "Type", align: "left" },
+        { label: "M1", align: "right" },
+        { label: "M2", align: "right" },
+        { label: "Avg", align: "right" },
+      ],
+      subjects.map((subject) => [
+        escapeHtml(subject.subject),
+        escapeHtml(subject.type),
+        subject.M1 == null ? "—" : String(subject.M1),
+        subject.M2 == null ? "—" : String(subject.M2),
+        subject.average == null ? "—" : String(subject.average),
+      ]),
+    ),
+    `<footer>Give the low ones some extra time.</footer>`,
+  ].join("\n");
+};
+
+/** The bunk plan as a rich message, one row per subject. */
+export const formatBunkPlanRich = (data: Attendance): string => {
+  const { rollno, year_branch_section, percentage, totalClasses, subjects } =
+    data;
+
+  const blocks = [
+    `<p><b>Bunk plan for <code>${escapeHtml(rollno)}</code></b> · ${escapeHtml(cleanBranch(year_branch_section))}</p>`,
+    `<p><b>${percentage.toFixed(2)}%</b> · ${totalClasses.attended}/${totalClasses.conducted}</p>`,
+    `<p>${buildBunkHeadline(
+      skipsAffordable(totalClasses.attended, totalClasses.conducted),
+      classesNeeded(totalClasses.attended, totalClasses.conducted),
+    ).trim()}</p>`,
+    richTable(
+      [
+        { label: "Subject", align: "left" },
+        { label: "Now", align: "right" },
+        { label: "Bunk", align: "right" },
+        { label: "Need", align: "right" },
+      ],
+      subjects.map((subject) => {
+        const percent = percentOf(subject);
+        return [
+          escapeHtml(subject.subject),
+          percent === null ? "0%" : `${percent.toFixed(0)}%`,
+          percent === null
+            ? "0"
+            : String(skipsAffordable(subject.attended, subject.conducted)),
+          percent === null
+            ? "0"
+            : String(classesNeeded(subject.attended, subject.conducted)),
+        ];
+      }),
+    ),
+  ];
+
+  const warning = belowTargetLine(subjects, (subject) => subject.subject);
+  if (warning) blocks.push(`<p>${warning}</p>`);
+  blocks.push(
+    `<footer>Bunk means classes you can skip, need means classes in a row. Six classes make a day.</footer>`,
+  );
+
+  return blocks.join("\n");
 };

@@ -1,48 +1,61 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
-  createOnTextMock,
+  createHearsMock,
   createOnMock,
   createSendMessageMock,
+  contextFor,
+  firstHearsHandler,
+  registeredEventHandler,
   sentMessage,
   type ReplyKeyboard,
-  type SendMessageOptions,
 } from "../mocks/telegram.mock.js";
 
 // Telegram is captured: no network, and every call the flow makes is visible.
-const onText = createOnTextMock();
+const hears = createHearsMock();
 const on = createOnMock();
 const sendMessage = createSendMessageMock();
-const editMessageText = vi.fn<
-  (
-    text: string,
-    options: SendMessageOptions & { chat_id?: number; message_id?: number },
-  ) => Promise<unknown>
->(async () => true);
+
+type EditTextParams = {
+  chat_id: number | string;
+  message_id: number;
+  text?: string;
+  rich_message?: { html: string };
+  parse_mode?: string;
+  reply_markup?: ReplyKeyboard;
+};
+
+const editMessageText = vi.fn<(params: EditTextParams) => Promise<unknown>>(
+  async () => true,
+);
 const editMessageReplyMarkup = vi.fn<
-  (
-    markup: ReplyKeyboard,
-    options: { chat_id: number; message_id: number },
-  ) => Promise<unknown>
+  (params: {
+    chat_id: number | string;
+    message_id: number;
+    reply_markup: ReplyKeyboard;
+  }) => Promise<unknown>
 >(async () => true);
 const deleteMessage = vi.fn<
-  (chatId: number, messageId: number) => Promise<boolean>
+  (params: { chat_id: number | string; message_id: number }) => Promise<boolean>
 >(async () => true);
 const answerCallbackQuery = vi.fn<
-  (
-    id: string,
-    options?: { text?: string; show_alert?: boolean },
-  ) => Promise<unknown>
+  (params: {
+    callback_query_id: string;
+    text?: string;
+    show_alert?: boolean;
+  }) => Promise<unknown>
 >(async () => true);
 
 vi.mock("../../src/bot/bot.js", () => ({
   bot: {
-    onText,
+    hears,
     on,
-    sendMessage,
-    editMessageText,
-    editMessageReplyMarkup,
-    deleteMessage,
-    answerCallbackQuery,
+    api: {
+      sendMessage,
+      editMessageText,
+      editMessageReplyMarkup,
+      deleteMessage,
+      answerCallbackQuery,
+    },
   },
 }));
 
@@ -113,26 +126,32 @@ const { getVerificationState } =
 const { takeGroupPrompts } =
   await import("../../src/bot/academics/groupPrompt.js");
 
-const rollHandler = onText.mock.calls[0][1] as (msg: unknown) => void;
-const callbackHandler = on.mock.calls.find(
-  ([event]) => event === "callback_query",
-)?.[1] as (query: unknown) => Promise<void>;
+const rollHandler = firstHearsHandler<(ctx: unknown) => void>(hears);
+const callbackHandler = registeredEventHandler<(ctx: unknown) => Promise<void>>(
+  on,
+  "callback_query",
+);
 
 const sendRoll = (userId: number, text = "25KB1A05AR", chatType = "private") =>
-  rollHandler({
-    chat: { id: userId, type: chatType },
-    from: { id: userId, username: "student", first_name: "Student" },
-    text,
-    message_id: 7,
-  });
+  rollHandler(
+    contextFor({
+      message: {
+        chat: { id: userId, type: chatType },
+        from: { id: userId, username: "student", first_name: "Student" },
+        text,
+        message_id: 7,
+      },
+      api: { sendMessage, answerCallbackQuery },
+    }),
+  );
 
 const tap = (
   userId: number,
   data: string,
   messageId = 9,
   chatType = "private",
-) =>
-  callbackHandler({
+) => {
+  const callbackQuery = {
     id: `callback-${userId}-${data}`,
     from: { id: userId, username: "student", first_name: "Student" },
     data,
@@ -141,7 +160,14 @@ const tap = (
       message_id: messageId,
       text: "card",
     },
-  });
+  };
+  return callbackHandler(
+    contextFor({
+      callbackQuery,
+      api: { sendMessage, answerCallbackQuery },
+    }),
+  );
+};
 
 const buttonsIn = (markup: ReplyKeyboard | undefined) =>
   markup?.inline_keyboard.flat() ?? [];
@@ -149,10 +175,10 @@ const buttonsIn = (markup: ReplyKeyboard | undefined) =>
 const callbackData = (markup: ReplyKeyboard | undefined) =>
   buttonsIn(markup).map((button) => button.callback_data);
 
-const lastEdit = () => {
+const lastEdit = (): EditTextParams => {
   const call = editMessageText.mock.calls.at(-1);
   if (!call) throw new Error("the card was never edited");
-  return call;
+  return call[0];
 };
 
 beforeEach(() => {
@@ -184,19 +210,19 @@ describe("attendance card", () => {
 
     expect(getAttendanceCard).toHaveBeenCalledWith("25KB1A05AR");
 
-    const [, placeholder, placeholderOptions] = sentMessage(sendMessage);
-    expect(placeholder).toContain("Getting your attendance...");
-    expect(placeholderOptions.parse_mode).toBe("HTML");
-    expect(placeholderOptions.reply_to_message_id).toBe(7);
-    expect(callbackData(placeholderOptions.reply_markup)).toContain(
-      "att_25KB1A05AR",
-    );
+    const placeholder = sentMessage(sendMessage);
+    expect(placeholder.text).toContain("Getting your attendance...");
+    expect(placeholder.parse_mode).toBe("HTML");
+    expect(placeholder.reply_parameters?.message_id).toBe(7);
+    expect(callbackData(placeholder.reply_markup)).toContain("att_25KB1A05AR");
 
-    const [text, options] = lastEdit();
-    expect(text).toContain("Attendance for");
-    expect(options.message_id).toBe(1);
+    const final = lastEdit();
+    expect(final.text).toContain("Attendance for");
+    expect(final.message_id).toBe(1);
 
-    const sentText = sendMessage.mock.calls.map(([, body]) => body).join("\n");
+    const sentText = sendMessage.mock.calls
+      .map(([params]) => params.text)
+      .join("\n");
     expect(sentText).not.toContain("What do you want to check?");
   });
 
@@ -205,8 +231,8 @@ describe("attendance card", () => {
 
     await vi.waitFor(() => expect(editMessageText).toHaveBeenCalled());
 
-    const [, options] = lastEdit();
-    expect(callbackData(options.reply_markup)).toEqual(
+    const final = lastEdit();
+    expect(callbackData(final.reply_markup)).toEqual(
       expect.arrayContaining([
         "att_25KB1A05AR",
         "mid_25KB1A05AR",
@@ -215,7 +241,7 @@ describe("attendance card", () => {
       ]),
     );
 
-    const leaderboard = buttonsIn(options.reply_markup).find(
+    const leaderboard = buttonsIn(final.reply_markup).find(
       (button) => button.text === "Leaderboard",
     );
     // the register is a page in the mini app now, not a chat answer
@@ -230,20 +256,21 @@ describe("attendance card", () => {
 
       await vi.waitFor(() => expect(sendMessage).toHaveBeenCalled());
 
-      const [chatId, text, options] = sentMessage(sendMessage);
-      expect(chatId).toBe(203);
-      expect(text).toBe(
+      const params = sentMessage(sendMessage);
+      expect(params.chat_id).toBe(203);
+      expect(params.text).toBe(
         "Your attendance is private. Tap to open it in the bot.",
       );
       // the roll travels in the button's link, never in the visible text
-      expect(text).not.toContain("25KB1A05AR");
-      expect(options.reply_to_message_id).toBe(7);
+      expect(params.text).not.toContain("25KB1A05AR");
+      expect(params.reply_parameters?.message_id).toBe(7);
 
-      const buttons = buttonsIn(options.reply_markup);
+      const buttons = buttonsIn(params.reply_markup);
       expect(buttons).toHaveLength(1);
       expect(buttons[0]).toEqual({
         text: "Open attendance",
         url: "https://t.me/NbkristQik_bot?start=att_25KB1A05AR",
+        style: "primary",
       });
 
       // no portal read, no card, no last-lookup and no roll_lookup event
@@ -272,12 +299,12 @@ describe("attendance card", () => {
   it("answers a Leaderboard tap in the chat, by roll in a group", async () => {
     await tap(210, "lb", 9, "group");
 
-    const [, text, options] = sentMessage(sendMessage);
-    expect(text).toContain("Attendance register");
-    expect(text).toContain("25KB1A05AA");
+    const params = sentMessage(sendMessage);
+    expect(params.text).toContain("Attendance register");
+    expect(params.text).toContain("25KB1A05AA");
     // a group message is forwarded: no classmate's name
-    expect(text).not.toContain("FIRST STUDENT");
-    expect(options.parse_mode).toBe("HTML");
+    expect(params.text).not.toContain("FIRST STUDENT");
+    expect(params.parse_mode).toBe("HTML");
     expect(getLeaderboard).toHaveBeenCalled();
   });
 
@@ -292,9 +319,9 @@ describe("attendance card", () => {
 
     await tap(211, "lb");
 
-    const [, text] = sentMessage(sendMessage);
-    expect(text).toContain("FIRST STUDENT");
-    expect(text).toContain("You are #4 of 60 at 88.10%.");
+    const params = sentMessage(sendMessage);
+    expect(params.text).toContain("FIRST STUDENT");
+    expect(params.text).toContain("You are #4 of 60 at 88.10%.");
   });
 
   it("edits the tapped card in place and never deletes it", async () => {
@@ -303,14 +330,14 @@ describe("attendance card", () => {
     expect(deleteMessage).not.toHaveBeenCalled();
     expect(editMessageText).toHaveBeenCalledTimes(2);
 
-    const [placeholderText, placeholderOptions] = editMessageText.mock.calls[0];
-    expect(placeholderText).toContain("Getting your mid marks");
-    expect(placeholderOptions.message_id).toBe(9);
+    const placeholder = editMessageText.mock.calls[0][0];
+    expect(placeholder.text).toContain("Getting your mid marks");
+    expect(placeholder.message_id).toBe(9);
 
-    const [finalText, finalOptions] = editMessageText.mock.calls[1];
-    expect(finalText).toContain("Mid marks for");
-    expect(finalOptions.message_id).toBe(9);
-    expect(callbackData(finalOptions.reply_markup)).toEqual(
+    const final = editMessageText.mock.calls[1][0];
+    expect(final.text).toContain("Mid marks for");
+    expect(final.message_id).toBe(9);
+    expect(callbackData(final.reply_markup)).toEqual(
       expect.arrayContaining([
         "att_25KB1A05AR",
         "mid_25KB1A05AR",
@@ -326,14 +353,15 @@ describe("attendance card", () => {
 
     expect(upsertRegistration).toHaveBeenCalledWith("205", "25KB1A05AR", null);
 
-    const answer = answerCallbackQuery.mock.calls.at(-1);
-    expect(answer?.[1]?.text).toContain("Saved");
+    const answer = answerCallbackQuery.mock.calls.at(-1)?.[0];
+    expect(answer?.text).toContain("Saved");
 
     expect(editMessageReplyMarkup).toHaveBeenCalledTimes(1);
-    const [markup, options] = editMessageReplyMarkup.mock.calls[0];
-    expect(options).toEqual({ chat_id: 205, message_id: 9 });
-    expect(callbackData(markup)).not.toContain("save_25KB1A05AR");
-    expect(callbackData(markup)).toEqual(
+    const params = editMessageReplyMarkup.mock.calls[0][0];
+    expect(params.chat_id).toBe(205);
+    expect(params.message_id).toBe(9);
+    expect(callbackData(params.reply_markup)).not.toContain("save_25KB1A05AR");
+    expect(callbackData(params.reply_markup)).toEqual(
       expect.arrayContaining(["att_25KB1A05AR", "mid_25KB1A05AR"]),
     );
     expect(deleteMessage).not.toHaveBeenCalled();
@@ -351,7 +379,7 @@ describe("attendance card", () => {
     await tap(206, "save_25KB1A05AR", 9);
 
     expect(upsertRegistration).not.toHaveBeenCalled();
-    expect(answerCallbackQuery.mock.calls.at(-1)?.[1]?.text).toBe(
+    expect(answerCallbackQuery.mock.calls.at(-1)?.[0]?.text).toBe(
       "Saved already",
     );
   });
@@ -370,7 +398,7 @@ describe("attendance card", () => {
     await tap(210, "save_25KB1A05AR", 9);
 
     expect(upsertRegistration).toHaveBeenCalledWith("210", "25KB1A05AR", null);
-    expect(answerCallbackQuery.mock.calls.at(-1)?.[1]?.text).toContain("Saved");
+    expect(answerCallbackQuery.mock.calls.at(-1)?.[0]?.text).toContain("Saved");
   });
 
   it("saves a roll another account already holds", async () => {
@@ -379,7 +407,7 @@ describe("attendance card", () => {
     await tap(207, "save_25KB1A05AR", 9);
 
     expect(upsertRegistration).toHaveBeenCalledWith("207", "25KB1A05AR", null);
-    expect(answerCallbackQuery.mock.calls.at(-1)?.[1]?.text).toContain("Saved");
+    expect(answerCallbackQuery.mock.calls.at(-1)?.[0]?.text).toContain("Saved");
     expect(editMessageReplyMarkup).toHaveBeenCalled();
   });
 
@@ -397,8 +425,8 @@ describe("attendance card", () => {
 
     await vi.waitFor(() => expect(editMessageText).toHaveBeenCalled());
 
-    const [, options] = lastEdit();
-    expect(callbackData(options.reply_markup)).toEqual(
+    const final = lastEdit();
+    expect(callbackData(final.reply_markup)).toEqual(
       expect.arrayContaining([
         "att_25KB1A05AX",
         "att_25KB1A05AR",
@@ -410,10 +438,44 @@ describe("attendance card", () => {
   it("rejects a mutated callback without touching the card", async () => {
     await tap(209, "att_not-a-roll", 9);
 
-    const answer = answerCallbackQuery.mock.calls.at(-1);
-    expect(answer?.[1]?.text).toContain("doesn't look right");
+    const answer = answerCallbackQuery.mock.calls.at(-1)?.[0];
+    expect(answer?.text).toContain("doesn't look right");
     expect(editMessageText).not.toHaveBeenCalled();
     expect(editMessageReplyMarkup).not.toHaveBeenCalled();
     expect(deleteMessage).not.toHaveBeenCalled();
+  });
+
+  it("uses the rich card when the service has one", async () => {
+    vi.mocked(getAttendanceCard).mockResolvedValueOnce({
+      text: "Attendance for 25KB1A05AR",
+      rich: "<p>Attendance for <code>25KB1A05AR</code></p><table bordered striped compact><tr><th>Subject</th></tr></table>",
+    });
+
+    sendRoll(219);
+
+    await vi.waitFor(() => expect(editMessageText).toHaveBeenCalled());
+
+    const final = lastEdit();
+    expect(final.rich_message?.html).toContain("<table");
+    expect(final.rich_message?.html).toContain("25KB1A05AR");
+    expect(final.text).toBeUndefined();
+  });
+
+  it("falls back to the HTML card when the client rejects rich", async () => {
+    vi.mocked(getAttendanceCard).mockResolvedValueOnce({
+      text: "Attendance for 25KB1A05AR",
+      rich: "<p>rich card</p>",
+    });
+    editMessageText.mockRejectedValueOnce(
+      new Error("Bad Request: rich unsupported"),
+    );
+
+    sendRoll(220);
+
+    await vi.waitFor(() => expect(editMessageText).toHaveBeenCalledTimes(2));
+
+    const fallback = editMessageText.mock.calls[1][0];
+    expect(fallback.text).toContain("Attendance for");
+    expect(fallback.rich_message).toBeUndefined();
   });
 });

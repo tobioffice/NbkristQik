@@ -5,6 +5,7 @@ import {
   parseRouteHash,
   parseRoutePath,
   takePageLink,
+  takeStartParam,
 } from "../src/route";
 
 describe("the hash router", () => {
@@ -52,12 +53,12 @@ describe("the hash router", () => {
   });
 
   it("writes the list as the section home and the form under new", () => {
-    expect(
-      hashFor({ section: "issues", issue: null, mine: true }),
-    ).toBe("#/issues");
-    expect(
-      hashFor({ section: "issues", issue: null, mine: false }),
-    ).toBe("#/issues/new");
+    expect(hashFor({ section: "issues", issue: null, mine: true })).toBe(
+      "#/issues",
+    );
+    expect(hashFor({ section: "issues", issue: null, mine: false })).toBe(
+      "#/issues/new",
+    );
   });
 
   it("writes the hash a route came from", () => {
@@ -128,12 +129,46 @@ describe("a bot deep link", () => {
 
   it("lands retired pages on the roll form, not a blank sheet", () => {
     // attendance now lives in the bot, so the old button opens the roll form
-    expect(takePageLink("https://x.test/library/?page=attendance")?.route).toEqual(
-      HOME_ROUTE,
-    );
+    expect(
+      takePageLink("https://x.test/library/?page=attendance")?.route,
+    ).toEqual(HOME_ROUTE);
     expect(takePageLink("https://x.test/library/?page=nope")?.route).toEqual(
       HOME_ROUTE,
     );
+  });
+});
+
+describe("a startapp direct link", () => {
+  it("folds start_param into the hash and spends it", () => {
+    expect(
+      takeStartParam("https://x.test/library/?tgWebAppStartParam=rank"),
+    ).toEqual({
+      route: { section: "rank", issue: null, mine: false },
+      href: "/library/#/rank",
+    });
+  });
+
+  it("prefers the SDK value and turns route slashes into underscores", () => {
+    expect(
+      takeStartParam(
+        "https://x.test/library/?tgWebAppStartParam=rank",
+        "issues_new",
+      ),
+    ).toEqual({
+      route: { section: "issues", issue: null, mine: false },
+      href: "/library/#/issues/new",
+    });
+  });
+
+  it("carries an issue conversation", () => {
+    expect(
+      takeStartParam("https://x.test/library/", "issues_QIK-0007")?.route,
+    ).toEqual({ section: "issues", issue: "QIK-0007", mine: false });
+  });
+
+  it("is absent when the app was not opened by a direct link", () => {
+    expect(takeStartParam("https://x.test/library/")).toBeNull();
+    expect(takeStartParam("https://x.test/library/", "")).toBeNull();
   });
 });
 

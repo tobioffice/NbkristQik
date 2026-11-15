@@ -1,4 +1,11 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Band from "./components/Band";
 import BandStampProvider from "./BandStampProvider";
 import type { BandStamp } from "./bandStamp";
@@ -6,13 +13,14 @@ import { useBackHandler } from "./backButton";
 import { IdentityProvider } from "./identity";
 import { useAppConfig } from "./useAppConfig";
 import { useTelegramIdentity } from "./useTelegramIdentity";
-import { haptic } from "./telegram";
+import { haptic, telegramWebApp } from "./telegram";
 import type { IssuesRoute } from "./issuesRoute";
 import {
   HOME_ROUTE,
   hashFor,
   parseRouteHash,
   takePageLink,
+  takeStartParam,
   type Route,
   type Section,
 } from "./route";
@@ -90,14 +98,20 @@ const readPcToken = (): string | undefined => {
 };
 
 /**
- * The address bar at startup: a bot's `?page=` deep link first, then the
- * hash. Folding the page into the hash here (rather than reading it on every
- * render) keeps the hash the only route the shell ever consults, so the next
- * tab tap is not overruled by a stale deep link.
+ * The address bar at startup: an explicit `?page=` button first, then a
+ * direct link's `start_param`, then the hash. Folding either marker into the
+ * hash here (rather than reading it on every render) keeps the hash the only
+ * route the shell ever consults, so the next tab tap is not overruled by a
+ * stale deep link.
  */
 const routeAtStartup = (): Route => {
   if (typeof window === "undefined") return HOME_ROUTE;
-  const link = takePageLink(window.location.href);
+  const link =
+    takePageLink(window.location.href) ??
+    takeStartParam(
+      window.location.href,
+      telegramWebApp()?.initDataUnsafe?.start_param,
+    );
   if (!link) return parseRouteHash(window.location.hash);
   try {
     window.history.replaceState(null, "", link.href);

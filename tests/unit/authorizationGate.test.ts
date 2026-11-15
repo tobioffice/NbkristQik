@@ -8,7 +8,9 @@ import {
 // The gate talks to Telegram and to the channel-membership service; both are
 // captured here. Redis only holds the membership cache.
 const sendMessage = createSendMessageMock();
-vi.mock("../../src/bot/bot.js", () => ({ bot: { sendMessage } }));
+vi.mock("../../src/bot/bot.js", () => ({
+  bot: { api: { sendMessage } },
+}));
 
 const checkMembership = vi.fn(async () => true);
 vi.mock("../../src/services/student.utils/checkMembership.js", () => ({
@@ -48,10 +50,10 @@ describe("authorization gate", () => {
       false,
     );
 
-    const [chatId, text, options] = sentMessage(sendMessage);
-    expect(chatId).toBe(43);
-    expect(text).toBe(JOIN_CHANNEL);
-    expect(replyKeyboard(options).inline_keyboard[0][0].url).toContain(
+    const params = sentMessage(sendMessage);
+    expect(params.chat_id).toBe(43);
+    expect(params.text).toBe(JOIN_CHANNEL);
+    expect(replyKeyboard(params).inline_keyboard[0][0].url).toContain(
       "t.me/test_channel",
     );
   });

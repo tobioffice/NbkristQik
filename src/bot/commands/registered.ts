@@ -5,6 +5,12 @@ import {
   sendAttendanceOrMidMarks,
   sendBunkPlan,
 } from "../academics/studentActions.js";
+import { sendPrivateCardLink } from "../academics/groupLink.js";
+import {
+  ephemeralCommand,
+  sendEphemeral,
+  type EphemeralTarget,
+} from "../academics/ephemeral.js";
 import { getRegistration } from "../../db/registration.model.js";
 import {
   getStudentCached,
@@ -17,7 +23,6 @@ import { logger } from "../../config/logger.js";
 import { trackMessage } from "../../services/tracker.js";
 import { isAuthorizedUser } from "../authorization.js";
 import { TOO_FAST, SOMETHING_BROKE } from "../replies.js";
-import { REGISTER_WEBAPP_URL } from "../../constants/webapp.js";
 import { appPageButton } from "./register.js";
 
 /** A lookup the student can ask for by command. */
@@ -30,30 +35,35 @@ const LOOKUP_TRACKED_AS: Record<Lookup, string> = {
 };
 
 /**
- * Ask the student to save their roll. `isPrivate` keeps the button a
- * `web_app` in a DM and a plain link in a group, where Telegram rejects
- * `web_app` buttons.
+ * A prompt with the registration button. It is ephemeral when the command
+ * that caused it was, so a group never sees a card that only makes sense to
+ * one student.
  */
-const promptRegister = (chatId: number, isPrivate: boolean): void => {
-  bot
-    .sendMessage(
-      chatId,
-      `Save your roll number first, then this command answers instantly.`,
-      {
-        parse_mode: "HTML",
-        reply_markup: {
-          inline_keyboard: [
-            [
-              appPageButton(
-                "👤 Register your roll",
-                REGISTER_WEBAPP_URL,
-                isPrivate,
-              ),
-            ],
-          ],
-        },
-      },
-    )
+const sendPrompt = async (
+  chatId: number,
+  isPrivate: boolean,
+  ephemeral: EphemeralTarget | undefined,
+  text: string,
+  label: string,
+): Promise<void> => {
+  const markup = {
+    inline_keyboard: [[appPageButton(label, "profile", isPrivate)]],
+  };
+
+  if (ephemeral) {
+    await sendEphemeral(chatId, ephemeral, text, markup).catch((e: Error) =>
+      logger.warn("[registered] prompt failed:", e?.message ?? e),
+    );
+    return;
+  }
+
+  await bot.api
+    .sendMessage({
+      chat_id: chatId,
+      text,
+      parse_mode: "HTML",
+      reply_markup: markup,
+    })
     .catch((e: Error) =>
       logger.warn("[registered] register prompt failed:", e?.message ?? e),
     );
@@ -67,10 +77,17 @@ export const resolveRegisteredRoll = async (
   userId: number,
   chatId: number,
   isPrivate: boolean,
+  ephemeral?: EphemeralTarget,
 ): Promise<string | null> => {
   const registration = await getRegistration(String(userId));
   if (!registration) {
-    promptRegister(chatId, isPrivate);
+    await sendPrompt(
+      chatId,
+      isPrivate,
+      ephemeral,
+      `Save your roll number first, then this command answers instantly.`,
+      "👤 Register your roll",
+    );
     return null;
   }
 
@@ -82,44 +99,26 @@ export const resolveRegisteredRoll = async (
   } catch (e) {
     if (e instanceof StudentNotFoundError) {
       // registered roll left studentsnew (semester sync) — ask for an update
-      bot
-        .sendMessage(
-          chatId,
-          `Your saved roll <code>${registration.roll_no}</code> isn't in the college records anymore.\n\n` +
-            `If the semester changed, save your new roll and this command works again.`,
-          {
-            parse_mode: "HTML",
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  appPageButton(
-                    "👤 Register your roll",
-                    REGISTER_WEBAPP_URL,
-                    isPrivate,
-                  ),
-                ],
-              ],
-            },
-          },
-        )
-        .catch((sendError: Error) =>
-          logger.warn(
-            "[registered] stale-roll prompt failed:",
-            sendError?.message ?? sendError,
-          ),
-        );
+      await sendPrompt(
+        chatId,
+        isPrivate,
+        ephemeral,
+        `Your saved roll <code>${registration.roll_no}</code> isn't in the college records anymore.\n\n` +
+          `If the semester changed, save your new roll and this command works again.`,
+        "👤 Register your roll",
+      );
       return null;
     }
 
     // Redis/DB hiccup, not a stale registration — don't tell the user their
     // roll was deleted.
     logger.warn("[registered] roll refresh failed:", e);
-    bot
-      .sendMessage(
-        chatId,
-        "Couldn't check your roll right now. Try again in a minute.",
-      )
-      .catch(() => {});
+    const text = "Couldn't check your roll right now. Try again in a minute.";
+    if (ephemeral) {
+      await sendEphemeral(chatId, ephemeral, text).catch(() => {});
+    } else {
+      await bot.api.sendMessage({ chat_id: chatId, text }).catch(() => {});
+    }
     return null;
   }
 };
@@ -132,12 +131,20 @@ const handleLookup = async (msg: Message, lookup: Lookup): Promise<void> => {
   if (chat.type === "channel") return;
 
   if (chat.id === CHIT_CHAT_ID) {
-    bot.deleteMessage(chat.id, msg.message_id).catch(() => {});
+    bot.api
+      .deleteMessage({ chat_id: chat.id, message_id: msg.message_id })
+      .catch(() => {});
     return;
   }
 
+  const ephemeral = ephemeralCommand(msg);
+
   if (!(await botSecurityHandler(from.id, "command"))) {
-    await bot.sendMessage(chat.id, TOO_FAST);
+    if (ephemeral) {
+      await sendEphemeral(chat.id, ephemeral, TOO_FAST).catch(() => {});
+    } else {
+      await bot.api.sendMessage({ chat_id: chat.id, text: TOO_FAST });
+    }
     return;
   }
 
@@ -151,23 +158,50 @@ const handleLookup = async (msg: Message, lookup: Lookup): Promise<void> => {
 
   trackMessage(msg, LOOKUP_TRACKED_AS[lookup]);
 
-  const rollNo = await resolveRegisteredRoll(from.id, chat.id, isPrivate);
+  const rollNo = await resolveRegisteredRoll(
+    from.id,
+    chat.id,
+    isPrivate,
+    ephemeral ?? undefined,
+  );
   if (!rollNo) return;
 
+  // A group is a shared room. An ephemeral command answers the sender alone;
+  // any other group command gets the private link and never the card.
+  if (!isPrivate && !ephemeral) {
+    await sendPrivateCardLink(msg, rollNo, lookup);
+    return;
+  }
+
+  const options = ephemeral ? { ephemeral } : undefined;
   if (lookup === "bunk") {
-    await sendBunkPlan(msg, rollNo);
+    await sendBunkPlan(msg, rollNo, options);
   } else {
-    await sendAttendanceOrMidMarks(msg, rollNo, lookup);
+    await sendAttendanceOrMidMarks(msg, rollNo, lookup, options);
   }
 };
 
-const registered = (lookup: Lookup) => (msg: Message) => {
-  handleLookup(msg, lookup).catch((e) => {
-    logger.error("[registered] lookup failed:", e);
-    bot.sendMessage(msg.chat.id, SOMETHING_BROKE).catch(() => {});
+const registered = (command: string, lookup: Lookup): void => {
+  bot.command(command, (ctx) => {
+    const msg = ctx.message;
+    if (!msg) return;
+
+    const ephemeral = ephemeralCommand(msg);
+    return handleLookup(msg, lookup).catch(async (e) => {
+      logger.error("[registered] lookup failed:", e);
+      if (ephemeral) {
+        await sendEphemeral(msg.chat.id, ephemeral, SOMETHING_BROKE).catch(
+          () => {},
+        );
+        return;
+      }
+      await bot.api
+        .sendMessage({ chat_id: msg.chat.id, text: SOMETHING_BROKE })
+        .catch(() => {});
+    });
   });
 };
 
-bot.onText(/\/attendance/, registered("att"));
-bot.onText(/\/midmarks/, registered("mid"));
-bot.onText(/\/bunk/, registered("bunk"));
+registered("attendance", "att");
+registered("midmarks", "mid");
+registered("bunk", "bunk");

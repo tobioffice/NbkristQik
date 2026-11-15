@@ -13,6 +13,11 @@ export interface LookupReplyMarkup {
 
 export interface LookupResult {
   text: string;
+  /**
+   * The same card as rich-message HTML, when the card has a table. Older
+   * clients fall back to `text`; the bot tries this first.
+   */
+  rich?: string;
   markup?: LookupReplyMarkup;
 }
 

@@ -1,11 +1,9 @@
 import { describe, it, expect, beforeAll, vi } from "vitest";
 import request from "supertest";
 import { createClient } from "@libsql/client";
-import TelegramBot from "node-telegram-bot-api";
 
 process.env.ADMIN_ID = "1000000001";
 process.env.TELEGRAM_BOT_TOKEN = "test_bot_token";
-void TelegramBot;
 
 const client = createClient({ url: "file::memory:" });
 vi.mock("../../src/db/db.js", () => ({ turso: client }));
@@ -28,10 +26,20 @@ vi.mock("../../src/services/redis/getRedisClient.js", () => ({
 const sent: Array<{ to: string; text: string }> = [];
 vi.mock("../../src/bot/bot.js", () => ({
   bot: {
-    sendMessage: vi.fn(async (to: string, text: string) => {
-      sent.push({ to: String(to), text });
-      return { message_id: sent.length };
-    }),
+    api: {
+      sendMessage: vi.fn(
+        async ({
+          chat_id,
+          text,
+        }: {
+          chat_id: string | number;
+          text: string;
+        }) => {
+          sent.push({ to: String(chat_id), text });
+          return { message_id: sent.length };
+        },
+      ),
+    },
   },
 }));
 

@@ -1,26 +1,28 @@
+/** The cards a group's private link can open. */
+export type DeepLinkSignal = "att" | "mid" | "bunk";
+
+const SIGNALS: DeepLinkSignal[] = ["att", "mid", "bunk"];
+
+export interface DeepLink {
+  signal: DeepLinkSignal;
+  /** The roll as typed into the link; the caller normalises it. */
+  roll: string;
+}
+
 /**
- * The payload of a `/start` deep link.
+ * The card and roll in an `att_<roll>` / `mid_<roll>` / `bunk_<roll>` start
+ * payload, or null for another payload.
  *
- * Telegram sends `/start <payload>` when a student opens
- * `https://t.me/NbkristQik_bot?start=<payload>`. The channel's "Open the
- * library" button uses `start=library`, so the button lands on the same
- * one-tap library entry as the `/library` command.
+ * The group reply links to `?start=<signal>_<roll>` so the card is one tap
+ * away in private. A group can never answer with the card itself. The payload
+ * arrives as `ctx.match` from `bot.command("start")`.
  */
-export const startPayload = (text: string): string | null => {
-  const match = /^\/start(?:\s+(\S+))?/.exec(text);
-  return match?.[1] ?? null;
+export const deepLink = (payload: string | null): DeepLink | null => {
+  if (!payload) return null;
+
+  const lower = payload.toLowerCase();
+  const signal = SIGNALS.find((candidate) => lower.startsWith(`${candidate}_`));
+  if (!signal) return null;
+
+  return { signal, roll: payload.slice(signal.length + 1) };
 };
-
-/** The prefix the group's "open attendance" link carries. */
-const ATTENDANCE_PREFIX = "att_";
-
-/**
- * The roll in an `att_<roll>` payload, or null for another payload.
- *
- * The group reply links to `?start=att_<roll>` so the attended card is one tap
- * away in private. A group can never answer with the card itself.
- */
-export const attendanceRoll = (payload: string | null): string | null =>
-  payload?.toLowerCase().startsWith(ATTENDANCE_PREFIX)
-    ? payload.slice(ATTENDANCE_PREFIX.length)
-    : null;

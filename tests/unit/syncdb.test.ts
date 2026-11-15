@@ -17,9 +17,11 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("../../src/bot/bot.js", () => ({
   bot: {
-    onText: vi.fn(),
-    sendMessage: vi.fn(),
-    editMessageText: vi.fn(),
+    command: vi.fn(),
+    api: {
+      sendMessage: vi.fn(),
+      editMessageText: vi.fn(),
+    },
   },
 }));
 vi.mock("axios", () => ({ default: mocks.axios }));

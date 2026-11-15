@@ -46,6 +46,7 @@ import {
   watchForBurst,
 } from "../services/library/reads.js";
 import { chargeDocumentSend } from "../services/library/sends.js";
+import { fromPath } from "node-telegram-bot-api/node";
 import { bot } from "../bot/bot.js";
 
 /**
@@ -445,12 +446,18 @@ libraryRouter.post(
     const unit = doc.unit ? ` · Unit ${doc.unit}` : "";
 
     try {
-      await bot.sendDocument(
-        auth.userId,
-        file,
-        { caption: `${doc.title}${unit}\nSent from your library.` },
-        { filename: fileName, contentType: "application/pdf" },
-      );
+      await bot.api.sendDocument({
+        chat_id: auth.userId,
+        document: await fromPath(file, {
+          filename: fileName,
+          contentType: "application/pdf",
+        }),
+        caption: `${doc.title}${unit}\nSent from your library.`,
+        // The shelf is watermarked and admin-first: a forwarded copy would
+        // leave the signed-in student behind. The one-time PC link still lets
+        // them keep a copy on their own machine.
+        protect_content: true,
+      });
     } catch (e) {
       logger.warn(
         "[library] Telegram would not take the file:",

@@ -52,7 +52,7 @@ deployment that forgets to set it does not inherit the shortcut.
 | `GET /api/leaderboard` | allowed; `name` is `null`, search matches rolls only | names; search matches rolls and names |
 | `GET /api/config` | allowed; both flags `false` | flags reflect the caller |
 | `GET /api/me` | `401` | allowed |
-| `/api/profile`, `/api/register`, `/api/report`, `/api/thread/*` | `401` | allowed |
+| `/api/profile`, `/api/register`, `/api/report`, `/api/thread/*`, `/api/rank/share` | `401` | allowed |
 | `POST /api/library/session` | `401` without signed `initData` in the body | sets the `nbq_lib` session cookie |
 | other `/api/library/*` | `401` without that cookie | cookie from the session exchange |
 
@@ -69,6 +69,7 @@ library read-burst check) lives in the service that knows the caller.
 | Global API middleware | 600 / 15 min per account, plus a 10,000 / 15 min per-IP backstop |
 | `POST /api/register` | 20 / 15 min per account (on top of the global limit) |
 | `POST /api/report` | 5 / 15 min per account, plus a 60 s per-user gate in the service |
+| `POST /api/rank/share` | 30 / 15 min per account |
 | `/api/thread/*` | 120 / 15 min per account, plus a 3 s per-user gate on follow-ups |
 | `POST /api/library/session` | 20 / hour per account (other library calls use the global limit) |
 | `/internal/*` | 120 / 15 min (on top of the global limit) |
@@ -221,6 +222,23 @@ current filters. `Cache-Control: private, no-store`.
 
 `DELETE /api/me/last-lookup` removes the caller's suggestion row; the
 registration is untouched.
+
+### `POST /api/rank/share`
+
+Stores a prepared inline message for the caller's own rank. The Mini App hands
+its `id` to `Telegram.WebApp.shareMessage`, and Telegram's native sheet asks
+the student which chat to send it to. The bot never posts the card itself.
+
+Body: `{ "sort": "attendance" | "midmarks" }`, default `attendance`.
+`400` without a registration, `404` before the student has a ranked figure.
+The card carries the roll, rank and score, never a name, and its button is a
+`startapp=rank` direct link.
+
+```json
+{ "ok": true, "id": "prepared-message-id", "expiresAt": 1763000000 }
+```
+
+`Cache-Control: private, no-store`.
 
 ### `GET /health`
 

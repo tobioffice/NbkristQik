@@ -36,6 +36,7 @@ import { isEmbeddedDatabase } from "../db/db.js";
 import { registerAdminRoutes } from "./admin/index.js";
 import { profileRouter } from "./profile.js";
 import { reportRouter } from "./report.js";
+import { rankRouter } from "./rank.js";
 import { verificationRouter } from "./verification.js";
 import { libraryRouter } from "./library.js";
 import { readSessionFromCookies } from "../services/library/session.js";
@@ -197,6 +198,17 @@ const threadLimit = createRateLimit(
 );
 app.use("/api/thread", threadLimit);
 app.use("/api", reportRouter);
+
+// Sharing a rank card mints a Telegram prepared message: a per-account
+// ceiling keeps one phone from turning the share sheet into a broadcast tool.
+const rankShareLimit = createRateLimit(
+  15 * 60 * 1000,
+  30,
+  "Too many share cards, please try again later.",
+  identityRateLimitKey,
+);
+app.use("/api/rank/share", rankShareLimit);
+app.use("/api", rankRouter);
 
 // Library web app: session exchange, then the student's own subject list.
 // The session exchange is the only way in, so it gets its own tight limit;

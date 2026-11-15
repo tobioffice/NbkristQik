@@ -32,7 +32,9 @@ const getCachedMembership = async (userId: number): Promise<boolean> => {
 /** A student who has not joined the channel gets this card instead. */
 const sendJoinChannelMsg = async (chatId: number): Promise<void> => {
   const channel = CHANNEL_USERNAME;
-  await bot.sendMessage(chatId, JOIN_CHANNEL, {
+  await bot.api.sendMessage({
+    chat_id: chatId,
+    text: JOIN_CHANNEL,
     reply_markup: {
       inline_keyboard: [
         [{ text: `Join @${channel}`, url: `https://t.me/${channel}` }],

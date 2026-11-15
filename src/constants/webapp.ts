@@ -12,7 +12,13 @@
  * whatever the button put there, while the query string arrives intact. The
  * app folds the page into its hash route on load (`takePageLink` in
  * `src/web/src/route.ts`); the hash routes must match it.
+ *
+ * A group has no `web_app` buttons, so there the same section becomes a
+ * direct link: `https://t.me/<bot>?startapp=<section>`. Telegram opens the
+ * Main Mini App in the current chat, and the app reads `start_param` on load.
  */
+
+import { BOT_USERNAME } from "./bot.js";
 
 const APP_BASE = "https://checker.tobioffice.dev/library/";
 
@@ -28,6 +34,31 @@ const section = (route: string): string => {
     .join("/");
   return `${APP_BASE}?page=${page}`;
 };
+
+/**
+ * A section as a `startapp` value. Telegram allows letters, digits,
+ * underscores and hyphens, so the route's slashes become underscores.
+ */
+export const startParamFor = (route: string): string =>
+  route.split("/").filter(Boolean).join("_") || "profile";
+
+/**
+ * A direct link that opens the Main Mini App in the current chat. It works in
+ * groups and channels, where Telegram rejects `web_app` buttons.
+ */
+export const appDirectLink = (route: string): string =>
+  `https://t.me/${BOT_USERNAME}?startapp=${encodeURIComponent(
+    startParamFor(route),
+  )}`;
+
+/** The sections the bot links to. */
+export type AppPage = "profile" | "rank" | "library" | "issues" | "issues/new";
+
+/** The same section as a Mini App button target or a direct link. */
+export const appPageUrl = (
+  page: AppPage,
+  mode: "web_app" | "direct",
+): string => (mode === "web_app" ? section(page) : appDirectLink(page));
 
 /** The profile form. */
 export const REGISTER_WEBAPP_URL = section("/profile");

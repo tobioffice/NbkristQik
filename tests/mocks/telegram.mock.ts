@@ -1,10 +1,9 @@
 import { vi, type Mock } from "vitest";
 
 /**
- * Narrow shapes for the handful of Telegram Bot API calls the unit tests
- * observe. The tests substitute these mocks for the real `bot` module, so
- * only the fields the assertions read are modelled; a real `sendMessage`
- * accepts more options than this.
+ * Narrow shapes for the handful of v2 Telegram calls the unit tests observe.
+ * The tests substitute these mocks for the real `bot` module; only the fields
+ * the assertions read are modelled.
  */
 
 export type InlineKeyboardButton = {
@@ -18,80 +17,154 @@ export type ReplyKeyboard = {
   inline_keyboard: InlineKeyboardButton[][];
 };
 
-export type SendMessageOptions = {
+export type SendMessageParams = {
+  chat_id: number | string;
+  text: string;
   parse_mode?: string;
   reply_markup?: ReplyKeyboard;
   disable_notification?: boolean;
-  reply_to_message_id?: number;
+  reply_parameters?: { message_id: number };
 };
 
 export type SendMessageArgs = (
-  chatId: number | string,
-  text: string,
-  options: SendMessageOptions,
+  params: SendMessageParams,
 ) => Promise<{ message_id: number }>;
 
 export type SendMessageMock = Mock<SendMessageArgs>;
 
-/** `bot.sendMessage` stand-in whose recorded calls keep their argument types. */
+/** `bot.api.sendMessage` stand-in whose recorded calls keep their params. */
 export const createSendMessageMock = (messageId = 1): SendMessageMock =>
   vi.fn<SendMessageArgs>(async () => ({ message_id: messageId }));
 
-/** The recorded call's arguments, with the third options argument present. */
+/** The recorded call's params, failing loudly when there is no call. */
 export const sentMessage = (
   mock: SendMessageMock,
   index = 0,
-): [number | string, string, SendMessageOptions] => {
+): SendMessageParams => {
   const call = mock.mock.calls[index];
   if (!call) {
     throw new Error(`sendMessage was not called ${index + 1} time(s)`);
   }
-  return call;
+  return call[0];
 };
 
 /** The reply keyboard of a recorded call, failing loudly if none was sent. */
-export const replyKeyboard = (options: SendMessageOptions): ReplyKeyboard => {
-  if (!options.reply_markup) {
+export const replyKeyboard = (params: {
+  reply_markup?: ReplyKeyboard;
+}): ReplyKeyboard => {
+  if (!params.reply_markup) {
     throw new Error("sendMessage was called without reply_markup");
   }
-  return options.reply_markup;
+  return params.reply_markup;
 };
 
 export type RegisteredHandler = (payload: unknown) => unknown;
-export type OnTextArgs = (
+export type CommandArgs = (
+  command: string,
+  handler: RegisteredHandler,
+) => unknown;
+export type HearsArgs = (
   pattern: RegExp,
   handler: RegisteredHandler,
 ) => unknown;
 export type OnArgs = (event: string, handler: RegisteredHandler) => unknown;
-export type OnTextMock = Mock<OnTextArgs>;
-export type OnMock = Mock<OnArgs>;
 
-/** `bot.onText(pattern, handler)` stand-in, capturing both arguments. */
-export const createOnTextMock = (): OnTextMock => vi.fn<OnTextArgs>();
+/** `bot.command(name, handler)` stand-in, capturing both arguments. */
+export const createCommandMock = (): Mock<CommandArgs> => vi.fn<CommandArgs>();
+
+/** `bot.hears(pattern, handler)` stand-in, capturing both arguments. */
+export const createHearsMock = (): Mock<HearsArgs> => vi.fn<HearsArgs>();
 
 /** `bot.on(event, handler)` stand-in, capturing both arguments. */
-export const createOnMock = (): OnMock => vi.fn<OnArgs>();
+export const createOnMock = (): Mock<OnArgs> => vi.fn<OnArgs>();
 
-/** The handler registered for the text pattern that matches `command`. */
-export const registeredTextHandler = <T extends RegisteredHandler>(
-  mock: OnTextMock,
+/** The handler registered for the command `command`. */
+export const registeredCommandHandler = <T extends RegisteredHandler>(
+  mock: Mock<CommandArgs>,
   command: string,
 ): T => {
-  const call = mock.mock.calls.find(([pattern]) => pattern.test(command));
-  if (!call) throw new Error(`no handler registered for ${command}`);
-  // The mock records the shared (payload: unknown) => unknown shape; each
-  // test knows the concrete bot payload it invokes the handler with.
+  const call = mock.mock.calls.find(([name]) => name === command);
+  if (!call) throw new Error(`no handler registered for /${command}`);
+  return call[1] as unknown as T;
+};
+
+/** The first `hears` handler; the roll regex is the only one in these tests. */
+export const firstHearsHandler = <T extends RegisteredHandler>(
+  mock: Mock<HearsArgs>,
+): T => {
+  const call = mock.mock.calls[0];
+  if (!call) throw new Error("no hears handler registered");
   return call[1] as unknown as T;
 };
 
 /** The handler registered for the bot event `event`. */
 export const registeredEventHandler = <T extends RegisteredHandler>(
-  mock: OnMock,
+  mock: Mock<OnArgs>,
   event: string,
 ): T => {
   const call = mock.mock.calls.find(([name]) => name === event);
   if (!call) throw new Error(`no handler registered for ${event}`);
-  // Same boundary as registeredTextHandler: the test supplies the concrete
-  // callback-query payload type it invokes the handler with.
   return call[1] as unknown as T;
 };
+
+/**
+ * The slice of a v2 `Context` the handlers read.
+ *
+ * `reply` is wired to the same `api.sendMessage` the real context uses, so a
+ * test can assert one call shape whether the handler replied through `ctx` or
+ * through `bot.api`.
+ */
+export interface TestContext {
+  message?: unknown;
+  match?: string | RegExpMatchArray;
+  callbackQuery?: { id: string };
+  reply: (
+    text: string,
+    options?: Omit<SendMessageParams, "chat_id" | "text">,
+  ) => Promise<{ message_id: number }>;
+  answerCallbackQuery: (options?: {
+    text?: string;
+    show_alert?: boolean;
+  }) => Promise<unknown>;
+}
+
+export const contextFor = ({
+  message,
+  match,
+  callbackQuery,
+  api,
+}: {
+  message?: {
+    chat: { id: number | string; type?: string };
+    [key: string]: unknown;
+  };
+  match?: string | RegExpMatchArray;
+  callbackQuery?: { id: string };
+  api: {
+    sendMessage: SendMessageMock;
+    answerCallbackQuery?: Mock<
+      (params: {
+        callback_query_id: string;
+        text?: string;
+        show_alert?: boolean;
+      }) => Promise<unknown>
+    >;
+  };
+}): TestContext => ({
+  message,
+  match,
+  callbackQuery,
+  reply: (text, options = {}) => {
+    if (!message) {
+      return Promise.reject(new Error("the update has no chat"));
+    }
+    return api.sendMessage({ chat_id: message.chat.id, text, ...options });
+  },
+  answerCallbackQuery: (options = {}) =>
+    api.answerCallbackQuery
+      ? api.answerCallbackQuery({
+          callback_query_id: callbackQuery?.id ?? "cb",
+          ...options,
+        })
+      : Promise.resolve(true),
+});

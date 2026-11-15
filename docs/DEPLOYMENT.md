@@ -39,6 +39,45 @@ Checks: `pnpm lint`, `pnpm typecheck`, `pnpm exec vitest run` (or
 static marketing site publishes separately with `cd src/web && pnpm deploy:site`
 (it stages `public/site/` and runs `gh-pages -d dist-site --nojekyll`).
 
+## Telegram setup
+
+The bot sets its command lists and menu button at startup (`setupBot`), so
+there is nothing to paste into @BotFather for commands. The Main Mini App is
+the one thing that needs a one-time BotFather step; the group privacy commands
+are set by the bot itself.
+
+### Main Mini App
+
+The group buttons use direct links such as
+`https://t.me/NbkristQik_bot?startapp=rank`. Telegram only opens those inside
+the app when the bot has a **Main Mini App**. Without it, the link opens the
+bot chat and the student has to tap the menu button.
+
+1. Open [@BotFather](https://t.me/BotFather) → `/mybots` → the bot →
+   **Bot Settings** → **Configure Mini App** → **Enable Mini App**.
+2. Set the URL to `https://checker.tobioffice.dev/library/`.
+3. Optionally set a short name (`app`), which makes
+   `https://t.me/NbkristQik_bot/app?startapp=rank` the explicit form.
+4. Upload screenshots and a short demo video from the bot's profile page.
+   These are what search and the Apps tab show.
+5. Configure the splash screen with the app's dark ground (`#1a2026`) and
+   surface (`#212a33`), and the app icon.
+
+The Mini App reads `start_param` at startup (`takeStartParam` in
+`src/web/src/route.ts`) and folds it into the hash route, so `rank`, `profile`,
+`issues`, `issues_new` and `library` all land on the right screen. `?page=`
+still works for every button already sent, so enabling the Main Mini App does
+not break old links.
+
+### Group privacy
+
+`/attendance`, `/midmarks` and `/bunk` are registered as **ephemeral** commands
+for groups. The command and the card are visible only to the student who sent
+it. Telegram may fail to deliver an ephemeral message (the student is offline,
+or the client is old), but the bot never falls back to posting the card in the
+room; the public command path sends the private link instead. No BotFather
+setting is required.
+
 ## Production deployment
 
 The bot runs as the `nbkristqik` **systemd** service on the production server.

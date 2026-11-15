@@ -13,17 +13,18 @@ process.on("unhandledRejection", (reason) => {
 
 logger.info("Starting bot initialization...");
 
+const messageOf = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
+let polling: Promise<void> | null = null;
 let shuttingDown = false;
 const shutdown = async (signal: string) => {
   if (shuttingDown) return;
   shuttingDown = true;
   logger.info(`[bot] ${signal} received, shutting down...`);
 
-  try {
-    await bot.stopPolling({ cancel: true });
-  } catch {
-    /* already stopped */
-  }
+  bot.stop();
+  await polling?.catch(() => undefined);
 
   try {
     const { getClient } = await import("../services/redis/getRedisClient.js");
@@ -50,9 +51,9 @@ async function startBot() {
     await initDatabase();
 
     // Setup bot commands
-    await setupBot(bot);
+    await setupBot(bot.api);
 
-    // Import handler modules — each registers its bot.on* handlers on import
+    // Import handler modules — each registers its commands and handlers on import
     await Promise.all([
       import("./commands/help.js"),
       import("./commands/start.js"),
@@ -85,10 +86,18 @@ async function startBot() {
     startServer();
 
     // Only expose the bot to Telegram after DB init, all command/handler
-    // imports, and the API server are ready.
-    await bot.startPolling();
-
+    // imports, and the API server are ready. v2's startPolling resolves when
+    // the pump stops, so it runs in the background and shutdown awaits it.
+    await bot.init();
     logger.info("Bot is ready!");
+
+    polling = bot.startPolling(undefined, {
+      onError: (error) => logger.warn("[bot] polling error:", messageOf(error)),
+    });
+    void polling.catch((error) => {
+      logger.error("[bot] polling stopped:", messageOf(error));
+      process.exit(1);
+    });
   } catch (error) {
     logger.error("Error during bot initialization:", error);
     process.exit(1);

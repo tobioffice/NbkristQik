@@ -10,35 +10,28 @@ import { botLink } from "../../constants/telegram.js";
 export const POSTOPEN_TEXT = "Tap below to open me in private.";
 export const POSTOPEN_BUTTON_TEXT = "Open me in private";
 
-bot.onText(/\/postopen$/, async (msg) => {
-  if (msg.from?.id !== ADMIN_ID) return;
+bot.command("postopen", async (ctx) => {
+  const msg = ctx.message;
+  if (!msg || msg.from?.id !== ADMIN_ID) return;
+
   trackMessage(msg, "command:postopen");
 
-  const chatId = msg.chat.id;
-
   if (!CHANNEL_ID) {
-    bot.sendMessage(chatId, "Channel isn't set up.");
+    await ctx.reply("Channel isn't set up.");
     return;
   }
 
   try {
-    await bot.sendMessage(CHANNEL_ID, POSTOPEN_TEXT, {
+    await bot.api.sendMessage({
+      chat_id: CHANNEL_ID,
+      text: POSTOPEN_TEXT,
       reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: POSTOPEN_BUTTON_TEXT,
-              url: botLink(),
-            },
-          ],
-        ],
+        inline_keyboard: [[{ text: POSTOPEN_BUTTON_TEXT, url: botLink() }]],
       },
     });
-    bot.sendMessage(chatId, "Posted to the channel.");
+    await ctx.reply("Posted to the channel.");
   } catch (e) {
     logger.error("[postopen] channel post failed:", e);
-    bot
-      .sendMessage(chatId, "That didn't send. Try again in a bit.")
-      .catch(() => {});
+    await ctx.reply("That didn't send. Try again in a bit.").catch(() => {});
   }
 });

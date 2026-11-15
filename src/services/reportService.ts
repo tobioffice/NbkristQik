@@ -26,8 +26,9 @@ import {
   REPORT_LIST_WEBAPP_URL,
 } from "../constants/webapp.js";
 import { escapeHtml } from "./text.js";
+import type { Bot } from "node-telegram-bot-api";
 
-const bot = async (): Promise<import("node-telegram-bot-api") | null> => {
+const bot = async (): Promise<Bot | null> => {
   try {
     const { bot: instance } = await import("../bot/bot.js");
     return instance;
@@ -110,28 +111,30 @@ export const createAndAnnounce = async (
         `New report <code>${issueId}</code> from ${reporterName} · <code>${sub.userId}</code>\n` +
         `${escapeHtml(sub.message)}\n\n` +
         `Reply with <code>/reply ${issueId} your answer</code>`;
-      instance
-        .sendMessage(ADMIN_ID, notice, { parse_mode: "HTML" })
+      instance.api
+        .sendMessage({ chat_id: ADMIN_ID, text: notice, parse_mode: "HTML" })
         .catch((e: Error) =>
           logger.warn("[report] admin notice failed:", e?.message ?? e),
         );
     }
 
-    instance
-      .sendMessage(
-        sub.userId,
-        `Got it, I've filed <code>${issueId}</code>.\n\n` +
+    instance.api
+      .sendMessage({
+        chat_id: sub.userId,
+        text:
+          `Got it, I've filed <code>${issueId}</code>.\n\n` +
           `<i>${escapeHtml(sub.message.slice(0, 200))}${sub.message.length > 200 ? "…" : ""}</i>\n\n` +
           `I'll reply here once I've looked into it. You can add more from My reports.`,
-        {
-          parse_mode: "HTML",
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: "🗂 My reports", web_app: { url: reportListUrl() } }],
+        parse_mode: "HTML",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: "Copy id", copy_text: { text: issueId } },
+              { text: "🗂 My reports", web_app: { url: reportListUrl() } },
             ],
-          },
+          ],
         },
-      )
+      })
       .catch((e: Error) =>
         logger.warn("[report] reporter confirm failed:", e?.message ?? e),
       );
@@ -148,24 +151,22 @@ const notifyReporterOfMessage = async (
   const instance = await bot();
   if (!instance) return;
   const issueId = formatIssueId(report.id);
-  instance
-    .sendMessage(
-      report.user_id,
-      `My reply on <code>${issueId}</code>:\n\n` + `${escapeHtml(body)}`,
-      {
-        parse_mode: "HTML",
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: "💬 Open the thread",
-                web_app: { url: reportThreadUrl(issueId) },
-              },
-            ],
+  instance.api
+    .sendMessage({
+      chat_id: report.user_id,
+      text: `My reply on <code>${issueId}</code>:\n\n` + `${escapeHtml(body)}`,
+      parse_mode: "HTML",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "💬 Open the thread",
+              web_app: { url: reportThreadUrl(issueId) },
+            },
           ],
-        },
+        ],
       },
-    )
+    })
     .catch((e: Error) =>
       logger.warn("[report] reply DM failed:", e?.message ?? e),
     );
@@ -183,14 +184,15 @@ const notifyAdminOfMessage = async (
   const reporterName = escapeHtml(
     who?.firstName || who?.username || `User ${report.user_id}`,
   );
-  instance
-    .sendMessage(
-      ADMIN_ID,
-      `Reply on <code>${issueId}</code> from ${reporterName} · <code>${report.user_id}</code>:\n` +
+  instance.api
+    .sendMessage({
+      chat_id: ADMIN_ID,
+      text:
+        `Reply on <code>${issueId}</code> from ${reporterName} · <code>${report.user_id}</code>:\n` +
         `${escapeHtml(body)}\n\n` +
         `Answer with <code>/reply ${issueId} your answer</code>`,
-      { parse_mode: "HTML" },
-    )
+      parse_mode: "HTML",
+    })
     .catch((e: Error) =>
       logger.warn("[report] admin thread notice failed:", e?.message ?? e),
     );
@@ -267,25 +269,24 @@ export const adminCloseReport = async (
   const issueId = formatIssueId(id);
   const instance = await bot();
   if (instance) {
-    instance
-      .sendMessage(
-        report.user_id,
-        `I've closed <code>${issueId}</code>. Glad that's sorted.\n\n` +
+    instance.api
+      .sendMessage({
+        chat_id: report.user_id,
+        text:
+          `I've closed <code>${issueId}</code>. Glad that's sorted.\n\n` +
           `If it comes back, report it again.`,
-        {
-          parse_mode: "HTML",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "💬 Open the thread",
-                  web_app: { url: reportThreadUrl(issueId) },
-                },
-              ],
+        parse_mode: "HTML",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "💬 Open the thread",
+                web_app: { url: reportThreadUrl(issueId) },
+              },
             ],
-          },
+          ],
         },
-      )
+      })
       .catch(() => {});
   }
   return issueId;

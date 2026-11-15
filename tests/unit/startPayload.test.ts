@@ -1,35 +1,33 @@
 import { describe, expect, it } from "vitest";
-import {
-  attendanceRoll,
-  startPayload,
-} from "../../src/bot/commands/startPayload.js";
+import { deepLink } from "../../src/bot/commands/startPayload.js";
 
-describe("a /start deep link", () => {
-  it("carries the library payload from the channel button", () => {
-    expect(startPayload("/start library")).toBe("library");
-  });
-
-  it("keeps other payloads exactly as sent", () => {
-    expect(startPayload("/start ref_23CS1042")).toBe("ref_23CS1042");
-  });
-
-  it("is empty for a plain start", () => {
-    expect(startPayload("/start")).toBeNull();
-  });
-});
-
-describe("an attendance deep link", () => {
-  it("carries the roll from the group link", () => {
-    expect(attendanceRoll("att_25KB1A05AR")).toBe("25KB1A05AR");
+describe("a card deep link", () => {
+  it("carries the roll and the card from the group link", () => {
+    expect(deepLink("att_25KB1A05AR")).toEqual({
+      signal: "att",
+      roll: "25KB1A05AR",
+    });
+    expect(deepLink("mid_25KB1A05AR")).toEqual({
+      signal: "mid",
+      roll: "25KB1A05AR",
+    });
+    expect(deepLink("bunk_25KB1A05AR")).toEqual({
+      signal: "bunk",
+      roll: "25KB1A05AR",
+    });
   });
 
   it("accepts the prefix in any case", () => {
-    expect(attendanceRoll("ATT_25KB1A05AR")).toBe("25KB1A05AR");
+    expect(deepLink("ATT_25KB1A05AR")).toEqual({
+      signal: "att",
+      roll: "25KB1A05AR",
+    });
   });
 
   it("is null for every other payload", () => {
-    expect(attendanceRoll("library")).toBeNull();
-    expect(attendanceRoll("campaign")).toBeNull();
-    expect(attendanceRoll(null)).toBeNull();
+    expect(deepLink("library")).toBeNull();
+    expect(deepLink("campaign")).toBeNull();
+    expect(deepLink("attendance_25KB1A05AR")).toBeNull();
+    expect(deepLink(null)).toBeNull();
   });
 });

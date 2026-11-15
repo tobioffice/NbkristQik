@@ -6,11 +6,15 @@ import {
   NoDataFoundError,
 } from "./academicErrors.js";
 import { StudentNotFoundError } from "../redis/utils.js";
+import { escapeHtml } from "../text.js";
 import { logger } from "../../config/logger.js";
 import {
   formatAttendanceMessage,
+  formatAttendanceRich,
   formatMidmarksMessage,
+  formatMidmarksRich,
   formatBunkPlanMessage,
+  formatBunkPlanRich,
 } from "./formatters.js";
 import {
   buildServerDownMessage,
@@ -41,6 +45,31 @@ export class AcademicTG extends Academic {
   }
 
   /**
+   * The same stamp for the rich card. A paragraph keeps it a block of its
+   * own; the text card's `<i>` tail would merge into the table's paragraph.
+   */
+  private withRichFreshness(body: string): string {
+    const notice = this.getDataNotice();
+    return notice ? `${body}\n<p><i>${escapeHtml(notice)}</i></p>` : body;
+  }
+
+  /**
+   * A rich card must never cost the student the text card. If the renderer
+   * trips on an unexpected portal shape, the caller keeps the HTML fallback.
+   */
+  private richOrUndefined(render: () => string): string | undefined {
+    try {
+      return render();
+    } catch (e) {
+      logger.warn(
+        "[AcademicTG] rich card skipped:",
+        e instanceof Error ? e.message : e,
+      );
+      return undefined;
+    }
+  }
+
+  /**
    * Gets attendance data formatted for Telegram. Text-only callers keep this
    * shape; the bot uses `getAttendanceResult` so it can carry the suggestion
    * buttons on a "roll not found" answer.
@@ -53,7 +82,12 @@ export class AcademicTG extends Academic {
   async getAttendanceResult(): Promise<LookupResult> {
     try {
       const data = await this.getAttendanceJSON();
-      return { text: this.withFreshnessNotice(formatAttendanceMessage(data)) };
+      return {
+        text: this.withFreshnessNotice(formatAttendanceMessage(data)),
+        rich: this.richOrUndefined(() =>
+          this.withRichFreshness(formatAttendanceRich(data)),
+        ),
+      };
     } catch (error) {
       logger.error("[AcademicTG] Attendance error:", error);
       return this.formatErrorResult(error, "attendance");
@@ -71,7 +105,12 @@ export class AcademicTG extends Academic {
   async getBunkPlanResult(): Promise<LookupResult> {
     try {
       const data = await this.getAttendanceJSON();
-      return { text: this.withFreshnessNotice(formatBunkPlanMessage(data)) };
+      return {
+        text: this.withFreshnessNotice(formatBunkPlanMessage(data)),
+        rich: this.richOrUndefined(() =>
+          this.withRichFreshness(formatBunkPlanRich(data)),
+        ),
+      };
     } catch (error) {
       logger.error("[AcademicTG] Bunk plan error:", error);
       return this.formatErrorResult(error, "attendance");
@@ -89,7 +128,12 @@ export class AcademicTG extends Academic {
   async getMidmarksResult(): Promise<LookupResult> {
     try {
       const data = await this.getMidmarksJSON();
-      return { text: this.withFreshnessNotice(formatMidmarksMessage(data)) };
+      return {
+        text: this.withFreshnessNotice(formatMidmarksMessage(data)),
+        rich: this.richOrUndefined(() =>
+          this.withRichFreshness(formatMidmarksRich(data)),
+        ),
+      };
     } catch (error) {
       logger.error("[AcademicTG] Midmarks error:", error);
       return this.formatErrorResult(error, "midmarks");

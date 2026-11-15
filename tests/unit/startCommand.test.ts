@@ -1,17 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
-  createOnTextMock,
+  createCommandMock,
   createSendMessageMock,
-  registeredTextHandler,
+  contextFor,
+  registeredCommandHandler,
   sentMessage,
 } from "../mocks/telegram.mock.js";
 
 // Capture the /start handler and the messages it sends instead of talking to
 // Telegram.
-const onText = createOnTextMock();
+const command = createCommandMock();
 const sendMessage = createSendMessageMock();
 const deleteMessage = vi.fn<
-  (chatId: number | string, messageId: number) => Promise<boolean>
+  (params: { chat_id: number | string; message_id: number }) => Promise<boolean>
 >(async () => true);
 const sendLibraryEntry = vi.fn(async () => undefined);
 const trackMessage = vi.fn();
@@ -40,7 +41,7 @@ const isAuthorizedUser = vi.fn<
 >(async () => true);
 
 vi.mock("../../src/bot/bot.js", () => ({
-  bot: { onText, sendMessage, deleteMessage },
+  bot: { command, api: { sendMessage, deleteMessage } },
 }));
 vi.mock("../../src/services/tracker.js", () => ({ trackMessage }));
 vi.mock("../../src/bot/commands/library.js", () => ({ sendLibraryEntry }));
@@ -62,10 +63,9 @@ const { rememberGroupPrompt } =
 
 await import("../../src/bot/commands/start.js");
 
-const start = registeredTextHandler<(msg: unknown) => Promise<unknown> | void>(
-  onText,
-  "/start",
-);
+const start = registeredCommandHandler<
+  (ctx: unknown) => Promise<unknown> | void
+>(command, "start");
 
 const message = (text: string, chatType = "private", messageId = 11) => ({
   chat: { id: 42, type: chatType },
@@ -73,6 +73,15 @@ const message = (text: string, chatType = "private", messageId = 11) => ({
   text,
   message_id: messageId,
 });
+
+const invoke = (text: string, chatType = "private", messageId = 11) =>
+  start(
+    contextFor({
+      message: message(text, chatType, messageId),
+      match: text.replace(/^\/start\s*/, ""),
+      api: { sendMessage },
+    }),
+  );
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -84,7 +93,7 @@ describe("/start", () => {
     sendLibraryEntry.mockClear();
     sendMessage.mockClear();
 
-    start(message("/start library"));
+    invoke("/start library");
 
     expect(sendLibraryEntry).toHaveBeenCalledTimes(1);
     expect(sendMessage).not.toHaveBeenCalled();
@@ -95,11 +104,11 @@ describe("/start", () => {
     sendLibraryEntry.mockClear();
     sendMessage.mockClear();
 
-    start(message("/start campaign"));
+    invoke("/start campaign");
 
     expect(sendLibraryEntry).not.toHaveBeenCalled();
     expect(sendMessage).toHaveBeenCalledTimes(1);
-    const [, text] = sentMessage(sendMessage);
+    const text = sentMessage(sendMessage).text;
     expect(text).toContain("welcome in");
   });
 
@@ -107,16 +116,16 @@ describe("/start", () => {
     sendLibraryEntry.mockClear();
     sendMessage.mockClear();
 
-    start(message("/start"));
+    invoke("/start");
 
     expect(sendMessage).toHaveBeenCalledTimes(1);
-    expect(sendMessage.mock.calls[0][1]).toContain("welcome in");
+    expect(sendMessage.mock.calls[0][0].text).toContain("welcome in");
   });
 });
 
 describe("/start att_<roll>", () => {
   it("answers the attendance card here in private", async () => {
-    await start(message("/start att_25KB1A05AR"));
+    await invoke("/start att_25KB1A05AR");
 
     expect(sendAttendanceOrMidMarks).toHaveBeenCalledTimes(1);
     const [, roll, signal, options] = sendAttendanceOrMidMarks.mock.calls[0];
@@ -134,22 +143,22 @@ describe("/start att_<roll>", () => {
   it("does not answer a blocked student", async () => {
     isAuthorizedUser.mockResolvedValueOnce(false);
 
-    await start(message("/start att_25KB1A05AR"));
+    await invoke("/start att_25KB1A05AR");
 
     expect(sendAttendanceOrMidMarks).not.toHaveBeenCalled();
   });
 
   it("never answers an attendance link in a group", async () => {
-    await start(message("/start att_25KB1A05AR", "group"));
+    await invoke("/start att_25KB1A05AR", "group");
 
     expect(sendAttendanceOrMidMarks).not.toHaveBeenCalled();
     expect(sendMessage).toHaveBeenCalledTimes(1);
-    const [, text] = sentMessage(sendMessage);
+    const text = sentMessage(sendMessage).text;
     expect(text).toContain("welcome in");
   });
 
   it("reads a payload O as zero, with the notice", async () => {
-    await start(message("/start att_25KB1A05OR"));
+    await invoke("/start att_25KB1A05OR");
 
     const [, roll, , options] = sendAttendanceOrMidMarks.mock.calls[0];
     expect(roll).toBe("25KB1A050R");
@@ -163,12 +172,18 @@ describe("/start att_<roll>", () => {
       sourceMessageId: 76,
     });
 
-    await start(message("/start att_25KB1A05AR"));
+    await invoke("/start att_25KB1A05AR");
 
     await vi.waitFor(() =>
-      expect(deleteMessage).toHaveBeenCalledWith(-100200, 77),
+      expect(deleteMessage).toHaveBeenCalledWith({
+        chat_id: -100200,
+        message_id: 77,
+      }),
     );
-    expect(deleteMessage).toHaveBeenCalledWith(-100200, 76);
+    expect(deleteMessage).toHaveBeenCalledWith({
+      chat_id: -100200,
+      message_id: 76,
+    });
     // the room is clean, the lookup still happens
     expect(sendAttendanceOrMidMarks).toHaveBeenCalledTimes(1);
   });
@@ -180,12 +195,15 @@ describe("/start att_<roll>", () => {
       sourceMessageId: 77,
     });
 
-    await start(message("/start att_25KB1A05AR"));
+    await invoke("/start att_25KB1A05AR");
     await vi.waitFor(() =>
-      expect(deleteMessage).toHaveBeenCalledWith(-100201, 78),
+      expect(deleteMessage).toHaveBeenCalledWith({
+        chat_id: -100201,
+        message_id: 78,
+      }),
     );
 
-    await start(message("/start att_25KB1A05AR"));
+    await invoke("/start att_25KB1A05AR");
     expect(deleteMessage).toHaveBeenCalledTimes(2);
   });
 
@@ -199,7 +217,7 @@ describe("/start att_<roll>", () => {
       sourceMessageId: 78,
     });
 
-    await start(message("/start att_25KB1A05AR"));
+    await invoke("/start att_25KB1A05AR");
 
     await vi.waitFor(() => expect(deleteMessage).toHaveBeenCalledTimes(2));
     expect(sendAttendanceOrMidMarks).toHaveBeenCalledTimes(1);
@@ -207,11 +225,11 @@ describe("/start att_<roll>", () => {
   });
 
   it("falls through to the welcome for a malformed roll", async () => {
-    await start(message("/start att_not-a-roll"));
+    await invoke("/start att_not-a-roll");
 
     expect(sendAttendanceOrMidMarks).not.toHaveBeenCalled();
     expect(sendMessage).toHaveBeenCalledTimes(1);
-    const [, text] = sentMessage(sendMessage);
+    const text = sentMessage(sendMessage).text;
     expect(text).toContain("welcome in");
   });
 });

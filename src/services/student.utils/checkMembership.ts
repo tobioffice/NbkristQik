@@ -5,7 +5,10 @@ import { redisKeys } from "../redis/keys.js";
 import { logger } from "../../config/logger.js";
 
 export const checkMembership = async (userId: number): Promise<boolean> => {
-  const member = await bot.getChatMember(CHANNEL_ID, userId);
+  const member = await bot.api.getChatMember({
+    chat_id: CHANNEL_ID,
+    user_id: userId,
+  });
   const isMember = ["member", "creator", "administrator"].includes(
     member.status,
   );

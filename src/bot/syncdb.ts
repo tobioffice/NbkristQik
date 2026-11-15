@@ -21,6 +21,7 @@
  *             /syncdb 1 2025-26 -> both
  */
 import { bot } from "./bot.js";
+import { commandArgs } from "./commands/args.js";
 import { ADMIN_ID } from "../config/environmentals.js";
 import { BASE_URL, BRANCHES } from "../constants/index.js";
 import {
@@ -94,10 +95,12 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 async function editProgress(p: SyncProgress) {
   if (!p.chatId || !p.msgId) return; // CLI run — no Telegram message to edit
   try {
-    await bot.editMessageText(
-      `<b>🔄 Semester Sync in progress...</b>\n\n${p.lines.join("\n")}`,
-      { chat_id: p.chatId, message_id: p.msgId, parse_mode: "HTML" },
-    );
+    await bot.api.editMessageText({
+      chat_id: p.chatId,
+      message_id: p.msgId,
+      text: `<b>🔄 Semester Sync in progress...</b>\n\n${p.lines.join("\n")}`,
+      parse_mode: "HTML",
+    });
   } catch {
     /* edit race — ignore */
   }
@@ -504,17 +507,23 @@ export async function runSyncDb(
 
 export const registerSyncDbCommand = () => {
   // ---------- /setsem 1|2 ----------
-  bot.onText(/\/setsem ?([12])?$/, async (msg, match) => {
-    if (msg.from?.id !== ADMIN_ID) return;
-    const chatId = msg.chat.id;
-    const redis = await getClient();
+  bot.command("setsem", async (ctx) => {
+    const msg = ctx.message;
+    if (!msg || msg.from?.id !== ADMIN_ID) return;
 
+    const raw = commandArgs(ctx);
+    const arg = raw === "1" || raw === "2" ? raw : undefined;
+
+    if (raw && !arg) {
+      await ctx.reply("Use /setsem 1 or /setsem 2.");
+      return;
+    }
+
+    const redis = await getClient();
     const current = await redis.get(redisKeys.syncSemType);
-    const arg = match?.[1];
 
     if (!arg) {
-      await bot.sendMessage(
-        chatId,
+      await ctx.reply(
         `Semester setting: <b>${current === "2" ? "2nd semester (12/22/32/42)" : current === "1" ? "1st semester (11/21/31/41)" : "not set, syncdb scans all 8 sessions"}</b>\n\n` +
           `Set it with:\n<code>/setsem 1</code> for odd semesters (11/21/31/41)\n<code>/setsem 2</code> for even semesters (12/22/32/42)\n\n` +
           `The college site can't tell us which semester is running, so set this once at semester start, then <code>/syncdb</code> just works.`,
@@ -526,18 +535,18 @@ export const registerSyncDbCommand = () => {
     await redis.set(redisKeys.syncSemType, arg);
     const label =
       arg === "1" ? "1st semester (11/21/31/41)" : "2nd semester (12/22/32/42)";
-    await bot.sendMessage(
-      chatId,
+    await ctx.reply(
       `✅ Semester set to <b>${label}</b>.\n\nRun <code>/syncdb</code> to pull the new sections.`,
     );
   });
 
   // ---------- /syncdb ----------
-  bot.onText(/\/syncdb( .+)?$/, async (msg, match) => {
-    if (msg.from?.id !== ADMIN_ID) return;
+  bot.command("syncdb", async (ctx) => {
+    const msg = ctx.message;
+    if (!msg || msg.from?.id !== ADMIN_ID) return;
 
     const chatId = msg.chat.id;
-    const argStr = (match?.[1] || "").trim();
+    const argStr = commandArgs(ctx);
     // accept: "1", "2", "2025-26", "1 2025-26", "2 2025-26", "" (use stored)
     const semArg = argStr.match(/^([12])\b/)?.[1];
     const yearArg = argStr.match(/(\d{4}-\d{2})/)?.[1];
@@ -558,8 +567,7 @@ export const registerSyncDbCommand = () => {
           ? "2nd sems (12/22/32/42)"
           : "all 8 sessions";
 
-    const progress = await bot.sendMessage(
-      chatId,
+    const progress = await ctx.reply(
       `🔄 <b>Sync started...</b>\nSemester mode: <b>${semLabel}</b>\nLogging into college portal...`,
       { parse_mode: "HTML" },
     );
@@ -583,23 +591,20 @@ export const registerSyncDbCommand = () => {
         onProgress: editProgress,
       });
 
-      await bot.editMessageText(
-        `✅ <b>Sync complete!</b>\n\n` +
+      await bot.api.editMessageText({
+        chat_id: chatId,
+        message_id: progress.message_id,
+        text:
+          `✅ <b>Sync complete!</b>\n\n` +
           res.lines.join("\n") +
           `\n\n📊 <b>Per-session students:</b>\n<code>${res.perYear}</code>\n\n` +
           `<i>Bot is now serving updated sections. Students get their new sections on next check.</i>`,
-        {
-          chat_id: chatId,
-          message_id: progress.message_id,
-          parse_mode: "HTML",
-        },
-      );
+        parse_mode: "HTML",
+      });
     } catch (e: unknown) {
       const err = e as Error;
       logger.error("[syncdb] error:", e instanceof Error ? e.message : e);
-      bot
-        .sendMessage(chatId, `❌ Sync failed: ${err?.message || e}`)
-        .catch(() => {});
+      ctx.reply(`❌ Sync failed: ${err?.message || e}`).catch(() => {});
     }
   });
 };

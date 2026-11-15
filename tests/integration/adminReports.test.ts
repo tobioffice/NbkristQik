@@ -19,10 +19,20 @@ vi.mock("../../src/services/redis/getRedisClient.js", () => ({
 const sentTo: Array<{ to: string; text: string }> = [];
 vi.mock("../../src/bot/bot.js", () => ({
   bot: {
-    sendMessage: vi.fn(async (to: string, text: string) => {
-      sentTo.push({ to: String(to), text });
-      return { message_id: sentTo.length };
-    }),
+    api: {
+      sendMessage: vi.fn(
+        async ({
+          chat_id,
+          text,
+        }: {
+          chat_id: string | number;
+          text: string;
+        }) => {
+          sentTo.push({ to: String(chat_id), text });
+          return { message_id: sentTo.length };
+        },
+      ),
+    },
   },
 }));
 

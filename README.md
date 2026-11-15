@@ -97,7 +97,7 @@ needs no migration step.
 | Layer      | Choice                                                            |
 | ---------- | ----------------------------------------------------------------- |
 | Runtime    | Node.js 22 or 24 (Node 20 is EOL), ESM, TypeScript 5             |
-| Bot        | `node-telegram-bot-api`, long polling                             |
+| Bot        | `node-telegram-bot-api` v2, long polling                          |
 | API        | Express 5 with CORS, rate limiting and input validation           |
 | Database   | libSQL/SQLite via `@libsql/client` — embedded file or Turso Cloud |
 | Cache      | Redis 5                                                           |

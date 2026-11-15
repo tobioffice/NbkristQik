@@ -1,21 +1,29 @@
 import { describe, it, expect, vi } from "vitest";
+import {
+  createHearsMock,
+  createSendMessageMock,
+  contextFor,
+  firstHearsHandler,
+} from "../mocks/telegram.mock.js";
 
 // Capture the roll handler; "you" identity writes must wait for authorization.
-const onText = vi.fn();
-const sendMessage = vi.fn(async () => ({ message_id: 1 }));
+const hears = createHearsMock();
+const sendMessage = createSendMessageMock();
 const getStudentCached = vi.fn(async () => ({ roll_no: "25KB1A05AR" }));
 const upsertTgUser = vi.fn(async () => 1);
 const isAuthorizedUser = vi.fn(async () => false);
 
 vi.mock("../../src/bot/bot.js", () => ({
   bot: {
-    onText,
+    hears,
     on: vi.fn(),
-    sendMessage,
-    editMessageText: vi.fn(async () => true),
-    editMessageReplyMarkup: vi.fn(async () => true),
-    deleteMessage: vi.fn(async () => true),
-    answerCallbackQuery: vi.fn(async () => true),
+    api: {
+      sendMessage,
+      editMessageText: vi.fn(async () => true),
+      editMessageReplyMarkup: vi.fn(async () => true),
+      deleteMessage: vi.fn(async () => true),
+      answerCallbackQuery: vi.fn(async () => true),
+    },
   },
 }));
 vi.mock("../../src/services/redis/utils.js", () => ({ getStudentCached }));
@@ -40,15 +48,20 @@ vi.mock("../../src/db/registration.model.js", () => ({
 
 await import("../../src/bot/academics/academicHandler.js");
 
-const rollHandler = onText.mock.calls[0]?.[1] as (msg: unknown) => void;
+const rollHandler = firstHearsHandler<(ctx: unknown) => void>(hears);
 
 const sendRoll = (userId: number, text: string) =>
-  rollHandler({
-    chat: { id: userId, type: "private" },
-    from: { id: userId, username: "student", first_name: "Student" },
-    text,
-    message_id: 7,
-  });
+  rollHandler(
+    contextFor({
+      message: {
+        chat: { id: userId, type: "private" },
+        from: { id: userId, username: "student", first_name: "Student" },
+        text,
+        message_id: 7,
+      },
+      api: { sendMessage },
+    }),
+  );
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
