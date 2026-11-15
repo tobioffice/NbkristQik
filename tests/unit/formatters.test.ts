@@ -19,7 +19,7 @@ describe("formatAttendanceMessage", () => {
         "📚 Attended: 188/206\n" +
         "\n" +
         "📈 Percentage: 91.26%\n\n" +
-        "🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜",
+        "● ● ● ● ● ● ● ● ● ○",
     );
   });
 

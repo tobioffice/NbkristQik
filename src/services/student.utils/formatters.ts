@@ -161,14 +161,13 @@ const cleanBranch = (raw: string): string =>
     .trim();
 
 /**
- * Ten blocks, green above the line, amber near it, red behind it. The number
- * beside it is the exact figure; the bar is only a glance.
+ * Ten dots: filled for the rounded percentage, empty for the rest. The exact
+ * figure is on the line above, and the warning below names every subject
+ * under the 75% line, so the bar is only a glance.
  */
 const buildProgressBar = (percentage: number): string => {
-  const filled = Math.max(0, Math.min(10, Math.floor(percentage / 10)));
-  const block =
-    percentage >= TARGET_PERCENT ? "🟩" : percentage >= 50 ? "🟨" : "🟥";
-  return block.repeat(filled) + "⬜".repeat(10 - filled);
+  const filled = Math.max(0, Math.min(10, Math.round(percentage / 10)));
+  return `${"● ".repeat(filled)}${"○ ".repeat(10 - filled)}`.trimEnd();
 };
 
 /**
