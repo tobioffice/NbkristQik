@@ -13,6 +13,7 @@ import { useBackHandler } from "./backButton";
 import { IdentityProvider } from "./identity";
 import { useAppConfig } from "./useAppConfig";
 import { useTelegramIdentity } from "./useTelegramIdentity";
+import { syncTheme } from "./api";
 import { haptic, telegramWebApp } from "./telegram";
 import type { IssuesRoute } from "./issuesRoute";
 import {
@@ -170,6 +171,18 @@ export default function AppShell() {
 
   // the address bar is the source of truth: Back, Forward and the bot's deep
   // links all arrive as a hash change
+  // The bot bakes the attendance bar strip in the chat background. Report the
+  // palette once, and again when the client switches light/dark.
+  useEffect(() => {
+    const run = () => {
+      void syncTheme();
+    };
+    run();
+    const app = telegramWebApp();
+    app?.onEvent?.("themeChanged", run);
+    return () => app?.offEvent?.("themeChanged", run);
+  }, []);
+
   useEffect(() => {
     const onHash = () => {
       setRoute(parseRouteHash(window.location.hash));

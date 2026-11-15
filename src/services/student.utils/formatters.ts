@@ -349,13 +349,17 @@ const truncateText = (text: string, maxLength: number): string => {
  * instead of a monospaced block. `text` stays alongside it as the fallback for
  * a client that does not render rich messages yet.
  */
-export const formatAttendanceRich = (data: Attendance): InputRichMessage => {
+export const formatAttendanceRich = (
+  data: Attendance,
+  background?: string,
+): InputRichMessage => {
   const { rollno, year_branch_section, percentage, totalClasses, subjects } =
     data;
 
   const barPng = renderAttendanceBarPng({
     percentage,
     target: TARGET_PERCENT,
+    background,
   });
   const bar =
     `<img src="tg://photo?id=attendance-bar" ` +

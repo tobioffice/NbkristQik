@@ -35,6 +35,14 @@ import {
  * Telegram-specific Academic class with formatted message output
  */
 export class AcademicTG extends Academic {
+  constructor(
+    rollnumber: string,
+    /** The chat background the attendance bar strip is drawn on. */
+    private readonly barBackground?: string,
+  ) {
+    super(rollnumber);
+  }
+
   /**
    * Prints the freshness warning above the card when the numbers did not
    * come from a live portal request. A cached figure must never look fresh:
@@ -114,7 +122,9 @@ export class AcademicTG extends Academic {
       return {
         text: this.withFreshnessNotice(formatAttendanceMessage(data)),
         rich: this.richOrUndefined(() =>
-          this.withRichFreshness(formatAttendanceRich(data)),
+          this.withRichFreshness(
+            formatAttendanceRich(data, this.barBackground),
+          ),
         ),
         widget: this.widgetOrUndefined(() =>
           formatAttendanceWidget(data, this.getDataNotice() ?? undefined),

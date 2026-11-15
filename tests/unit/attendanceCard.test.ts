@@ -115,6 +115,9 @@ vi.mock("../../src/services/redis/utils.js", () => ({
   getStudentCached: vi.fn(async () => ({ roll_no: "25KB1A05AR" })),
 }));
 vi.mock("../../src/db/student.model.js", () => ({ upsertTgUser: vi.fn() }));
+vi.mock("../../src/db/userSettings.model.js", () => ({
+  getUserTheme: vi.fn(async () => null),
+}));
 vi.mock("../../src/services/tracker.js", () => ({ trackActivity: vi.fn() }));
 vi.mock("../../src/bot/authorization.js", () => ({
   isAuthorizedUser: vi.fn(async () => true),
@@ -135,6 +138,7 @@ const { getRegistration, upsertRegistration } =
 const { trackActivity } = await import("../../src/services/tracker.js");
 const { upsertTgUser } = await import("../../src/db/student.model.js");
 const { getStudentCached } = await import("../../src/services/redis/utils.js");
+const { getUserTheme } = await import("../../src/db/userSettings.model.js");
 const { getVerificationState } =
   await import("../../src/services/verification/otp.js");
 const { LEADERBOARD_WEBAPP_URL, appDirectLink } =
@@ -225,6 +229,19 @@ afterEach(() => {
 });
 
 describe("attendance card", () => {
+  it("passes the synced theme background to the attendance card", async () => {
+    vi.mocked(getUserTheme).mockResolvedValueOnce({
+      bgColor: "#ffffff",
+      colorScheme: "light",
+    });
+
+    sendRoll(250);
+
+    await vi.waitFor(() =>
+      expect(getAttendanceCard).toHaveBeenCalledWith("25KB1A05AR", "#ffffff"),
+    );
+  });
+
   it("answers a typed roll with the attendance card instead of a menu", async () => {
     sendRoll(201);
 

@@ -32,6 +32,17 @@ export interface TelegramWebApp {
   };
   /** "android" | "ios" | "tdesktop" | "macos" | "web" | ... */
   platform?: string;
+  /** The client's current palette, as CSS colours. */
+  themeParams?: {
+    bg_color?: string;
+    secondary_bg_color?: string;
+    text_color?: string;
+    hint_color?: string;
+  };
+  colorScheme?: "light" | "dark";
+  /** Telegram's own event bus (`themeChanged`, `viewportChanged`, ...). */
+  onEvent?: (event: string, callback: () => void) => void;
+  offEvent?: (event: string, callback: () => void) => void;
   /** True once Telegram's own header has stepped away. */
   isFullscreen?: boolean;
   BackButton?: BackButton;

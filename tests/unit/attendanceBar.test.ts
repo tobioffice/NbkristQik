@@ -17,4 +17,15 @@ describe("the attendance bar image", () => {
 
     expect(low.equals(high)).toBe(false);
   });
+
+  it("uses the chat background supplied by the Mini App", () => {
+    const dark = renderAttendanceBarPng({ percentage: 77.12, target: 75 });
+    const light = renderAttendanceBarPng({
+      percentage: 77.12,
+      target: 75,
+      background: "#ffffff",
+    });
+
+    expect(dark.equals(light)).toBe(false);
+  });
 });

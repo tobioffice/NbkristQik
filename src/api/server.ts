@@ -35,6 +35,7 @@ import { logger } from "../config/logger.js";
 import { isEmbeddedDatabase } from "../db/db.js";
 import { registerAdminRoutes } from "./admin/index.js";
 import { profileRouter } from "./profile.js";
+import { themeRouter } from "./theme.js";
 import { reportRouter } from "./report.js";
 import { rankRouter } from "./rank.js";
 import { verificationRouter } from "./verification.js";
@@ -174,6 +175,7 @@ const profileWriteLimit = createRateLimit(
 );
 app.use("/api/register", profileWriteLimit);
 app.use("/api", profileRouter);
+app.use("/api", themeRouter);
 app.use("/api", verificationRouter);
 
 // Report endpoints: identity-authenticated; submits rate-limited per account

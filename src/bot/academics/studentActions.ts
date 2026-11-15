@@ -12,6 +12,7 @@ import type {
 import { bot } from "../bot.js";
 import type { InputRichMessage, Message } from "node-telegram-bot-api";
 import { logger } from "../../config/logger.js";
+import { getUserTheme } from "../../db/userSettings.model.js";
 import {
   cardMarkup,
   isRollSaved,
@@ -433,11 +434,19 @@ export const sendAttendanceOrMidMarks = async (
   const widgetMarkup = replyMarkup
     ? withTextCard(replyMarkup, rollno)
     : undefined;
+  const readerId = options?.userId ?? msg.from?.id;
+  const fetchContent = async (): Promise<LookupResult> => {
+    if (signal !== "att") return getMidMarksCard(rollno);
+    const theme = readerId ? await getUserTheme(readerId) : null;
+    return theme
+      ? getAttendanceCard(rollno, theme.bgColor)
+      : getAttendanceCard(rollno);
+  };
+
   await fetchAndEdit(
     msg,
     `Getting ${signal == "att" ? "your attendance" : "your mid marks"}...`,
-    () =>
-      signal == "att" ? getAttendanceCard(rollno) : getMidMarksCard(rollno),
+    fetchContent,
     { ...options, replyMarkup, widgetMarkup },
   );
 };

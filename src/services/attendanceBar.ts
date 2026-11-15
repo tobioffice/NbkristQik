@@ -24,6 +24,14 @@ const BAR_TOP = Math.round((IMAGE_HEIGHT - BAR_HEIGHT) / 2);
 
 const DARK: readonly [number, number, number, number] = [27, 39, 51, 255];
 const TRACK: readonly [number, number, number, number] = [142, 142, 147, 56];
+
+/** `#rrggbb` from the Mini App's theme, or null. */
+const parseHex = (value?: string): Rgba | null => {
+  const match = /^#?([0-9a-f]{6})$/i.exec(value?.trim() ?? "");
+  if (!match) return null;
+  const colour = Number.parseInt(match[1], 16);
+  return [(colour >> 16) & 0xff, (colour >> 8) & 0xff, colour & 0xff, 255];
+};
 const GREEN: readonly [number, number, number, number] = [52, 199, 89, 255];
 const AMBER: readonly [number, number, number, number] = [255, 159, 10, 255];
 const RED: readonly [number, number, number, number] = [255, 59, 48, 255];
@@ -118,16 +126,20 @@ const fillColour = (percentage: number, target: number): Rgba => {
 export const renderAttendanceBarPng = ({
   percentage,
   target,
+  background,
 }: {
   percentage: number;
   target: number;
+  /** The chat background from the Mini App's theme, e.g. "#ffffff". */
+  background?: string;
 }): Buffer => {
   const pct = Math.max(0, Math.min(100, percentage));
   const at = Math.max(0, Math.min(100, target));
   const pixels = Buffer.alloc(BAR_WIDTH * IMAGE_HEIGHT * 4);
+  const canvas = parseHex(background) ?? DARK;
   for (let y = 0; y < IMAGE_HEIGHT; y += 1) {
     for (let x = 0; x < BAR_WIDTH; x += 1) {
-      put(pixels, x, y, DARK);
+      put(pixels, x, y, canvas);
     }
   }
 

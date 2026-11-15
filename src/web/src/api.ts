@@ -1,4 +1,5 @@
 import { fetchWithTimeout, readJson } from "./http";
+import { telegramWebApp } from "./telegram";
 
 // Centralized API origin. Dev builds default to same-origin so the vite
 // proxy forwards /api to the local backend; prod builds need the real origin.
@@ -19,6 +20,29 @@ export interface ApiIdentity {
  */
 export const authHeaders = (initData?: string): Record<string, string> =>
   initData ? { "X-Telegram-Init-Data": initData } : {};
+
+/**
+ * Tell the bot the current chat palette once per app open (and on a theme
+ * change). The bot bakes the attendance bar strip in this background colour.
+ * Best-effort: a failed sync leaves the dark default in place.
+ */
+export const syncTheme = async (): Promise<void> => {
+  const app = telegramWebApp();
+  const bgColor = app?.themeParams?.bg_color;
+  if (!app?.initData || !bgColor) return;
+
+  await fetchWithTimeout(`${API_BASE}/api/theme`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(app.initData),
+    },
+    body: JSON.stringify({
+      bgColor,
+      colorScheme: app.colorScheme,
+    }),
+  }).catch(() => undefined);
+};
 
 /** The dev fallback is a bare userId, and only when initData is absent. */
 const devIdentityParams = (identity: ApiIdentity): URLSearchParams => {
