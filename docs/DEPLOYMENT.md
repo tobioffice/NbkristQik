@@ -18,7 +18,7 @@
 | `STATUS_PAGE_PATH` | `src/api/server.ts` | Optional override for the `/status` file; defaults to `public/status/index.html` |
 | `UPTIME_INGEST_SECRET` | `src/api/internal.ts` | Shared secret for `/internal/*`; unset disables both routes |
 | `MONITOR_*` | `src/monitor/index.ts` | Only read by the monitor-host monitor, not the bot |
-| `ATTENDANCE_WIDGET` | `src/bot/academics/widgetCard.ts` | `admin` (default) gives the HTML widget to `ADMIN_ID` only; `all` gives it to every private chat; `off` disables it |
+| `ATTENDANCE_WIDGET` | `src/bot/academics/widgetCard.ts` | `off` (default) while Telegram rejects widgets; `admin` tests it on `ADMIN_ID`; `all` opens it to every private chat |
 
 Start from [`.env.example`](../.env.example).
 
@@ -80,10 +80,11 @@ bot never puts the card in the room. No BotFather setting is required.
 
 ### Attendance widget
 
-`ATTENDANCE_WIDGET` controls the HTML widget card. The default, `admin`, gives
-it to `ADMIN_ID` only, so the operator can confirm the client renders it while
-students keep the text/rich card. Set `all` to turn it on for every private
-chat, or `off` to disable it.
+`ATTENDANCE_WIDGET` controls the HTML widget card. The default is `off`
+because Telegram currently rejects `sendWidget` in production with
+`INPUT_MEDIA_WIDGET_NOT_ALLOWED`; widgets were disabled on 13 Nov 2026, two
+days after Bot API 10.4. When the API returns, `admin` tests the card on
+`ADMIN_ID` and `all` opens it to every private chat.
 
 The widget is one fixed HTML/CSS/JS document; the bot changes its `chat_data`
 on Attendance, Mid marks and Bunk taps, and the card redraws in place. It fits

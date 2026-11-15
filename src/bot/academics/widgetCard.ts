@@ -12,14 +12,17 @@ type WidgetMode = "off" | "admin" | "all";
 /**
  * Who gets the widget card.
  *
- * `admin` is the safe rollout: the operator sees the new card, students keep
- * the text/rich card until the client support is confirmed. `all` turns it on
- * for every private chat. A widget already on screen keeps updating even if
- * the mode changes.
+ * `off` is the current default because Telegram rejects widgets in
+ * production. `admin` is the safe test: the operator sees the card, students
+ * keep the text/rich card. `all` turns it on for every private chat. A widget
+ * already on screen keeps updating even if the mode changes.
  */
 const widgetMode = (): WidgetMode => {
   const raw = process.env.ATTENDANCE_WIDGET?.trim().toLowerCase();
-  return raw === "off" || raw === "all" ? raw : "admin";
+  // Telegram currently rejects widgets in production with
+  // INPUT_MEDIA_WIDGET_NOT_ALLOWED; keep the attempt off until the API is
+  // available again, then use admin/all for the rollout.
+  return raw === "admin" || raw === "all" ? raw : "off";
 };
 
 export const widgetEnabledFor = (userId?: number): boolean => {

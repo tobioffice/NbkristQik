@@ -18,7 +18,7 @@ describe("formatAttendanceMessage", () => {
         "🏫 Branch: 4 AI DS B\n" +
         "📚 Attended: 188/206\n" +
         "\n" +
-        "📈 Percentage: 91.26%\n" +
+        "📈 Percentage: 91.26%\n\n" +
         "🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜",
     );
   });

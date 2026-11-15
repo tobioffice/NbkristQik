@@ -183,12 +183,12 @@ export const formatAttendanceMessage = (data: Attendance): string => {
     `🧑‍🎓 ROLL: <code>${escapeHtml(rollno)}</code>\n` +
     `🏫 Branch: ${escapeHtml(cleanBranch(year_branch_section))}\n` +
     `📚 Attended: ${totalClasses.attended}/${totalClasses.conducted}\n\n` +
-    `📈 Percentage: ${percentage.toFixed(2)}%\n` +
+    `📈 Percentage: ${percentage.toFixed(2)}%\n\n` +
     buildProgressBar(percentage);
 
   if (subjects.length === 0) return msg.trimEnd();
 
-  msg += `\n${buildAttendanceTable(subjects)}`;
+  msg += `\n\n${buildAttendanceTable(subjects)}`;
 
   const warning = belowTargetLine(subjects, (subject) => subject.subject);
   if (warning) msg += `\n${warning}\n`;
@@ -357,7 +357,9 @@ export const formatAttendanceRich = (data: Attendance): string => {
     `<p>🏫 Branch: ${escapeHtml(cleanBranch(year_branch_section))}</p>`,
     `<p>📚 Attended: ${totalClasses.attended}/${totalClasses.conducted}</p>`,
     `<p>📈 Percentage: <b>${percentage.toFixed(2)}%</b></p>`,
+    `<p>&nbsp;</p>`,
     `<p>${buildProgressBar(percentage)}</p>`,
+    `<p>&nbsp;</p>`,
   ];
 
   if (subjects.length === 0) return blocks.join("\n");
