@@ -7,12 +7,12 @@ import { BRANCHES } from "../constants/index.js";
  * cannot drift.
  *
  * A correct answer is worth 100. Speed adds up to 50 more, fading to zero at
- * 20 seconds. Accuracy still beats reflexes: a slow correct answer (100)
- * beats a fast wrong one (0), and the speed bonus is capped below the value
- * of another correct answer.
+ * 10 seconds. A tap that arrives after 10 seconds is wrong: the clock is the
+ * anti-copy-paste rule, not a bonus. Accuracy and speed both matter inside
+ * the window; a fast wrong answer is still 0.
  */
 
-export const QUESTION_LIMIT_MS = 20_000;
+export const QUESTION_LIMIT_MS = 10_000;
 export const CORRECT_POINTS = 100;
 export const MAX_SPEED_BONUS = 50;
 export const QUESTIONS_PER_RUN = 5;
@@ -23,7 +23,7 @@ export const DUEL_DRAW_POINTS = 125;
 
 /** Points for one answer. */
 export const answerPoints = (correct: boolean, elapsedMs: number): number => {
-  if (!correct) return 0;
+  if (!correct || elapsedMs > QUESTION_LIMIT_MS) return 0;
   const elapsed = Math.max(0, Math.min(QUESTION_LIMIT_MS, elapsedMs));
   const bonus = Math.round(MAX_SPEED_BONUS * (1 - elapsed / QUESTION_LIMIT_MS));
   return CORRECT_POINTS + bonus;

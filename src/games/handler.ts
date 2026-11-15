@@ -371,7 +371,11 @@ export const handleGameCallback = async (ctx: Context): Promise<void> => {
 
   await ctx
     .answerCallbackQuery({
-      text: result.correct ? `Correct +${result.earned}` : "Missed",
+      text: result.timedOut
+        ? "Too slow"
+        : result.correct
+          ? `Correct +${result.earned}`
+          : "Missed",
     })
     .catch(() => undefined);
 

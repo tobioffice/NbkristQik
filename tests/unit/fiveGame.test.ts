@@ -58,6 +58,7 @@ vi.mock("../../src/services/tracker.js", () => ({
 const { startDailyFive } = await import("../../src/games/five.js");
 const { startDuel, sendDuelRecord } = await import("../../src/games/duel.js");
 const { handleGameCallback } = await import("../../src/games/handler.js");
+const { recordAnswer } = await import("../../src/games/play.js");
 
 const clear = async (): Promise<void> => {
   for (const table of [
@@ -189,6 +190,32 @@ describe("the Five flow", () => {
     expect(mocks.answerCallbackQuery).toHaveBeenCalledWith({
       text: expect.stringContaining("Correct +"),
     });
+  });
+
+  it("makes a tap after ten seconds wrong", async () => {
+    await startDailyFive({ chatId: 900, userId: 42 });
+    const attempt = await getAttemptForRound(
+      "five",
+      `five-${istStamp().date}`,
+      42,
+    );
+    expect(attempt).not.toBeNull();
+
+    const late = {
+      ...attempt!,
+      shownAt: new Date(Date.now() - 11_000).toISOString(),
+    };
+    const result = await recordAnswer({ attempt: late, index: 0, option: 0 });
+
+    expect(result).not.toBe("stale");
+    if (result === "stale") return;
+    expect(result.timedOut).toBe(true);
+    expect(result.correct).toBe(false);
+    expect(result.earned).toBe(0);
+
+    const saved = await getAttempt(attempt!.id);
+    expect(saved?.score).toBe(0);
+    expect(saved?.answers[0]).toMatchObject({ correct: false, points: 0 });
   });
 
   it("resumes the same five instead of starting a second run", async () => {

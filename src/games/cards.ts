@@ -9,7 +9,7 @@ import type {
   GameDuel,
   GameQuestion,
 } from "./types.js";
-import { formatDuration, publicName } from "./scoring.js";
+import { formatDuration, publicName, QUESTION_LIMIT_MS } from "./scoring.js";
 
 export interface Card {
   text: string;
@@ -41,6 +41,9 @@ export const dayLabel = (dateKey: string): string => {
 export const weekLabel = (mondayKey: string): string =>
   `Week of ${dayLabel(mondayKey)}`;
 
+/** The visible clock, derived from the scoring constant. */
+const QUESTION_SECONDS = Math.round(QUESTION_LIMIT_MS / 1000);
+
 const formatNumber = (value: number): string =>
   new Intl.NumberFormat("en-IN").format(value);
 
@@ -62,8 +65,8 @@ export const questionCard = ({
   const total = attempt.questionIds.length;
   const header =
     attempt.game === "duel"
-      ? `Duel · Question ${index + 1} of ${total}`
-      : `Question ${index + 1} of ${total}`;
+      ? `Duel · Question ${index + 1} of ${total} · ${QUESTION_SECONDS}s`
+      : `Question ${index + 1} of ${total} · ${QUESTION_SECONDS}s`;
 
   const lines = [`<b>${header}</b>`];
   if (attempt.game === "duel" && duelTarget != null) {
@@ -71,7 +74,12 @@ export const questionCard = ({
   } else {
     lines.push(`Score so far: <b>${attempt.score}</b>`);
   }
-  if (index === 0) lines.push("", "<i>Fast answers score more.</i>");
+  if (index === 0) {
+    lines.push(
+      "",
+      `<i>${QUESTION_SECONDS} seconds. Fast answers score more.</i>`,
+    );
+  }
   lines.push("", escapeHtml(question.prompt));
 
   const markup: InlineKeyboardMarkup = {

@@ -126,9 +126,10 @@ The question bank is seeded from `src/games/questions.ts` once, keyed by slug.
 Add questions by appending new slugs (a restart seeds them) or by inserting
 rows directly; `active = 0` retires a question without deleting history.
 
-League rules: one Five attempt per account per IST day; duels last 48 hours;
-only the best ten players per section count on the weekly board; channel names
-are the student's chosen display name or a masked roll, never the portal name.
+League rules: one Five attempt per account per IST day; each question closes
+after 10 seconds and a late tap scores nothing; duels last 48 hours; only the
+best ten players per section count on the weekly board; channel names are the
+student's chosen display name or a masked roll, never the portal name.
 
 ## Production deployment
 

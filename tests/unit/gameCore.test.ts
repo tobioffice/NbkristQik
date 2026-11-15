@@ -62,11 +62,12 @@ describe("the IST clock", () => {
 });
 
 describe("scoring", () => {
-  it("pays for accuracy first and speed second", () => {
+  it("pays inside ten seconds only, accuracy first", () => {
     expect(answerPoints(true, 0)).toBe(150);
-    expect(answerPoints(true, 10_000)).toBe(125);
-    expect(answerPoints(true, 20_000)).toBe(100);
-    expect(answerPoints(true, 60_000)).toBe(100);
+    expect(answerPoints(true, 5_000)).toBe(125);
+    expect(answerPoints(true, 10_000)).toBe(100);
+    expect(answerPoints(true, 10_001)).toBe(0);
+    expect(answerPoints(true, 60_000)).toBe(0);
     expect(answerPoints(false, 0)).toBe(0);
   });
 
@@ -177,7 +178,7 @@ const question: GameQuestion = {
 describe("the cards", () => {
   it("draws a question with one callback per option", () => {
     const card = questionCard({ attempt, question, index: 1 });
-    expect(card.text).toContain("Question 2 of 5");
+    expect(card.text).toContain("Question 2 of 5 · 10s");
     expect(card.text).toContain("&lt;CPU&gt;");
     expect(card.markup?.inline_keyboard).toHaveLength(4);
     expect(card.markup?.inline_keyboard[0][0].callback_data).toBe("q5_7_1_0");
@@ -190,7 +191,7 @@ describe("the cards", () => {
       index: 0,
       duelTarget: 612,
     });
-    expect(card.text).toContain("Duel · Question 1 of 5");
+    expect(card.text).toContain("Duel · Question 1 of 5 · 10s");
     expect(card.text).toContain("Target: <b>612</b>");
   });
 

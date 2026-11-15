@@ -7,7 +7,7 @@ import {
   touchShownAt,
 } from "../db/game.model.js";
 import { questionCard, type Card } from "./cards.js";
-import { answerPoints } from "./scoring.js";
+import { answerPoints, QUESTION_LIMIT_MS } from "./scoring.js";
 import type { AttemptAnswer, GameAttempt } from "./types.js";
 
 /**
@@ -92,6 +92,7 @@ export const showQuestion = async ({
 export interface AnswerResult {
   attempt: GameAttempt;
   correct: boolean;
+  timedOut: boolean;
   earned: number;
   done: boolean;
 }
@@ -118,7 +119,8 @@ export const recordAnswer = async ({
 
   const startedAt = new Date(attempt.shownAt ?? attempt.startedAt).getTime();
   const elapsed = Math.max(0, Date.now() - startedAt);
-  const correct = option === question.correct;
+  const timedOut = elapsed > QUESTION_LIMIT_MS;
+  const correct = !timedOut && option === question.correct;
   const earned = answerPoints(correct, elapsed);
   const answers: AttemptAnswer[] = [
     ...attempt.answers,
@@ -140,6 +142,7 @@ export const recordAnswer = async ({
   return {
     attempt: updated,
     correct,
+    timedOut,
     earned,
     done: updated.idx >= updated.questionIds.length,
   };
