@@ -168,7 +168,7 @@ describe("the Five flow", () => {
 
     expect(mocks.sendMessage).toHaveBeenCalledTimes(1);
     expect(lastSent()?.text).toContain("Question 1 of 5");
-    expect(lastSent()?.text).toContain("Fast answers score more");
+    expect(lastSent()?.text).toContain("10s");
 
     const attempt = await getAttemptForRound(
       "five",
@@ -249,7 +249,7 @@ describe("the Five flow", () => {
 
     await startDailyFive({ chatId: 900, userId: 42 });
 
-    expect(lastSent()?.text).toContain("already played today");
+    expect(lastSent()?.text).toContain("Played today. Back tomorrow.");
   });
 
   it("turns the run into a duel and closes it for both sides", async () => {

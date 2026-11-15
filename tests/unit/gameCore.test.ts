@@ -200,8 +200,7 @@ describe("the cards", () => {
       attempt,
       rank: 7,
       total: 143,
-      week: { points: 628, rank: 37, players: 143 },
-      section: { label: "4 CSE C", rank: 5, total: 12, points: 4_820 },
+      section: { label: "4 CSE C", rank: 5, total: 12 },
       alreadyPlayed: false,
     });
 
@@ -209,10 +208,14 @@ describe("the cards", () => {
     expect(card.text).toContain("<b>571</b> run score");
     expect(card.text).toContain("<b>628</b> season points");
     expect(card.text).toContain("+57 streak");
-    expect(card.text).toContain("Rank <b>#7</b> of 143");
+    expect(card.text).toContain("#7 of 143 today");
     expect(card.text).toContain("2-day streak");
-    expect(card.text).toContain("4 CSE C: <b>#5</b> of 12");
+    expect(card.text).toContain("4 CSE C · <b>#5</b> of 12 this week");
+    expect(card.markup?.inline_keyboard[0]).toHaveLength(2);
     expect(card.markup?.inline_keyboard[0][0].callback_data).toBe("duel_new_7");
+    expect(card.markup?.inline_keyboard[0][1].callback_data).toBe(
+      "league_show",
+    );
   });
 
   it("marks a second visit as already played", () => {
@@ -220,12 +223,13 @@ describe("the cards", () => {
       attempt,
       rank: 1,
       total: 1,
-      week: { points: 0, rank: null, players: 0 },
       section: null,
       alreadyPlayed: true,
     });
-    expect(card.text).toContain("already played today");
-    expect(card.text).toContain("isn't in the college list");
+    expect(card.text).toContain("First today");
+    expect(card.text).toContain("Played today. Back tomorrow.");
+    expect(card.text).toContain("No section on record");
+    expect(card.text).not.toContain("1-day streak");
   });
 
   const duel: GameDuel = {
@@ -257,7 +261,7 @@ describe("the cards", () => {
 
     expect(challenger.text).toContain("You <b>612</b>");
     expect(challenger.text).toContain("23KB1A0••• <b>640</b>");
-    expect(challenger.text).toContain("won by 28");
+    expect(challenger.text).toContain("lost by 28");
     expect(opponent.text).toContain("You <b>640</b>");
     expect(opponent.text).toContain("Asha <b>612</b>");
     expect(opponent.text).toContain("You won by 28");
@@ -268,7 +272,7 @@ describe("the cards", () => {
     const share = card.markup?.inline_keyboard[0][0].url ?? "";
     expect(share).toContain("https://t.me/share/url");
     expect(decodeURIComponent(share)).toContain("duel_12");
-    expect(card.markup?.inline_keyboard[1][0].copy_text?.text).toContain(
+    expect(card.markup?.inline_keyboard[0][1].copy_text?.text).toContain(
       "duel_12",
     );
   });

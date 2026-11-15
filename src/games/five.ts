@@ -8,7 +8,6 @@ import {
   getFiveRank,
   getGamePlayer,
   getOrCreateDailyRound,
-  getPlayerWeek,
   getSectionWeek,
   setPlayerStreak,
 } from "../db/game.model.js";
@@ -218,11 +217,6 @@ export const showFiveResult = async ({
     points: attempt.points,
     finishedAt: attempt.finishedAt ?? new Date().toISOString(),
   });
-  const week = await getPlayerWeek(
-    attempt.season,
-    attempt.weekKey,
-    attempt.userId,
-  );
   const section =
     attempt.sectionKey && attempt.sectionLabel
       ? await getSectionWeek(
@@ -240,10 +234,13 @@ export const showFiveResult = async ({
       attempt,
       rank: rank.rank,
       total: rank.total,
-      week,
       section:
         section && attempt.sectionLabel
-          ? { ...section, label: attempt.sectionLabel }
+          ? {
+              label: attempt.sectionLabel,
+              rank: section.rank,
+              total: section.total,
+            }
           : null,
       alreadyPlayed,
     }),

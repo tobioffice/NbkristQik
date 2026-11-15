@@ -71,14 +71,8 @@ export const questionCard = ({
   const lines = [`<b>${header}</b>`];
   if (attempt.game === "duel" && duelTarget != null) {
     lines.push(`Target: <b>${duelTarget}</b>`);
-  } else {
-    lines.push(`Score so far: <b>${attempt.score}</b>`);
-  }
-  if (index === 0) {
-    lines.push(
-      "",
-      `<i>${QUESTION_SECONDS} seconds. Fast answers score more.</i>`,
-    );
+  } else if (attempt.score > 0) {
+    lines.push(`Score: <b>${attempt.score}</b>`);
   }
   lines.push("", escapeHtml(question.prompt));
 
@@ -99,59 +93,55 @@ export const fiveResultCard = ({
   attempt,
   rank,
   total,
-  week,
   section,
   alreadyPlayed,
 }: {
   attempt: GameAttempt;
   rank: number;
   total: number;
-  week: { points: number; rank: number | null; players: number };
-  section: {
-    label: string;
-    rank: number;
-    total: number;
-    points: number;
-  } | null;
+  section: { label: string; rank: number; total: number } | null;
   alreadyPlayed: boolean;
 }): Card => {
   const correct = attempt.answers.filter((answer) => answer.correct).length;
   const bonus = Math.max(0, attempt.points - attempt.score);
-  const lines = [
-    "<b>Five done</b>",
-    `${correct} of ${attempt.answers.length} correct · <b>${formatNumber(
-      attempt.score,
-    )}</b> run score`,
-    `<b>${formatNumber(attempt.points)}</b> season points${
-      bonus > 0 ? ` · +${formatNumber(bonus)} streak` : ""
-    }`,
-    `Rank <b>#${rank}</b> of ${total} today · ${attempt.streak}-day streak`,
-  ];
+  const lines = ["<b>Five done</b>"];
 
-  if (section) {
+  if (bonus > 0) {
     lines.push(
-      "",
-      `${escapeHtml(section.label)}: <b>#${section.rank}</b> of ${
-        section.total
-      } this week · ${formatNumber(section.points)} points`,
+      `${correct} of ${attempt.answers.length} correct · <b>${formatNumber(
+        attempt.score,
+      )}</b> run score`,
+      `<b>${formatNumber(
+        attempt.points,
+      )}</b> season points · +${formatNumber(bonus)} streak`,
     );
   } else {
     lines.push(
-      "",
-      "<i>Your section isn't in the college list yet, so this run counts for you only.</i>",
+      `${correct} of ${attempt.answers.length} correct · <b>${formatNumber(
+        attempt.points,
+      )}</b> points`,
     );
   }
 
-  if (week.rank) {
+  const today = total <= 1 ? "First today" : `#${rank} of ${total} today`;
+  const streak = attempt.streak > 1 ? ` · ${attempt.streak}-day streak` : "";
+  lines.push(`${today}${streak}`);
+
+  if (section) {
+    const place =
+      section.total <= 1
+        ? "first this week"
+        : `<b>#${section.rank}</b> of ${section.total} this week`;
+    lines.push(`${escapeHtml(section.label)} · ${place}`);
+  } else {
     lines.push(
-      `You: <b>#${week.rank}</b> of ${week.players} this week · ${formatNumber(
-        week.points,
-      )} points`,
+      "",
+      "<i>No section on record. This run counts for you only.</i>",
     );
   }
 
   if (alreadyPlayed) {
-    lines.push("", "<i>You already played today. Come back tomorrow.</i>");
+    lines.push("", "<i>Played today. Back tomorrow.</i>");
   }
 
   return {
@@ -163,10 +153,8 @@ export const fiveResultCard = ({
             text: "Challenge a friend",
             callback_data: `duel_new_${attempt.id}`,
           },
-        ],
-        [
           {
-            text: "This week's board",
+            text: "Weekly board",
             callback_data: "league_show",
           },
         ],
@@ -186,13 +174,14 @@ export const duelInviteCard = ({ duel }: { duel: GameDuel }): Card => {
   return {
     text:
       "<b>Challenge ready</b>\n" +
-      `You scored <b>${duel.challengerScore}</b> on today's five. ` +
-      "Send this to a friend; they get the same five questions. " +
+      `You scored <b>${duel.challengerScore}</b> on today's five.\n` +
       "The first friend to open it takes the challenge.",
     markup: {
       inline_keyboard: [
-        [{ text: "Send challenge", url: shareUrl }],
-        [{ text: "Copy link", copy_text: { text: link } }],
+        [
+          { text: "Send challenge", url: shareUrl },
+          { text: "Copy link", copy_text: { text: link } },
+        ],
       ],
     },
   };
@@ -219,21 +208,22 @@ export const duelResultCard = ({
       ? "It's a draw."
       : me > them
         ? `You won by ${difference}.`
-        : `${themName} won by ${difference}.`;
+        : `You lost by ${difference}.`;
 
   const lines = [
     "<b>Duel result</b>",
     `You <b>${me}</b> · ${escapeHtml(themName)} <b>${them}</b>`,
     verdict,
   ];
-  if (isChallenger) lines.push("", "<i>Your challenge was accepted.</i>");
 
   return {
     text: lines.join("\n"),
     markup: {
       inline_keyboard: [
-        [{ text: "Today's five", callback_data: "five_play" }],
-        [{ text: "This week's board", callback_data: "league_show" }],
+        [
+          { text: "Today's five", callback_data: "five_play" },
+          { text: "Weekly board", callback_data: "league_show" },
+        ],
       ],
     },
   };
@@ -279,19 +269,19 @@ export const leagueCard = ({
   if (me.rank) {
     lines.push(
       "",
-      `You: <b>#${me.rank}</b> of ${me.players} this week · ${formatNumber(
+      `You: <b>#${me.rank}</b> of ${me.players} · ${formatNumber(
         me.points,
       )} points`,
     );
   } else if (me.points === 0) {
-    lines.push("", "You haven't scored this week. Play today's five.");
+    lines.push("", "You haven't scored yet. Play today's five.");
   }
 
   if (mySection) {
     lines.push(
-      `${escapeHtml(mySection.label)}: <b>#${mySection.rank}</b> of ${
+      `${escapeHtml(mySection.label)} · <b>#${mySection.rank}</b> of ${
         mySection.total
-      } this week`,
+      }`,
     );
   }
 
