@@ -11,14 +11,14 @@ export const panelJs = `(function () {
     "report": "Report to admin", "report_followup": "Thread follow-up"
   };
   var SURFACES = [
-    { key: "private", label: "Private chat", color: "#3f6457" },
-    { key: "channel", label: "Channel", color: "#1e2a38" },
-    { key: "group", label: "Group", color: "#5a5140" },
-    { key: "unknown", label: "Web app", color: "#675d4b" }
+    { key: "private", label: "Private chat", color: "var(--accent)" },
+    { key: "channel", label: "Channel", color: "var(--text-2)" },
+    { key: "group", label: "Group", color: "var(--text-3)" },
+    { key: "unknown", label: "Web app", color: "var(--surface-active)" }
   ];
   var surfaceColor = function (k) {
     for (var i = 0; i < SURFACES.length; i++) if (SURFACES[i].key === k) return SURFACES[i].color;
-    return "#675d4b";
+    return "var(--text-2)";
   };
   var surfaceLabel = function (k) {
     for (var i = 0; i < SURFACES.length; i++) if (SURFACES[i].key === k) return SURFACES[i].label;
@@ -225,9 +225,9 @@ export const panelJs = `(function () {
     for (var q = 0; q < pts.length; q++) line += (q ? " L" : "M") + pts[q][0].toFixed(1) + " " + pts[q][1].toFixed(1);
     var area = line + " L" + (W - pad) + " " + H + " L" + pad + " " + H + " Z";
     var svgHtml =
-      '<path d="' + area + '" fill="#1e2a38" fill-opacity="0.12"/>' +
-      '<path d="' + line + '" fill="none" stroke="#1e2a38" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
-      '<line x1="' + pts[pts.length - 1][0] + '" y1="' + pts[pts.length - 1][1] + '" x2="' + pts[pts.length - 1][0] + '" y2="' + H + '" stroke="#1e2a38" stroke-opacity="0.32" stroke-dasharray="2 3"/>';
+      '<path d="' + area + '" style="fill:var(--accent);fill-opacity:.14"/>' +
+      '<path d="' + line + '" style="fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round"/>' +
+      '<line x1="' + pts[pts.length - 1][0] + '" y1="' + pts[pts.length - 1][1] + '" x2="' + pts[pts.length - 1][0] + '" y2="' + H + '" style="stroke:var(--accent);stroke-opacity:.35" stroke-dasharray="2 3"/>';
     for (var r = 0; r < points.length; r += 1) {
       var cx = pad + r * step, cy = y(points[r].actions);
       svgHtml += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="7" fill="transparent"><title>' + points[r].label + ": " + points[r].actions + " actions, " + points[r].users + " students</title></circle>";
@@ -243,7 +243,7 @@ export const panelJs = `(function () {
       if (!tip) {
         tip = document.createElement("div");
         tip.id = "pctip";
-        tip.style.cssText = "position:fixed;pointer-events:none;font-size:12px;background:#f6efdd;border:1px solid rgba(30,42,56,.45);color:#1e2a38;padding:5px 9px;border-radius:2px;z-index:30;font-family:" + "var(--tabular)" + ";white-space:nowrap";
+        tip.style.cssText = "position:fixed;pointer-events:none;font-size:12px;background:var(--dropdown);border:0;color:var(--text);padding:6px 10px;border-radius:8px;z-index:30;font-family:" + "var(--font)" + ";font-variant-numeric:tabular-nums;white-space:nowrap";
         document.body.appendChild(tip);
       }
       tip.textContent = lab + (pulseRange === "24h" ? " IST" : "") + " · " + pt.actions + " actions · " + pt.users + " students";
@@ -278,7 +278,7 @@ export const panelJs = `(function () {
       if (!n) continue;
       var pct = (n / total) * 100;
       widths.push(pct.toFixed(2) + "%");
-      barHtml += '<div style="width:0;background:' + SURFACES[s].color + ';opacity:.8"></div>';
+      barHtml += '<div style="width:0;background:' + SURFACES[s].color + '"></div>';
       legendHtml += '<span class="item"><span class="dot" style="background:' + SURFACES[s].color + '"></span>' +
         SURFACES[s].label + ' <span class="n">' + fmt(n) + '</span> <span class="dim">' + Math.round(pct) + '%</span></span>';
     }
@@ -658,7 +658,7 @@ export const panelJs = `(function () {
 
   /* ---------- reports ---------- */
   var reportStatus = "open";
-  var REPORT_DOT = { open: "var(--text-3)", answered: "var(--amber)", resolved: "var(--green)" };
+  var REPORT_DOT = { open: "var(--text-2)", answered: "var(--warning)", resolved: "var(--good)" };
 
   var reporterLabel = function (r) {
     return esc(r.name || r.username || ("ID " + r.userId));
@@ -785,7 +785,13 @@ export const panelJs = `(function () {
   };
 
   var refreshThread = function (issueId) {
-    if (inflight.thread) return;
+    if (inflight.thread) {
+      // A send that lands mid-fetch still needs its screenshots painted; the
+      // in-flight response may predate the reply. Refresh once more when it
+      // finishes instead of dropping the request.
+      inflight.threadAgain = issueId;
+      return;
+    }
     inflight.thread = true;
     api("reports/" + issueId).then(function (d) {
       var t = d.thread;
@@ -795,10 +801,15 @@ export const panelJs = `(function () {
     }).catch(function () {
       if (drawerIssue === issueId && !threadCache[issueId])
         renderThreadError(function () { refreshThread(issueId); });
-    }).then(function () { inflight.thread = false; });
+    }).then(function () {
+      inflight.thread = false;
+      var again = inflight.threadAgain;
+      inflight.threadAgain = null;
+      if (again) refreshThread(again);
+    });
   };
 
-  // Screenshots ride with their message: a small paper strip of thumbnails,
+  // Screenshots ride with their message: a small strip of thumbnails,
   // each opening the full image in a new tab. The URL comes from the server
   // and is escaped like every other value.
   var attachmentHtml = function (list) {
@@ -813,10 +824,87 @@ export const panelJs = `(function () {
     return html + "</div>";
   };
 
+  // Screenshots on an admin reply. Files stay in memory until Send; the
+  // server sniffs their bytes with the same limits as the student form.
+  var MAX_SHOTS = 3;
+  var MAX_SHOT_BYTES = 5 * 1024 * 1024;
+  var threadShots = [];
+  var threadShotsIssue = null;
+
+  var clearThreadShots = function () {
+    for (var i = 0; i < threadShots.length; i++) {
+      if (threadShots[i].url) URL.revokeObjectURL(threadShots[i].url);
+    }
+    threadShots = [];
+  };
+
+  var setShotHint = function (message, bad) {
+    var hint = $("dshothint");
+    if (!hint) return;
+    hint.textContent = message;
+    hint.className = "hint" + (bad ? " error" : "");
+  };
+
+  var renderThreadShots = function () {
+    var wrap = $("dpreviews");
+    if (!wrap) return;
+    var html = "";
+    for (var i = 0; i < threadShots.length; i++) {
+      html += '<span class="rshot"><img src="' + esc(threadShots[i].url) +
+        '" alt="Selected screenshot ' + (i + 1) + '">' +
+        '<button type="button" data-shotremove="' + i +
+        '" aria-label="Remove screenshot ' + (i + 1) + '">&times;</button></span>';
+    }
+    wrap.innerHTML = html;
+    var btns = wrap.querySelectorAll("[data-shotremove]");
+    for (var b = 0; b < btns.length; b++) {
+      btns[b].addEventListener("click", function () {
+        var at = Number(this.dataset.shotremove);
+        if (threadShots[at] && threadShots[at].url)
+          URL.revokeObjectURL(threadShots[at].url);
+        threadShots.splice(at, 1);
+        renderThreadShots();
+        setShotHint(threadShots.length
+          ? threadShots.length + " of " + MAX_SHOTS + " selected"
+          : "Up to 3, 5 MB each", false);
+      });
+    }
+  };
+
+  var addThreadShots = function (fileList) {
+    if (!fileList || !fileList.length) return;
+    var error = "";
+    for (var i = 0; i < fileList.length; i++) {
+      var file = fileList[i];
+      if (threadShots.length >= MAX_SHOTS) {
+        error = "Up to 3 screenshots per message.";
+        break;
+      }
+      if (file.type && !/^image\\/(png|jpeg|webp)$/.test(file.type)) {
+        error = "Screenshots need to be PNG, JPEG or WebP.";
+        continue;
+      }
+      if (file.size > MAX_SHOT_BYTES) {
+        error = "Each screenshot must be under 5 MB.";
+        continue;
+      }
+      threadShots.push({ file: file, url: URL.createObjectURL(file) });
+    }
+    renderThreadShots();
+    if (error) setShotHint(error, true);
+    else setShotHint(threadShots.length
+      ? threadShots.length + " of " + MAX_SHOTS + " selected"
+      : "Up to 3, 5 MB each", false);
+  };
+
   // full thread paint: head, messages, composer, actions. A draft being
   // typed survives background reconciles — the send flow clears the box
   // itself when the message goes out.
   var renderThread = function (t) {
+      if (threadShotsIssue !== t.issueId) {
+        clearThreadShots();
+        threadShotsIssue = t.issueId;
+      }
       var prevReply = $("dreply");
       var draft = prevReply ? prevReply.value : null;
       var html = '<div class="dhead"><div><h3>' + esc(t.issueId) + "</h3>" +
@@ -829,11 +917,18 @@ export const panelJs = `(function () {
         html += '<div class="tmsg ' + (m.author === "admin" ? "admin" : "student") + '">' +
           '<div class="tmeta"><b>' + (m.author === "admin" ? "you · admin" : "student") + "</b>" +
           "<span>" + istDate(parseUtc(m.createdAt)).slice(5) + " " + istTime(m.createdAt) + "</span></div>" +
-          '<div class="tbody">' + esc(m.body) + "</div>" +
+          (m.body ? '<div class="tbody">' + esc(m.body) + "</div>" : "") +
           attachmentHtml(m.attachments) + "</div>";
       }
       html += "</div>" +
-        '<div class="rform show"><textarea id="dreply" placeholder="Write to the reporter. It is added to the thread and DM\\'d to them."></textarea>' +
+        '<div class="rform show"><div class="rform-main">' +
+        '<textarea id="dreply" placeholder="Write to the reporter. It is added to the thread and DM\\'d to them."></textarea>' +
+        '<div class="rattach"><label for="dshots">Attach screenshots</label>' +
+        '<input type="file" id="dshots" accept="image/png,image/jpeg,image/webp" multiple>' +
+        '<span class="hint" id="dshothint">Up to 3, 5 MB each</span></div>' +
+        '<div class="rshots" id="dpreviews"></div>' +
+        '<div class="hint error" id="dshoterr" style="display:none"></div>' +
+        "</div>" +
         '<button class="send" id="dsend">Send</button></div>' +
         '<div class="rbtns" id="dactions"></div>';
       $("drawer").innerHTML = html;
@@ -844,6 +939,15 @@ export const panelJs = `(function () {
 
       $("dclose").addEventListener("click", closeDrawer);
 
+      var shotInput = $("dshots");
+      shotInput.addEventListener("change", function () {
+        addThreadShots(this.files);
+        this.value = "";
+      });
+      renderThreadShots();
+      if (threadShots.length)
+        setShotHint(threadShots.length + " of " + MAX_SHOTS + " selected", false);
+
       var ta = $("dreply");
       var sendBtn = $("dsend");
       if (t.status === "resolved")
@@ -851,22 +955,46 @@ export const panelJs = `(function () {
 
       var send = function () {
         var text = ta.value.trim();
-        if (!text || sendBtn.disabled) return;
+        if ((!text && !threadShots.length) || sendBtn.disabled) return;
         sendBtn.disabled = true;
         sendBtn.textContent = "Sending...";
-        ta.value = "";
-        fetch(BASE + "/api/reports/" + t.issueId + "/reply", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reply: text })
-        }).then(function (r) { return r.json(); }).then(function () {
+        var request;
+        if (threadShots.length) {
+          var form = new FormData();
+          if (text) form.append("reply", text);
+          for (var s = 0; s < threadShots.length; s++)
+            form.append("screenshots", threadShots[s].file, threadShots[s].file.name);
+          request = fetch(BASE + "/api/reports/" + t.issueId + "/reply", {
+            method: "POST",
+            body: form
+          });
+        } else {
+          request = fetch(BASE + "/api/reports/" + t.issueId + "/reply", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reply: text })
+          });
+        }
+        request.then(function (r) {
+          if (r.ok) return r.json();
+          return r.json().catch(function () { return {}; }).then(function (b) {
+            throw new Error(b.error || "Could not send. Try again.");
+          });
+        }).then(function () {
+          ta.value = "";
+          clearThreadShots();
           updateRowAfterReply(t.issueId, text);
           refreshThread(t.issueId); // drawer stays put, updates when it lands
-        }).catch(function () {
+        }).catch(function (err) {
           sendBtn.disabled = false;
           sendBtn.textContent = "Send";
           var cur = $("dreply");
           if (cur && !cur.value) cur.value = text;
+          var errEl = $("dshoterr");
+          if (errEl) {
+            errEl.textContent = err && err.message ? err.message : "Could not send. Try again.";
+            errEl.style.display = "block";
+          }
         });
       };
       sendBtn.addEventListener("click", send);
@@ -1014,7 +1142,7 @@ export const panelJs = `(function () {
         // a stale heartbeat means the monitor stopped reporting, not that the
         // component recovered, so stale wins over the last recorded status.
         var stateWord = c.stale ? "No data" : c.current === "up" ? "Operational" : "Down";
-        var stateColor = c.current === "up" ? "#3f6457" : c.stale ? "#8a6a12" : "#a62f22";
+        var stateColor = c.current === "up" ? "var(--good)" : c.stale ? "var(--warning)" : "var(--danger)";
         var ageSec =
           typeof c.lastPingAgeSec === "number" && isFinite(c.lastPingAgeSec)
             ? Math.max(0, c.lastPingAgeSec)
@@ -1039,6 +1167,8 @@ export const panelJs = `(function () {
   /* ---------- drawer ---------- */
   var closeDrawer = function () {
     drawerIssue = null;
+    clearThreadShots();
+    threadShotsIssue = null;
     $("drawer").classList.remove("open");
     $("scrim").classList.remove("open");
     $("drawer").setAttribute("aria-hidden", "true");

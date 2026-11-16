@@ -12,7 +12,12 @@ import {
   adminReplyToReport,
   adminCloseReport,
 } from "../../services/reportService.js";
-import { reportAttachmentUrl } from "../../services/reportFiles.js";
+import {
+  ReportUploadError,
+  readReportUpload,
+  reportAttachmentUrl,
+  type PendingReportUpload,
+} from "../../services/reportFiles.js";
 import { logger } from "../../config/logger.js";
 import { cached, invalidate } from "./cache.js";
 import type { RequireAdmin } from "./auth.js";
@@ -141,25 +146,66 @@ export const registerReportsRoutes = (
     `${base}/api/reports/:id/reply`,
     requireAdmin,
     async (req: Request, res: Response) => {
+      let upload: PendingReportUpload | null = null;
+      // A rejected reply must not leave its screenshots on disk. Before
+      // commit this removes the temp directory; after commit the service has
+      // already moved the files and `discard` removes those final paths too.
+      const dropUpload = async () => {
+        if (!upload) return;
+        const pending = upload;
+        upload = null;
+        await pending
+          .discard()
+          .catch((e) => logger.warn("[admin] reply upload cleanup failed:", e));
+      };
       try {
-        const reply = String(req.body?.reply ?? "")
+        try {
+          upload = req.is("multipart/form-data")
+            ? await readReportUpload(req, "reply")
+            : null;
+        } catch (e) {
+          if (e instanceof ReportUploadError) {
+            res.status(400).json({ error: e.message });
+            return;
+          }
+          throw e;
+        }
+
+        const reply = String(upload ? upload.message : (req.body?.reply ?? ""))
           .trim()
           .slice(0, 1000);
-        if (!reply) {
-          res.status(400).json({ error: "Reply text required" });
+        const fileCount = upload?.fileCount ?? 0;
+        if (!reply && fileCount === 0) {
+          await dropUpload();
+          res.status(400).json({ error: "Write a reply or add a screenshot" });
           return;
         }
+
+        const files = upload ? await upload.commit() : [];
         // adminReplyToReport appends to the thread and DMs the reporter
-        const issueId = await adminReplyToReport(String(req.params.id), reply);
+        const issueId = await adminReplyToReport(
+          String(req.params.id),
+          reply,
+          files.map((file) => ({
+            fileName: file.fileName,
+            mimeType: file.mimeType,
+            byteSize: file.byteSize,
+          })),
+        );
         if (!issueId) {
+          await dropUpload();
           res.status(404).json({ error: "Unknown report" });
           return;
         }
+        // the report owns the files now; the finally block must not remove them
+        upload = null;
         invalidate("reports:");
         res.json({ ok: true, issueId });
       } catch (e) {
         logger.error("[admin] report reply failed:", e);
         res.status(500).json({ error: "Internal Server Error" });
+      } finally {
+        await dropUpload();
       }
     },
   );

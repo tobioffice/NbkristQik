@@ -1,10 +1,22 @@
-import { describe, it, expect, beforeAll, vi } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import crypto from "crypto";
 import request from "supertest";
 import { createClient } from "@libsql/client";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 
 process.env.ADMIN_PANEL_PATH = "panels-test";
 process.env.ADMIN_PANEL_PASSWORD = "panel-pass";
+
+// Admin screenshot replies write under the same private directory as the
+// student form. Point it at a throwaway directory for this file.
+const uploadsDir = await mkdtemp(path.join(os.tmpdir(), "qik-admin-report-"));
+process.env.REPORT_FILES_DIR = uploadsDir;
+
+afterAll(async () => {
+  await rm(uploadsDir, { recursive: true, force: true });
+});
 
 const client = createClient({ url: "file::memory:" });
 vi.mock("../../src/db/db.js", () => ({ turso: client }));
@@ -43,6 +55,10 @@ const { createReport, formatIssueId } =
 const PASSWORD = "panel-pass";
 const BASE = "/panels-test";
 const cookie = `qik_admin=${encodeURIComponent("test-admin-token")}`;
+const PNG = Buffer.concat([
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+  Buffer.from("admin reply screenshot"),
+]);
 
 beforeAll(async () => {
   await client.batch(
@@ -191,6 +207,98 @@ describe("admin reports endpoints", () => {
         byteSize: 42,
       },
     ]);
+  });
+
+  it("sends screenshots with an admin reply", async () => {
+    const id = await createReport(7, "The bar is cut off on my phone");
+    const issueId = formatIssueId(id);
+
+    const res = await request(app)
+      .post(`${BASE}/api/reports/${issueId}/reply`)
+      .set("Cookie", cookie)
+      .field("reply", "Fixed the layout. Here is what it should look like.")
+      .attach("screenshots", PNG, "fixed.png");
+
+    expect(res.status).toBe(200);
+
+    // the reporter gets the count, never the image itself, in the DM
+    const notice = sentTo.find(
+      (s) => s.to === "7" && s.text.includes("Fixed the layout"),
+    );
+    expect(notice?.text).toContain("1 screenshot attached.");
+
+    // the admin thread carries the image on the reply
+    const opened = await request(app)
+      .get(`${BASE}/api/reports/${issueId}`)
+      .set("Cookie", cookie);
+    const reply = opened.body.thread.messages.at(-1);
+    expect(reply.author).toBe("admin");
+    expect(reply.body).toBe(
+      "Fixed the layout. Here is what it should look like.",
+    );
+    expect(reply.attachments).toHaveLength(1);
+    expect(reply.attachments[0].url).toMatch(
+      /^\/api\/report-attachment\/[a-f0-9]{32}\.png$/,
+    );
+
+    // the bytes really landed in the report directory
+    expect(await readdir(uploadsDir)).toContain(
+      reply.attachments[0].url.split("/").pop(),
+    );
+  });
+
+  it("accepts a screenshot-only admin reply", async () => {
+    const id = await createReport(7, "No words needed, just the capture");
+    const issueId = formatIssueId(id);
+
+    const res = await request(app)
+      .post(`${BASE}/api/reports/${issueId}/reply`)
+      .set("Cookie", cookie)
+      .attach("screenshots", PNG, "capture.png");
+
+    expect(res.status).toBe(200);
+    const notice = sentTo.find(
+      (s) => s.to === "7" && s.text.includes("Sent 1 screenshot."),
+    );
+    expect(notice).toBeTruthy();
+
+    const opened = await request(app)
+      .get(`${BASE}/api/reports/${issueId}`)
+      .set("Cookie", cookie);
+    const reply = opened.body.thread.messages.at(-1);
+    expect(reply.author).toBe("admin");
+    expect(reply.body).toBe("");
+    expect(reply.attachments).toHaveLength(1);
+  });
+
+  it("rejects a file that is not a screenshot and cleans it up", async () => {
+    const id = await createReport(7, "This reply will carry a fake image");
+    const before = (await readdir(uploadsDir)).length;
+
+    const res = await request(app)
+      .post(`${BASE}/api/reports/${id}/reply`)
+      .set("Cookie", cookie)
+      .attach("screenshots", Buffer.from("<script>alert(1)</script>"), {
+        filename: "not-an-image.png",
+        contentType: "image/png",
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/PNG, JPEG or WebP/);
+    expect((await readdir(uploadsDir)).length).toBe(before);
+  });
+
+  it("removes a committed screenshot when the report is missing", async () => {
+    const before = (await readdir(uploadsDir)).length;
+
+    const res = await request(app)
+      .post(`${BASE}/api/reports/999999/reply`)
+      .set("Cookie", cookie)
+      .field("reply", "This issue id does not exist")
+      .attach("screenshots", PNG, "orphan.png");
+
+    expect(res.status).toBe(404);
+    expect((await readdir(uploadsDir)).length).toBe(before);
   });
 
   it("404s on unknown report ids and 400s on empty replies", async () => {

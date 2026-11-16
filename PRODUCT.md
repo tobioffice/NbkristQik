@@ -28,9 +28,9 @@ The product lives entirely inside Telegram â€” no install, no separate account â
 - Registration is optional and editable at any time; registered users unlock `/attendance`, `/midmarks`, `/bunk` instant commands and are the only students who can open the library.
 - The library is admin-first: the shelf and its tab stay hidden from students until `LIBRARY_ACCESS=all`, and the web shell trusts `/api/config` for that decision. Once open, only registered students see their own subjects.
 - Channel membership is the bot gate. There is no daily check-in.
-- Reports get an issue id; the admin replies from the admin panel (or `/reply`), and the reply reaches the student on the report page and in Telegram. A report or follow-up can carry up to three screenshots (PNG, JPEG or WebP, 5 MB each) that both sides see in the thread.
+- Reports get an issue id; the admin replies from the admin panel (or `/reply`), and the reply reaches the student on the report page and in Telegram. A report, a follow-up, or an admin reply can carry up to three screenshots (PNG, JPEG or WebP, 5 MB each) that both sides see in the thread.
 - All wall-clock times shown anywhere are IST (Asia/Kolkata), 12-hour AM/PM, regardless of the UTC storage.
-- Admin panel views: login, Overview (30-day activity pulse, surface split, top actions), Students (searchable table + drill-down), Live (10 s feed), Health (90-day uptime for API, database, Redis, college portal), Reports.
+- Admin panel views: login, Overview (30-day activity pulse, surface split, top actions), Students (searchable table + drill-down), Live (10 s feed), Health (90-day uptime for API, database, Redis, college portal), Reports. The panel uses the Mini App's Telegram surface: dark ground, grouped surfaces, sentence case, two blues.
 - Deployment: one React app is built with Vite and served by Express at `/library/` on the same origin as the API, so the library's session cookie is same-origin there (and `SameSite=None` + `Partitioned` for Telegram Web's cross-site iframe). The status page at `/status` and the admin panel are also served by Express; the bot runs as a systemd service behind nginx. The marketing site remains a separate static surface on GitHub Pages.
 
 ## Capabilities and Constraints
@@ -48,7 +48,7 @@ The product lives entirely inside Telegram â€” no install, no separate account â
 ## Brand Commitments
 
 - Keep the product name **NbkristQik**.
-- The Mini App ships the Telegram-native visual system in `DESIGN.md` (user decision). The paper register in `DESIGN.PAPER.md` is legacy, kept for the admin panel and status page until they are migrated.
+- The Mini App ships the Telegram-native visual system in `DESIGN.md` (user decision). The admin panel now follows the same system; the paper register in `DESIGN.PAPER.md` is legacy, kept for the public status page until it is migrated.
 
 ## Evidence on Hand
 

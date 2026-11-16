@@ -1,6 +1,6 @@
 ---
 name: NbkristQik — Paper Register
-description: The legacy paper surface for the admin panel and status page.
+description: The legacy paper surface for the public status page.
 colors:
   paper-sheet: "#e7dcc3"
   paper-raised: "#efe5cd"
@@ -85,9 +85,9 @@ components:
 
 # Design System: NbkristQik — Paper Register
 
-> **Status: legacy for the server-rendered surfaces.** The Telegram Mini App now
-> follows [`DESIGN.md`](DESIGN.md). The admin panel and the public status page
-> still use this paper system until they are migrated.
+> **Status: legacy for the public status page.** The Telegram Mini App and the
+> admin panel now follow [`DESIGN.md`](DESIGN.md). The public status page still
+> uses this paper system until it is migrated.
 
 ## Overview
 
@@ -112,7 +112,7 @@ The world serves the task, never the reverse: navigation, search, filters, and s
 A restrained, warm palette of paper and ink with one marking pen.
 
 ### Primary
-- **Cloth Green** (#3f6457): the register's binding. Head bands, active nav fills on the admin top bar, uptime ticks, pass states. Deep shade **Cloth Deep** (#33544a) is the desk ground behind the desktop sheet and the admin band's bottom rule.
+- **Cloth Green** (#3f6457): the register's binding. Head bands, uptime ticks, pass states. Deep shade **Cloth Deep** (#33544a) is the desk ground behind the desktop sheet.
 
 ### Secondary
 - **Ballpoint Red** (#c33b2e, text-safe **#a62f22**): the teacher's pen. The 75% rule, below-minimum figures, the YOU stamp, the viewer's margin bracket, focus rings, fresh-activity cues, and service-down ticks — never decoration, never a background field.
@@ -121,7 +121,7 @@ A restrained, warm palette of paper and ink with one marking pen.
 - **Marking Amber** (#8a6a12, text-safe **#6e5410**): degraded states, answered tickets, check-in series in charts, fresh live rows. **Pass Green** (#2f5c46): confirmed/resolved/operational states.
 
 ### Neutral
-- **Paper Sheet** (#e7dcc3): the page ground of every register surface. **Paper Raised** (#efe5cd): entries, fields, tabs, stamps, toolbars. **Paper Bright** (#f6efdd): sheets and drawers that lift off the ground (admin drawer, tooltips, the desktop sheet).
+- **Paper Sheet** (#e7dcc3): the page ground of every register surface. **Paper Raised** (#efe5cd): entries, fields, tabs, stamps, toolbars. **Paper Bright** (#f6efdd): sheets and drawers that lift off the ground (tooltips, the desktop sheet).
 - **Ink Navy** (#1e2a38): primary text and rules. **Ink Soft** (#5a5140): secondary text (roll numbers, labels, hints). **Ink Faint** (#675d4b): placeholders and tertiary metadata — the lightest tone that still clears 4.5:1 on paper.
 - **Hairline** (rgba(30,42,56,0.2)): row rules; 0.45 alpha for stronger separators.
 
@@ -139,7 +139,7 @@ A restrained, warm palette of paper and ink with one marking pen.
 
 ### Hierarchy
 - **Display** (600, 24px band wordmark / clamp(34-44px) issue ids, line-height 1.05): register heads and the big printed numbers read off the master page.
-- **Headline** (600, 17-22px): admin section heads and form titles.
+- **Headline** (600, 17-22px): section heads and form titles.
 - **Title** (600-700, 14.5-16px): row names, scores, entry rank.
 - **Body** (400-500, 13-15px, measure 40-46ch in forms): lists, notes, descriptions.
 - **Data** (700, 16-27px tabular): every comparable figure — ranks, percentages, counts, uptimes.
@@ -151,14 +151,14 @@ A restrained, warm palette of paper and ink with one marking pen.
 
 ## Layout
 
-Phone-first single column, full-bleed on the sheet. At 720px and up the register sits as one 560px centered sheet on the cloth-deep desk; the admin panel becomes a full-width paper workspace (main capped at 1060px) under its cloth band. The leaderboard's row grid is fixed and narrow — rank 38px, roll 94px, name 1fr, score 62px — so the table scans identically on every phone. Rhythm: 4/8/16/24px in components, 44px between admin sections, more space above a heading than below it. Form controls on phones are 16px to prevent browser zoom.
+Phone-first single column, full-bleed on the sheet. At 720px and up the register sits as one 560px centered sheet on the cloth-deep desk. The leaderboard's row grid is fixed and narrow — rank 38px, roll 94px, name 1fr, score 62px — so the table scans identically on every phone. Rhythm: 4/8/16/24px in components, more space above a heading than below it. Form controls on phones are 16px to prevent browser zoom.
 
 ### Named Rules
 **The Sheet Rule.** Phones get the register edge to edge; desktops get one sheet on the desk. Never two overlapping panels, never a card grid.
 
 ## Elevation & Depth
 
-Flat by default; hairlines and paper tone shifts carry structure. Shadows exist only for elements that genuinely float over the sheet: the desktop sheet on the cloth desk, the profile dock, and the admin drawer (which uses a border, not a shadow). No blur, no glass, no glow.
+Flat by default; hairlines and paper tone shifts carry structure. Shadows exist only for elements that genuinely float over the sheet: the desktop sheet on the cloth desk and the profile dock. No blur, no glass, no glow.
 
 ### Shadow Vocabulary
 - **Sheet float** (`0 20px 44px -16px rgba(16, 24, 30, 0.55)`): the centered sheet on desktop and the status page.
@@ -211,9 +211,6 @@ Every surface now lives on one sheet. The shell owns three things:
 **Index tabs.** The foot of the sheet is a ruled rail of five tabs (Index, Ranks, Library, Profile, Issues). Each carries a 19px single-stroke icon over an 11px tracked label; the open tab fills ink with paper-bright text — a stamp impression, not a pill. The rail is full-bleed on phones and centred with the 560px sheet on desktop.
 
 **The reader is the exception.** When a page is open, the reader takes the sheet and the band and tabs step away; a reading surface carries only its own head.
-
-### Admin Ledger
-Tables, feed rows, weights, and health ticks reuse the same rules: paper grounds, hairline rows, ink data, amber check-in series, cloth-green uptime ticks, and red pen for down states and fresh cues. The drawer is a paper-bright sheet with a 1.5px ink edge.
 
 ## Do's and Don'ts
 

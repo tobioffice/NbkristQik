@@ -23,4 +23,12 @@ describe("admin panel embedded assets", () => {
     expect(panelCss.trim().length).toBeGreaterThan(0);
     expect(panelCss).not.toContain("${");
   });
+
+  it("uses the Mini App's dark surface tokens", () => {
+    expect(panelCss).toContain("--ground: #1a2026");
+    expect(panelCss).toContain("--surface: #212a33");
+    expect(panelCss).toContain("--accent: #4cb2ff");
+    expect(panelCss).toContain("--action: #248bda");
+    expect(panelCss).not.toContain("data-theme");
+  });
 });

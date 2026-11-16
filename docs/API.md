@@ -438,7 +438,7 @@ the thread is opened.
 | `POST` | `/api/thread/:issue` | The reporter adds `{message}` (1–1000 chars) to an open thread; a follow-up on an answered issue reopens it and DMs the admin. Resolved threads are closed and answer `410` — file a new report instead. Limited 120/15min/IP + a 3s per-user gate |
 | `GET` | `{base}/api/reports` | Admin panel: list all reports with names and thread roll-ups, `?status=open\|answered\|resolved` |
 | `GET` | `{base}/api/reports/:id` | Admin panel: the whole conversation behind one issue, and clears its unread stamp |
-| `POST` | `{base}/api/reports/:id/reply` | Admin panel: append a message to the thread and DM the reporter |
+| `POST` | `{base}/api/reports/:id/reply` | Admin panel: append a message to the thread and DM the reporter. Accepts JSON `{reply}` or multipart `reply` plus up to three `screenshots` (PNG/JPEG/WebP, 5 MB each); an image can stand alone |
 | `POST` | `{base}/api/reports/:id/close` | Admin panel: mark resolved and notify the reporter |
 | `POST` | `{base}/api/reports/:id/reopen` | Admin panel: put a closed issue back in the open inbox |
 

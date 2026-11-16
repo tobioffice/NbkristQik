@@ -141,13 +141,16 @@ const uploadError = (error: unknown): ReportUploadError => {
 /**
  * Parse and validate one multipart report submission.
  *
- * Every error path removes the temporary directory before throwing, so a
- * rejected request never leaves a file behind. The caller owns the result:
- * `commit()` on success, `discard()` when the message, gate or database says
- * no after the files were already accepted.
+ * `textField` is the form field that carries the message body (`message` for
+ * the reporter's form, `reply` for the admin panel's composer). Every error
+ * path removes the temporary directory before throwing, so a rejected request
+ * never leaves a file behind. The caller owns the result: `commit()` on
+ * success, `discard()` when the message, gate or database says no after the
+ * files were already accepted.
  */
 export const readReportUpload = async (
   req: Request,
+  textField = "message",
 ): Promise<PendingReportUpload> => {
   const declared = Number(req.headers["content-length"] ?? 0);
   if (Number.isFinite(declared) && declared > MAX_REPORT_UPLOAD_BYTES) {
@@ -212,7 +215,7 @@ export const readReportUpload = async (
   }
 
   return {
-    message: String(fields.message?.[0] ?? "").trim(),
+    message: String(fields[textField]?.[0] ?? "").trim(),
     fileCount: pending.length,
     commit: async () => {
       const stored: StoredReportFile[] = [];

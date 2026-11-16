@@ -495,36 +495,85 @@ export const appendUserThreadMessage = async (
  * Admin reply in ONE write round trip: the thread entry, the legacy reply
  * columns, and the admin's read marker — so the panel never flags the
  * admin's own message as "new" to them.
+ *
+ * Screenshots need the message id before their rows can be written, so that
+ * path runs in a transaction instead. As on the reporter side, the extra
+ * round trips only happen when there is a file to attach.
  */
 export const recordAdminReply = async (
   reportId: number,
   reply: string,
+  attachments: NewReportAttachment[] = [],
 ): Promise<void> => {
-  await turso.batch(
-    [
-      {
-        sql: `INSERT INTO report_messages (report_id, author, body) VALUES (?, 'admin', ?)`,
-        args: [reportId, reply],
-      },
-      {
-        sql: `UPDATE reports
-              SET admin_reply = ?, status = 'answered', replied_at = datetime('now')
-              WHERE id = ?`,
-        args: [reply, reportId],
-      },
-      {
-        sql: `INSERT INTO report_reads (report_id, reader, last_seen_id, seen_at)
-              VALUES (?, 'admin',
-                      (SELECT COALESCE(MAX(id), 0) FROM report_messages WHERE report_id = ?),
-                      datetime('now'))
-              ON CONFLICT(report_id, reader) DO UPDATE SET
-                last_seen_id = MAX(report_reads.last_seen_id, excluded.last_seen_id),
-                seen_at = excluded.seen_at`,
-        args: [reportId, reportId],
-      },
-    ],
-    "write",
-  );
+  if (attachments.length === 0) {
+    await turso.batch(
+      [
+        {
+          sql: `INSERT INTO report_messages (report_id, author, body) VALUES (?, 'admin', ?)`,
+          args: [reportId, reply],
+        },
+        {
+          sql: `UPDATE reports
+                SET admin_reply = ?, status = 'answered', replied_at = datetime('now')
+                WHERE id = ?`,
+          args: [reply, reportId],
+        },
+        {
+          sql: `INSERT INTO report_reads (report_id, reader, last_seen_id, seen_at)
+                VALUES (?, 'admin',
+                        (SELECT COALESCE(MAX(id), 0) FROM report_messages WHERE report_id = ?),
+                        datetime('now'))
+                ON CONFLICT(report_id, reader) DO UPDATE SET
+                  last_seen_id = MAX(report_reads.last_seen_id, excluded.last_seen_id),
+                  seen_at = excluded.seen_at`,
+          args: [reportId, reportId],
+        },
+      ],
+      "write",
+    );
+    return;
+  }
+
+  const tx = await turso.transaction("write");
+  try {
+    const inserted = await tx.execute({
+      sql: `INSERT INTO report_messages (report_id, author, body) VALUES (?, 'admin', ?)`,
+      args: [reportId, reply],
+    });
+    const messageId = Number(inserted.lastInsertRowid);
+    for (const file of attachments) {
+      await tx.execute({
+        sql: `INSERT INTO report_attachments
+                (report_id, message_id, file_name, mime_type, byte_size)
+              VALUES (?, ?, ?, ?, ?)`,
+        args: [
+          reportId,
+          messageId,
+          file.fileName,
+          file.mimeType,
+          file.byteSize,
+        ],
+      });
+    }
+    await tx.execute({
+      sql: `UPDATE reports
+            SET admin_reply = ?, status = 'answered', replied_at = datetime('now')
+            WHERE id = ?`,
+      args: [reply, reportId],
+    });
+    await tx.execute({
+      sql: `INSERT INTO report_reads (report_id, reader, last_seen_id, seen_at)
+            VALUES (?, 'admin', ?, datetime('now'))
+            ON CONFLICT(report_id, reader) DO UPDATE SET
+              last_seen_id = MAX(report_reads.last_seen_id, excluded.last_seen_id),
+              seen_at = excluded.seen_at`,
+      args: [reportId, messageId],
+    });
+    await tx.commit();
+  } catch (e) {
+    await tx.rollback().catch(() => undefined);
+    throw e;
+  }
 };
 
 export interface AdminReport extends ReportRow {

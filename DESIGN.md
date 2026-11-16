@@ -109,13 +109,15 @@ each mean one thing. Type is sentence case and quiet; the figures are tabular, s
 ranks, rolls, percentages and page numbers line up the way a register's do.
 
 The register's old paper-and-cloth language lives on in `DESIGN.PAPER.md`, where
-the server-rendered admin panel and status page still use it. The Mini App has
-moved to the native surface described here.
+the public status page still uses it. The Mini App and the admin panel use the
+native surface described here.
 
 **Status:** shipped. The Ranks, Profile, Issues, Library and Reader screens in
-`src/web` follow this document. The admin panel (`src/api/admin/panel.css.ts`)
-and the status page (`src/status/index.html`) still follow the paper system until
-they are migrated.
+`src/web` follow this document, and so does the server-rendered admin panel
+(`src/api/admin/panel.css.ts`). The admin panel keeps the same ground, surfaces,
+type and two blues; its data tables take a wider column and a top nav because it
+is a desktop operator console. The public status page (`src/status/index.html`)
+still follows the paper system until it is migrated.
 
 **Key Characteristics:**
 

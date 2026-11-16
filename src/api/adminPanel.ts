@@ -1,8 +1,8 @@
 /**
  * Self-contained admin panel: one HTML document (CSS + vanilla JS from the
  * sibling `admin/panel.*.ts` modules, so the page stays readable as regular
- * source). No external assets except the Public Sans + Zilla Slab webfonts
- * with system fallback.
+ * source). No external assets except the Figtree webfont with a system
+ * fallback.
  * Served by the API at the secret ADMIN_PANEL_PATH; all data endpoints
  * require the session cookie.
  *
@@ -22,7 +22,7 @@ export const adminPanelCsp = (nonce: string): string =>
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "connect-src 'self'",
-    "img-src 'self' data:",
+    "img-src 'self' data: blob:",
     "frame-ancestors 'none'",
     "base-uri 'none'",
     "form-action 'self'",
@@ -34,10 +34,11 @@ const panelDocument = (nonce: string): string => `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#212a33">
 <title>Qik Control</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Zilla+Slab:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style nonce="${nonce}">
 ${panelCss}
 </style>

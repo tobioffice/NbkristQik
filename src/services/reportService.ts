@@ -159,14 +159,21 @@ export const createAndAnnounce = async (
 const notifyReporterOfMessage = async (
   report: ReportRow,
   body: string,
+  attachmentCount = 0,
 ): Promise<void> => {
   const instance = await bot();
   if (!instance) return;
   const issueId = formatIssueId(report.id);
+  const preview =
+    body || (attachmentCount ? `Sent ${screenshotNote(attachmentCount)}.` : "");
+  const shotLine =
+    attachmentCount && body
+      ? `\n\n${screenshotNote(attachmentCount)} attached.`
+      : "";
   instance.api
     .sendMessage({
       chat_id: report.user_id,
-      text: `My reply on <code>${issueId}</code>:\n\n` + `${escapeHtml(body)}`,
+      text: `My reply on <code>${issueId}</code>:\n\n${escapeHtml(preview)}${shotLine}`,
       parse_mode: "HTML",
       reply_markup: {
         inline_keyboard: [
@@ -226,13 +233,14 @@ const notifyAdminOfMessage = async (
 export const adminReplyToReport = async (
   rawId: string,
   reply: string,
+  attachments: NewReportAttachment[] = [],
 ): Promise<string | null> => {
   const id = parseIssueId(rawId);
   if (!id) return null;
   const report = await getReport(id);
   if (!report) return null;
-  await recordAdminReply(id, reply);
-  await notifyReporterOfMessage(report, reply);
+  await recordAdminReply(id, reply, attachments);
+  await notifyReporterOfMessage(report, reply, attachments.length);
   return formatIssueId(id);
 };
 

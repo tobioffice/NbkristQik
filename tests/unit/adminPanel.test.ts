@@ -9,15 +9,28 @@ const nonceFrom = (html: string): string | undefined =>
   /<script nonce="([a-f0-9]+)">/.exec(html)?.[1];
 
 describe("the admin panel document", () => {
-  it("puts a fresh nonce on both inline tags", () => {
+  it("puts a fresh nonce on every inline tag", () => {
     const first = createAdminPanelDocument();
     const second = createAdminPanelDocument();
 
     expect(first.nonce).toMatch(/^[a-f0-9]{32}$/);
     expect(first.html).toContain(`<style nonce="${first.nonce}">`);
     expect(first.html).toContain(`<script nonce="${first.nonce}">`);
+    expect(first.html.match(/<script nonce="[a-f0-9]{32}">/g)).toHaveLength(1);
     expect(second.nonce).not.toBe(first.nonce);
     expect(nonceFrom(first.html)).toBe(first.nonce);
+  });
+
+  it("serves the Mini App surface, not the paper register", () => {
+    const { html } = createAdminPanelDocument();
+
+    expect(html).toContain("Figtree");
+    expect(html).toContain("--ground: #1a2026");
+    expect(html).toContain("--accent: #4cb2ff");
+    expect(html).toContain("--action: #248bda");
+    expect(html).toContain("Attach screenshots");
+    expect(html).not.toContain("Zilla Slab");
+    expect(html).not.toContain("qik-admin-theme");
   });
 
   it("builds a CSP that authorises exactly that nonce", () => {
@@ -30,6 +43,8 @@ describe("the admin panel document", () => {
     );
     expect(csp).toContain("font-src 'self' https://fonts.gstatic.com");
     expect(csp).toContain("connect-src 'self'");
+    // the reply composer previews local files without a server round trip
+    expect(csp).toContain("img-src 'self' data: blob:");
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).toContain("base-uri 'none'");
     expect(csp).toContain("form-action 'self'");
