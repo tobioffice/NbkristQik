@@ -48,7 +48,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
   const [search, setSearch] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
-  const filterSheetRef = useRef<HTMLDivElement | null>(null);
+  const filterSheetRef = useRef<HTMLDialogElement | null>(null);
   const { initData, tgUser } = useTelegramIdentity();
   const { myRoll, myRank, loading: identityLoading } = useTelegramUser();
 
@@ -270,27 +270,58 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
   }, []);
 
   const closeFilters = useCallback(() => {
+    const dialog = filterSheetRef.current;
+    if (dialog?.open) {
+      dialog.close();
+      return;
+    }
+    setFiltersOpen(false);
+  }, []);
+
+  const onFiltersClosed = useCallback(() => {
     haptic.select();
     setFiltersOpen(false);
   }, []);
 
-  // The sheet owns the screen while open: the native back arrow closes it,
-  // the page behind it does not scroll, and Escape is the keyboard equivalent.
+  // The filter sheet is a native modal dialog: the top layer gives it the
+  // inert page, focus containment, Esc/back dismissal and backdrop. The back
+  // button hook stays for Telegram's own back gesture.
   useBackHandler(filtersOpen ? closeFilters : null);
   useEffect(() => {
-    if (!filtersOpen) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeFilters();
+    const dialog = filterSheetRef.current;
+    if (!filtersOpen || !dialog) return;
+    if (!dialog.open) dialog.showModal();
+    // Safari has no closedby yet; keep click-outside dismissal there.
+    if (
+      typeof HTMLDialogElement === "undefined" ||
+      "closedBy" in HTMLDialogElement.prototype
+    ) {
+      return;
+    }
+    let pressedOutside = false;
+    const outside = (event: PointerEvent) => {
+      const rect = dialog.getBoundingClientRect();
+      return (
+        event.clientX < rect.left ||
+        event.clientX > rect.right ||
+        event.clientY < rect.top ||
+        event.clientY > rect.bottom
+      );
     };
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", onKey);
-    filterSheetRef.current?.focus();
+    const down = (event: PointerEvent) => {
+      pressedOutside = outside(event);
+    };
+    const up = (event: PointerEvent) => {
+      if (pressedOutside && outside(event)) dialog.close();
+      pressedOutside = false;
+    };
+    dialog.addEventListener("pointerdown", down);
+    dialog.addEventListener("pointerup", up);
     return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", onKey);
+      dialog.removeEventListener("pointerdown", down);
+      dialog.removeEventListener("pointerup", up);
     };
-  }, [filtersOpen, closeFilters]);
+  }, [filtersOpen]);
 
   const stripTotal =
     myRankInfo?.total && myRankInfo.total > 0 ? myRankInfo.total : total;
@@ -598,17 +629,14 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
         )}
 
         {filtersOpen && (
-          <div className="tg-sheet-backdrop" onClick={closeFilters}>
-            <div
-              id="tg-filter-sheet"
-              ref={filterSheetRef}
-              className="tg-sheet"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="tg-filter-title"
-              tabIndex={-1}
-              onClick={(event) => event.stopPropagation()}
-            >
+          <dialog
+            id="tg-filter-sheet"
+            ref={filterSheetRef}
+            className="tg-sheet"
+            aria-labelledby="tg-filter-title"
+            closedby="any"
+            onClose={onFiltersClosed}
+          >
               <div className="tg-sheet-grabber" aria-hidden="true" />
               <div className="tg-sheet-head">
                 <div>
@@ -671,8 +699,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
                   Done
                 </button>
               </div>
-            </div>
-          </div>
+          </dialog>
         )}
       </div>
     </>

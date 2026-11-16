@@ -139,14 +139,17 @@ export const panelJs = `(function () {
   var activateTab = function (name) {
     current = name;
     var tabs = document.querySelectorAll(".nav button");
-    for (var i = 0; i < tabs.length; i++)
-      tabs[i].setAttribute("aria-selected", String(tabs[i].dataset.view === name));
+    for (var i = 0; i < tabs.length; i++) {
+      if (tabs[i].dataset.view === name) tabs[i].setAttribute("aria-current", "page");
+      else tabs[i].removeAttribute("aria-current");
+    }
     var views = document.querySelectorAll(".view");
     for (var j = 0; j < views.length; j++)
       views[j].classList.toggle("active", views[j].id === "view-" + name);
   };
   var switchView = function (name) {
     activateTab(name);
+    window.scrollTo(0, 0);
     if (name === "overview" && isStale("overview")) loadOverview();
     if (name === "students" && isStale("students")) loadUsers();
     if (name === "verified" && isStale("verified")) loadVerified();
@@ -262,7 +265,7 @@ export const panelJs = `(function () {
     pulseBtns[pb].addEventListener("click", function () {
       pulseRange = this.dataset.range;
       for (var k = 0; k < pulseBtns.length; k++)
-        pulseBtns[k].setAttribute("aria-selected", String(pulseBtns[k] === this));
+        pulseBtns[k].setAttribute("aria-pressed", String(pulseBtns[k] === this));
       drawPulse(buildPulsePoints());
     });
 
@@ -435,12 +438,12 @@ export const panelJs = `(function () {
     var v = this.value;
     searchTimer = setTimeout(function () { var q = v.trim(); if (q === userQuery) return; userQuery = q; loadUsers(); }, 250);
   });
-  var sortBtns = document.querySelectorAll(".seg button");
+  var sortBtns = document.querySelectorAll("#usersort button");
   for (var sb = 0; sb < sortBtns.length; sb++)
     sortBtns[sb].addEventListener("click", function () {
       userSort = this.dataset.sort;
       for (var k = 0; k < sortBtns.length; k++)
-        sortBtns[k].setAttribute("aria-selected", String(sortBtns[k] === this));
+        sortBtns[k].setAttribute("aria-pressed", String(sortBtns[k] === this));
       loadUsers();
     });
 
@@ -543,7 +546,7 @@ export const panelJs = `(function () {
     libSortBtns[lb].addEventListener("click", function () {
       libSort = this.dataset.sort;
       for (var k2 = 0; k2 < libSortBtns.length; k2++)
-        libSortBtns[k2].setAttribute("aria-selected", String(libSortBtns[k2] === this));
+        libSortBtns[k2].setAttribute("aria-pressed", String(libSortBtns[k2] === this));
       lastLoad.library = 0;
       loadLibrary();
     });
@@ -593,7 +596,7 @@ export const panelJs = `(function () {
     var r = d.reader;
     var label = libReaderLabel(r);
     var name = label.name;
-    var html = '<div class="dhead"><div><h3>' + esc(name) + "</h3>" +
+    var html = '<div class="dhead"><div><h3 id="drawer-title">' + esc(name) + "</h3>" +
       '<div class="meta mono">' + (label.handle ? esc(label.handle) + " · " : "") + "ID " + esc(String(r.userId)) +
       (r.rollNo ? " · " + esc(r.rollNo) : "") + (r.collegeName ? " · " + esc(r.collegeName) : "") + "</div></div>" +
       '<button class="x" id="dclose" aria-label="Close">&times;</button></div>' +
@@ -624,9 +627,7 @@ export const panelJs = `(function () {
     $("drawer").innerHTML = html;
     $("dclose").addEventListener("click", closeDrawer);
     drawerIssue = "user:" + r.userId;
-    $("drawer").classList.add("open");
-    $("scrim").classList.add("open");
-    $("drawer").setAttribute("aria-hidden", "false");
+    showDrawer();
   };
 
   /* ---------- live ---------- */
@@ -747,16 +748,13 @@ export const panelJs = `(function () {
     var sk = "";
     for (var k = 0; k < 3; k++) sk += '<div class="tmsg sk sk-pulse" style="height:64px"></div>';
     $("drawer").innerHTML =
-      '<div class="dhead"><div><h3>' + esc(issueId) + "</h3>" +
+      '<div class="dhead"><div><h3 id="drawer-title">' + esc(issueId) + "</h3>" +
       '<div class="meta">' + sub + "</div></div>" +
       '<button class="x" id="dclose" aria-label="Close">&times;</button></div>' +
       '<div class="dthread">' + sk + "</div>";
     $("dclose").addEventListener("click", closeDrawer);
     drawerIssue = issueId;
-    var drawer = $("drawer");
-    drawer.classList.add("open");
-    $("scrim").classList.add("open");
-    drawer.setAttribute("aria-hidden", "false");
+    showDrawer();
   };
 
   var renderThreadError = function (retry) {
@@ -818,7 +816,7 @@ export const panelJs = `(function () {
     for (var i = 0; i < list.length; i++) {
       var a = list[i];
       html += '<a class="tattachment" href="' + esc(a.url) + '" target="_blank" rel="noopener noreferrer">' +
-        '<img src="' + esc(a.url) + '" alt="Screenshot ' + (i + 1) + '" loading="lazy">' +
+        '<img src="' + esc(a.url) + '" alt="Screenshot ' + (i + 1) + '" loading="lazy" decoding="async">' +
         "</a>";
     }
     return html + "</div>";
@@ -869,6 +867,11 @@ export const panelJs = `(function () {
           : "Up to 3, 5 MB each", false);
       });
     }
+    var addBtn = $("dshotsbtn");
+    if (addBtn) {
+      addBtn.disabled = threadShots.length >= MAX_SHOTS;
+      addBtn.textContent = threadShots.length ? "Add another" : "Attach screenshots";
+    }
   };
 
   var addThreadShots = function (fileList) {
@@ -907,7 +910,7 @@ export const panelJs = `(function () {
       }
       var prevReply = $("dreply");
       var draft = prevReply ? prevReply.value : null;
-      var html = '<div class="dhead"><div><h3>' + esc(t.issueId) + "</h3>" +
+      var html = '<div class="dhead"><div><h3 id="drawer-title">' + esc(t.issueId) + "</h3>" +
         '<div class="meta">' + reporterLabel(t) + ' <span class="mono">' + esc(String(t.userId)) + "</span>" +
         " · " + esc(t.status) + " · opened " + istDate(parseUtc(t.createdAt)) + "</div></div>" +
         '<button class="x" id="dclose" aria-label="Close">&times;</button></div>' +
@@ -923,8 +926,8 @@ export const panelJs = `(function () {
       html += "</div>" +
         '<div class="rform show"><div class="rform-main">' +
         '<textarea id="dreply" placeholder="Write to the reporter. It is added to the thread and DM\\'d to them."></textarea>' +
-        '<div class="rattach"><label for="dshots">Attach screenshots</label>' +
-        '<input type="file" id="dshots" accept="image/png,image/jpeg,image/webp" multiple>' +
+        '<div class="rattach"><button type="button" class="rattach-btn" id="dshotsbtn">Attach screenshots</button>' +
+        '<input type="file" id="dshots" class="rattach-input" accept="image/png,image/jpeg,image/webp" multiple tabindex="-1" aria-hidden="true">' +
         '<span class="hint" id="dshothint">Up to 3, 5 MB each</span></div>' +
         '<div class="rshots" id="dpreviews"></div>' +
         '<div class="hint error" id="dshoterr" style="display:none"></div>' +
@@ -940,6 +943,9 @@ export const panelJs = `(function () {
       $("dclose").addEventListener("click", closeDrawer);
 
       var shotInput = $("dshots");
+      $("dshotsbtn").addEventListener("click", function () {
+        shotInput.click();
+      });
       shotInput.addEventListener("change", function () {
         addThreadShots(this.files);
         this.value = "";
@@ -1019,9 +1025,7 @@ export const panelJs = `(function () {
 
       drawerIssue = t.issueId;
       var drawer = $("drawer");
-      drawer.classList.add("open");
-      $("scrim").classList.add("open");
-      drawer.setAttribute("aria-hidden", "false");
+      showDrawer();
       drawer.scrollTop = drawer.scrollHeight;
   };
 
@@ -1093,7 +1097,7 @@ export const panelJs = `(function () {
       if (this.dataset.status === reportStatus || inflight.reports) return;
       reportStatus = this.dataset.status;
       for (var k = 0; k < reportFilterBtns.length; k++)
-        reportFilterBtns[k].setAttribute("aria-selected", String(reportFilterBtns[k] === this));
+        reportFilterBtns[k].setAttribute("aria-pressed", String(reportFilterBtns[k] === this));
       loadReports();
     });
   }
@@ -1165,34 +1169,58 @@ export const panelJs = `(function () {
   };
 
   /* ---------- drawer ---------- */
+  var showDrawer = function () {
+    var drawer = $("drawer");
+    if (!drawer.open) drawer.showModal();
+  };
   var closeDrawer = function () {
+    var drawer = $("drawer");
+    if (drawer.open) drawer.close();
+  };
+  // Native modal dialogs give the drawer focus containment, an inert page,
+  // the top layer and Esc/back dismissal. Only the screenshot buffers need
+  // clearing on close; the dialog's own close event covers every path.
+  $("drawer").addEventListener("close", function () {
     drawerIssue = null;
     clearThreadShots();
     threadShotsIssue = null;
-    $("drawer").classList.remove("open");
-    $("scrim").classList.remove("open");
-    $("drawer").setAttribute("aria-hidden", "true");
-  };
-  $("scrim").addEventListener("click", closeDrawer);
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") closeDrawer();
   });
+  // Safari lacks closedby="any"; keep click-outside working there without a
+  // manual scrim. The pointer check avoids closing on a drag that ends outside.
+  if (
+    typeof HTMLDialogElement !== "undefined" &&
+    !("closedBy" in HTMLDialogElement.prototype)
+  ) {
+    var pressedOutside = false;
+    var outsideDrawer = function (e, dialog) {
+      var r = dialog.getBoundingClientRect();
+      return (
+        e.clientX < r.left || e.clientX > r.right ||
+        e.clientY < r.top || e.clientY > r.bottom
+      );
+    };
+    var drawerEl = $("drawer");
+    drawerEl.addEventListener("pointerdown", function (e) {
+      pressedOutside = outsideDrawer(e, drawerEl);
+    });
+    drawerEl.addEventListener("pointerup", function (e) {
+      if (pressedOutside && outsideDrawer(e, drawerEl)) drawerEl.close();
+      pressedOutside = false;
+    });
+  }
 
   // same instant-open contract as threads: shell, warm cache, reconcile
   var openDrawerShell = function (userId) {
     var sk = "";
     for (var k = 0; k < 4; k++) sk += '<div class="sk sk-pulse" style="height:14px;margin:10px 0"></div>';
     $("drawer").innerHTML =
-      '<div class="dhead"><div><h3>ID ' + esc(String(userId)) + "</h3>" +
+      '<div class="dhead"><div><h3 id="drawer-title">ID ' + esc(String(userId)) + "</h3>" +
       '<div class="meta">loading the student…</div></div>' +
       '<button class="x" id="dclose" aria-label="Close">&times;</button></div>' +
       '<div class="dfeed">' + sk + "</div>";
     $("dclose").addEventListener("click", closeDrawer);
     drawerIssue = "user:" + userId;
-    var drawer = $("drawer");
-    drawer.classList.add("open");
-    $("scrim").classList.add("open");
-    drawer.setAttribute("aria-hidden", "false");
+    showDrawer();
   };
 
   var openDrawer = function (userId) {
@@ -1222,7 +1250,7 @@ export const panelJs = `(function () {
   var renderUserDrawer = function (d) {
       var p = d.profile;
       var name = p.firstName || p.username || "ID " + p.userId;
-      var html = '<div class="dhead"><div><h3>' + esc(name) + "</h3>" +
+      var html = '<div class="dhead"><div><h3 id="drawer-title">' + esc(name) + "</h3>" +
         '<div class="meta mono">' + (p.username ? "@" + esc(p.username) + " · " : "") + "ID " + p.userId +
         (p.rollNo ? " · " + esc(p.rollNo) : "") + "</div></div>" +
         '<button class="x" id="dclose" aria-label="Close">&times;</button></div>' +
@@ -1259,9 +1287,7 @@ export const panelJs = `(function () {
       mini.innerHTML = miniHtml;
 
       drawerIssue = "user:" + p.userId;
-      $("drawer").classList.add("open");
-      $("scrim").classList.add("open");
-      $("drawer").setAttribute("aria-hidden", "false");
+      showDrawer();
   };
 
   /* ---------- boot ---------- */

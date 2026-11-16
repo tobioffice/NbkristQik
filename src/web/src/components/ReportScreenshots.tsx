@@ -148,6 +148,7 @@ export default function ReportScreenshots({
               <img
                 src={url}
                 alt={`Screenshot ${index + 1} of ${previews.length}`}
+                decoding="async"
               />
               <button
                 type="button"

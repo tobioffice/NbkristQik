@@ -106,18 +106,23 @@ a:focus-visible {
 }
 
 @media (min-width: 720px) {
-  ::-webkit-scrollbar {
-    width: 11px;
+  html {
+    scrollbar-color: var(--ink-3) var(--paper-2);
   }
-  ::-webkit-scrollbar-track {
-    background: var(--paper-2);
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--ink-3);
-    border: 3px solid var(--paper-2);
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--ink-2);
+  @supports not (scrollbar-color: auto) {
+    ::-webkit-scrollbar {
+      width: 11px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--paper-2);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--ink-3);
+      border: 3px solid var(--paper-2);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--ink-2);
+    }
   }
 }
 
@@ -1702,12 +1707,18 @@ a:focus-visible {
   overflow-anchor: none;
 }
 
-.reader__pages::-webkit-scrollbar {
-  height: 4px;
+.reader__pages {
+  scrollbar-color: var(--ink-3) transparent;
 }
 
-.reader__pages::-webkit-scrollbar-thumb {
-  background: var(--rule-strong);
+@supports not (scrollbar-color: auto) {
+  .reader__pages::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .reader__pages::-webkit-scrollbar-thumb {
+    background: var(--ink-3);
+  }
 }
 
 .reader__page {

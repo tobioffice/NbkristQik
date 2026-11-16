@@ -393,6 +393,7 @@ export default function ReportThreadView({
                           src={attachment.url}
                           alt={`Screenshot ${index + 1}`}
                           loading="lazy"
+                          decoding="async"
                         />
                       </a>
                     ))}

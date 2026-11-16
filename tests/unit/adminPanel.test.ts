@@ -33,6 +33,26 @@ describe("the admin panel document", () => {
     expect(html).not.toContain("qik-admin-theme");
   });
 
+  it("uses a native modal dialog and real navigation semantics", () => {
+    const { html } = createAdminPanelDocument();
+
+    expect(html).toContain('<dialog class="drawer"');
+    expect(html).toContain('closedby="any"');
+    expect(html).toContain('aria-labelledby="drawer-title"');
+    expect(html).not.toContain('<div class="scrim"');
+    expect(html).not.toContain('role="dialog"');
+    expect(html).not.toContain('role="tablist"');
+    expect(html).toContain('aria-current="page"');
+    expect(html).toContain('aria-pressed="true"');
+  });
+
+  it("uses standard scrollbar styling with a wrapped WebKit fallback", () => {
+    const { html } = createAdminPanelDocument();
+
+    expect(html).toContain("scrollbar-color: var(--text-3) var(--footer)");
+    expect(html).toContain("@supports not (scrollbar-color: auto)");
+  });
+
   it("builds a CSP that authorises exactly that nonce", () => {
     const { nonce } = createAdminPanelDocument();
     const csp = adminPanelCsp(nonce);

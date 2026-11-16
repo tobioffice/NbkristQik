@@ -31,4 +31,11 @@ describe("admin panel embedded assets", () => {
     expect(panelCss).toContain("--action: #248bda");
     expect(panelCss).not.toContain("data-theme");
   });
+
+  it("opens the drawer with the native modal dialog API", () => {
+    expect(panelJs).toContain("showModal()");
+    expect(panelJs).toContain('addEventListener("close"');
+    expect(panelJs).not.toContain('$("scrim")');
+    expect(panelJs).not.toContain('setAttribute("aria-hidden"');
+  });
 });

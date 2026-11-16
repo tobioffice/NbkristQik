@@ -47,14 +47,14 @@ ${panelCss}
 
 <header class="topbar" id="topbar" style="display:none">
   <div class="wordmark">Qik<span> Control</span></div>
-  <nav class="nav" role="tablist">
-    <button role="tab" aria-selected="true" data-view="overview">Overview</button>
-    <button role="tab" aria-selected="false" data-view="students">Students</button>
-    <button role="tab" aria-selected="false" data-view="verified">Verified</button>
-    <button role="tab" aria-selected="false" data-view="library">Library</button>
-    <button role="tab" aria-selected="false" data-view="reports">Reports</button>
-    <button role="tab" aria-selected="false" data-view="live">Live</button>
-    <button role="tab" aria-selected="false" data-view="health">Health</button>
+  <nav class="nav" aria-label="Admin views">
+    <button aria-current="page" data-view="overview">Overview</button>
+    <button data-view="students">Students</button>
+    <button data-view="verified">Verified</button>
+    <button data-view="library">Library</button>
+    <button data-view="reports">Reports</button>
+    <button data-view="live">Live</button>
+    <button data-view="health">Health</button>
   </nav>
   <button class="signout" id="signout">Sign out</button>
 </header>
@@ -80,9 +80,9 @@ ${panelCss}
       </div>
       <div class="pulse">
         <div class="pulse-head">
-          <div class="seg seg-sm" id="pulseseq" role="tablist">
-            <button aria-selected="true" data-range="30d">30 days</button>
-            <button aria-selected="false" data-range="24h">Today</button>
+          <div class="seg seg-sm" id="pulseseq" role="group" aria-label="Activity range">
+            <button aria-pressed="true" data-range="30d">30 days</button>
+            <button aria-pressed="false" data-range="24h">Today</button>
           </div>
           <span class="legend"><b>&mdash;</b> actions &nbsp;&nbsp; hover for students</span>
         </div>
@@ -118,9 +118,9 @@ ${panelCss}
   <section class="view" id="view-students">
     <div class="toolbar">
       <input class="search" id="usersearch" placeholder="Search name, @username, roll or ID&hellip;" aria-label="Search students">
-      <div class="seg" role="tablist">
-        <button aria-selected="true" data-sort="recent">Recent</button>
-        <button aria-selected="false" data-sort="total">Most active</button>
+      <div class="seg" id="usersort" role="group" aria-label="Sort students">
+        <button aria-pressed="true" data-sort="recent">Recent</button>
+        <button aria-pressed="false" data-sort="total">Most active</button>
       </div>
     </div>
     <div class="tablewrap">
@@ -174,10 +174,10 @@ ${panelCss}
     </div>
     <div class="toolbar" style="margin-top:16px">
       <input class="search" id="libsearch" placeholder="Search name, @username, roll or ID&hellip;" aria-label="Search readers">
-      <div class="seg" role="tablist" id="libsort">
-        <button aria-selected="true" data-sort="recent">Recent</button>
-        <button aria-selected="false" data-sort="pages">Most pages</button>
-        <button aria-selected="false" data-sort="downloads">Most downloads</button>
+      <div class="seg" role="group" aria-label="Sort readers" id="libsort">
+        <button aria-pressed="true" data-sort="recent">Recent</button>
+        <button aria-pressed="false" data-sort="pages">Most pages</button>
+        <button aria-pressed="false" data-sort="downloads">Most downloads</button>
       </div>
       <button class="btn-ghost" id="librefresh">Refresh</button>
     </div>
@@ -238,11 +238,11 @@ ${panelCss}
       <span class="hint">each issue is a thread — replies reach the reporter in Telegram</span>
     </div>
     <div class="toolbar">
-      <div class="seg" role="tablist" id="reportfilter">
-        <button aria-selected="false" data-status="all">All</button>
-        <button aria-selected="true" data-status="open">Open</button>
-        <button aria-selected="false" data-status="answered">Answered</button>
-        <button aria-selected="false" data-status="resolved">Resolved</button>
+      <div class="seg" role="group" aria-label="Report status" id="reportfilter">
+        <button aria-pressed="false" data-status="all">All</button>
+        <button aria-pressed="true" data-status="open">Open</button>
+        <button aria-pressed="false" data-status="answered">Answered</button>
+        <button aria-pressed="false" data-status="resolved">Resolved</button>
       </div>
       <button class="btn-ghost" id="reportsrefresh">Refresh</button>
     </div>
@@ -258,8 +258,7 @@ ${panelCss}
   </section>
 </main>
 
-<div class="scrim" id="scrim"></div>
-<aside class="drawer" id="drawer" aria-hidden="true"></aside>
+<dialog class="drawer" id="drawer" aria-labelledby="drawer-title" closedby="any"></dialog>
 
 <script nonce="${nonce}">
 ${panelJs}
