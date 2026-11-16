@@ -384,6 +384,15 @@ td .surfn { display: inline-block; min-width: 30px; text-align: right; }
   margin-top: 6px; font-size: 13.5px; line-height: 1.55; color: var(--ink);
   white-space: pre-wrap; overflow-wrap: anywhere;
 }
+/* screenshots filed with a message: a strip of small paper prints */
+.tattachments { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.tattachment {
+  display: block; width: 132px; height: 132px; overflow: hidden;
+  border: 1px solid var(--line-soft); background: var(--paper-3);
+}
+.tattachment img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tattachment:hover, .tattachment:focus-visible { border-color: var(--ink); }
+.tattachment:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 /* skeleton placeholders: flat paper tones breathing, no gradients or glow */
 .sk { background: var(--paper-3); border: 1px solid var(--line-soft); border-radius: 2px; }
 .tmsg.sk { min-height: 64px; border-left: none; }

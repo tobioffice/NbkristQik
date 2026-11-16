@@ -6,6 +6,7 @@ import { reportStatusLabel } from "../reportStatus";
 import { useClosingConfirmation } from "../telegram";
 import { FORM_ROUTE, HISTORY_ROUTE, type IssuesRoute } from "../issuesRoute";
 import ReportThreadView from "./ReportThread";
+import ReportScreenshots from "../components/ReportScreenshots";
 
 /**
  * The issue desk: file a report, then keep the conversation going.
@@ -40,6 +41,7 @@ export default function Issues({
 }: IssuesProps) {
   const draftKey = reportDraftKey(identity.userId, "form");
   const [message, setMessage] = useState(() => readDraft(draftKey));
+  const [screenshots, setScreenshots] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ticket, setTicket] = useState<string | null>(null);
@@ -49,7 +51,9 @@ export default function Issues({
   const reportsInFlight = useRef(false);
 
   // a half-written report is worth more than a fast exit
-  useClosingConfirmation(message.trim().length > 0 && !ticket);
+  useClosingConfirmation(
+    (message.trim().length > 0 || screenshots.length > 0) && !ticket,
+  );
 
   // keep the draft across tab switches, back navigation and a reload
   useEffect(() => {
@@ -139,9 +143,10 @@ export default function Issues({
     }
     setSending(true);
     try {
-      const { issueId } = await submitReport(identity, clean);
+      const { issueId } = await submitReport(identity, clean, screenshots);
       setTicket(issueId);
       setMessage("");
+      setScreenshots([]);
       clearDraft(draftKey);
       setReports(null); // the list refetches on its next visit
     } catch (e) {
@@ -209,27 +214,24 @@ export default function Issues({
           </div>
         )}
 
-        {orderedReports &&
-          orderedReports.length === 0 &&
-          !loadingError && (
-            <div className="report-empty">
-              <p className="report-empty__title">No reports yet</p>
-              <p className="form-note">
-                Something wrong with your marks or the bot? File a report.
-                You'll get an issue id, and the reply lands here and in your
-                chat.
-              </p>
-              <button
-                onClick={() => {
-                  setTicket(null);
-                  onNavigate(FORM_ROUTE);
-                }}
-                className="btn-ink mt-4"
-              >
-                Report an issue
-              </button>
-            </div>
-          )}
+        {orderedReports && orderedReports.length === 0 && !loadingError && (
+          <div className="report-empty">
+            <p className="report-empty__title">No reports yet</p>
+            <p className="form-note">
+              Something wrong with your marks or the bot? File a report. You'll
+              get an issue id, and the reply lands here and in your chat.
+            </p>
+            <button
+              onClick={() => {
+                setTicket(null);
+                onNavigate(FORM_ROUTE);
+              }}
+              className="btn-ink mt-4"
+            >
+              Report an issue
+            </button>
+          </div>
+        )}
 
         {orderedReports && orderedReports.length > 0 && (
           <>
@@ -291,9 +293,7 @@ export default function Issues({
                             : "you wrote last"}
                         </span>
                         {activity ? (
-                          <span className="report-entry__when">
-                            {activity}
-                          </span>
+                          <span className="report-entry__when">{activity}</span>
                         ) : null}
                       </span>
                     </button>
@@ -385,6 +385,12 @@ export default function Issues({
                   : `${message.length}/1000`}
               </span>
             </label>
+
+            <ReportScreenshots
+              files={screenshots}
+              onChange={setScreenshots}
+              disabled={sending}
+            />
 
             {error && <p className="note note--err mt-4">{error}</p>}
 

@@ -9,6 +9,7 @@ import {
 import { clearDraft, readDraft, threadDraftKey, writeDraft } from "../drafts";
 import { reportStatusLabel } from "../reportStatus";
 import { useClosingConfirmation } from "../telegram";
+import ReportScreenshots from "../components/ReportScreenshots";
 
 interface ReportThreadViewProps {
   identity: { initData?: string; userId?: string };
@@ -63,7 +64,13 @@ const threadFromSeed = (seed: MyReport): ReportThread => ({
   createdAt: seed.createdAt,
   messageCount: seed.messageCount,
   messages: [
-    { id: 0, author: "user", body: seed.message, createdAt: seed.createdAt },
+    {
+      id: 0,
+      author: "user",
+      body: seed.message,
+      createdAt: seed.createdAt,
+      attachments: [],
+    },
     ...(seed.adminReply
       ? [
           {
@@ -71,6 +78,7 @@ const threadFromSeed = (seed: MyReport): ReportThread => ({
             author: "admin" as const,
             body: seed.adminReply,
             createdAt: seed.repliedAt ?? seed.createdAt,
+            attachments: [],
           },
         ]
       : []),
@@ -183,6 +191,7 @@ export default function ReportThreadView({
   const [error, setError] = useState<string | null>(null);
   const draftKey = threadDraftKey(issueId);
   const [draft, setDraft] = useState(() => readDraft(draftKey));
+  const [screenshots, setScreenshots] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const bottom = useRef<HTMLDivElement | null>(null);
   // -1 makes the first painted thread count as new: opening a conversation
@@ -192,7 +201,7 @@ export default function ReportThreadView({
   const abortRef = useRef<AbortController | null>(null);
   const inFlightRef = useRef(false);
 
-  useClosingConfirmation(draft.trim().length > 0);
+  useClosingConfirmation(draft.trim().length > 0 || screenshots.length > 0);
 
   // a reply is just as easy to lose as a report: keep it per issue
   useEffect(() => {
@@ -283,7 +292,7 @@ export default function ReportThreadView({
 
   const send = async () => {
     const clean = draft.trim();
-    if (!clean || sending) return;
+    if ((!clean && screenshots.length === 0) || sending) return;
     setSending(true);
     setError(null);
 
@@ -291,8 +300,9 @@ export default function ReportThreadView({
     // that looks delivered but failed is worse than a moment's wait. The
     // draft stays put on failure, so the words are never lost.
     try {
-      await sendThreadMessage(identity, issueId, clean);
+      await sendThreadMessage(identity, issueId, clean, screenshots);
       setDraft("");
+      setScreenshots([]);
       clearDraft(draftKey);
       load(true, true);
     } catch (e) {
@@ -368,7 +378,26 @@ export default function ReportThreadView({
                     {istDay(m.createdAt)} {istTime(m.createdAt)}
                   </span>
                 </p>
-                <p className="thread__body">{m.body}</p>
+                {m.body ? <p className="thread__body">{m.body}</p> : null}
+                {m.attachments.length > 0 && (
+                  <div className="thread__shots">
+                    {m.attachments.map((attachment, index) => (
+                      <a
+                        key={attachment.url}
+                        className="thread__shot"
+                        href={attachment.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <img
+                          src={attachment.url}
+                          alt={`Screenshot ${index + 1}`}
+                          loading="lazy"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                )}
               </li>
             ))}
           </ol>
@@ -404,10 +433,18 @@ export default function ReportThreadView({
                 />
                 <span className="char-count">{draft.length}/1000</span>
               </label>
+              <ReportScreenshots
+                files={screenshots}
+                onChange={setScreenshots}
+                disabled={sending}
+              />
               {error ? <p className="note note--err mt-4">{error}</p> : null}
               <button
                 type="submit"
-                disabled={sending || draft.trim().length === 0}
+                disabled={
+                  sending ||
+                  (draft.trim().length === 0 && screenshots.length === 0)
+                }
                 className="btn-ink w-full mt-4"
               >
                 {sending ? "Sending..." : "Send message"}

@@ -798,6 +798,21 @@ export const panelJs = `(function () {
     }).then(function () { inflight.thread = false; });
   };
 
+  // Screenshots ride with their message: a small paper strip of thumbnails,
+  // each opening the full image in a new tab. The URL comes from the server
+  // and is escaped like every other value.
+  var attachmentHtml = function (list) {
+    if (!list || !list.length) return "";
+    var html = '<div class="tattachments">';
+    for (var i = 0; i < list.length; i++) {
+      var a = list[i];
+      html += '<a class="tattachment" href="' + esc(a.url) + '" target="_blank" rel="noopener noreferrer">' +
+        '<img src="' + esc(a.url) + '" alt="Screenshot ' + (i + 1) + '" loading="lazy">' +
+        "</a>";
+    }
+    return html + "</div>";
+  };
+
   // full thread paint: head, messages, composer, actions. A draft being
   // typed survives background reconciles — the send flow clears the box
   // itself when the message goes out.
@@ -814,7 +829,8 @@ export const panelJs = `(function () {
         html += '<div class="tmsg ' + (m.author === "admin" ? "admin" : "student") + '">' +
           '<div class="tmeta"><b>' + (m.author === "admin" ? "you · admin" : "student") + "</b>" +
           "<span>" + istDate(parseUtc(m.createdAt)).slice(5) + " " + istTime(m.createdAt) + "</span></div>" +
-          '<div class="tbody">' + esc(m.body) + "</div></div>";
+          '<div class="tbody">' + esc(m.body) + "</div>" +
+          attachmentHtml(m.attachments) + "</div>";
       }
       html += "</div>" +
         '<div class="rform show"><textarea id="dreply" placeholder="Write to the reporter. It is added to the thread and DM\\'d to them."></textarea>' +

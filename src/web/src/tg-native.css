@@ -1555,6 +1555,128 @@ body {
   border-top: 0;
 }
 
+/* ---------- screenshots ---------- */
+
+.sheet--tg .shots-field {
+  margin-top: 10px;
+}
+
+.sheet--tg .shots-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sheet--tg .shot-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sheet--tg .shot-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+}
+
+.sheet--tg .shot-add svg {
+  flex: none;
+  color: var(--tg-accent);
+}
+
+.sheet--tg .shots-hint {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--tg-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sheet--tg .shots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sheet--tg .shot {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border-radius: var(--tg-radius);
+  background: var(--tg-surface);
+}
+
+.sheet--tg .shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sheet--tg .shot__remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(17, 20, 23, 0.82);
+  color: #fff;
+  cursor: pointer;
+}
+
+.sheet--tg .shot__remove:hover {
+  background: rgba(17, 20, 23, 0.96);
+}
+
+.sheet--tg .shot__remove:focus-visible {
+  outline: 2px solid var(--tg-accent);
+  outline-offset: 1px;
+}
+
+/* screenshots already sent in a thread */
+.sheet--tg .thread__shots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.sheet--tg .thread__shot {
+  display: block;
+  width: 96px;
+  height: 96px;
+  overflow: hidden;
+  border-radius: var(--tg-radius);
+  background: var(--tg-surface);
+}
+
+.sheet--tg .thread__shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sheet--tg .thread__shot:focus-visible {
+  outline: 2px solid var(--tg-accent);
+  outline-offset: 1px;
+}
+
 /* ---------- the receipt ---------- */
 
 .sheet--tg .ticket {

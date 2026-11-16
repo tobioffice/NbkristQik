@@ -38,6 +38,10 @@ import { registerAdminRoutes } from "./admin/index.js";
 import { profileRouter } from "./profile.js";
 import { themeRouter } from "./theme.js";
 import { reportRouter } from "./report.js";
+import {
+  isReportAttachmentName,
+  reportFilesDir,
+} from "../services/reportFiles.js";
 import { rankRouter } from "./rank.js";
 import { verificationRouter } from "./verification.js";
 import { libraryRouter } from "./library.js";
@@ -156,6 +160,60 @@ app.get(
       (error) => {
         if (!error) return;
         if (!res.headersSent) {
+          res.status(404).json({ success: false, error: "Not Found" });
+        }
+      },
+    );
+  },
+);
+
+/**
+ * Report screenshots. Random 32-hex names make the URL unguessable; the
+ * database row is what decides which files exist. Like /status, this is
+ * mounted ahead of the API middlewares so an image request never spends a
+ * student's API budget, and it carries its own limiter for the file read.
+ */
+const reportAttachmentLimit = rateLimit({
+  windowMs: 60_000,
+  // A campus NAT can put a whole class behind one address; a thread with
+  // three screenshots costs three requests, so leave room for a busy hour
+  // while still capping a scripted scrape.
+  limit: 1_200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: "Too many image requests. Try again in a minute.",
+  },
+});
+
+app.get(
+  "/api/report-attachment/:name",
+  reportAttachmentLimit,
+  (req: Request, res: Response) => {
+    const name = String(req.params.name);
+    if (!isReportAttachmentName(name)) {
+      res.setHeader("Cache-Control", "no-store");
+      res.status(404).json({ success: false, error: "Not Found" });
+      return;
+    }
+
+    res.setHeader("Cache-Control", "private, max-age=31536000, immutable");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Security-Policy", "default-src 'none'");
+    // sendFile derives the type from the extension, which was chosen from the
+    // bytes on upload (png/jpg/webp), never from the client's claim.
+    res.sendFile(
+      name,
+      { root: reportFilesDir(), dotfiles: "deny" },
+      (error) => {
+        if (!error) return;
+        if (!res.headersSent) {
+          // sendFile may have staged an image Content-Type before it found
+          // the file missing; a JSON 404 must not inherit it, and a missing
+          // image must not be cached as if it were the screenshot.
+          res.removeHeader("Content-Type");
+          res.setHeader("Cache-Control", "no-store");
           res.status(404).json({ success: false, error: "Not Found" });
         }
       },

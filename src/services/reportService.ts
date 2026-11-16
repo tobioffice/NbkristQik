@@ -14,6 +14,7 @@ import {
   setReportStatus,
   formatIssueId,
   parseIssueId,
+  type NewReportAttachment,
   type ReportRow,
 } from "../db/report.model.js";
 import { trackActivity } from "./tracker.js";
@@ -50,7 +51,13 @@ export interface ReportSubmission {
   /** chat surface for tracking; the web form reports as "unknown" */
   chatType?: "private" | "group" | "supergroup" | "channel" | "unknown";
   message: string;
+  /** screenshots already written to disk, waiting for their message row */
+  attachments?: NewReportAttachment[];
 }
+
+/** "1 screenshot" / "2 screenshots" — notices count them, never show them. */
+const screenshotNote = (count: number): string =>
+  count === 1 ? "1 screenshot" : `${count} screenshots`;
 
 /** One report per user per minute (fail-open), beyond the HTTP rate limiter. */
 export const tooSoonToReport = async (userId: number): Promise<boolean> => {
@@ -88,7 +95,8 @@ export const tooSoonToFollowUp = async (userId: number): Promise<boolean> => {
 export const createAndAnnounce = async (
   sub: ReportSubmission,
 ): Promise<{ issueId: string; id: number }> => {
-  const id = await createReport(sub.userId, sub.message);
+  const attachments = sub.attachments ?? [];
+  const id = await createReport(sub.userId, sub.message, attachments);
   const issueId = formatIssueId(id);
 
   trackActivity({
@@ -108,8 +116,9 @@ export const createAndAnnounce = async (
 
     if (ADMIN_ID) {
       const notice =
-        `New report <code>${issueId}</code> from ${reporterName} · <code>${sub.userId}</code>\n` +
-        `${escapeHtml(sub.message)}\n\n` +
+        `New report <code>${issueId}</code> from ${reporterName} · <code>${sub.userId}</code>` +
+        (attachments.length ? ` · ${screenshotNote(attachments.length)}` : "") +
+        `\n${escapeHtml(sub.message)}\n\n` +
         `Reply with <code>/reply ${issueId} your answer</code>`;
       instance.api
         .sendMessage({ chat_id: ADMIN_ID, text: notice, parse_mode: "HTML" })
@@ -124,6 +133,9 @@ export const createAndAnnounce = async (
         text:
           `Got it, I've filed <code>${issueId}</code>.\n\n` +
           `<i>${escapeHtml(sub.message.slice(0, 200))}${sub.message.length > 200 ? "…" : ""}</i>\n\n` +
+          (attachments.length
+            ? `${screenshotNote(attachments.length)} attached. `
+            : "") +
           `I'll reply here once I've looked into it. You can add more from My reports.`,
         parse_mode: "HTML",
         reply_markup: {
@@ -178,18 +190,25 @@ const notifyAdminOfMessage = async (
   report: ReportRow,
   body: string,
   who?: { username?: string | null; firstName?: string | null },
+  attachmentCount = 0,
 ): Promise<void> => {
   const instance = await bot();
   if (!instance || !ADMIN_ID) return;
   const reporterName = escapeHtml(
     who?.firstName || who?.username || `User ${report.user_id}`,
   );
+  const preview =
+    body || (attachmentCount ? `Sent ${screenshotNote(attachmentCount)}.` : "");
+  const shotLine =
+    attachmentCount && body
+      ? `\n${screenshotNote(attachmentCount)} attached.`
+      : "";
   instance.api
     .sendMessage({
       chat_id: ADMIN_ID,
       text:
         `Reply on <code>${issueId}</code> from ${reporterName} · <code>${report.user_id}</code>:\n` +
-        `${escapeHtml(body)}\n\n` +
+        `${escapeHtml(preview)}${shotLine}\n\n` +
         `Answer with <code>/reply ${issueId} your answer</code>`,
       parse_mode: "HTML",
     })
@@ -221,17 +240,22 @@ export type AppendUserMessageResult =
   { issueId: string } | { closed: true } | null;
 
 /**
- * Reporter follow-up on a thread: one write round trip appends the message,
- * moves the author's read marker to it, and reopens an answered issue so it
- * lands back in the admin's "Open" inbox. A resolved thread stays shut —
- * "resolved" means closed, so follow-ups are refused and the reporter files
- * a new report instead. The admin is DM'd on every accepted message.
+ * Reporter follow-up on a thread: appends the message, moves the author's
+ * read marker to it, and reopens an answered issue so it lands back in the
+ * admin's "Open" inbox. A resolved thread stays shut — "resolved" means
+ * closed, so follow-ups are refused and the reporter files a new report
+ * instead. The admin is DM'd on every accepted message.
+ *
+ * The body may be empty when screenshots are attached: a picture of the bug
+ * is a complete message. A report opened without text is not — that still
+ * needs its explanation.
  */
 export const appendUserMessage = async (
   rawId: string,
   userId: number,
   body: string,
   who?: { username?: string | null; firstName?: string | null },
+  attachments: NewReportAttachment[] = [],
 ): Promise<AppendUserMessageResult> => {
   const id = parseIssueId(rawId);
   if (!id) return null;
@@ -239,7 +263,12 @@ export const appendUserMessage = async (
   if (!report || report.user_id !== userId) return null;
   if (report.status === "resolved") return { closed: true };
 
-  await appendUserThreadMessage(id, body, report.status !== "open");
+  await appendUserThreadMessage(
+    id,
+    body,
+    report.status !== "open",
+    attachments,
+  );
 
   const issueId = formatIssueId(id);
   trackActivity({
@@ -251,7 +280,7 @@ export const appendUserMessage = async (
     detail: issueId,
   });
 
-  await notifyAdminOfMessage(issueId, report, body, who);
+  await notifyAdminOfMessage(issueId, report, body, who, attachments.length);
   return { issueId };
 };
 

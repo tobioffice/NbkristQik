@@ -7,11 +7,19 @@ import {
   tooSoonToReport,
 } from "../services/reportService.js";
 import {
+  ReportUploadError,
+  readReportUpload,
+  reportAttachmentUrl,
+  type PendingReportUpload,
+  type StoredReportFile,
+} from "../services/reportFiles.js";
+import {
   formatIssueId,
   getReportThread,
   listUserReports,
   markReportRead,
   parseIssueId,
+  type ReportAttachment,
 } from "../db/report.model.js";
 import { logger } from "../config/logger.js";
 
@@ -23,8 +31,49 @@ const unauthorized = (res: Response, error: string | undefined) => {
     .json({ ok: false, error: error ?? "Telegram initData required" });
 };
 
-// POST /api/report — submit from the web form (identity required)
+/** The wire shape of one screenshot: a URL plus what the client needs to render it. */
+const attachmentJson = (attachment: ReportAttachment) => ({
+  url: reportAttachmentUrl(attachment.file_name),
+  mimeType: attachment.mime_type,
+  byteSize: attachment.byte_size,
+});
+
+/** The report model wants disk metadata, not the absolute path. */
+const attachmentRows = (files: StoredReportFile[]) =>
+  files.map((file) => ({
+    fileName: file.fileName,
+    mimeType: file.mimeType,
+    byteSize: file.byteSize,
+  }));
+
+/**
+ * Parse a multipart form when that is what arrived. JSON callers (older
+ * clients and the bot) keep the plain body path and never touch the disk.
+ */
+const readUpload = async (
+  req: Request,
+): Promise<PendingReportUpload | null> => {
+  if (!req.is("multipart/form-data")) return null;
+  return readReportUpload(req);
+};
+
+// POST /api/report — submit from the web form (identity required). JSON and
+// multipart are both accepted; multipart carries up to three screenshots.
 reportRouter.post("/report", async (req: Request, res: Response) => {
+  let upload: PendingReportUpload | null = null;
+  // Clean up before answering, not after: a client that retries immediately
+  // must not race a temp directory that is still being removed.
+  const dropUpload = async () => {
+    if (!upload) return;
+    const pending = upload;
+    upload = null;
+    // A cleanup failure must not turn a clean 400 into a 500 or an
+    // unhandled rejection; the row was never written, so the bytes are
+    // at worst an orphan on disk.
+    await pending
+      .discard()
+      .catch((e) => logger.warn("[report] upload cleanup failed:", e));
+  };
   try {
     const resolved = resolveUserId(req);
     if (!resolved || resolved.error) {
@@ -32,9 +81,22 @@ reportRouter.post("/report", async (req: Request, res: Response) => {
       return;
     }
 
-    // sanitizeInput already strips angle brackets from the body
-    const message = String(req.body?.message ?? "").trim();
+    try {
+      upload = await readUpload(req);
+    } catch (e) {
+      if (e instanceof ReportUploadError) {
+        res.status(400).json({ ok: false, error: e.message });
+        return;
+      }
+      throw e;
+    }
+
+    // sanitizeInput already trims the body; multipart fields are read here
+    const message = upload
+      ? upload.message
+      : String(req.body?.message ?? "").trim();
     if (message.length < 10 || message.length > 1000) {
+      await dropUpload();
       res.status(400).json({
         ok: false,
         error: "Give me a bit more detail: between 10 and 1000 characters.",
@@ -44,6 +106,7 @@ reportRouter.post("/report", async (req: Request, res: Response) => {
 
     const userId = Number(resolved.userId);
     if (await tooSoonToReport(userId)) {
+      await dropUpload();
       res.status(429).json({
         ok: false,
         error: "Hold on a minute before reporting again.",
@@ -51,18 +114,24 @@ reportRouter.post("/report", async (req: Request, res: Response) => {
       return;
     }
 
+    const files = upload ? await upload.commit() : [];
     const { issueId } = await createAndAnnounce({
       userId,
       username: resolved.user?.username ?? null,
       firstName: resolved.user?.first_name ?? null,
       chatType: "unknown",
       message,
+      attachments: attachmentRows(files),
     });
+    // the report now owns the files; a later failure must not delete them
+    upload = null;
 
     res.json({ ok: true, issueId });
   } catch (e) {
     logger.error("[report] submit failed:", e);
     res.status(500).json({ ok: false, error: "Internal Server Error" });
+  } finally {
+    await dropUpload();
   }
 });
 
@@ -137,6 +206,7 @@ reportRouter.get("/thread/:issue", async (req: Request, res: Response) => {
           author: m.author,
           body: m.body,
           createdAt: m.created_at,
+          attachments: m.attachments.map(attachmentJson),
         })),
       },
     });
@@ -146,8 +216,19 @@ reportRouter.get("/thread/:issue", async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/thread/:issue — the reporter adds a message to the conversation
+// POST /api/thread/:issue — the reporter adds a message to the conversation.
+// Text-only JSON stays supported; multipart may carry screenshots and an
+// empty body, because a picture of the bug is a complete message.
 reportRouter.post("/thread/:issue", async (req: Request, res: Response) => {
+  let upload: PendingReportUpload | null = null;
+  const dropUpload = async () => {
+    if (!upload) return;
+    const pending = upload;
+    upload = null;
+    await pending
+      .discard()
+      .catch((e) => logger.warn("[report] upload cleanup failed:", e));
+  };
   try {
     const resolved = resolveUserId(req);
     if (!resolved || resolved.error) {
@@ -155,17 +236,40 @@ reportRouter.post("/thread/:issue", async (req: Request, res: Response) => {
       return;
     }
 
-    const message = String(req.body?.message ?? "").trim();
-    if (message.length < 1 || message.length > 1000) {
+    try {
+      upload = await readUpload(req);
+    } catch (e) {
+      if (e instanceof ReportUploadError) {
+        res.status(400).json({ ok: false, error: e.message });
+        return;
+      }
+      throw e;
+    }
+
+    const message = upload
+      ? upload.message
+      : String(req.body?.message ?? "").trim();
+    const fileCount = upload?.fileCount ?? 0;
+    if (message.length > 1000) {
+      await dropUpload();
       res.status(400).json({
         ok: false,
-        error: "Between 1 and 1000 characters.",
+        error: "Keep it under 1000 characters.",
+      });
+      return;
+    }
+    if (message.length === 0 && fileCount === 0) {
+      await dropUpload();
+      res.status(400).json({
+        ok: false,
+        error: "Write a message or add a screenshot.",
       });
       return;
     }
 
     const userId = Number(resolved.userId);
     if (await tooSoonToFollowUp(userId)) {
+      await dropUpload();
       res.status(429).json({
         ok: false,
         error: "Hold on a moment before sending again.",
@@ -173,6 +277,7 @@ reportRouter.post("/thread/:issue", async (req: Request, res: Response) => {
       return;
     }
 
+    const files = upload ? await upload.commit() : [];
     const result = await appendUserMessage(
       String(req.params.issue),
       userId,
@@ -181,12 +286,15 @@ reportRouter.post("/thread/:issue", async (req: Request, res: Response) => {
         username: resolved.user?.username ?? null,
         firstName: resolved.user?.first_name ?? null,
       },
+      attachmentRows(files),
     );
     if (!result) {
+      await dropUpload();
       res.status(404).json({ ok: false, error: "Unknown report" });
       return;
     }
     if ("closed" in result) {
+      await dropUpload();
       res.status(410).json({
         ok: false,
         error:
@@ -194,10 +302,13 @@ reportRouter.post("/thread/:issue", async (req: Request, res: Response) => {
       });
       return;
     }
+    upload = null;
 
     res.json({ ok: true, issueId: result.issueId });
   } catch (e) {
     logger.error("[report] thread message failed:", e);
     res.status(500).json({ ok: false, error: "Internal Server Error" });
+  } finally {
+    await dropUpload();
   }
 });

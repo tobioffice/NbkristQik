@@ -12,6 +12,7 @@ import {
   adminReplyToReport,
   adminCloseReport,
 } from "../../services/reportService.js";
+import { reportAttachmentUrl } from "../../services/reportFiles.js";
 import { logger } from "../../config/logger.js";
 import { cached, invalidate } from "./cache.js";
 import type { RequireAdmin } from "./auth.js";
@@ -121,6 +122,11 @@ export const registerReportsRoutes = (
               author: m.author,
               body: m.body,
               createdAt: m.created_at,
+              attachments: m.attachments.map((a) => ({
+                url: reportAttachmentUrl(a.file_name),
+                mimeType: a.mime_type,
+                byteSize: a.byte_size,
+              })),
             })),
           },
         });

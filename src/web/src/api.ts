@@ -1,4 +1,4 @@
-import { fetchWithTimeout, readJson } from "./http";
+import { fetchWithTimeout, readJson, UPLOAD_TIMEOUT_MS } from "./http";
 import { telegramWebApp } from "./telegram";
 
 // Centralized API origin. Dev builds default to same-origin so the vite
@@ -509,17 +509,32 @@ export interface MyReport {
 export const submitReport = async (
   identity: { initData?: string; userId?: string },
   message: string,
+  files: File[] = [],
 ): Promise<{ issueId: string }> => {
-  const body = { message, ...identityBody(identity) };
+  const url = withQuery("/api/report", devIdentityParams(identity));
+  const headers: Record<string, string> = {
+    ...authHeaders(identity.initData),
+  };
+  let body: BodyInit;
+  if (files.length > 0) {
+    const form = new FormData();
+    form.set("message", message);
+    for (const file of files) form.append("screenshots", file, file.name);
+    body = form;
+  } else {
+    headers["Content-Type"] = "application/json";
+    body = JSON.stringify({ message, ...identityBody(identity) });
+  }
 
-  const res = await fetchWithTimeout(`${API_BASE}/api/report`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(identity.initData),
+  const res = await fetchWithTimeout(
+    url,
+    {
+      method: "POST",
+      headers,
+      body,
     },
-    body: JSON.stringify(body),
-  });
+    files.length > 0 ? UPLOAD_TIMEOUT_MS : undefined,
+  );
   const data = (await res.json().catch(() => ({}))) as {
     ok?: boolean;
     issueId?: string;
@@ -544,11 +559,20 @@ export const fetchMyReports = async (identity: {
   return data.reports ?? [];
 };
 
+export interface ReportAttachment {
+  /** Same-origin URL of the stored screenshot. */
+  url: string;
+  mimeType: string;
+  byteSize: number;
+}
+
 export interface ThreadMessage {
   id: number;
   author: "user" | "admin";
   body: string;
   createdAt: string;
+  /** Screenshots sent with this message; empty for admin replies. */
+  attachments: ReportAttachment[];
 }
 
 export interface ReportThread {
@@ -597,24 +621,39 @@ export const fetchThread = async (
   return data.thread;
 };
 
-/** The reporter's side of the conversation. */
+/** The reporter's side of the conversation. Text, screenshots, or both. */
 export const sendThreadMessage = async (
   identity: { initData?: string; userId?: string },
   issueId: string,
   message: string,
+  files: File[] = [],
 ): Promise<void> => {
-  const body = { message, ...identityBody(identity) };
+  const url = withQuery(
+    `/api/thread/${encodeURIComponent(issueId)}`,
+    devIdentityParams(identity),
+  );
+  const headers: Record<string, string> = {
+    ...authHeaders(identity.initData),
+  };
+  let body: BodyInit;
+  if (files.length > 0) {
+    const form = new FormData();
+    form.set("message", message);
+    for (const file of files) form.append("screenshots", file, file.name);
+    body = form;
+  } else {
+    headers["Content-Type"] = "application/json";
+    body = JSON.stringify({ message, ...identityBody(identity) });
+  }
 
   const res = await fetchWithTimeout(
-    `${API_BASE}/api/thread/${encodeURIComponent(issueId)}`,
+    url,
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...authHeaders(identity.initData),
-      },
-      body: JSON.stringify(body),
+      headers,
+      body,
     },
+    files.length > 0 ? UPLOAD_TIMEOUT_MS : undefined,
   );
   const data = (await res.json().catch(() => ({}))) as {
     ok?: boolean;

@@ -28,24 +28,28 @@ interface ErrorBody {
 /** How long any API request may take before it is abandoned. */
 export const REQUEST_TIMEOUT_MS = 15_000;
 
+/** An upload moves real bytes: three screenshots need longer than a JSON read. */
+export const UPLOAD_TIMEOUT_MS = 60_000;
+
 /**
  * The one fetch the app uses.
  *
  * A phone on a weak line can sit on a request for minutes; the screen then
  * waits on a spinner that will never resolve. Every call gets the same 15s
- * ceiling, and an abort from the caller (a superseded issue thread, for
- * example) still passes through untouched.
+ * ceiling (uploads ask for the longer one), and an abort from the caller (a
+ * superseded issue thread, for example) still passes through untouched.
  */
 export const fetchWithTimeout = async (
   input: RequestInfo | URL,
   init: RequestInit = {},
+  timeoutMs = REQUEST_TIMEOUT_MS,
 ): Promise<Response> => {
   const controller = new AbortController();
   let timedOut = false;
   const timer = setTimeout(() => {
     timedOut = true;
     controller.abort();
-  }, REQUEST_TIMEOUT_MS);
+  }, timeoutMs);
 
   const external = init.signal;
   const forwardAbort = () => controller.abort();

@@ -47,6 +47,15 @@ beforeAll(async () => {
         seen_at TEXT NOT NULL DEFAULT (datetime('now')),
         PRIMARY KEY (report_id, reader)
       )`,
+      `CREATE TABLE report_attachments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        report_id INTEGER NOT NULL,
+        message_id INTEGER NOT NULL,
+        file_name TEXT NOT NULL UNIQUE,
+        mime_type TEXT NOT NULL,
+        byte_size INTEGER NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
       `CREATE TABLE botusers (user_id INTEGER PRIMARY KEY, username TEXT, first_name TEXT,
          first_seen TEXT, last_seen TEXT, private_actions INTEGER DEFAULT 0,
          channel_actions INTEGER DEFAULT 0, group_actions INTEGER DEFAULT 0,

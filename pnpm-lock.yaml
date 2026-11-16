@@ -43,6 +43,9 @@ importers:
       express-validator:
         specifier: ^7.3.2
         version: 7.3.2
+      formidable:
+        specifier: ^3.5.4
+        version: 3.5.4
       node-telegram-bot-api:
         specifier: ^2.4.0
         version: 2.4.0
@@ -65,6 +68,9 @@ importers:
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
+      '@types/formidable':
+        specifier: ^3.5.1
+        version: 3.5.1
       '@types/nodemailer':
         specifier: ^8.0.2
         version: 8.0.2
@@ -646,6 +652,9 @@ packages:
 
   '@types/express@5.0.6':
     resolution: {integrity: sha512-sKYVuV7Sv9fbPIt/442koC7+IIwK5olP1KWeD88e/idgoJqDm3JV/YUiPwkoKK92ylff2MGxSz1CSjsXelx0YA==}
+
+  '@types/formidable@3.5.1':
+    resolution: {integrity: sha512-aFQijSGbD8JCeEST2LEbwR7faHynbt43lojLIcTM/QhB2U06h41ZVRFVEql+Z1xdL+aKGIzm69V/P/uSW9N6XA==}
 
   '@types/http-errors@2.0.5':
     resolution: {integrity: sha512-r8Tayk8HJnX0FztbZN7oVqGccWgw98T/0neJphO91KkmOzug1KkofZURD4UaD5uH8AqcFLfdPErnBod0u71/qg==}
@@ -2443,6 +2452,10 @@ snapshots:
       '@types/body-parser': 1.19.6
       '@types/express-serve-static-core': 5.0.7
       '@types/serve-static': 2.2.0
+
+  '@types/formidable@3.5.1':
+    dependencies:
+      '@types/node': 22.13.10
 
   '@types/http-errors@2.0.5': {}
 

@@ -40,6 +40,24 @@ export interface ReportMessageRow {
   author: MessageAuthor;
   body: string;
   created_at: string;
+  /** Screenshots sent with this message, oldest first. */
+  attachments: ReportAttachment[];
+}
+
+export interface ReportAttachment {
+  id: number;
+  message_id: number;
+  /** Opaque random name under the report files directory. */
+  file_name: string;
+  mime_type: string;
+  byte_size: number;
+}
+
+/** A file already written to disk, waiting for the message row that owns it. */
+export interface NewReportAttachment {
+  fileName: string;
+  mimeType: string;
+  byteSize: number;
 }
 
 /** Human-friendly issue id: QIK-0007 (zero-padded to 4). */
@@ -150,6 +168,7 @@ export const addReportMessage = async (
 export const createReport = async (
   userId: number,
   message: string,
+  attachments: NewReportAttachment[] = [],
 ): Promise<number> => {
   // One transaction: a crash between the reports row and its opening thread
   // entry must not leave a report that looks empty. The boot backfill repairs
@@ -166,6 +185,14 @@ export const createReport = async (
       args: [id, message],
     });
     const messageId = Number(opening.lastInsertRowid);
+    for (const file of attachments) {
+      await tx.execute({
+        sql: `INSERT INTO report_attachments
+                (report_id, message_id, file_name, mime_type, byte_size)
+              VALUES (?, ?, ?, ?, ?)`,
+        args: [id, messageId, file.fileName, file.mimeType, file.byteSize],
+      });
+    }
     await tx.execute({
       sql: `INSERT INTO report_reads (report_id, reader, last_seen_id, seen_at)
             VALUES (?, 'user', ?, datetime('now'))
@@ -210,6 +237,7 @@ export const listReportMessages = async (
     author: String(row.author) as MessageAuthor,
     body: String(row.body),
     created_at: String(row.created_at),
+    attachments: [],
   }));
 };
 
@@ -287,7 +315,8 @@ export interface ReportThreadData {
 
 /**
  * One conversation in a SINGLE round trip: the report head, every message
- * oldest first, the reporter's profile and the caller's read marker.
+ * oldest first, the reporter's profile, the caller's read marker, and the
+ * screenshots attached to those messages.
  * The database is ~250 ms away — the previous three sequential queries are
  * what made opening a thread feel slow.
  */
@@ -295,19 +324,30 @@ export const getReportThread = async (
   reportId: number,
   reader: MessageAuthor,
 ): Promise<ReportThreadData | null> => {
-  const result = await turso.execute({
-    sql: `SELECT r.id, r.user_id, r.status, r.created_at,
-                 u.first_name AS name, u.username,
-                 m.id AS message_id, m.author, m.body, m.created_at AS message_at,
-                 (SELECT COALESCE(rd.last_seen_id, 0) FROM report_reads rd
-                   WHERE rd.report_id = r.id AND rd.reader = ?) AS last_seen_id
-          FROM reports r
-          LEFT JOIN botusers u ON u.user_id = r.user_id
-          JOIN report_messages m ON m.report_id = r.id
-          WHERE r.id = ?
-          ORDER BY m.id`,
-    args: [reader, reportId],
-  });
+  const [messagesResult, attachmentsResult] = await turso.batch(
+    [
+      {
+        sql: `SELECT r.id, r.user_id, r.status, r.created_at,
+                     u.first_name AS name, u.username,
+                     m.id AS message_id, m.author, m.body, m.created_at AS message_at,
+                     (SELECT COALESCE(rd.last_seen_id, 0) FROM report_reads rd
+                       WHERE rd.report_id = r.id AND rd.reader = ?) AS last_seen_id
+              FROM reports r
+              LEFT JOIN botusers u ON u.user_id = r.user_id
+              JOIN report_messages m ON m.report_id = r.id
+              WHERE r.id = ?
+              ORDER BY m.id`,
+        args: [reader, reportId],
+      },
+      {
+        sql: `SELECT id, message_id, file_name, mime_type, byte_size
+              FROM report_attachments WHERE report_id = ? ORDER BY id`,
+        args: [reportId],
+      },
+    ],
+    "read",
+  );
+  const result = messagesResult;
 
   if (result.rows.length === 0) {
     // a report with no messages yet: fall back to the bare head so a valid
@@ -326,6 +366,20 @@ export const getReportThread = async (
     };
   }
 
+  const byMessage = new Map<number, ReportAttachment[]>();
+  for (const row of attachmentsResult.rows) {
+    const attachment: ReportAttachment = {
+      id: Number(row.id),
+      message_id: Number(row.message_id),
+      file_name: String(row.file_name),
+      mime_type: String(row.mime_type),
+      byte_size: Number(row.byte_size),
+    };
+    const list = byMessage.get(attachment.message_id);
+    if (list) list.push(attachment);
+    else byMessage.set(attachment.message_id, [attachment]);
+  }
+
   const head = result.rows[0];
   return {
     id: Number(head.id),
@@ -340,49 +394,101 @@ export const getReportThread = async (
       author: String(row.author) as MessageAuthor,
       body: String(row.body),
       created_at: String(row.message_at),
+      attachments: byMessage.get(Number(row.message_id)) ?? [],
     })),
     last_seen_id: Number(head.last_seen_id ?? 0),
   };
 };
 
 /**
- * Reporter follow-up in ONE write round trip: the message, the author's read
- * marker at their own new message, and the reopen flip. The marker subquery
- * sees the message inserted earlier in the same batch.
+ * Reporter follow-up. A text-only message is ONE write round trip: the
+ * message, the author's read marker at their own new message, and the reopen
+ * flip. The marker subquery sees the message inserted earlier in the same
+ * batch.
+ *
+ * Screenshots need the message id before their rows can be written, so that
+ * path runs in a transaction instead. The extra round trips only happen when
+ * there is actually a file to attach.
  */
 export const appendUserThreadMessage = async (
   reportId: number,
   body: string,
   reopen: boolean,
-): Promise<void> => {
-  await turso.batch(
-    [
-      {
-        sql: `INSERT INTO report_messages (report_id, author, body) VALUES (?, 'user', ?)`,
-        args: [reportId, body],
-      },
-      {
-        sql: `INSERT INTO report_reads (report_id, reader, last_seen_id, seen_at)
-              VALUES (?, 'user',
-                      (SELECT COALESCE(MAX(id), 0) FROM report_messages WHERE report_id = ?),
-                      datetime('now'))
-              ON CONFLICT(report_id, reader) DO UPDATE SET
-                last_seen_id = MAX(report_reads.last_seen_id, excluded.last_seen_id),
-                seen_at = excluded.seen_at`,
-        args: [reportId, reportId],
-      },
-      // a follow-up means the admin owes an answer again
-      ...(reopen
-        ? [
-            {
-              sql: `UPDATE reports SET status = 'open' WHERE id = ?`,
-              args: [reportId],
-            },
-          ]
-        : []),
-    ],
-    "write",
-  );
+  attachments: NewReportAttachment[] = [],
+): Promise<number> => {
+  if (attachments.length === 0) {
+    const [inserted] = await turso.batch(
+      [
+        {
+          sql: `INSERT INTO report_messages (report_id, author, body) VALUES (?, 'user', ?)`,
+          args: [reportId, body],
+        },
+        {
+          sql: `INSERT INTO report_reads (report_id, reader, last_seen_id, seen_at)
+                VALUES (?, 'user',
+                        (SELECT COALESCE(MAX(id), 0) FROM report_messages WHERE report_id = ?),
+                        datetime('now'))
+                ON CONFLICT(report_id, reader) DO UPDATE SET
+                  last_seen_id = MAX(report_reads.last_seen_id, excluded.last_seen_id),
+                  seen_at = excluded.seen_at`,
+          args: [reportId, reportId],
+        },
+        // a follow-up means the admin owes an answer again
+        ...(reopen
+          ? [
+              {
+                sql: `UPDATE reports SET status = 'open' WHERE id = ?`,
+                args: [reportId],
+              },
+            ]
+          : []),
+      ],
+      "write",
+    );
+    return Number(inserted.lastInsertRowid);
+  }
+
+  const tx = await turso.transaction("write");
+  try {
+    const inserted = await tx.execute({
+      sql: `INSERT INTO report_messages (report_id, author, body) VALUES (?, 'user', ?)`,
+      args: [reportId, body],
+    });
+    const messageId = Number(inserted.lastInsertRowid);
+    for (const file of attachments) {
+      await tx.execute({
+        sql: `INSERT INTO report_attachments
+                (report_id, message_id, file_name, mime_type, byte_size)
+              VALUES (?, ?, ?, ?, ?)`,
+        args: [
+          reportId,
+          messageId,
+          file.fileName,
+          file.mimeType,
+          file.byteSize,
+        ],
+      });
+    }
+    await tx.execute({
+      sql: `INSERT INTO report_reads (report_id, reader, last_seen_id, seen_at)
+            VALUES (?, 'user', ?, datetime('now'))
+            ON CONFLICT(report_id, reader) DO UPDATE SET
+              last_seen_id = MAX(report_reads.last_seen_id, excluded.last_seen_id),
+              seen_at = excluded.seen_at`,
+      args: [reportId, messageId],
+    });
+    if (reopen) {
+      await tx.execute({
+        sql: `UPDATE reports SET status = 'open' WHERE id = ?`,
+        args: [reportId],
+      });
+    }
+    await tx.commit();
+    return messageId;
+  } catch (e) {
+    await tx.rollback().catch(() => undefined);
+    throw e;
+  }
 };
 
 /**

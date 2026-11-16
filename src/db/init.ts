@@ -47,10 +47,11 @@ import { logger } from "../config/logger.js";
  *
  * Version 7 adds the league: questions, daily rounds, attempts, duels, season
  * points and the channel-post claims. Version 8 adds user_settings, the chat
- * theme the Mini App syncs for the attendance bar image. Every table is CREATE
- * IF NOT EXISTS, so an older database only needs the stamp.
+ * theme the Mini App syncs for the attendance bar image. Version 9 adds
+ * report_attachments, the screenshots filed with a report message. Every table
+ * is CREATE IF NOT EXISTS, so an older database only needs the stamp.
  */
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 
 /** Reads the database's user_version, treating a missing row as 0. */
 const readSchemaVersion = async (): Promise<number> => {
@@ -238,8 +239,28 @@ export const initDatabase = async () => {
         PRIMARY KEY (report_id, reader)
     );
   `);
+  // Screenshots attached to one message in a report thread. The file itself
+  // lives in REPORT_FILES_DIR (data/reports by default); this row is the
+  // authoritative list and owns its lifetime.
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS report_attachments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        report_id INTEGER NOT NULL,
+        message_id INTEGER NOT NULL,
+        file_name TEXT NOT NULL UNIQUE,
+        mime_type TEXT NOT NULL,
+        byte_size INTEGER NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
   await turso.execute(
     `CREATE INDEX IF NOT EXISTS idx_report_messages ON report_messages (report_id, id);`,
+  );
+  await turso.execute(
+    `CREATE INDEX IF NOT EXISTS idx_report_attachments_message ON report_attachments (message_id);`,
+  );
+  await turso.execute(
+    `CREATE INDEX IF NOT EXISTS idx_report_attachments_report ON report_attachments (report_id);`,
   );
   await turso.execute(
     `CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_log (created_at);`,

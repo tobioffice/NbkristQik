@@ -69,6 +69,15 @@ beforeAll(async () => {
         seen_at TEXT NOT NULL DEFAULT (datetime('now')),
         PRIMARY KEY (report_id, reader)
       )`,
+      `CREATE TABLE report_attachments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        report_id INTEGER NOT NULL,
+        message_id INTEGER NOT NULL,
+        file_name TEXT NOT NULL UNIQUE,
+        mime_type TEXT NOT NULL,
+        byte_size INTEGER NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
       `CREATE TABLE botusers (user_id INTEGER PRIMARY KEY, username TEXT, first_name TEXT,
          first_seen TEXT, last_seen TEXT, private_actions INTEGER DEFAULT 0,
          channel_actions INTEGER DEFAULT 0, group_actions INTEGER DEFAULT 0,
@@ -161,6 +170,27 @@ describe("admin reports endpoints", () => {
         (r: { issueId: string }) => r.issueId === formatIssueId(id),
       ),
     ).toBe(true);
+  });
+
+  it("shows screenshots on the admin's side of a thread", async () => {
+    const fileName = `${"a".repeat(32)}.png`;
+    const id = await createReport(7, "The screenshot shows the wrong total", [
+      { fileName, mimeType: "image/png", byteSize: 42 },
+    ]);
+    const issueId = formatIssueId(id);
+
+    const opened = await request(app)
+      .get(`${BASE}/api/reports/${issueId}`)
+      .set("Cookie", cookie);
+
+    expect(opened.status).toBe(200);
+    expect(opened.body.thread.messages[0].attachments).toEqual([
+      {
+        url: `/api/report-attachment/${fileName}`,
+        mimeType: "image/png",
+        byteSize: 42,
+      },
+    ]);
   });
 
   it("404s on unknown report ids and 400s on empty replies", async () => {
