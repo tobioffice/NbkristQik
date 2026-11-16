@@ -1,4 +1,5 @@
 import express, { NextFunction, Request, Response } from "express";
+import rateLimit from "express-rate-limit";
 import cors from "cors";
 import { existsSync } from "fs";
 import path from "path";
@@ -126,23 +127,41 @@ const defaultStatusPage = path.resolve(
   "index.html",
 );
 
-app.get("/status", (_req: Request, res: Response) => {
-  const statusPage = process.env.STATUS_PAGE_PATH?.trim() || defaultStatusPage;
-  res.setHeader("Cache-Control", "no-store");
-  res.sendFile(
-    statusPage,
-    {
-      cacheControl: false,
-      headers: { "Cache-Control": "no-store" },
+app.get(
+  "/status",
+  // The route is mounted before the global API limiter (the page is static
+  // and must not spend a student's API budget), so it carries its own. A page
+  // refresh every half-second is far above what the status page or a monitor
+  // needs; the limiter keeps the sendFile path from being hammered.
+  rateLimit({
+    windowMs: 60_000,
+    limit: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      success: false,
+      error: "Too many status requests. Try again in a minute.",
     },
-    (error) => {
-      if (!error) return;
-      if (!res.headersSent) {
-        res.status(404).json({ success: false, error: "Not Found" });
-      }
-    },
-  );
-});
+  }),
+  (_req: Request, res: Response) => {
+    const statusPage =
+      process.env.STATUS_PAGE_PATH?.trim() || defaultStatusPage;
+    res.setHeader("Cache-Control", "no-store");
+    res.sendFile(
+      statusPage,
+      {
+        cacheControl: false,
+        headers: { "Cache-Control": "no-store" },
+      },
+      (error) => {
+        if (!error) return;
+        if (!res.headersSent) {
+          res.status(404).json({ success: false, error: "Not Found" });
+        }
+      },
+    );
+  },
+);
 
 // Apply security middleware to all routes
 app.use(apiSecurityMiddlewares);
