@@ -48,7 +48,7 @@ The product lives entirely inside Telegram â€” no install, no separate account â
 ## Brand Commitments
 
 - Keep the product name **NbkristQik**.
-- The Mini App ships the Telegram-native visual system in `DESIGN.md` (user decision). The admin panel now follows the same system; the paper register in `DESIGN.PAPER.md` is legacy, kept for the public status page until it is migrated.
+- The app, admin panel, status page and stats page follow the Telegram-native visual system in `DESIGN.md` (user decision).
 
 ## Evidence on Hand
 

@@ -8,7 +8,7 @@ import { telegramWebApp } from "./telegram";
  * The SDK is a deferred script, so the first render can happen before it has
  * run. The identity is read synchronously as before; when there is no SDK yet
  * the hook waits for the end of parsing (always after the deferred script)
- * and reads once more. The shell paints its paper immediately, then the
+ * and reads once more. The shell paints its ground immediately, then the
  * identity appears and `/api/me` runs. It never stays anonymous because the
  * SDK was a moment late.
  */

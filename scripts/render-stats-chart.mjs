@@ -5,10 +5,11 @@
  *   node scripts/render-stats-chart.mjs
  *   node scripts/render-stats-chart.mjs --file /tmp/history.csv --out /tmp/history.svg
  *
- * The chart follows the paper register palette: manila ground, ink figures,
- * a cloth-green series, red for daily activity and amber for the week. It is
- * self-contained (system fonts only, no external links), responsive through
- * its viewBox, and readable with a single day as well as a long history.
+ * The chart follows the Telegram-native palette: a dark ground, a surface
+ * panel, a white registered-users series, accent blue daily activity, green
+ * weekly activity and a dashed secondary monthly series. It is self-contained
+ * (system fonts only, no external links), responsive through its viewBox, and
+ * readable with a single day as well as a long history.
  */
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -17,30 +18,37 @@ const WIDTH = 960;
 const HEIGHT = 420;
 
 const PALETTE = {
-  paper: "#e7dcc3",
-  ink: "#1e2a38",
-  softInk: "#5a5140",
-  cloth: "#3f6457",
-  red: "#a62f22",
-  amber: "#8a6a12",
+  ground: "#1a2026",
+  surface: "#212a33",
+  text: "#ffffff",
+  secondary: "#8794a1",
+  accent: "#4cb2ff",
+  good: "#7ed176",
+  grid: "#ffffff",
 };
 
-const LEFT = 70;
-const RIGHT = 926;
+const LEFT = 80;
+const RIGHT = 920;
 const TOP = 132;
 const BOTTOM = 360;
 const PLOT_WIDTH = RIGHT - LEFT;
 const PLOT_HEIGHT = BOTTOM - TOP;
 
 const SERIES = [
-  { key: "registered_users", label: "registered users", color: PALETTE.ink },
-  { key: "dau", label: "daily active", color: PALETTE.red },
-  { key: "wau", label: "weekly active", color: PALETTE.amber },
+  {
+    key: "registered_users",
+    label: "registered users",
+    color: PALETTE.text,
+    width: 2.6,
+  },
+  { key: "dau", label: "daily active", color: PALETTE.accent, width: 2 },
+  { key: "wau", label: "weekly active", color: PALETTE.good, width: 2 },
   {
     key: "mau",
     label: "monthly active",
-    color: PALETTE.cloth,
+    color: PALETTE.secondary,
     dash: "5 3",
+    width: 1.6,
   },
 ];
 
@@ -227,7 +235,7 @@ const labelled = new Set(
 const grid = ticks
   .map((value) => {
     const y = round(yAt(value));
-    return `<line x1="${LEFT}" y1="${y}" x2="${RIGHT}" y2="${y}" stroke="${PALETTE.ink}" stroke-opacity="${value === 0 ? 0.45 : 0.14}" />
+    return `<line x1="${LEFT}" y1="${y}" x2="${RIGHT}" y2="${y}" stroke="${PALETTE.grid}" stroke-opacity="${value === 0 ? 0.18 : 0.1}" />
       <text x="${LEFT - 12}" y="${y + 4}" text-anchor="end" class="axis">${formatCount(value)}</text>`;
   })
   .join("\n      ");
@@ -255,7 +263,7 @@ const lines = SERIES.map((series) => {
       return `${command}${round(xAt(index))} ${round(yAt(row[series.key]))}`;
     })
     .join(" ");
-  return `<path class="series" data-series="${series.key}" d="${pathData}" stroke="${series.color}"${series.dash ? ` stroke-dasharray="${series.dash}"` : ""} />`;
+  return `<path class="series" data-series="${series.key}" d="${pathData}" stroke="${series.color}" stroke-width="${series.width}"${series.dash ? ` stroke-dasharray="${series.dash}"` : ""} />`;
 }).join("\n      ");
 
 const markers =
@@ -284,19 +292,20 @@ const span =
 const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${WIDTH} ${HEIGHT}" width="100%" role="img" aria-labelledby="chart-title chart-desc" style="display:block;width:100%;height:auto;max-width:${WIDTH}px">
   <title id="chart-title">NbkristQik usage</title>
-  <desc id="chart-desc">Line chart of registered_users, dau, wau and mau across ${escapeXml(span)}. Daily snapshots at 23:30 IST; aggregates only.</desc>
+  <desc id="chart-desc">Line chart of registered users, daily active, weekly active and monthly active across ${escapeXml(span)}. Daily snapshots at 23:30 IST; aggregates only.</desc>
   <style>
     text {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    .axis {
-      fill: ${PALETTE.softInk};
-      font-size: 11.5px;
+      font-family: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       font-variant-numeric: tabular-nums;
     }
+    .axis {
+      fill: ${PALETTE.secondary};
+      font-size: 11.5px;
+    }
     .legend {
-      fill: ${PALETTE.ink};
+      fill: ${PALETTE.text};
       font-size: 12px;
+      font-weight: 500;
     }
     .series {
       fill: none;
@@ -305,18 +314,17 @@ const svg = `<?xml version="1.0" encoding="UTF-8"?>
       stroke-linecap: round;
     }
     .series-point {
-      stroke: ${PALETTE.paper};
-      stroke-width: 1;
+      stroke: ${PALETTE.surface};
+      stroke-width: 1.5;
     }
   </style>
-  <rect width="${WIDTH}" height="${HEIGHT}" fill="${PALETTE.paper}" />
-  <rect width="${WIDTH}" height="6" fill="${PALETTE.cloth}" />
-  <text x="44" y="50" fill="${PALETTE.ink}" font-size="27" font-weight="600" letter-spacing="-0.02em">NbkristQik usage</text>
-  <text x="44" y="74" fill="${PALETTE.softInk}" font-size="13">Daily snapshots, 23:30 IST · aggregates only</text>
+  <rect width="${WIDTH}" height="${HEIGHT}" fill="${PALETTE.ground}" />
+  <text x="44" y="50" fill="${PALETTE.text}" font-size="27" font-weight="700">NbkristQik usage</text>
+  <text x="44" y="74" fill="${PALETTE.secondary}" font-size="13">Daily snapshots · aggregates only</text>
   <g>
       ${legend}
   </g>
-  <line x1="44" y1="116" x2="${RIGHT}" y2="116" stroke="${PALETTE.ink}" stroke-opacity="0.18" />
+  <rect x="24" y="112" width="912" height="284" rx="8" fill="${PALETTE.surface}" />
   <g>
       ${grid}
   </g>

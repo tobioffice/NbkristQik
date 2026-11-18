@@ -3,56 +3,43 @@
 @tailwind utilities;
 
 /* ============================================================
-   The Attendance Register — design system for the mini apps
-   paper · ink · cloth · red ballpoint
+   Shared base layout for the Mini App.
+   The visual language lives in tg-native.css (DESIGN.md):
+   dark ground, grouped surfaces, two blues.
    ============================================================ */
 
-@font-face {
-  font-family: "Public Sans";
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url("./assets/fonts/public-sans.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Zilla Slab";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("./assets/fonts/zilla-slab-600.woff2") format("woff2");
-}
-
 :root {
-  --paper: #e7dcc3;
-  --paper-2: #efe5cd;
-  --paper-3: #f6efdd;
+  --ground: #1a2026;
+  --ground-outer: #111417;
+  --surface: #212a33;
+  --surface-hover: #293440;
+  --surface-active: #2d3a47;
+  --text: #ffffff;
+  --text-secondary: #8794a1;
+  --text-tertiary: #8494a3;
+  --accent: #4cb2ff;
+  --action: #248bda;
+  --action-hover: #207cc2;
+  --danger: #f88277;
+  --warning: #ff9953;
+  --good: #7ed176;
   --page-white: #fff;
-  --ink: #1e2a38;
-  --ink-2: #5a5140;
-  --ink-3: #675d4b;
-  --cloth: #3f6457;
-  --cloth-deep: #33544a;
-  --red: #c33b2e;
-  --red-ink: #a62f22;
-  --amber-ink: #8a6a12;
-  --amber-text: #6e5410;
-  --green-ink: #2f5c46;
-  --rule: rgba(30, 42, 56, 0.2);
-  --rule-strong: rgba(30, 42, 56, 0.45);
-  --font-display: "Zilla Slab", "Roboto Slab", Georgia, serif;
-  --font-ui:
-    "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --rule: rgba(255, 255, 255, 0.1);
+  --rule-strong: rgba(255, 255, 255, 0.22);
+  --font-display: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --font-ui: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
 }
 
 html {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 body {
   margin: 0;
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--ground);
+  color: var(--text);
   font-family: var(--font-ui);
   font-size: 15px;
   line-height: 1.45;
@@ -61,8 +48,8 @@ body {
 }
 
 ::selection {
-  background: rgba(195, 59, 46, 0.24);
-  color: var(--ink);
+  background: rgba(76, 178, 255, 0.25);
+  color: #fff;
 }
 
 a {
@@ -87,11 +74,11 @@ textarea {
 
 input,
 textarea {
-  caret-color: var(--ink);
+  caret-color: var(--text);
 }
 
 :focus-visible {
-  outline: 2px solid var(--red);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 1px;
 }
@@ -101,27 +88,27 @@ input:focus-visible,
 textarea:focus-visible,
 button:focus-visible,
 a:focus-visible {
-  outline: 2px solid var(--red);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
 @media (min-width: 720px) {
   html {
-    scrollbar-color: var(--ink-3) var(--paper-2);
+    scrollbar-color: var(--text-tertiary) var(--surface);
   }
   @supports not (scrollbar-color: auto) {
     ::-webkit-scrollbar {
       width: 11px;
     }
     ::-webkit-scrollbar-track {
-      background: var(--paper-2);
+      background: var(--surface);
     }
     ::-webkit-scrollbar-thumb {
-      background: var(--ink-3);
-      border: 3px solid var(--paper-2);
+      background: var(--text-tertiary);
+      border: 3px solid var(--surface);
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: var(--ink-2);
+      background: var(--text-secondary);
     }
   }
 }
@@ -129,11 +116,11 @@ a:focus-visible {
 /* ---------- shell ---------- */
 .app {
   min-height: 100dvh;
-  background: var(--paper);
+  background: var(--ground);
 }
 
 .sheet {
-  background: var(--paper);
+  background: var(--ground);
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -147,21 +134,21 @@ a:focus-visible {
 
 @media (min-width: 720px) {
   .app {
-    background: var(--cloth-deep);
+    background: var(--ground-outer);
     padding: 30px 0 70px;
   }
   .sheet {
     max-width: 560px;
     margin: 0 auto;
     min-height: 0;
-    box-shadow: 0 20px 44px -16px rgba(16, 24, 30, 0.55);
+    box-shadow: none;
   }
 }
 
-/* ---------- cloth band ---------- */
+/* ---------- band ---------- */
 .reg-band {
-  background: var(--cloth);
-  color: var(--paper-3);
+  background: var(--surface);
+  color: var(--text);
   padding: 17px 16px 14px;
   display: flex;
   align-items: flex-start;
@@ -182,14 +169,14 @@ a:focus-visible {
   margin: 6px 0 0;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(246, 239, 221, 0.85);
+  letter-spacing: 0;
+  text-transform: none;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .reg-band__stamp {
   flex-shrink: 0;
-  border: 1.5px solid rgba(246, 239, 221, 0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
   border-radius: 2px;
   padding: 5px 9px;
   text-align: right;
@@ -207,9 +194,9 @@ a:focus-visible {
 .reg-band__stamp span {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(246, 239, 221, 0.85);
+  letter-spacing: 0;
+  text-transform: none;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .reg-body {
@@ -224,8 +211,8 @@ a:focus-visible {
 .entry-strip {
   position: relative;
   margin: 0 16px 14px;
-  background: var(--paper-2);
-  border: 1.5px solid var(--ink);
+  background: var(--surface);
+  border: 1.5px solid var(--text);
   padding: 11px 14px 11px 23px;
   display: flex;
   align-items: center;
@@ -240,7 +227,7 @@ a:focus-visible {
   transform: translateY(-50%);
   width: 8px;
   height: 34px;
-  border: 1.5px solid var(--red);
+  border: 1.5px solid var(--danger);
   border-right: 0;
   animation: bracket-land 0.5s steps(2, end) both;
 }
@@ -255,7 +242,7 @@ a:focus-visible {
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.04em;
-  color: var(--ink-2);
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -273,9 +260,9 @@ a:focus-visible {
   font-family: var(--font-ui);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
 }
 
 .entry-strip__meta {
@@ -286,9 +273,9 @@ a:focus-visible {
 .entry-strip__meta span {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
   line-height: 1.6;
   display: block;
 }
@@ -299,7 +286,7 @@ a:focus-visible {
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.15;
-  color: var(--ink);
+  color: var(--text);
   font-variant-numeric: tabular-nums;
   text-transform: none;
 }
@@ -316,7 +303,7 @@ a:focus-visible {
 }
 
 .entry-strip--action:hover {
-  background: var(--paper-3);
+  background: var(--surface-hover);
 }
 
 @keyframes bracket-land {
@@ -334,8 +321,8 @@ a:focus-visible {
 .sort-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border: 1.5px solid var(--ink);
-  background: var(--paper-2);
+  border: 1.5px solid var(--text);
+  background: var(--surface);
   margin: 0 16px 10px;
 }
 
@@ -343,25 +330,25 @@ a:focus-visible {
   padding: 11px 8px;
   font-size: 12.5px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
   transition:
     background-color 0.12s ease,
     color 0.12s ease;
 }
 
 .sort-tabs button + button {
-  border-left: 1.5px solid var(--ink);
+  border-left: 1.5px solid var(--text);
 }
 
 .sort-tabs button:hover {
-  color: var(--ink);
+  color: var(--text);
 }
 
 .sort-tabs button[aria-pressed="true"] {
-  background: var(--ink);
-  color: var(--paper-3);
+  background: var(--surface-active);
+  color: var(--text);
 }
 
 /* clear-filters / freshness line under the controls */
@@ -384,10 +371,10 @@ a:focus-visible {
   text-align: right;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   font-variant-numeric: tabular-nums;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 /* ---------- controls ---------- */
@@ -405,8 +392,8 @@ a:focus-visible {
 
 .search-field input {
   width: 100%;
-  background: var(--paper-2);
-  border: 1.5px solid var(--ink);
+  background: var(--surface);
+  border: 1.5px solid var(--text);
   border-radius: 2px;
   padding: 11px 42px 11px 38px;
   font-size: 16px;
@@ -414,7 +401,7 @@ a:focus-visible {
 }
 
 .search-field input::placeholder {
-  color: var(--ink-3);
+  color: var(--text-tertiary);
   font-weight: 400;
 }
 
@@ -423,7 +410,7 @@ a:focus-visible {
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--ink-2);
+  color: var(--text-secondary);
   pointer-events: none;
   display: flex;
 }
@@ -434,12 +421,12 @@ a:focus-visible {
   top: 50%;
   transform: translateY(-50%);
   padding: 7px;
-  color: var(--ink-2);
+  color: var(--text-secondary);
   display: flex;
 }
 
 .search-clear:hover {
-  color: var(--red-ink);
+  color: var(--danger);
 }
 
 .filter-row {
@@ -452,8 +439,8 @@ a:focus-visible {
   appearance: none;
   -webkit-appearance: none;
   width: 100%;
-  background-color: var(--paper-2);
-  border: 1.5px solid var(--ink);
+  background-color: var(--surface);
+  border: 1.5px solid var(--text);
   border-radius: 2px;
   /* 45px tall: a thumb target, not a desktop select */
   padding: 12px 22px 12px 9px;
@@ -483,8 +470,8 @@ a:focus-visible {
 
 .merit-entry {
   min-width: 0;
-  background: var(--paper-2);
-  border: 1.5px solid var(--ink);
+  background: var(--surface);
+  border: 1.5px solid var(--text);
   padding: 12px 9px 11px;
   min-height: 132px;
   display: flex;
@@ -524,7 +511,7 @@ a:focus-visible {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  border: 1.5px solid var(--ink-2);
+  border: 1.5px solid var(--text-secondary);
   display: grid;
   place-items: center;
   font-size: 13px;
@@ -535,8 +522,8 @@ a:focus-visible {
 .merit-entry--first .merit-mark {
   width: 36px;
   height: 36px;
-  border: 2px solid var(--red);
-  color: var(--red-ink);
+  border: 2px solid var(--danger);
+  color: var(--danger);
   font-size: 15px;
 }
 
@@ -560,7 +547,7 @@ a:focus-visible {
 .merit-roll {
   font-size: 11px;
   font-weight: 500;
-  color: var(--ink-2);
+  color: var(--text-secondary);
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
 }
@@ -580,7 +567,7 @@ a:focus-visible {
 .merit-score .unit {
   font-size: 11px;
   font-weight: 600;
-  color: var(--ink-2);
+  color: var(--text-secondary);
   margin-left: 1px;
 }
 
@@ -590,14 +577,14 @@ a:focus-visible {
   font-family: var(--font-ui);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
 }
 
 .struck {
   text-decoration: line-through;
-  text-decoration-color: var(--red);
+  text-decoration-color: var(--danger);
   text-decoration-thickness: 2px;
 }
 
@@ -606,7 +593,7 @@ a:focus-visible {
   text-align: center;
   margin-top: 2px;
   font-size: 11.5px;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 /* ---------- the register list ---------- */
@@ -617,10 +604,10 @@ a:focus-visible {
   padding: 7px 16px 6px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-2);
-  border-bottom: 1.5px solid var(--ink);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
+  border-bottom: 1.5px solid var(--text);
 }
 
 .list-head span:last-child {
@@ -635,26 +622,26 @@ a:focus-visible {
   align-items: center;
   padding: 10px 16px;
   min-height: 45px;
-  background: var(--paper);
+  background: var(--ground);
   border-bottom: 1px solid var(--rule);
   transition: background-color 0.12s ease;
 }
 
 .reg-row:hover {
-  background: var(--paper-3);
+  background: var(--surface-hover);
 }
 
 .reg-row__rank {
   font-size: 13px;
   font-weight: 600;
-  color: var(--ink-2);
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
 .reg-row__roll {
   font-size: 12px;
   font-weight: 500;
-  color: var(--ink-2);
+  color: var(--text-secondary);
   letter-spacing: 0.005em;
   font-variant-numeric: tabular-nums;
   overflow: hidden;
@@ -665,7 +652,7 @@ a:focus-visible {
   min-width: 0;
   font-size: 14.5px;
   font-weight: 600;
-  color: var(--ink);
+  color: var(--text);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -683,11 +670,11 @@ a:focus-visible {
   margin-left: 1px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 .reg-row--me {
-  background: var(--paper-3);
+  background: var(--surface-active);
 }
 
 .reg-row--me::before {
@@ -698,7 +685,7 @@ a:focus-visible {
   transform: translateY(-50%);
   width: 7px;
   height: 22px;
-  border: 1.5px solid var(--red);
+  border: 1.5px solid var(--danger);
   border-right: 0;
   animation: bracket-land 0.5s steps(2, end) both;
 }
@@ -707,7 +694,7 @@ a:focus-visible {
 .reg-row__score.is-below,
 .entry-strip__score.is-below b,
 .merit-score.is-below {
-  color: var(--red-ink);
+  color: var(--danger);
 }
 
 .you-stamp {
@@ -716,9 +703,9 @@ a:focus-visible {
   padding: 1px 5px 0;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  color: var(--red-ink);
-  border: 1.5px solid var(--red-ink);
+  letter-spacing: 0;
+  color: var(--danger);
+  border: 1.5px solid var(--danger);
   border-radius: 2px;
   transform: translateY(-1px) rotate(-2deg);
 }
@@ -731,7 +718,7 @@ a:focus-visible {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  color: var(--red-ink);
+  color: var(--danger);
 }
 
 .the-line::before {
@@ -741,7 +728,7 @@ a:focus-visible {
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--red);
+  background: var(--danger);
   transform-origin: left center;
   animation: line-draw 0.34s steps(7, end) both;
 }
@@ -755,8 +742,8 @@ a:focus-visible {
 .the-line span {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 @keyframes line-draw {
@@ -780,7 +767,7 @@ a:focus-visible {
 }
 
 .sk {
-  background: var(--paper-2);
+  background: var(--surface);
   border: 1px solid var(--rule);
   border-radius: 2px;
   animation: sk-pulse 1.6s ease-in-out infinite;
@@ -820,13 +807,13 @@ a:focus-visible {
 .state-block {
   text-align: center;
   padding: 54px 24px;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 .state-block svg {
   display: block;
   margin: 0 auto 14px;
-  color: var(--ink-3);
+  color: var(--text-tertiary);
 }
 
 .state-block p {
@@ -837,14 +824,14 @@ a:focus-visible {
 .state-block .sub {
   margin-top: 7px;
   font-size: 12.5px;
-  color: var(--ink-3);
+  color: var(--text-tertiary);
 }
 
 .state-block .title {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 17px;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .btn-ink {
@@ -852,22 +839,22 @@ a:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: var(--ink);
-  border: 1.5px solid var(--ink);
+  background: var(--action);
+  border: 1.5px solid var(--action);
   border-radius: 2px;
   padding: 12px 22px;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.03em;
-  color: var(--paper-3);
+  color: #fff;
   transition:
     background-color 0.12s ease,
     border-color 0.12s ease;
 }
 
 .btn-ink:hover {
-  background: var(--cloth);
-  border-color: var(--cloth);
+  background: var(--action-hover);
+  border-color: var(--action-hover);
 }
 
 .btn-ink:disabled {
@@ -876,8 +863,8 @@ a:focus-visible {
 }
 
 .btn-ink:disabled:hover {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--action);
+  border-color: var(--action);
 }
 
 .btn-outline {
@@ -885,19 +872,19 @@ a:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: var(--paper-2);
-  border: 1.5px solid var(--ink);
+  background: var(--surface);
+  border: 1.5px solid var(--text);
   border-radius: 2px;
   padding: 12px 22px;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.03em;
-  color: var(--ink);
+  color: var(--text);
   transition: background-color 0.12s ease;
 }
 
 .btn-outline:hover {
-  background: var(--paper-3);
+  background: var(--surface-hover);
 }
 
 .btn-row {
@@ -918,7 +905,7 @@ a:focus-visible {
 
 .link-btn {
   font-weight: 600;
-  color: var(--red-ink);
+  color: var(--danger);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -933,7 +920,7 @@ a:focus-visible {
   width: 18px;
   height: 18px;
   border: 2px solid var(--rule);
-  border-top-color: var(--ink);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -954,7 +941,7 @@ a:focus-visible {
   display: block;
   width: 56px;
   height: 1.5px;
-  background: var(--ink);
+  background: var(--rule-strong);
   margin: 0 auto 12px;
 }
 
@@ -962,9 +949,9 @@ a:focus-visible {
   margin: 0;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
 }
 
 /* the ranked rows are a real list: no markers, no default indent */
@@ -987,11 +974,11 @@ a:focus-visible {
 .load-more__note {
   margin: 0 0 10px;
   font-size: 12px;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 .load-more__note[role="alert"] {
-  color: var(--red-ink);
+  color: var(--danger);
 }
 
 /* ---------- profile dock ---------- */
@@ -1011,23 +998,23 @@ a:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--paper-2);
-  border: 1.5px solid var(--ink);
+  background: var(--surface);
+  border: 1.5px solid var(--text);
   border-radius: 2px;
   padding: 11px 18px;
   font-size: 13.5px;
   font-weight: 700;
   letter-spacing: 0.03em;
-  color: var(--ink);
-  box-shadow: 0 10px 22px -10px rgba(16, 24, 30, 0.45);
+  color: var(--text);
+  box-shadow: none;
 }
 
 .profile-tab:hover {
-  background: var(--paper-3);
+  background: var(--surface-hover);
 }
 
 .profile-tab svg {
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 /* ---------- forms ---------- */
@@ -1054,7 +1041,7 @@ a:focus-visible {
   max-width: 46ch;
   font-size: 13.5px;
   line-height: 1.55;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 .field {
@@ -1067,16 +1054,16 @@ a:focus-visible {
   margin-bottom: 6px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
 }
 
 .field input,
 .field textarea {
   width: 100%;
-  background: var(--paper-2);
-  border: 1.5px solid var(--ink);
+  background: var(--surface);
+  border: 1.5px solid var(--text);
   border-radius: 2px;
   padding: 11px 12px;
   font-size: 16px;
@@ -1092,7 +1079,7 @@ a:focus-visible {
 
 .field input::placeholder,
 .field textarea::placeholder {
-  color: var(--ink-3);
+  color: var(--text-tertiary);
   font-weight: 400;
 }
 
@@ -1102,45 +1089,45 @@ a:focus-visible {
   text-align: right;
   font-size: 11.5px;
   font-variant-numeric: tabular-nums;
-  color: var(--ink-3);
+  color: var(--text-tertiary);
 }
 
 .hint-line {
   margin: 4px 0 0;
   font-size: 12.5px;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 .hint-line b {
   font-weight: 600;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .note {
-  border: 1.5px solid var(--ink);
+  border: 1.5px solid var(--text);
   border-radius: 2px;
-  background: var(--paper-2);
+  background: var(--surface);
   padding: 11px 12px;
   font-size: 13.5px;
   line-height: 1.5;
 }
 
 .note--ok {
-  border-color: var(--green-ink);
-  background: rgba(47, 92, 70, 0.08);
-  color: var(--green-ink);
+  border-color: var(--good);
+  background: rgba(126, 209, 118, 0.1);
+  color: var(--good);
 }
 
 .note--warn {
-  border-color: var(--amber-ink);
-  background: rgba(138, 106, 18, 0.08);
-  color: var(--amber-text);
+  border-color: var(--warning);
+  background: rgba(255, 153, 83, 0.1);
+  color: var(--warning);
 }
 
 .note--err {
-  border-color: var(--red-ink);
-  background: rgba(166, 47, 34, 0.07);
-  color: var(--red-ink);
+  border-color: var(--danger);
+  background: rgba(248, 130, 119, 0.1);
+  color: var(--danger);
 }
 
 .suggestion {
@@ -1148,7 +1135,7 @@ a:focus-visible {
   margin-top: 5px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--red-ink);
+  color: var(--danger);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -1158,15 +1145,15 @@ a:focus-visible {
   margin: 26px 16px 0;
   text-align: center;
   font-size: 12.5px;
-  color: var(--ink-2);
+  color: var(--text-secondary);
   text-decoration: underline;
   text-underline-offset: 2px;
   text-decoration-color: var(--rule-strong);
 }
 
 .foot-link:hover {
-  color: var(--red-ink);
-  text-decoration-color: var(--red-ink);
+  color: var(--danger);
+  text-decoration-color: var(--danger);
 }
 
 /* ---------- report entries ---------- */
@@ -1174,16 +1161,16 @@ a:focus-visible {
   margin: 10px 0 2px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-3);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-tertiary);
   font-variant-numeric: tabular-nums;
 }
 
 .report-empty {
   margin-top: 16px;
   padding: 18px 0 20px;
-  border-top: 1.5px solid var(--ink);
+  border-top: 1.5px solid var(--text);
   border-bottom: 1px solid var(--rule);
 }
 
@@ -1197,7 +1184,7 @@ a:focus-visible {
 
 .report-list {
   margin: 4px 0 0;
-  border-top: 1.5px solid var(--ink);
+  border-top: 1.5px solid var(--text);
 }
 
 .report-entry {
@@ -1224,9 +1211,9 @@ a:focus-visible {
   gap: 6px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
 }
 
 .status-mark i {
@@ -1238,28 +1225,28 @@ a:focus-visible {
 }
 
 .status-mark--answered {
-  color: var(--amber-text);
+  color: var(--warning);
 }
 
 .status-mark--answered i {
-  background: var(--amber-ink);
-  border-color: var(--amber-ink);
+  background: var(--warning);
+  border-color: var(--warning);
 }
 
 .status-mark--resolved {
-  color: var(--green-ink);
+  color: var(--good);
 }
 
 .status-mark--resolved i {
-  background: var(--green-ink);
-  border-color: var(--green-ink);
+  background: var(--good);
+  border-color: var(--good);
 }
 
 .report-entry__msg {
   margin: 6px 0 0;
   font-size: 13.5px;
   line-height: 1.55;
-  color: var(--ink);
+  color: var(--text);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1270,11 +1257,11 @@ a:focus-visible {
   display: block;
   margin: 9px 0 0;
   padding: 8px 0 8px 12px;
-  border-left: 1px solid var(--ink-3);
+  border-left: 1px solid var(--text-tertiary);
   font-size: 13.5px;
   font-style: italic;
   line-height: 1.55;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 .report-entry__reply b {
@@ -1283,9 +1270,9 @@ a:focus-visible {
   font-size: 11px;
   font-style: normal;
   font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ink-3);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-tertiary);
 }
 
 /* the row itself is the tap target — it opens the conversation */
@@ -1307,7 +1294,7 @@ a:focus-visible {
 }
 
 .report-entry__open:focus-visible {
-  outline: 2px solid var(--red);
+  outline: 2px solid var(--accent);
   outline-offset: 4px;
 }
 
@@ -1317,14 +1304,14 @@ a:focus-visible {
   gap: 10px;
 }
 
-/* the unread count is a stamp: red ballpoint on paper, never a fill */
+/* the unread count is an action-blue pill, never a fill */
 .report-entry__new {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--red-ink);
-  border: 1.5px solid var(--red);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--danger);
+  border: 1.5px solid var(--danger);
   border-radius: 1px;
   padding: 1px 6px;
   font-variant-numeric: tabular-nums;
@@ -1340,9 +1327,9 @@ a:focus-visible {
   margin-top: 9px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-3);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-tertiary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1354,7 +1341,7 @@ a:focus-visible {
 /* ---------- report thread ---------- */
 .thread-head {
   padding-bottom: 12px;
-  border-bottom: 1.5px solid var(--ink);
+  border-bottom: 1.5px solid var(--text);
 }
 
 .thread-head__ids {
@@ -1370,7 +1357,7 @@ a:focus-visible {
   max-width: 46ch;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 .thread {
@@ -1387,8 +1374,8 @@ a:focus-visible {
 /* the admin's entries sit under the same rule as a correction in the margin */
 .thread__msg--admin {
   padding: 12px 12px 13px 13px;
-  border-left: 1.5px solid var(--ink);
-  background: var(--paper-2);
+  border-left: 1.5px solid var(--text);
+  background: var(--surface);
 }
 
 .thread__meta {
@@ -1399,13 +1386,13 @@ a:focus-visible {
   margin: 0;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-3);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-tertiary);
 }
 
 .thread__msg--admin .thread__meta b {
-  color: var(--ink);
+  color: var(--text);
 }
 
 .thread__time {
@@ -1418,7 +1405,7 @@ a:focus-visible {
   margin: 6px 0 0;
   font-size: 14px;
   line-height: 1.55;
-  color: var(--ink);
+  color: var(--text);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -1439,8 +1426,8 @@ a:focus-visible {
 /* ---------- ticket ---------- */
 .ticket {
   margin-top: 22px;
-  border: 1.5px solid var(--ink);
-  background: var(--paper-2);
+  border: 1.5px solid var(--text);
+  background: var(--surface);
   padding: 18px 16px;
 }
 
@@ -1448,9 +1435,9 @@ a:focus-visible {
   margin: 0;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--green-ink);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--good);
 }
 
 .ticket__id {
@@ -1467,7 +1454,7 @@ a:focus-visible {
   max-width: 42ch;
   font-size: 13.5px;
   line-height: 1.55;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 /* ---------- library ---------- */
@@ -1486,7 +1473,7 @@ a:focus-visible {
   align-items: center;
   padding: 10px 16px;
   min-height: 45px;
-  background: var(--paper);
+  background: var(--ground);
   border-bottom: 1px solid var(--rule);
 }
 
@@ -1497,7 +1484,7 @@ a:focus-visible {
 .lib-row__code {
   font-size: 12px;
   font-weight: 500;
-  color: var(--ink-2);
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -1507,7 +1494,7 @@ a:focus-visible {
   font-size: 14.5px;
   font-weight: 600;
   line-height: 1.3;
-  color: var(--ink);
+  color: var(--text);
   /* a subject name is the one thing that must not be guessed at: two lines */
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1522,13 +1509,13 @@ a:focus-visible {
   text-align: right;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-3);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-tertiary);
 }
 
 .lib-row__state--live {
-  color: var(--green-ink);
+  color: var(--good);
 }
 
 .lib-form {
@@ -1544,13 +1531,13 @@ a:focus-visible {
 
 .lib-row--open:hover,
 .lib-row--open:active {
-  background: var(--paper-3);
+  background: var(--surface-hover);
 }
 
 /* ---------- the reader ---------- */
 .reader {
   min-height: 100vh;
-  background: var(--paper);
+  background: var(--ground);
 }
 
 .reader__head {
@@ -1561,8 +1548,8 @@ a:focus-visible {
   align-items: center;
   gap: 10px;
   padding: 10px 12px 11px;
-  background: var(--cloth);
-  color: var(--paper-3);
+  background: var(--surface);
+  color: var(--text);
 }
 
 .reader__back {
@@ -1574,10 +1561,10 @@ a:focus-visible {
   min-width: 44px;
   min-height: 44px;
   padding: 0 11px;
-  border: 1px solid rgba(246, 239, 221, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.42);
   border-radius: 1px;
   background: transparent;
-  color: var(--paper-3);
+  color: var(--text);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 700;
@@ -1590,7 +1577,7 @@ a:focus-visible {
 }
 
 .reader__back:active {
-  background: rgba(246, 239, 221, 0.14);
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .reader__title {
@@ -1618,16 +1605,16 @@ a:focus-visible {
   gap: 6px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(246, 239, 221, 0.85);
+  letter-spacing: 0;
+  text-transform: none;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .reader__title span em {
   font-style: normal;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--paper-3);
+  color: var(--text);
 }
 
 /* reading progress, drawn on the band's bottom rule */
@@ -1637,7 +1624,7 @@ a:focus-visible {
   bottom: 0;
   width: 100%;
   height: 2px;
-  background: var(--paper-3);
+  background: var(--accent);
   transform-origin: left center;
   transition: transform 140ms linear;
 }
@@ -1657,10 +1644,10 @@ a:focus-visible {
   min-width: 44px;
   min-height: 44px;
   padding: 0 8px;
-  border: 1px solid rgba(246, 239, 221, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.42);
   border-radius: 1px;
   background: transparent;
-  color: var(--paper-3);
+  color: var(--text);
   font-family: inherit;
   font-size: 15px;
   font-weight: 700;
@@ -1672,7 +1659,7 @@ a:focus-visible {
 }
 
 .reader__zoom-btn:active {
-  background: rgba(246, 239, 221, 0.14);
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .reader__zoom-value {
@@ -1708,7 +1695,7 @@ a:focus-visible {
 }
 
 .reader__pages {
-  scrollbar-color: var(--ink-3) transparent;
+  scrollbar-color: var(--text-tertiary) transparent;
 }
 
 @supports not (scrollbar-color: auto) {
@@ -1717,7 +1704,7 @@ a:focus-visible {
   }
 
   .reader__pages::-webkit-scrollbar-thumb {
-    background: var(--ink-3);
+    background: var(--text-tertiary);
   }
 }
 
@@ -1727,7 +1714,7 @@ a:focus-visible {
   width: calc(100% * var(--zoom));
   margin: 0 auto 18px;
   /* white, like the printed page: the PDF's figures are set on white, and
-     they must not sit in white boxes on a cream sheet */
+     they must not sit in white boxes on the dark ground */
   background: var(--page-white);
   border: 1px solid var(--rule);
   /* the sticky head must not cover a page scrolled back to */
@@ -1757,7 +1744,7 @@ a:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  color: var(--ink-3);
+  color: var(--text-tertiary);
   pointer-events: none;
 }
 
@@ -1773,8 +1760,8 @@ a:focus-visible {
 .reader__skeleton span {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   opacity: 0.5;
 }
 
@@ -1789,20 +1776,20 @@ a:focus-visible {
   justify-content: center;
   min-height: 44px;
   padding: 8px 14px;
-  border: 1.5px solid var(--red-ink);
+  border: 1.5px solid var(--danger);
   border-radius: 2px;
-  background: var(--paper-2);
-  color: var(--red-ink);
+  background: var(--surface);
+  color: var(--danger);
   font-family: var(--font-ui);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   cursor: pointer;
 }
 
 .reader__retry:hover {
-  background: var(--paper-3);
+  background: var(--surface-hover);
 }
 
 /* the page is transparent where the PDF has no ink: once it is drawn, the
@@ -1824,18 +1811,18 @@ a:focus-visible {
 .reader__end span {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-3);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-tertiary);
 }
 
 .reader__end-btn {
   min-height: 44px;
   padding: 10px 14px;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--text);
   border-radius: 1px;
-  background: var(--paper-2);
-  color: var(--ink);
+  background: var(--surface);
+  color: var(--text);
   font-family: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -1843,11 +1830,11 @@ a:focus-visible {
 }
 
 .reader__end-btn:active {
-  background: var(--paper-3);
+  background: var(--surface-hover);
 }
 
 /* ---------- the app: index page, page heads, index tabs ----------
-   One sheet holds every surface. The band stays the single cloth field; the
+   One screen holds every surface. The band stays the single surface field; the
    sections are printed pages under it, and the tab rail at the foot turns
    them like the index tabs of a register.
    ------------------------------------------------------------------ */
@@ -1860,7 +1847,7 @@ a:focus-visible {
 }
 
 .reg-band__home:focus-visible {
-  outline: 2px solid var(--red);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -1883,16 +1870,16 @@ a:focus-visible {
 
 .page-head {
   padding: 0 16px 13px;
-  border-bottom: 1.5px solid var(--ink);
+  border-bottom: 1.5px solid var(--text);
 }
 
 .eyebrow {
   margin: 0 0 6px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
 }
 
 .page-title {
@@ -1909,7 +1896,7 @@ a:focus-visible {
   max-width: 46ch;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 .page-body {
@@ -1945,7 +1932,7 @@ a:focus-visible {
   max-width: 44ch;
   font-size: 13.5px;
   line-height: 1.5;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 /* who is reading: the viewer's own entry, bracketed in the margin */
@@ -1956,7 +1943,7 @@ a:focus-visible {
   gap: 10px;
   margin-top: 20px;
   padding: 11px 14px 11px 23px;
-  background: var(--paper-2);
+  background: var(--surface);
   border: 1px solid var(--rule);
 }
 
@@ -1967,16 +1954,16 @@ a:focus-visible {
   top: 9px;
   bottom: 9px;
   width: 8px;
-  border: 1.5px solid var(--red);
+  border: 1.5px solid var(--danger);
   border-right: 0;
 }
 
 .cover__viewer-label {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
 }
 
 .cover__viewer-roll {
@@ -1984,7 +1971,7 @@ a:focus-visible {
   font-size: 17px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .cover__viewer-rank {
@@ -1992,16 +1979,16 @@ a:focus-visible {
   font-size: 15px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .cover__viewer-rank small {
   display: block;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
   text-align: right;
 }
 
@@ -2009,7 +1996,7 @@ a:focus-visible {
 
 .index-list {
   margin-top: 22px;
-  border-top: 1.5px solid var(--ink);
+  border-top: 1.5px solid var(--text);
 }
 
 .index-row {
@@ -2025,15 +2012,15 @@ a:focus-visible {
 }
 
 .index-row:hover {
-  background: var(--paper-2);
+  background: var(--surface);
 }
 
 .index-row:active {
-  background: var(--paper-3);
+  background: var(--surface-active);
 }
 
 .index-row:focus-visible {
-  outline: 2px solid var(--red);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -2043,7 +2030,7 @@ a:focus-visible {
   font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: var(--ink-3);
+  color: var(--text-tertiary);
 }
 
 .index-row__name {
@@ -2051,7 +2038,7 @@ a:focus-visible {
   font-size: 17px;
   font-weight: 600;
   line-height: 1.2;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .index-row__name small {
@@ -2061,13 +2048,13 @@ a:focus-visible {
   font-size: 12px;
   font-weight: 400;
   line-height: 1.45;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 .index-row__go {
   justify-self: end;
   align-self: center;
-  color: var(--ink-3);
+  color: var(--text-tertiary);
 }
 
 .cover__foot {
@@ -2076,7 +2063,7 @@ a:focus-visible {
   border-top: 1px solid var(--rule);
   font-size: 12px;
   line-height: 1.5;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 /* ---------- the tab rail ---------- */
@@ -2094,8 +2081,8 @@ a:focus-visible {
   max-width: 560px;
   /* left/right 0 plus auto margins centres the rail under the sheet */
   margin: 0 auto;
-  background: var(--paper-2);
-  border-top: 1.5px solid var(--ink);
+  background: var(--surface);
+  border-top: 1.5px solid var(--text);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -2107,9 +2094,9 @@ a:focus-visible {
   padding: 9px 2px 8px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
   transition:
     color 0.12s ease,
     background-color 0.12s ease;
@@ -2120,18 +2107,18 @@ a:focus-visible {
 }
 
 .tabbar__item:hover {
-  color: var(--ink);
+  color: var(--text);
 }
 
 .tabbar__item:focus-visible {
-  outline: 2px solid var(--red);
+  outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
 
-/* the open tab is a stamp impression: ink ground, paper text */
+/* the open tab is accent-coloured, not filled */
 .tabbar__item[aria-current="page"] {
-  background: var(--ink);
-  color: var(--paper-3);
+  background: transparent;
+  color: var(--accent);
 }
 
 /* ---------- narrow phones ---------- */
@@ -2178,28 +2165,28 @@ a:focus-visible {
   padding: 9px 0 8px;
   border-bottom: 1px solid var(--rule);
   font-size: 12px;
-  color: var(--ink-2);
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
 .att-id b {
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .att-id__rank {
   font-weight: 700;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .att-id__rank small {
   margin-left: 3px;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
 }
 
 .att-summary {
@@ -2209,7 +2196,7 @@ a:focus-visible {
   gap: 18px;
   margin: 0 16px 12px;
   padding: 4px 0 14px;
-  border-bottom: 1.5px solid var(--ink);
+  border-bottom: 1.5px solid var(--text);
 }
 
 .att-summary__big {
@@ -2221,9 +2208,9 @@ a:focus-visible {
   margin-bottom: 4px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
 }
 
 .att-summary__percent {
@@ -2233,13 +2220,13 @@ a:focus-visible {
   font-weight: 600;
   line-height: 0.95;
   font-variant-numeric: tabular-nums;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .att-summary__percent small {
   margin-left: 1px;
   font-size: 0.42em;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 .att-summary__gap {
@@ -2247,11 +2234,11 @@ a:focus-visible {
   margin-top: 7px;
   font-size: 12.5px;
   font-weight: 600;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 .att-summary__gap.is-below {
-  color: var(--red-ink);
+  color: var(--danger);
 }
 
 .att-summary__facts {
@@ -2269,9 +2256,9 @@ a:focus-visible {
 .att-summary__facts dt {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
   text-align: left;
 }
 
@@ -2280,19 +2267,19 @@ a:focus-visible {
   font-size: 15px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .att-fresh {
   margin: 0 16px 14px;
   font-size: 12px;
   line-height: 1.5;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 .att-fresh--warn {
   font-weight: 600;
-  color: var(--amber-text);
+  color: var(--warning);
 }
 
 .att-bunk {
@@ -2308,11 +2295,11 @@ a:focus-visible {
   font-size: 17px;
   font-weight: 600;
   line-height: 1.3;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .att-bunk.is-below p {
-  color: var(--red-ink);
+  color: var(--danger);
 }
 
 .att-bunk span {
@@ -2320,9 +2307,9 @@ a:focus-visible {
   margin-top: 5px;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
 }
 
 .att-table__head {
@@ -2330,13 +2317,13 @@ a:focus-visible {
   grid-template-columns: minmax(0, 1fr) 62px 40px 58px;
   gap: 6px;
   padding: 7px 16px 6px;
-  border-top: 1.5px solid var(--ink);
-  border-bottom: 1.5px solid var(--ink);
+  border-top: 1.5px solid var(--text);
+  border-bottom: 1.5px solid var(--text);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
 }
 
 .att-table__head span:not(:first-child) {
@@ -2359,7 +2346,7 @@ a:focus-visible {
   font-weight: 600;
   white-space: nowrap;
   text-overflow: ellipsis;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .att-row__count,
@@ -2371,22 +2358,22 @@ a:focus-visible {
 
 .att-row__count {
   font-size: 12.5px;
-  color: var(--ink-2);
+  color: var(--text-secondary);
 }
 
 .att-row__pct {
   font-size: 14px;
   font-weight: 700;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .att-row__last {
   font-size: 11px;
-  color: var(--ink-3);
+  color: var(--text-tertiary);
 }
 
 .att-row--below .att-row__pct {
-  color: var(--red-ink);
+  color: var(--danger);
 }
 
 /* ---------- PDF download controls ---------- */
@@ -2419,7 +2406,7 @@ a:focus-visible {
 
 .lib-row--pdf:hover,
 .lib-row--pdf:active {
-  background: var(--paper-3);
+  background: var(--surface-hover);
 }
 
 .lib-pdf {
@@ -2431,22 +2418,22 @@ a:focus-visible {
   min-width: 44px;
   min-height: 44px;
   padding: 0 7px;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--text);
   border-radius: 1px;
-  background: var(--paper-2);
-  color: var(--ink);
+  background: var(--surface);
+  color: var(--text);
   font-family: var(--font-ui);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
   line-height: 1;
-  text-transform: uppercase;
+  text-transform: none;
   cursor: pointer;
 }
 
 .lib-pdf:hover,
 .lib-pdf:active {
-  background: var(--paper-3);
+  background: var(--surface-hover);
 }
 
 /* the bytes are being prepared: the client has not been handed the URL yet */
@@ -2456,7 +2443,7 @@ a:focus-visible {
   cursor: progress;
 }
 
-/* the reader keeps the same stamp in the cloth band, beside the zoom */
+/* the reader keeps the same stamp in the band, beside the zoom */
 .reader__pdf {
   flex: none;
   display: inline-flex;
@@ -2465,22 +2452,22 @@ a:focus-visible {
   min-width: 44px;
   min-height: 44px;
   padding: 0 7px;
-  border: 1px solid rgba(246, 239, 221, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.42);
   border-radius: 1px;
   background: transparent;
-  color: var(--paper-3);
+  color: var(--text);
   font-family: var(--font-ui);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0;
   line-height: 1;
-  text-transform: uppercase;
+  text-transform: none;
   cursor: pointer;
   touch-action: manipulation;
 }
 
 .reader__pdf:active {
-  background: rgba(246, 239, 221, 0.14);
+  background: rgba(255, 255, 255, 0.14);
 }
 
 /* ---------- college-email verification ---------- */
@@ -2501,7 +2488,7 @@ a:focus-visible {
   margin-top: 14px;
   font-size: 13.5px;
   line-height: 1.45;
-  color: var(--ink);
+  color: var(--text);
   cursor: pointer;
 }
 
@@ -2510,5 +2497,5 @@ a:focus-visible {
   width: 18px;
   height: 18px;
   margin: 2px 0 0;
-  accent-color: var(--ink);
+  accent-color: var(--text);
 }

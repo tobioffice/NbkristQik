@@ -29,11 +29,49 @@ describe("stats page", () => {
     expect(html).not.toMatch(/@import/);
   });
 
-  it("keeps the local paper-register font stacks", () => {
+  it("uses the Telegram-native Figtree stack", () => {
     expect(html).toContain(
-      '--font-display: "Zilla Slab", "Roboto Slab", Georgia, serif;',
+      '--font: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;',
     );
-    expect(html).toContain('"Public Sans", system-ui');
+    expect(html).not.toContain("Zilla Slab");
+    expect(html).not.toContain("Public Sans");
+  });
+
+  it("uses the Telegram-native palette and grouped rows", () => {
+    for (const token of [
+      "--ground: #1a2026",
+      "--footer: #111417",
+      "--surface: #212a33",
+      "--surface-hover: #293440",
+      "--surface-active: #2d3a47",
+      "--accent: #4cb2ff",
+      "--action: #248bda",
+      "--danger: #f88277",
+    ]) {
+      expect(html).toContain(token);
+    }
+    expect(html).toContain("--radius: 8px");
+    expect(html).toContain("max-width: 720px");
+    expect(html).toContain("border-spacing: 0 1px");
+    expect(html).toContain(
+      "a { color: var(--accent); text-decoration: none; }",
+    );
+    expect(html).not.toContain("box-shadow");
+    expect(html).not.toContain("text-transform: uppercase");
+  });
+
+  it("does not fall back to the retired paper register", () => {
+    for (const retired of [
+      "#e7dcc3",
+      "#efe5cd",
+      "#f6efdd",
+      "#3f6457",
+      "#33544a",
+      "#a62f22",
+      "#8a6a12",
+    ]) {
+      expect(html).not.toContain(retired);
+    }
   });
 
   it("loads all six aggregates from the stats API", () => {
@@ -59,11 +97,12 @@ describe("stats page", () => {
     );
   });
 
-  it("makes the values live, tabular and described by a table caption", () => {
+  it("makes the values live, tabular, right-aligned and described by a table caption", () => {
     expect(
       html.match(/aria-live="polite"/g)?.length ?? 0,
     ).toBeGreaterThanOrEqual(6);
     expect(html).toContain("font-variant-numeric: tabular-nums");
+    expect(html).toContain("text-align: right");
     expect(html).toContain('Intl.NumberFormat("en-IN")');
     expect(html).toContain("<caption>");
   });

@@ -2,9 +2,9 @@
 
 The Telegram Mini App (leaderboard, profile, issue reports, library, reader) follows the design system in `DESIGN.md` — "The Telegram Utility, Open on the Phone": fullscreen dark ground, grouped rows, sentence case, two blues.
 
-The server-rendered admin panel follows the Mini App's Telegram-native system in `DESIGN.md`. The public status page still follows the paper register in `DESIGN.PAPER.md`.
+The server-rendered admin panel and the public status and stats pages follow the same system, so every public surface — Mini App, admin, status and stats — uses `DESIGN.md`. The marketing site has its own editorial identity, documented in `docs/SITE.md`.
 
-- Before changing Mini App UI: read `DESIGN.md`. Follow its palette, typography, layout, safe-area contract, and Do's and Don'ts.
+- Before changing UI on any surface: read `DESIGN.md`. Follow its palette, typography, layout, safe-area contract, and Do's and Don'ts.
 - The named rules are binding: Fullscreen Rule (phones get the whole screen with safe-area padding), Safe-Area Rule, One-Band Rule, Two-Blue Rule (`#4cb2ff` pointer, `#248bda` action), Grouped Row Rule (1px ground gaps inside an 8px group), Sentence Case Rule, Tabular Register Rule (every comparable figure uses tabular numerals), Flat Chrome Rule (no shadows except the reader page), Danger Rule (red is text and rules, never a filled field).
 - Do not reintroduce paper texture, serif display type, tracked uppercase labels, floating desk sheets, glass blur, gradient text, or red stamp backgrounds into the Mini App.
 - Product brief: `PRODUCT.md`.

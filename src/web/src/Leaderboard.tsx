@@ -33,7 +33,7 @@ import { useBandStamp } from "./bandStamp";
 
 interface LeaderboardProps {
   /**
-   * Draw the cloth band here. False when the app shell already owns the band
+   * Draw the band here. False when the app shell already owns the band
    * (its tabbed surface): the count then goes up as the band's stamp.
    */
   showBand?: boolean;

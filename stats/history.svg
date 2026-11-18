@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" width="100%" role="img" aria-labelledby="chart-title chart-desc" style="display:block;width:100%;height:auto;max-width:960px">
   <title id="chart-title">NbkristQik usage</title>
-  <desc id="chart-desc">Line chart of registered_users, dau, wau and mau across 30 daily snapshots from 19 Oct 2026 to 17 Nov 2026. Daily snapshots at 23:30 IST; aggregates only.</desc>
+  <desc id="chart-desc">Line chart of registered users, daily active, weekly active and monthly active across 30 daily snapshots from 19 Oct 2026 to 17 Nov 2026. Daily snapshots at 23:30 IST; aggregates only.</desc>
   <style>
     text {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    .axis {
-      fill: #5a5140;
-      font-size: 11.5px;
+      font-family: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       font-variant-numeric: tabular-nums;
     }
+    .axis {
+      fill: #8794a1;
+      font-size: 11.5px;
+    }
     .legend {
-      fill: #1e2a38;
+      fill: #ffffff;
       font-size: 12px;
+      font-weight: 500;
     }
     .series {
       fill: none;
@@ -22,55 +23,54 @@
       stroke-linecap: round;
     }
     .series-point {
-      stroke: #e7dcc3;
-      stroke-width: 1;
+      stroke: #212a33;
+      stroke-width: 1.5;
     }
   </style>
-  <rect width="960" height="420" fill="#e7dcc3" />
-  <rect width="960" height="6" fill="#3f6457" />
-  <text x="44" y="50" fill="#1e2a38" font-size="27" font-weight="600" letter-spacing="-0.02em">NbkristQik usage</text>
-  <text x="44" y="74" fill="#5a5140" font-size="13">Daily snapshots, 23:30 IST · aggregates only</text>
+  <rect width="960" height="420" fill="#1a2026" />
+  <text x="44" y="50" fill="#ffffff" font-size="27" font-weight="700">NbkristQik usage</text>
+  <text x="44" y="74" fill="#8794a1" font-size="13">Daily snapshots · aggregates only</text>
   <g>
       <g data-series="registered_users">
-        <line x1="44" y1="101" x2="66" y2="101" stroke="#1e2a38" stroke-width="2.5" stroke-linecap="round" />
+        <line x1="44" y1="101" x2="66" y2="101" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
         <text x="74" y="105" class="legend">registered users</text>
       </g>
       <g data-series="dau">
-        <line x1="250" y1="101" x2="272" y2="101" stroke="#a62f22" stroke-width="2.5" stroke-linecap="round" />
+        <line x1="250" y1="101" x2="272" y2="101" stroke="#4cb2ff" stroke-width="2.5" stroke-linecap="round" />
         <text x="280" y="105" class="legend">daily active</text>
       </g>
       <g data-series="wau">
-        <line x1="430" y1="101" x2="452" y2="101" stroke="#8a6a12" stroke-width="2.5" stroke-linecap="round" />
+        <line x1="430" y1="101" x2="452" y2="101" stroke="#7ed176" stroke-width="2.5" stroke-linecap="round" />
         <text x="460" y="105" class="legend">weekly active</text>
       </g>
       <g data-series="mau">
-        <line x1="610" y1="101" x2="632" y2="101" stroke="#3f6457" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 3" />
+        <line x1="610" y1="101" x2="632" y2="101" stroke="#8794a1" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 3" />
         <text x="640" y="105" class="legend">monthly active</text>
       </g>
   </g>
-  <line x1="44" y1="116" x2="926" y2="116" stroke="#1e2a38" stroke-opacity="0.18" />
+  <rect x="24" y="112" width="912" height="284" rx="8" fill="#212a33" />
   <g>
-      <line x1="70" y1="360" x2="926" y2="360" stroke="#1e2a38" stroke-opacity="0.45" />
-      <text x="58" y="364" text-anchor="end" class="axis">0</text>
-      <line x1="70" y1="303" x2="926" y2="303" stroke="#1e2a38" stroke-opacity="0.14" />
-      <text x="58" y="307" text-anchor="end" class="axis">1,000</text>
-      <line x1="70" y1="246" x2="926" y2="246" stroke="#1e2a38" stroke-opacity="0.14" />
-      <text x="58" y="250" text-anchor="end" class="axis">2,000</text>
-      <line x1="70" y1="189" x2="926" y2="189" stroke="#1e2a38" stroke-opacity="0.14" />
-      <text x="58" y="193" text-anchor="end" class="axis">3,000</text>
-      <line x1="70" y1="132" x2="926" y2="132" stroke="#1e2a38" stroke-opacity="0.14" />
-      <text x="58" y="136" text-anchor="end" class="axis">4,000</text>
+      <line x1="80" y1="360" x2="920" y2="360" stroke="#ffffff" stroke-opacity="0.18" />
+      <text x="68" y="364" text-anchor="end" class="axis">0</text>
+      <line x1="80" y1="303" x2="920" y2="303" stroke="#ffffff" stroke-opacity="0.1" />
+      <text x="68" y="307" text-anchor="end" class="axis">1,000</text>
+      <line x1="80" y1="246" x2="920" y2="246" stroke="#ffffff" stroke-opacity="0.1" />
+      <text x="68" y="250" text-anchor="end" class="axis">2,000</text>
+      <line x1="80" y1="189" x2="920" y2="189" stroke="#ffffff" stroke-opacity="0.1" />
+      <text x="68" y="193" text-anchor="end" class="axis">3,000</text>
+      <line x1="80" y1="132" x2="920" y2="132" stroke="#ffffff" stroke-opacity="0.1" />
+      <text x="68" y="136" text-anchor="end" class="axis">4,000</text>
   </g>
   <g>
-      <path class="series" data-series="registered_users" d="M70 228.7 L99.5 224.1 L129 219.8 L158.6 216.2 L188.1 213.3 L217.6 210.3 L247.1 205.6 L276.6 193 L306.1 186.7 L335.7 183 L365.2 180.1 L394.7 177.9 L424.2 176.5 L453.7 175.7 L483.2 175.1 L512.8 174.4 L542.3 174 L571.8 173.6 L601.3 173 L630.8 172.9 L660.3 172.4 L689.9 169.8 L719.4 167.7 L748.9 166.3 L778.4 164.8 L807.9 162.8 L837.4 161.4 L867 160.2 L896.5 159.2 L926 158.6" stroke="#1e2a38" />
-      <path class="series" data-series="dau" d="M70 325.2 L99.5 332 L129 332 L158.6 338.2 L188.1 338.9 L217.6 334.4 L247.1 327.7 L276.6 256.3 L306.1 248.2 L335.7 252.6 L365.2 248.9 L394.7 255.1 L424.2 260.1 L453.7 308.1 L483.2 319.7 L512.8 327.9 L542.3 339.4 L571.8 346.2 L601.3 333.4 L630.8 344.6 L660.3 333.2 L689.9 259.3 L719.4 255.7 L748.9 254.3 L778.4 258.1 L807.9 253.8 L837.4 268.6 L867 300.2 L896.5 288.4 L926 295.5" stroke="#a62f22" />
-      <path class="series" data-series="wau" d="M70 228.7 L99.5 224.1 L129 219.8 L158.6 217.4 L188.1 239.9 L217.6 245.4 L247.1 242.3 L276.6 215.7 L306.1 203.1 L335.7 197.6 L365.2 193.2 L394.7 190.3 L424.2 188.4 L453.7 187.7 L483.2 189.9 L512.8 193.1 L542.3 198.5 L571.8 206.8 L601.3 218.4 L630.8 246.2 L660.3 252.8 L689.9 223.4 L719.4 209.6 L748.9 201.3 L778.4 195 L807.9 191.1 L837.4 187.1 L867 185.2 L896.5 188 L926 190.9" stroke="#8a6a12" />
-      <path class="series" data-series="mau" d="M70 228.7 L99.5 224.1 L129 219.8 L158.6 216.2 L188.1 213.3 L217.6 210.3 L247.1 205.6 L276.6 193 L306.1 186.7 L335.7 183 L365.2 180.1 L394.7 177.9 L424.2 176.5 L453.7 175.7 L483.2 175.1 L512.8 174.4 L542.3 174 L571.8 173.6 L601.3 173 L630.8 172.9 L660.3 172.4 L689.9 169.8 L719.4 167.7 L748.9 166.3 L778.4 164.8 L807.9 162.8 L837.4 161.4 L867 162.3 L896.5 161.7 L926 161.4" stroke="#3f6457" stroke-dasharray="5 3" />
+      <path class="series" data-series="registered_users" d="M80 228.7 L109 224.1 L137.9 219.8 L166.9 216.2 L195.9 213.3 L224.8 210.3 L253.8 205.6 L282.8 193 L311.7 186.7 L340.7 183 L369.7 180.1 L398.6 177.9 L427.6 176.5 L456.6 175.7 L485.5 175.1 L514.5 174.4 L543.4 174 L572.4 173.6 L601.4 173 L630.3 172.9 L659.3 172.4 L688.3 169.8 L717.2 167.7 L746.2 166.3 L775.2 164.8 L804.1 162.8 L833.1 161.4 L862.1 160.2 L891 159.2 L920 158.6" stroke="#ffffff" stroke-width="2.6" />
+      <path class="series" data-series="dau" d="M80 325.2 L109 332 L137.9 332 L166.9 338.2 L195.9 338.9 L224.8 334.4 L253.8 327.7 L282.8 256.3 L311.7 248.2 L340.7 252.6 L369.7 248.9 L398.6 255.1 L427.6 260.1 L456.6 308.1 L485.5 319.7 L514.5 327.9 L543.4 339.4 L572.4 346.2 L601.4 333.4 L630.3 344.6 L659.3 333.2 L688.3 259.3 L717.2 255.7 L746.2 254.3 L775.2 258.1 L804.1 253.8 L833.1 268.6 L862.1 300.2 L891 288.4 L920 295.5" stroke="#4cb2ff" stroke-width="2" />
+      <path class="series" data-series="wau" d="M80 228.7 L109 224.1 L137.9 219.8 L166.9 217.4 L195.9 239.9 L224.8 245.4 L253.8 242.3 L282.8 215.7 L311.7 203.1 L340.7 197.6 L369.7 193.2 L398.6 190.3 L427.6 188.4 L456.6 187.7 L485.5 189.9 L514.5 193.1 L543.4 198.5 L572.4 206.8 L601.4 218.4 L630.3 246.2 L659.3 252.8 L688.3 223.4 L717.2 209.6 L746.2 201.3 L775.2 195 L804.1 191.1 L833.1 187.1 L862.1 185.2 L891 188 L920 190.9" stroke="#7ed176" stroke-width="2" />
+      <path class="series" data-series="mau" d="M80 228.7 L109 224.1 L137.9 219.8 L166.9 216.2 L195.9 213.3 L224.8 210.3 L253.8 205.6 L282.8 193 L311.7 186.7 L340.7 183 L369.7 180.1 L398.6 177.9 L427.6 176.5 L456.6 175.7 L485.5 175.1 L514.5 174.4 L543.4 174 L572.4 173.6 L601.4 173 L630.3 172.9 L659.3 172.4 L688.3 169.8 L717.2 167.7 L746.2 166.3 L775.2 164.8 L804.1 162.8 L833.1 161.4 L862.1 162.3 L891 161.7 L920 161.4" stroke="#8794a1" stroke-width="1.6" stroke-dasharray="5 3" />
       
   </g>
   <g>
-      <text x="70" y="384" text-anchor="start" class="axis">19 Oct 2026</text>
-      <text x="512.8" y="384" text-anchor="middle" class="axis">3 Nov 2026</text>
-      <text x="926" y="384" text-anchor="end" class="axis">17 Nov 2026</text>
+      <text x="80" y="384" text-anchor="start" class="axis">19 Oct 2026</text>
+      <text x="514.5" y="384" text-anchor="middle" class="axis">3 Nov 2026</text>
+      <text x="920" y="384" text-anchor="end" class="axis">17 Nov 2026</text>
   </g>
 </svg>

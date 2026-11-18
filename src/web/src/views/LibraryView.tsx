@@ -14,7 +14,7 @@ import DocumentReader from "./DocumentReader";
 /**
  * The shelf: the subjects of the reader's own semester, and what we hold.
  *
- * The shell owns the cloth band and the frame, so this view only prints its
+ * The shell owns the band and the frame, so this view only prints its
  * contents and publishes the one figure the band shows — how many subjects
  * are ready. When a unit is opened the reader takes the whole screen and the
  * shell steps out of its way (`onImmersive`).

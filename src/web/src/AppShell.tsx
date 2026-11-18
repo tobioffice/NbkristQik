@@ -40,7 +40,7 @@ const Leaderboard = lazy(() => import("./Leaderboard"));
  * The first screen is the roll form. Attendance is answered only in the bot,
  * on purpose: the answer arrives with the bot's ad, and this sheet never
  * becomes a second place to read it. The register can still be browsed here.
- * The cloth band says where you are and the tabs at the foot turn to another
+ * The band says where you are and the tabs at the foot turn to another
  * section without leaving the sheet.
  *
  * Routes live in the hash, so a reload lands on the same page. Bot buttons
@@ -352,7 +352,7 @@ const Tab = ({
 );
 
 /**
- * A route chunk is on its way. The cloth band and the tab rail stay exactly
+ * A route chunk is on its way. The band and the tab rail stay exactly
  * where they are; only the page shape is drawn, so the tab switch does not
  * move the sheet.
  */

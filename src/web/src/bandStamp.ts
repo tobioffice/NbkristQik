@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect } from "react";
 
 /**
- * The cloth band's stamp, shared by the app shell and its pages.
+ * The band's stamp, shared by the app shell and its pages.
  *
- * The design has one cloth band per surface, so a page cannot draw its own
+ * The design has one band per surface, so a page cannot draw its own
  * head: the shell owns the band, and a page publishes the one figure that
  * belongs in its stamp (the shelf's ready units, the register's students, the
  * inbox's open issues). A page with nothing counted leaves the stamp empty.

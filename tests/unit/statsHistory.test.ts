@@ -265,15 +265,49 @@ describe("render-stats-chart.mjs", () => {
     expect(svg).toContain('role="img"');
     expect(svg).toContain('aria-labelledby="chart-title chart-desc"');
     expect(svg).toContain("NbkristQik usage");
-    expect(svg).toContain("Daily snapshots, 23:30 IST · aggregates only");
+    expect(svg).toContain("Daily snapshots · aggregates only");
     expect(svg.match(/class="series"/g) ?? []).toHaveLength(4);
-    for (const key of ["registered_users", "dau", "wau", "mau"]) {
-      expect(svg).toContain(`data-series="${key}"`);
+    for (const [key, color] of [
+      ["registered_users", "#ffffff"],
+      ["dau", "#4cb2ff"],
+      ["wau", "#7ed176"],
+      ["mau", "#8794a1"],
+    ] as const) {
+      expect(svg).toMatch(
+        new RegExp(
+          `<path class="series" data-series="${key}"[^>]*stroke="${color}"`,
+        ),
+      );
     }
     expect(svg).toContain(">registered users<");
     expect(svg).toContain(">daily active<");
     expect(svg).toContain(">weekly active<");
     expect(svg).toContain(">monthly active<");
+
+    // Telegram-native palette: dark ground, surface panel, subtle white grid.
+    expect(svg).toContain("#1a2026");
+    expect(svg).toContain("#212a33");
+    expect(svg).toContain("#ffffff");
+    expect(svg).toContain("#4cb2ff");
+    expect(svg).toContain("#7ed176");
+    expect(svg).toContain("#8794a1");
+    expect(svg).toContain('stroke="#ffffff" stroke-opacity="0.1"');
+    expect(svg).toContain(
+      '"Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+    );
+    for (const retired of [
+      "#e7dcc3",
+      "#3f6457",
+      "#a62f22",
+      "#8a6a12",
+      "#f88277",
+      "#ff9953",
+      "Zilla Slab",
+      "Public Sans",
+    ]) {
+      expect(svg).not.toContain(retired);
+    }
+
     expect(svg).toContain("14 Nov 2026");
     expect(svg).toContain("16 Nov 2026");
     expect(svg).toContain("17 Nov 2026");

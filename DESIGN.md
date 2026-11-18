@@ -108,16 +108,16 @@ a 1px gap, one band at the head, one flat tab rail at the foot, and two blues th
 each mean one thing. Type is sentence case and quiet; the figures are tabular, so
 ranks, rolls, percentages and page numbers line up the way a register's do.
 
-The register's old paper-and-cloth language lives on in `DESIGN.PAPER.md`, where
-the public status page still uses it. The Mini App and the admin panel use the
-native surface described here.
+The old paper register is retired. The Mini App, the admin panel and the public
+status and stats pages all use the native surface described here.
 
 **Status:** shipped. The Ranks, Profile, Issues, Library and Reader screens in
 `src/web` follow this document, and so does the server-rendered admin panel
 (`src/api/admin/panel.css.ts`). The admin panel keeps the same ground, surfaces,
 type and two blues; its data tables take a wider column and a top nav because it
-is a desktop operator console. The public status page (`src/status/index.html`)
-still follows the paper system until it is migrated.
+is a desktop operator console. The public status and stats pages
+(`src/status/index.html`, `src/status/stats.html`) use the same ground, surfaces,
+type and two blues, with their own page-specific layouts.
 
 **Key Characteristics:**
 
@@ -409,4 +409,4 @@ plus the shipped CSS/JS.
 
 NbkristQik's adaptations: Figtree instead of Product Sans, tabular numerals on all
 rank figures, the 75% rule, the band's stamp pill, the issue/thread surfaces and
-the reader toolbar. The paper register it replaced is kept in `DESIGN.PAPER.md`.
+the reader toolbar. The paper register it replaced is retired.

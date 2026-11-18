@@ -111,7 +111,7 @@ cookie:
 
 **Gate 3 — registration (registered-only).** The session carries a user id.
 `GET /api/library/subjects` looks up `registrations.userId → roll_no`. No row,
-no subjects: the app shows the register sheet (or tells the student to run
+no subjects: the app shows the roll form (or tells the student to run
 `/register`) and stops. The roll must also exist in `studentsnew`, the
 college master table, so a typed-in roll cannot be a ghost.
 
@@ -461,8 +461,8 @@ site remain.
 
 Structure:
 
-- `AppShell.tsx` — the sheet: the cloth band, the hash router, the index page
-  and the index-tab rail; the sections publish their figures into the band.
+- `AppShell.tsx` — the shell: the band, the hash router, the index page
+  and the tab rail; the sections publish their figures into the band.
 - `views/LibraryView.tsx` — the gate, then the shelf: the student's subjects
   as register rows, a subject's units, and the reader when one is open.
 - `views/DocumentReader.tsx` — the reader. A vertical scroll of pages; each
@@ -477,27 +477,26 @@ Structure:
 ### 8a. The app shell
 
 The bot's one button opens the app, and the app is the whole product on one
-sheet:
+screen:
 
-- **The index page** is the register's front matter: who is reading (the
-  viewer's roll, bracketed in red, with their attendance rank) and the four
-  sections as ruled index entries, each with its number in the margin.
-- **The tab rail** at the foot of the sheet carries five index tabs — Index,
-  Ranks, Library, Profile, Issues. The open tab is filled with ink and paper
-  text, a stamp impression rather than a pill.
-- **One cloth band.** A section never draws its own head; it publishes one
-  figure into the band's stamp (ready units on the shelf, students on the
-  register) through `useBandStamp`.
+- **The first screen** is the roll form: who is reading and how to save or
+  edit their roll number. The register opens from its tab.
+- **The tab rail** at the foot of the screen carries the tabs — Profile,
+  Ranks, Issues and, when the shelf is open, Library. The open tab is
+  accent-coloured, not filled.
+- **One band.** A section never draws its own head; it publishes one figure
+  into the band's stamp (ready units on the shelf, students on the register)
+  through `useBandStamp`.
 - **Routes** make every section reloadable and deep-linkable. The hash carries
   `#/rank`, `#/library`, `#/profile`, `#/issues` (the reports list),
   `#/issues/new` (a new report) and `#/issues/QIK-0007`; the bot's buttons
   carry the same path in `?page=`, which
   `takePageLink` folds into the hash on load. Telegram overwrites the fragment
   with its own launch data, so a hash written by a button never arrives.
-- **The reader takes the sheet.** While a page is open the band and the tabs
+- **The reader takes the screen.** While a page is open the band and the tabs
   step away and the reader carries its own head.
 - **The Telegram back arrow** is a stack (`backButton.ts`): the reader closes
-  first, then the section returns to the index.
+  first, then the section returns to the first screen.
 
 ### The reader, in detail
 

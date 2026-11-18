@@ -15,7 +15,7 @@ interface BandProps {
 }
 
 /**
- * Cloth head band shared by every surface: wordmark, context line, and an
+ * Head band shared by every surface: wordmark, context line, and an
  * optional stamp block for a headline figure.
  *
  * The band is the register's binding — one per surface, at the head. It is

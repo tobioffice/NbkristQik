@@ -3,135 +3,181 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#33544a" />
-  <title>NbkristQik Status</title>
+  <meta name="theme-color" content="#1a2026" />
+  <title>NbkristQik status</title>
   <style>
     :root {
-      --paper: #e7dcc3;
-      --paper-2: #efe5cd;
-      --paper-3: #f6efdd;
-      --ink: #1e2a38;
-      --ink-2: #5a5140;
-      --ink-3: #675d4b;
-      --cloth: #3f6457;
-      --cloth-deep: #33544a;
-      --red-ink: #a62f22;
-      --amber-ink: #8a6a12;
-      --amber-text: #6e5410;
-      --green-ink: #2f5c46;
-      --rule: rgba(30, 42, 56, 0.2);
-      --rule-strong: rgba(30, 42, 56, 0.45);
-      --font-display: "Zilla Slab", "Roboto Slab", Georgia, serif;
-      --font-ui: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --ground: #1a2026;
+      --footer: #111417;
+      --surface: #212a33;
+      --surface-hover: #293440;
+      --surface-active: #2d3a47;
+      --text: #ffffff;
+      --secondary: #8794a1;
+      --tertiary: #8494a3;
+      --accent: #4cb2ff;
+      --action: #248bda;
+      --action-hover: #207cc2;
+      --danger: #f88277;
+      --warning: #ff9953;
+      --good: #7ed176;
+      --font: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --radius: 8px;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { color-scheme: light; }
+    html { color-scheme: dark; background: var(--ground); }
     body {
-      background: var(--cloth-deep); color: var(--ink);
-      font-family: var(--font-ui); font-size: 15px; line-height: 1.45;
-      -webkit-font-smoothing: antialiased; min-height: 100dvh;
+      min-height: 100dvh; display: flex; flex-direction: column;
+      background: var(--ground); color: var(--text);
+      font-family: var(--font); font-size: 15px; line-height: 20px;
+      -webkit-font-smoothing: antialiased;
     }
-    ::selection { background: rgba(195, 59, 46, 0.24); }
-    .wrap { max-width: 720px; margin: 0 auto; padding: 30px 0 60px; }
-    .sheet { background: var(--paper); box-shadow: 0 20px 44px -16px rgba(16, 24, 30, 0.55); }
-    @media (max-width: 760px) {
-      .wrap { padding: 0; }
-      .sheet { box-shadow: none; min-height: 100dvh; }
+    ::selection { background: rgba(36, 139, 218, 0.35); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .column {
+      width: 100%; max-width: 720px; margin: 0 auto;
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
     }
 
-    /* cloth band */
-    .reg-band {
-      background: var(--cloth); color: var(--paper-3);
-      padding: 17px 20px 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+    /* one band at the head */
+    .band {
+      background: var(--surface);
+      padding: calc(8px + env(safe-area-inset-top)) 0 8px;
     }
-    .reg-band__title { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-height: 1.05; letter-spacing: 0.01em; }
-    .reg-band__sub { margin-top: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(246, 239, 221, 0.85); }
-    .reg-band__stamp { flex-shrink: 0; border: 1.5px solid rgba(246, 239, 221, 0.5); border-radius: 2px; padding: 5px 9px; text-align: right; line-height: 1.25; }
-    .reg-band__stamp b { display: block; font-family: var(--font-display); font-weight: 600; font-size: 16px; font-variant-numeric: tabular-nums; }
-    .reg-band__stamp span { font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(246, 239, 221, 0.85); }
+    .band__inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .band h1 { font-size: 17px; line-height: 24px; font-weight: 600; }
+    .band__sub { font-size: 12px; line-height: 16px; color: var(--secondary); }
+    .stamp {
+      display: inline-flex; align-items: baseline; gap: 4px; flex-shrink: 0;
+      background: var(--surface-active); border-radius: 20px; padding: 5px 10px;
+      white-space: nowrap;
+    }
+    .stamp b {
+      font-size: 13px; line-height: 16px; font-weight: 600;
+      font-variant-numeric: tabular-nums; color: var(--text);
+    }
+    .stamp span { font-size: 11px; line-height: 16px; font-weight: 400; color: var(--secondary); }
 
-    /* state banner */
+    main { flex: 1; padding: 12px 0 48px; }
+
+    /* state banner keeps the grouped surface shape */
     .banner {
-      display: flex; gap: 12px; align-items: flex-start;
-      margin: 16px 20px 0; padding: 13px 14px;
-      border: 1.5px solid var(--green-ink); background: rgba(47, 92, 70, 0.08); color: var(--green-ink);
+      display: flex; align-items: flex-start; gap: 10px;
+      background: var(--surface); border-radius: var(--radius);
+      padding: 12px 14px; color: var(--good);
     }
-    .banner.bad { border-color: var(--red-ink); background: rgba(166, 47, 34, 0.07); color: var(--red-ink); }
-    .banner.unknown { border-color: var(--amber-ink); background: rgba(138, 106, 18, 0.08); color: var(--amber-text); }
-    .banner svg { flex-shrink: 0; margin-top: 1px; }
-    .banner h2 { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
-    .banner p { margin-top: 3px; font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+    .banner.bad { color: var(--danger); }
+    .banner.unknown { color: var(--warning); }
+    .banner__icon { flex-shrink: 0; display: block; line-height: 0; margin-top: 1px; }
+    .banner h2 { font-size: 15px; line-height: 20px; font-weight: 600; color: var(--text); }
+    .banner p { margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--secondary); }
 
-    /* components */
-    .components { margin: 18px 20px 0; border-top: 1.5px solid var(--ink); }
-    .comp { padding: 14px 0 16px; border-bottom: 1px solid var(--rule); }
-    .comp-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 9px; flex-wrap: wrap; }
-    .comp-name { display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 600; }
+    /* grouped component rows, 1px ground gaps */
+    .components {
+      display: flex; flex-direction: column; gap: 1px; margin-top: 12px;
+      background: var(--footer); border-radius: var(--radius);
+    }
+    .comp { background: var(--surface); padding: 12px 14px 10px; }
+    .comp:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+    .comp:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+    .comp:only-child { border-radius: var(--radius); }
+    .comp-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 4px 12px; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    .comp-name {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 15px; line-height: 20px; font-weight: 600;
+    }
     .comp-name svg { flex-shrink: 0; }
-    .comp-state { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
-    .comp-uptime { font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
-    .comp-uptime b { color: var(--ink); font-weight: 700; }
-    .bars { display: flex; gap: 2px; height: 26px; }
-    .bars:focus-visible { outline: 2px solid var(--red-ink); outline-offset: 2px; }
-    .bar { flex: 1; min-width: 1px; background: rgba(30, 42, 56, 0.12); position: relative; }
-    .bar.up { background: var(--cloth); }
-    .bar.degraded { background: var(--amber-ink); }
-    .bar.down { background: var(--red-ink); }
-    .bar.selected { outline: 1.5px solid var(--ink); outline-offset: 1px; z-index: 2; }
+    .comp-state { font-size: 12px; line-height: 16px; font-weight: 500; }
+    .comp-uptime { font-size: 12px; line-height: 16px; color: var(--secondary); font-variant-numeric: tabular-nums; }
+    .comp-uptime b { color: var(--text); font-weight: 600; }
+
+    /* 90-day bars */
+    .bars { display: flex; gap: 1px; height: 26px; }
+    .bars:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .bar { flex: 1; min-width: 1px; background: var(--surface-active); position: relative; }
+    .bar.up { background: var(--good); }
+    .bar.degraded { background: var(--warning); }
+    .bar.down { background: var(--danger); }
+    .bar.selected { outline: 1.5px solid var(--accent); outline-offset: 1px; z-index: 2; }
     .bar:hover::after {
       content: attr(data-tip); position: absolute; bottom: 32px; left: 50%;
-      transform: translateX(-50%); background: var(--paper-3); color: var(--ink);
-      border: 1.5px solid var(--rule-strong); padding: 5px 9px;
-      font-size: 11px; white-space: nowrap; z-index: 10; pointer-events: none;
+      transform: translateX(-50%); background: var(--surface-active); color: var(--text);
+      border-radius: 6px; padding: 5px 9px; font-size: 11px; line-height: 16px;
+      font-variant-numeric: tabular-nums; white-space: nowrap; z-index: 10;
+      pointer-events: none;
     }
+    .bar:first-child:hover::after { left: 0; transform: none; }
+    .bar:last-child:hover::after { left: auto; right: 0; transform: none; }
     .day-detail {
-      margin-top: 7px; min-height: 1.2em; font-size: 12px; line-height: 1.4;
-      color: var(--ink-2); font-variant-numeric: tabular-nums;
+      margin-top: 7px; min-height: 18px; font-size: 12px; line-height: 16px;
+      color: var(--secondary); font-variant-numeric: tabular-nums;
     }
 
-    .footer { text-align: center; font-size: 12px; letter-spacing: 0.02em; color: var(--ink-3); padding: 20px 20px 26px; }
-    .footer a { color: var(--ink-2); text-underline-offset: 2px; }
-    .footer a:hover { color: var(--ink); }
-    .footer a:focus-visible { outline: 2px solid var(--red-ink); outline-offset: 2px; }
-    .loading { text-align: center; color: var(--ink-2); padding: 64px 20px; font-size: 14px; }
+    /* loading and error */
+    .loading {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      padding: 56px 16px; color: var(--secondary); font-size: 13px;
+      line-height: 18px; text-align: center;
+    }
+    .loading.is-error { color: var(--danger); padding: 24px 16px; }
     .spinner {
-      width: 22px; height: 22px; border: 2px solid var(--rule); border-top-color: var(--ink);
-      border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px;
+      width: 22px; height: 22px; border: 2px solid var(--surface-active);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     @media (prefers-reduced-motion: reduce) {
       * { animation: none !important; transition: none !important; }
     }
+
+    .footer {
+      background: var(--footer);
+      padding: 16px 0 calc(20px + env(safe-area-inset-bottom));
+    }
+    .footer p { text-align: center; font-size: 12px; line-height: 16px; color: var(--tertiary); }
+    .footer a { color: var(--accent); }
   </style>
 </head>
 <body>
-  <div class="wrap"><div class="sheet">
-    <header class="reg-band">
+  <header class="band">
+    <div class="band__inner column">
       <div>
-        <h1 class="reg-band__title">NbkristQik</h1>
-        <p class="reg-band__sub">System status</p>
+        <h1>NbkristQik</h1>
+        <p class="band__sub">System status</p>
       </div>
-      <div class="reg-band__stamp"><b id="stamp-val">&mdash;</b><span>systems up</span></div>
-    </header>
+      <div class="stamp"><b id="stamp-val">&mdash;</b><span>systems up</span></div>
+    </div>
+  </header>
 
+  <main class="column">
     <div class="banner" id="banner" style="display:none">
-      <span id="banner-icon" aria-hidden="true"></span>
+      <span class="banner__icon" id="banner-icon" aria-hidden="true"></span>
       <div>
         <h2 id="banner-title">Checking status...</h2>
         <p id="banner-sub">We're not aware of any issues affecting our systems.</p>
       </div>
     </div>
 
-    <div class="components" id="components-wrap" style="display:none">
-      <div id="components"></div>
+    <div id="components-wrap" style="display:none">
+      <div class="components" id="components"></div>
     </div>
-    <div class="loading" id="loading">
-      <div class="spinner"></div>
+    <div class="loading" id="loading" role="status" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
       Loading status...
     </div>
+  </main>
 
-    <p class="footer">Updated live &middot; Last 90 days &middot; checker.tobioffice.dev &middot; <a href="/stats">Usage stats</a></p>
-  </div></div>
+  <footer class="footer">
+    <div class="column">
+      <p>Updated live &middot; Last 90 days &middot; checker.tobioffice.dev &middot; <a href="/stats">Usage stats</a></p>
+    </div>
+  </footer>
 
   <script>
     const IST = "Asia/Kolkata";
@@ -218,7 +264,7 @@
           const div = document.createElement("div");
           div.className = "comp";
 
-          const stateColor = isUp ? "#3f6457" : c.stale ? "#8a6a12" : "#a62f22";
+          const stateColor = isUp ? "#7ed176" : c.stale ? "#ff9953" : "#f88277";
           const statusWord = c.stale ? "No data" : isUp ? "Operational" : "Down";
 
           let barsHtml = "";
@@ -282,7 +328,9 @@
         }
       })
       .catch(() => {
-        document.getElementById("loading").textContent = "Status unavailable right now.";
+        const loading = document.getElementById("loading");
+        loading.classList.add("is-error");
+        loading.textContent = "Status unavailable right now.";
         document.getElementById("banner-title").textContent = "Status unavailable";
         document.getElementById("banner-sub").textContent = "Couldn't reach the status API.";
       });
