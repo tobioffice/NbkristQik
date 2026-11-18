@@ -18,7 +18,7 @@ const { getStudentCached, StudentNotFoundError } =
   await import("../../src/services/redis/utils.js");
 
 const student = {
-  roll_no: "23B91A0512",
+  roll_no: "00TEST0001",
   name: "Test Student",
   section: "A",
   branch: "05",

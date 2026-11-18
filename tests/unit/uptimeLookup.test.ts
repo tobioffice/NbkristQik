@@ -13,7 +13,7 @@ vi.mock("../../src/config/environmentals.js", () => ({
   ENV: "test",
   PORT: "3001",
   ADMIN_ID: 0,
-  CANARY_ROLL: "21B81A05E9",
+  CANARY_ROLL: "00TEST0000",
   CANARY_ENABLED: true,
 }));
 
@@ -125,11 +125,11 @@ describe("lookup canary probe", () => {
     // The module runs with ENV=test in this suite.
     expect(canaryProbeEnabled()).toBe(false);
 
-    expect(canaryProbeEnabled("production", false, "21B81A05E9")).toBe(false);
+    expect(canaryProbeEnabled("production", false, "00TEST0000")).toBe(false);
     expect(canaryProbeEnabled("production", true, "")).toBe(false);
     expect(canaryProbeEnabled("production", true, "   ")).toBe(false);
-    expect(canaryProbeEnabled("test", true, "21B81A05E9")).toBe(false);
-    expect(canaryProbeEnabled("production", true, "21B81A05E9")).toBe(true);
+    expect(canaryProbeEnabled("test", true, "00TEST0000")).toBe(false);
+    expect(canaryProbeEnabled("production", true, "00TEST0000")).toBe(true);
 
     expect(buildComponentProbes(false)).not.toHaveProperty("lookup");
     expect(buildComponentProbes(true)).toHaveProperty("lookup");

@@ -6,7 +6,7 @@ vi.mock("../../src/db/student_stats.model.js", () => ({
   getLeaderboard: vi.fn(async () => ({
     rows: [
       {
-        roll_no: "21B81A05E9",
+        roll_no: "00TEST0000",
         name: "JOHN",
         attendance_percentage: 95.5,
         mid_marks_avg: 18.75,
@@ -42,11 +42,11 @@ vi.mock("../../src/db/student_stats.model.js", () => ({
 
 vi.mock("../../src/db/student.model.js", () => ({
   getTgUserRoll: vi.fn(async (userId: string) =>
-    userId === "12345" ? "21B81A05E9" : null,
+    userId === "12345" ? "00TEST0000" : null,
   ),
   deleteTgUser: vi.fn(async () => undefined),
   getStudent: vi.fn(async () => ({
-    roll_no: "21B81A05E9",
+    roll_no: "00TEST0000",
     name: "JOHN",
     section: "A",
     branch: "5",
@@ -126,7 +126,7 @@ describe("API contracts", () => {
       scope: null,
       coverage: { ranked: 1, known: 100 },
     });
-    expect(res.body.data[0]).toMatchObject({ roll_no: "21B81A05E9", rank: 1 });
+    expect(res.body.data[0]).toMatchObject({ roll_no: "00TEST0000", rank: 1 });
     expect(res.headers["vary"]).toContain("X-Telegram-Init-Data");
     expect(res.headers["cache-control"]).toBe("public, max-age=30");
   });
@@ -252,7 +252,7 @@ describe("API contracts", () => {
     const res = await request(app).get("/api/me?userId=12345");
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ found: false, lastLookup: "21B81A05E9" });
+    expect(res.body).toEqual({ found: false, lastLookup: "00TEST0000" });
     // identity is registration; never run rank queries for a lookup-only user
     expect(vi.mocked(getStudentRank)).not.toHaveBeenCalled();
   });
@@ -270,7 +270,7 @@ describe("API contracts", () => {
       .set("X-Telegram-Init-Data", signInitData(12345));
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ found: false, lastLookup: "21B81A05E9" });
+    expect(res.body).toEqual({ found: false, lastLookup: "00TEST0000" });
   });
 
   it("GET /api/me rejects presented-but-invalid initData", async () => {

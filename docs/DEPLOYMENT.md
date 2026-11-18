@@ -215,6 +215,26 @@ Add required reviewers to the `production` environment if a push to `main`
 should not deploy unattended. The private key exists on the runner only for the
 life of the job and disappears with it.
 
+### Logs and privacy
+
+The repository is public, so the GitHub Actions logs are public. Debug logging
+is disabled whenever `CI` or Vitest is set, and the test fixtures use synthetic
+roll numbers; never put a real student identifier, portal response body, token
+or secret in a test, a log line or a command line. `logger.info`, `warn` and
+`error` remain available for debugging, but keep their messages free of student
+data. GitHub masks repository secrets, and `deploy.sh` pipes the database URL
+and internal secret over stdin so they do not appear in the remote process list
+or the log.
+
+Production application logs stay on the server in systemd-journald, which
+rotates by size and age. Read them with `journalctl -u nbkristqik` and keep
+queries keyword- or count-based; do not dump URLs because portal sessions carry
+tokens. If the host's journal is not already capped, set `SystemMaxUse=500M`
+and `MaxRetentionSec=30day` in `/etc/systemd/journald.conf` and restart
+`systemd-journald`; that bounds the server log without a second application log
+file. The Actions log is a few hundred KB per run and GitHub retains it for
+90 days, so it does not need a separate file.
+
 ### Usage stats and history
 
 `GET /stats` is the public usage page; `GET /api/stats` is the aggregate-only

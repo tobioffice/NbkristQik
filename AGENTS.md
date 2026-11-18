@@ -20,5 +20,6 @@ Escape `&<>` in user text sent as Telegram HTML — unescaped names break sendin
 - Don't commit, push, or deploy without being asked.
 - The uptime monitor host is not spare. Never repurpose it for app work.
 - Journal queries keyword/count-only — logs contain token-bearing URLs.
+- CI logs are public. Never print student identifiers, portal response bodies, tokens or secrets in tests or scripts; use synthetic fixtures. Debug logs are off in CI and tests.
 - Tests: `pnpm exec vitest run` (bare `pnpm test` watches). Typecheck + lint before any deploy.
 - DB is embedded SQLite via `LOCAL_DB_URL` (unset = Turso). Turso reads blocked ~Nov 2026; merge tool ready: `scripts/import-turso-snapshot.mjs`.

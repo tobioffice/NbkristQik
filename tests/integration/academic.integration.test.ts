@@ -14,7 +14,7 @@ vi.mock("../../src/services/redis/getRedisClient.js", () => ({
 }));
 vi.mock("../../src/services/redis/utils.js", () => ({
   getStudentCached: vi.fn().mockResolvedValue({
-    roll_no: "21B81A05E9",
+    roll_no: "00TEST0000",
     name: "Test Student",
     section: "A",
     branch: "5",
@@ -34,7 +34,7 @@ vi.mock("../../src/services/redis/storeAttOrMidToRedis.js", () => ({
 }));
 
 describe("Academic Integration Tests", () => {
-  const rollNumber = "21B81A05E9";
+  const rollNumber = "00TEST0000";
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -49,7 +49,7 @@ describe("Academic Integration Tests", () => {
 
       const message = await academicTG.getAttendanceMessage();
 
-      expect(message).toContain("21B81A05E9");
+      expect(message).toContain("00TEST0000");
       expect(message).toContain("3 CSE A");
       expect(message).toBeTruthy();
     });
@@ -60,7 +60,7 @@ describe("Academic Integration Tests", () => {
 
       const message = await academicTG.getMidmarksMessage();
 
-      expect(message).toContain("21B81A05E9");
+      expect(message).toContain("00TEST0000");
       expect(message).toContain("Mid marks for");
       expect(message).toBeTruthy();
     });
@@ -94,15 +94,15 @@ describe("Academic Integration Tests", () => {
 
   describe("Academic Class", () => {
     it("should create Academic instance with normalized roll number", () => {
-      const academic = new Academic("21b81a05e9");
+      const academic = new Academic("00TEST0000");
 
-      expect(academic.rollnumber).toBe("21B81A05E9");
+      expect(academic.rollnumber).toBe("00TEST0000");
     });
 
     it("should trim whitespace from roll number", () => {
-      const academic = new Academic("  21B81A05E9  ");
+      const academic = new Academic("  00TEST0000  ");
 
-      expect(academic.rollnumber).toBe("21B81A05E9");
+      expect(academic.rollnumber).toBe("00TEST0000");
     });
   });
 });

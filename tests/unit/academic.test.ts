@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // These mocks need to be defined without referencing any imports
 vi.mock("../../src/services/redis/utils.js", () => ({
   getStudentCached: vi.fn().mockResolvedValue({
-    roll_no: "21B81A05E9",
+    roll_no: "00TEST0000",
     name: "Test Student",
     section: "A",
     branch: "5",
@@ -82,7 +82,7 @@ import axios from "axios";
 
 describe("Academic Module", () => {
   let academic: Academic;
-  const rollNumber = "21B81A05E9";
+  const rollNumber = "00TEST0000";
 
   beforeEach(async () => {
     academic = new Academic(rollNumber);
@@ -95,13 +95,13 @@ describe("Academic Module", () => {
 
   describe("Constructor", () => {
     it("should normalize roll number to uppercase", () => {
-      const lowercaseAcademic = new Academic("21b81a05e9");
-      expect(lowercaseAcademic.rollnumber).toBe("21B81A05E9");
+      const lowercaseAcademic = new Academic("00TEST0000");
+      expect(lowercaseAcademic.rollnumber).toBe("00TEST0000");
     });
 
     it("should trim whitespace from roll number", () => {
-      const spacedAcademic = new Academic("  21B81A05E9  ");
-      expect(spacedAcademic.rollnumber).toBe("21B81A05E9");
+      const spacedAcademic = new Academic("  00TEST0000  ");
+      expect(spacedAcademic.rollnumber).toBe("00TEST0000");
     });
   });
 
@@ -165,7 +165,7 @@ describe("Academic Module", () => {
       });
 
       const response = await academic.getResponse("att");
-      expect(response).toContain("21B81A05E9");
+      expect(response).toContain("00TEST0000");
       expect(axios.post).toHaveBeenCalled();
     });
 
@@ -190,7 +190,7 @@ describe("Academic Module", () => {
       });
 
       const response = await academic.getResponse("mid");
-      expect(response).toContain("21B81A05E9");
+      expect(response).toContain("00TEST0000");
       expect(axios.post).toHaveBeenCalled();
     });
 
@@ -217,7 +217,7 @@ describe("Academic Module", () => {
         });
 
       const response = await academic.getResponse("att");
-      expect(response).toContain("21B81A05E9");
+      expect(response).toContain("00TEST0000");
       expect(axios.post).toHaveBeenCalledTimes(3); // Login page + session renewal + data request
     });
 
@@ -265,7 +265,7 @@ describe("Academic Module", () => {
         rollNumber,
       );
 
-      expect(result.rollno).toBe("21B81A05E9");
+      expect(result.rollno).toBe("00TEST0000");
       expect(result.percentage).toBe(85.5);
       expect(result.totalClasses.attended).toBe(450);
       expect(result.totalClasses.conducted).toBe(526);
@@ -300,7 +300,7 @@ describe("Academic Module", () => {
         rollNumber,
       );
 
-      expect(result.rollno).toBe("21B81A05E9");
+      expect(result.rollno).toBe("00TEST0000");
       expect(result.year_branch_section).toBe("3_CSE_A");
       expect(result.subjects).toHaveLength(3);
       expect(result.subjects[0]).toMatchObject({
@@ -347,7 +347,7 @@ describe("Academic Module", () => {
       const result = await academic.getAttendanceJSON();
 
       expect(result).toEqual(mockAttendance);
-      expect(mockClient.get).toHaveBeenCalledWith("attendance:21B81A05E9");
+      expect(mockClient.get).toHaveBeenCalledWith("attendance:00TEST0000");
       expect(academic.getDataNotice()).toContain("Cached ≤1h");
     });
 
@@ -359,7 +359,7 @@ describe("Academic Module", () => {
       const result = await academic.getAttendanceJSON();
 
       expect(result).toBeDefined();
-      expect(result.rollno).toBe("21B81A05E9");
+      expect(result.rollno).toBe("00TEST0000");
       // the raw response is cached only after the roll check and a parse
       await vi.waitFor(() => expect(storeResponse).toHaveBeenCalledTimes(1));
     });
@@ -377,7 +377,7 @@ describe("Academic Module", () => {
 
     it("does not cache a response that is missing the roll", async () => {
       vi.mocked(axios.post).mockResolvedValue({
-        data: mockAttendanceHTML.split(rollNumber).join("21B81A05E8"),
+        data: mockAttendanceHTML.split(rollNumber).join("00TEST0008"),
       });
 
       await expect(academic.getAttendanceJSON()).rejects.toThrow(
@@ -399,7 +399,7 @@ describe("Academic Module", () => {
 
       const result = await academic.getAttendanceJSON();
 
-      expect(result.rollno).toBe("21B81A05E9");
+      expect(result.rollno).toBe("00TEST0000");
       expect(academic.getDataNotice()).toContain("4h old");
       expect(academic.getDataNotice()).toContain("Offline copy");
       // a fallback must not refresh its own timestamp
@@ -417,7 +417,7 @@ describe("Academic Module", () => {
       const result = await academic.getMidmarksJSON();
 
       expect(result).toEqual(mockMidmarks);
-      expect(mockClient.get).toHaveBeenCalledWith("midmarks:21B81A05E9");
+      expect(mockClient.get).toHaveBeenCalledWith("midmarks:00TEST0000");
       // mid-mark cache TTL is two hours, not one
       expect(academic.getDataNotice()).toContain("Cached ≤2h");
     });
@@ -430,7 +430,7 @@ describe("Academic Module", () => {
       const result = await academic.getMidmarksJSON();
 
       expect(result).toBeDefined();
-      expect(result.rollno).toBe("21B81A05E9");
+      expect(result.rollno).toBe("00TEST0000");
     });
   });
 

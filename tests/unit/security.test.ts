@@ -23,7 +23,7 @@ describe("Security Middleware", () => {
     it("should reject invalid roll number formats", () => {
       expect(isValidRollNumber("123456789")).toBe(false);
       expect(isValidRollNumber("21B81A05")).toBe(false); // too short
-      expect(isValidRollNumber("21B81A05E90")).toBe(false); // too long
+      expect(isValidRollNumber("00TEST00000")).toBe(false); // too long
       expect(isValidRollNumber("ABC123")).toBe(false); // wrong format
       expect(isValidRollNumber("")).toBe(false);
     });

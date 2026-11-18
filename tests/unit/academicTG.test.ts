@@ -4,7 +4,7 @@ import { mockAttendance, mockMidmarks } from "../mocks/academic.mock.js";
 
 describe("AcademicTG Module", () => {
   let academicTG: AcademicTG;
-  const rollNumber = "21B81A05E9";
+  const rollNumber = "00TEST0000";
 
   beforeEach(() => {
     academicTG = new AcademicTG(rollNumber);
@@ -19,7 +19,7 @@ describe("AcademicTG Module", () => {
 
       const message = await academicTG.getAttendanceMessage();
 
-      expect(message).toContain("21B81A05E9");
+      expect(message).toContain("00TEST0000");
       expect(message).toContain("3 CSE A");
       // The percentage is formatted as 85.50% not 85.5%
       expect(message).toContain("85.50%");
@@ -79,7 +79,7 @@ describe("AcademicTG Module", () => {
       const message = await academicTG.getMidmarksMessage();
 
       expect(message).toContain("Mid marks for");
-      expect(message).toContain("21B81A05E9");
+      expect(message).toContain("00TEST0000");
       expect(message).toContain("3 CSE A");
       expect(message).toContain("<pre>");
       expect(message).toContain("</pre>");

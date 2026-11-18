@@ -1,5 +1,5 @@
 export const mockStudent = {
-  roll_no: "21B81A05E9",
+  roll_no: "00TEST0000",
   name: "Test Student",
   section: "A",
   branch: "05",
@@ -7,7 +7,7 @@ export const mockStudent = {
 };
 
 export const mockAttendance = {
-  rollno: "21B81A05E9",
+  rollno: "00TEST0000",
   year_branch_section: "3_CSE_A",
   percentage: 85.5,
   totalClasses: {
@@ -31,7 +31,7 @@ export const mockAttendance = {
 };
 
 export const mockMidmarks = {
-  rollno: "21B81A05E9",
+  rollno: "00TEST0000",
   year_branch_section: "3_CSE_A",
   subjects: [
     {
@@ -81,8 +81,8 @@ export const mockAttendanceHTML = `
     <td>50</td>
     <td>45</td>
   </tr>
-  <tr id="21B81A05E9">
-    <td>21B81A05E9</td>
+  <tr id="00TEST0000">
+    <td>00TEST0000</td>
     <td>Test Student</td>
     <td>45</td>
     <td>40</td>
@@ -105,8 +105,8 @@ export const mockMidmarksHTML = `
     <td><a>Operating Systems</a></td>
     <td>DS Lab</td>
   </tr>
-  <tr id="21B81A05E9">
-    <td>21B81A05E9</td>
+  <tr id="00TEST0000">
+    <td>00TEST0000</td>
     <td>Test Student</td>
     <td>23/25(24)</td>
     <td>22/24(23)</td>

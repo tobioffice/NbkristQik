@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../src/services/redis/utils.js", () => ({
   getStudentCached: vi.fn().mockResolvedValue({
-    roll_no: "21B81A05E9",
+    roll_no: "00TEST0000",
     name: "Canary Student",
     section: "A",
     branch: "5",
@@ -73,7 +73,7 @@ describe("Academic.getFreshResponse", () => {
 
   it("returns the live portal response without reading the fallback", async () => {
     vi.mocked(axios.post).mockResolvedValue({ data: mockAttendanceHTML });
-    const academic = new Academic("21B81A05E9");
+    const academic = new Academic("00TEST0000");
 
     await expect(academic.getFreshResponse("att")).resolves.toBe(
       mockAttendanceHTML,
@@ -84,7 +84,7 @@ describe("Academic.getFreshResponse", () => {
 
   it("throws on a portal failure while getResponse masks it with the saved copy", async () => {
     vi.mocked(axios.post).mockRejectedValue(new Error("portal down"));
-    const academic = new Academic("21B81A05E9");
+    const academic = new Academic("00TEST0000");
 
     await expect(academic.getFreshResponse("att")).rejects.toThrow(
       "portal down",

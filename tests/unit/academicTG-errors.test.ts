@@ -9,7 +9,7 @@ describe("AcademicTG - Error Handling", () => {
 
   beforeEach(() => {
     // AcademicTG constructor only takes rollnumber (1 argument)
-    academicTG = new AcademicTG("21B81A05E9");
+    academicTG = new AcademicTG("00TEST0000");
     vi.clearAllMocks();
   });
 
@@ -86,7 +86,7 @@ describe("AcademicTG - Error Handling", () => {
   describe("Successful Response Formatting", () => {
     it("should format attendance message correctly", async () => {
       const mockAttendance: Attendance = {
-        rollno: "21B81A05E9",
+        rollno: "00TEST0000",
         year_branch_section: "3 CSE A",
         percentage: 85.5,
         totalClasses: { attended: 85, conducted: 100 },
@@ -106,14 +106,14 @@ describe("AcademicTG - Error Handling", () => {
 
       const result = await academicTG.getAttendanceMessage();
 
-      expect(result).toContain("21B81A05E9");
+      expect(result).toContain("00TEST0000");
       expect(result).toContain("3 CSE A");
       expect(result).toContain("85.50%");
     });
 
     it("should format midmarks message correctly", async () => {
       const mockMidmarks: Midmarks = {
-        rollno: "21B81A05E9",
+        rollno: "00TEST0000",
         year_branch_section: "3 CSE A",
         subjects: [
           {
@@ -131,7 +131,7 @@ describe("AcademicTG - Error Handling", () => {
       const result = await academicTG.getMidmarksMessage();
 
       expect(result).toContain("Mid marks for");
-      expect(result).toContain("21B81A05E9");
+      expect(result).toContain("00TEST0000");
       expect(result).toContain("3 CSE A");
     });
   });
