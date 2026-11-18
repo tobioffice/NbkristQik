@@ -1,0 +1,126 @@
+name: Deploy
+
+# Production deploy. Every deployment credential comes from GitHub secrets;
+# nothing is read from a checked-in file or a file that happens to exist on the
+# runner. The job refuses a checkout that contains an ops env file.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# The deploy script must run from a git checkout, needs ssh/rsync, and is run by
+# the same user the local script uses. It is not safe to run two at once: a
+# second release could swap dist/ while the first is still rolling back.
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+
+    env:
+      # The ssh config written below maps this alias to the real host. deploy.sh
+      # and rsync then use it without the host, user or port on a command line.
+      DEPLOY_HOST: nbkristqik-deploy
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Deploy from main only
+        if: github.ref_name != 'main'
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          echo "::error::Production deploys run only from main (got '$REF_NAME')."
+          exit 1
+
+      - name: Refuse a committed operations env file
+        run: |
+          if git ls-files --error-unmatch .env.deploy >/dev/null 2>&1 || [ -e .env.deploy ]; then
+            echo "::error::.env.deploy must never be committed or present in CI; deploy values live in GitHub secrets."
+            exit 1
+          fi
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure SSH
+        env:
+          # Prefer the DEPLOY_* names; fall back to the repository secrets left
+          # by the retired deploy workflow so the existing key keeps working.
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY || secrets.SERVER_SSH_KEY }}
+          DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST || secrets.SERVER_HOST }}
+          DEPLOY_SSH_USER: ${{ secrets.DEPLOY_SSH_USER || secrets.SERVER_USER }}
+          DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_SSH_KEY:?DEPLOY_SSH_KEY is not set}"
+          : "${DEPLOY_SSH_HOST:?DEPLOY_SSH_HOST is not set}"
+          : "${DEPLOY_SSH_USER:?DEPLOY_SSH_USER is not set}"
+          port="${DEPLOY_SSH_PORT:-22}"
+
+          install -d -m 700 "$HOME/.ssh"
+          umask 077
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/deploy_key"
+
+          if [ -n "${DEPLOY_KNOWN_HOSTS:-}" ]; then
+            printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          else
+            # Trust on first use for this ephemeral runner only. Set
+            # DEPLOY_KNOWN_HOSTS to pin the host key instead.
+            ssh-keyscan -p "$port" -H "$DEPLOY_SSH_HOST" > "$HOME/.ssh/known_hosts" 2>/dev/null
+            if [ ! -s "$HOME/.ssh/known_hosts" ]; then
+              echo "::error::ssh-keyscan returned no host key; set the DEPLOY_KNOWN_HOSTS secret."
+              exit 1
+            fi
+          fi
+
+          {
+            echo "Host nbkristqik-deploy"
+            echo "  HostName $DEPLOY_SSH_HOST"
+            echo "  User $DEPLOY_SSH_USER"
+            echo "  Port $port"
+            echo "  IdentityFile $HOME/.ssh/deploy_key"
+            echo "  IdentitiesOnly yes"
+            echo "  StrictHostKeyChecking yes"
+            echo "  UserKnownHostsFile $HOME/.ssh/known_hosts"
+            echo "  BatchMode yes"
+            echo "  ConnectTimeout 20"
+          } > "$HOME/.ssh/config"
+
+          chmod 600 "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts" "$HOME/.ssh/config"
+
+      - name: Deploy
+        env:
+          DEPLOY_DIR: ${{ secrets.DEPLOY_DIR }}
+          DEPLOY_SERVICE: ${{ secrets.DEPLOY_SERVICE }}
+          DEPLOY_BASE_URL: ${{ secrets.DEPLOY_BASE_URL }}
+          DEPLOY_DB_URL: ${{ secrets.DEPLOY_DB_URL }}
+          DEPLOY_DB_BACKUP_DIR: ${{ secrets.DEPLOY_DB_BACKUP_DIR }}
+          DEPLOY_INTERNAL_SECRET: ${{ secrets.DEPLOY_INTERNAL_SECRET }}
+        run: |
+          if [ -z "${DEPLOY_DB_URL:-}" ]; then
+            echo "::warning::DEPLOY_DB_URL is not set; the pre-restart database backup will be skipped."
+          fi
+          scripts/deploy.sh
