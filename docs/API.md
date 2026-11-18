@@ -3,11 +3,11 @@
 The API is served by the Express app in `src/api/server.ts`, started in-process
 by the bot entry point. It binds `HOST` (default `127.0.0.1`) on `PORT`
 (default `3000`); production is reached through nginx at
-`https://checker.tobioffice.dev`. The app trusts one proxy hop (`trust proxy`
+`https://checker.tobioffice.online`. The app trusts one proxy hop (`trust proxy`
 = 1) so `req.ip` and the rate limits see the real client address.
 
 CORS allows the origins in `CORS_ORIGINS` (comma-separated, default
-`https://checker.tobioffice.dev`). The shipped app and status page are
+`https://checker.tobioffice.online`). The shipped app and status page are
 same-origin, so they need no CORS entry; add another origin only for a
 separate frontend. Public routes pass through a security middleware stack:
 suspicious-request logging, body sanitization, and an IP rate limit of 600

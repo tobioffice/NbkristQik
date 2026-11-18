@@ -9,7 +9,7 @@
 A Telegram bot and companion web app for students of NBKRIST. Send a roll
 number, get an answer in seconds. No install, no separate account.
 
-[Bot](https://t.me/NbkristQik_bot) · [App](https://checker.tobioffice.dev/library/) · [Status](https://checker.tobioffice.dev/status) · [Website](https://tobioffice.github.io/NbkristQik/site/)
+[Bot](https://t.me/NbkristQik_bot) · [App](https://checker.tobioffice.online/library/) · [Status](https://checker.tobioffice.online/status) · [Website](https://tobioffice.github.io/NbkristQik/site/)
 
 [![Tests](https://github.com/tobioffice/NbkristQik/actions/workflows/test.yml/badge.svg)](https://github.com/tobioffice/NbkristQik/actions/workflows/test.yml)
 [![Node.js](https://img.shields.io/badge/Node.js-22%2F24-1e2a38)](https://nodejs.org)
@@ -41,8 +41,8 @@ day so far; the 1,131 above is the completed 17 November day.
 Only aggregates are published; no usernames, user IDs or per-student rows leave
 the database.
 
-Live: [checker.tobioffice.dev/stats](https://checker.tobioffice.dev/stats) ·
-JSON: [/api/stats](https://checker.tobioffice.dev/api/stats) ·
+Live: [checker.tobioffice.online/stats](https://checker.tobioffice.online/stats) ·
+JSON: [/api/stats](https://checker.tobioffice.online/api/stats) ·
 Method: [publicStats.ts](src/api/publicStats.ts) and
 [activityStats.model.ts](src/db/activityStats.model.ts) ·
 History: [stats/history.csv](stats/history.csv)
@@ -80,7 +80,7 @@ Telegram reply, formatted for a phone held in a corridor between classes.
 
 3,534 users have used it, 1,131 checked in on 17 November (about a third of
 tracked users), and the API stayed up 99.6% over 90 days. The
-[live numbers](https://checker.tobioffice.dev/stats) are public.
+[live numbers](https://checker.tobioffice.online/stats) are public.
 
 The same service also runs a Telegram Mini App with the live leaderboard, an
 optional roll-number profile, a watermarked library of semester material and a
@@ -278,8 +278,8 @@ public command menu.
 
 | Surface        | Location                                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Mini App       | [`/library/`](https://checker.tobioffice.dev/library/) — hash routes `#/` (my attendance), `#/rank`, `#/profile`, `#/library`, `#/issues` (reports), `#/issues/new` (the report form) |
-| Status page    | [`/status`](https://checker.tobioffice.dev/status) — Express-served, live health and 90-day bars per component     |
+| Mini App       | [`/library/`](https://checker.tobioffice.online/library/) — hash routes `#/` (my attendance), `#/rank`, `#/profile`, `#/library`, `#/issues` (reports), `#/issues/new` (the report form) |
+| Status page    | [`/status`](https://checker.tobioffice.online/status) — Express-served, live health and 90-day bars per component     |
 | Admin panel    | `/<ADMIN_PANEL_PATH>` — Overview, Students, Live, Health, Reports                                                   |
 | Marketing site | [NbkristQik site](https://tobioffice.github.io/NbkristQik/site/)                                                    |
 

@@ -18,7 +18,7 @@ describe("environment defaults", () => {
   });
 
   it("defaults the CORS allowlist to the same-origin checker host", () => {
-    expect(CORS_ORIGINS).toEqual(["https://checker.tobioffice.dev"]);
+    expect(CORS_ORIGINS).toEqual(["https://checker.tobioffice.online"]);
   });
 
   it("keeps the monitor ingest secret", () => {

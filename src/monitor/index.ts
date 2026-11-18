@@ -22,7 +22,7 @@ import {
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-const DEFAULT_BASE_URL = "https://checker.tobioffice.dev";
+const DEFAULT_BASE_URL = "https://checker.tobioffice.online";
 const DEFAULT_PORTAL_URL = "http://103.203.175.91";
 const MIN_SECRET_LENGTH = 32;
 const TELEGRAM_TOKEN = /^\d+:[A-Za-z0-9_-]+$/;

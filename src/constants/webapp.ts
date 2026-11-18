@@ -20,7 +20,7 @@
 
 import { BOT_USERNAME } from "./bot.js";
 
-const APP_BASE = "https://checker.tobioffice.dev/library/";
+const APP_BASE = "https://checker.tobioffice.online/library/";
 
 /** The app's index page. */
 export const APP_WEBAPP_URL = APP_BASE;

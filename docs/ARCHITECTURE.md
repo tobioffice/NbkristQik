@@ -62,7 +62,7 @@ Monitor (monitor-host) ──> /health, /internal/health, portal
   API is not meant to be reachable directly. One trusted proxy hop
   (`trust proxy` = 1) gives Express the real client IP.
 - **CORS:** `CORS_ORIGINS` is a comma-separated allowlist, default
-  `https://checker.tobioffice.dev`. The app and status page are same-origin and
+  `https://checker.tobioffice.online`. The app and status page are same-origin and
   need no entry.
 - **Static first:** `/library` is mounted before the API security middleware
   from `LIBRARY_WEB_DIR` (default `public/library`). HTML is `no-cache`;
@@ -171,7 +171,7 @@ historical rows cannot duplicate leaderboard rows.
 
 - **Production host** runs the `nbkristqik` systemd service: bot, Express on
   `127.0.0.1:3000`, admin panel and status data. nginx terminates TLS for
-  `checker.tobioffice.dev`, serves nothing itself beyond the proxy, and can
+  `checker.tobioffice.online`, serves nothing itself beyond the proxy, and can
   restrict `/internal/` to the monitor host.
 - **Static surfaces:** `src/status` → `public/status`, and the
   `src/web/dist-library` bundle → `public/library`; both are synced by

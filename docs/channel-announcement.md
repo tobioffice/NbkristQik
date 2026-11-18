@@ -9,7 +9,7 @@ Check attendance, tap "Bunk Plan" and it tells you exactly how many classes you 
 Open the leaderboard from the bot and your row shows up highlighted with your rank. No more scrolling through thousands of names.
 
 **📡 Live Status Page**
-New page showing bot uptime with 90-day history: checker.tobioffice.dev/status
+New page showing bot uptime with 90-day history: checker.tobioffice.online/status
 
 **🛠️ Smarter errors**
 Typos in roll numbers now get corrected - the bot suggests similar roll numbers instead of just failing. And if the college server acts up, the bot retries before giving up.

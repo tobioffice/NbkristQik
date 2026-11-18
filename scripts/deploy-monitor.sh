@@ -102,7 +102,7 @@ preflight_url="$(sudo awk -F= '$1 == "MONITOR_PREFLIGHT_URL" { sub(/^[^=]*=/, ""
 if [ -z "$preflight_url" ]; then
   base_url="$(sudo awk -F= '$1 == "MONITOR_BASE_URL" { sub(/^[^=]*=/, ""); print; exit }' "$ENV_FILE")"
   base_url="${base_url%/}"
-  preflight_url="${base_url:-https://checker.tobioffice.dev}/internal/health"
+  preflight_url="${base_url:-https://checker.tobioffice.online}/internal/health"
 fi
 preflight_secret="$(sudo awk -F= '$1 == "UPTIME_INGEST_SECRET" { sub(/^[^=]*=/, ""); print; exit }' "$ENV_FILE")"
 if ! command -v curl >/dev/null 2>&1; then

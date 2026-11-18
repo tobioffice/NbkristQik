@@ -323,7 +323,7 @@ should use the header: a URL can end up in nginx logs, browser history and
 is never treated as anonymous.
 
 API CORS is an allowlist from `CORS_ORIGINS` (comma-separated, default
-`https://checker.tobioffice.dev`). The Vite dev server proxies `/api` to the
+`https://checker.tobioffice.online`). The Vite dev server proxies `/api` to the
 local backend, so local development needs no extra origin. If you serve a
 separate frontend origin, add it to `CORS_ORIGINS` and restart the API.
 

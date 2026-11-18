@@ -3,7 +3,7 @@
 A separate, hand-written static marketing site for NbkristQik. It lives in
 `src/web/public/site/` and is published under `/site/` on GitHub Pages. It is
 not part of the app: the shipped application is served by Express at
-<https://checker.tobioffice.dev/library/>.
+<https://checker.tobioffice.online/library/>.
 
 - Live: <https://tobioffice.github.io/NbkristQik/site/>
 - Blog: <https://tobioffice.github.io/NbkristQik/site/blog/>
@@ -100,7 +100,7 @@ The site has no test suite. Check it by hand:
 
 The landing carries a proof strip under the hero: 3,534 users, 1,131 daily
 actives on 17 November 2026, and 99.6% uptime over 90 days. It links once to
-<https://checker.tobioffice.dev/stats>, which serves the live numbers and the
+<https://checker.tobioffice.online/stats>, which serves the live numbers and the
 JSON at `/api/stats`. The figures come from that page and are a dated snapshot,
 not live values. Update them only from a dated snapshot; never estimate, round
 up, or mix snapshot and live counts.

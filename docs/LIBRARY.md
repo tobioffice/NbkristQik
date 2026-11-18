@@ -163,7 +163,7 @@ restart. The flag is read per request, so the gate and the bot menus agree
 without a rebuild.
 
 **Cost.** The app is one shipped SPA at
-`https://checker.tobioffice.dev/library/`, served by Express as static files.
+`https://checker.tobioffice.online/library/`, served by Express as static files.
 The leaderboard, register and report surfaces are sections of it, not separate
 apps. The old GitHub Pages app entry points are retired; the marketing site
 remains a separate static surface under `src/web/public/site/`.
@@ -664,7 +664,7 @@ case.
 ## 11. Running it
 
 - **Server**: the production host, Express on 3000 behind nginx at
-  `checker.tobioffice.dev`. The library SPA is served by Express from
+  `checker.tobioffice.online`. The library SPA is served by Express from
   `$DIR/public/library`; nginx needs no change, the existing `location /`
   already proxies to Express. The SPA is a separate Vite build
   (`src/web/vite.library.config.ts` → `dist-library/`) because it is the only
@@ -735,5 +735,5 @@ one where a student sees a page.
    resolving the token server-side points at one account without printing
    identity data on the page.
 6. **Hosting (resolved).** The app is served from
-   `checker.tobioffice.dev/library/` on the API host, off GitHub Pages, so its
+   `checker.tobioffice.online/library/` on the API host, off GitHub Pages, so its
    session cookie is first-party.

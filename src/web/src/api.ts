@@ -5,7 +5,7 @@ import { telegramWebApp } from "./telegram";
 // proxy forwards /api to the local backend; prod builds need the real origin.
 export const API_BASE =
   import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? "" : "https://checker.tobioffice.dev");
+  (import.meta.env.DEV ? "" : "https://checker.tobioffice.online");
 
 /** Who is calling: signed Telegram initData, with a dev userId fallback. */
 export interface ApiIdentity {

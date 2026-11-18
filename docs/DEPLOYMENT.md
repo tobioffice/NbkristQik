@@ -12,7 +12,7 @@
 | `ADMIN_ID` | command handlers | Telegram id for admin commands and report forwarding |
 | `PROD_CHANNEL` / `TEST_CHANNEL` | config | Channel selected by `ENV` |
 | `ADMIN_PANEL_PATH` / `ADMIN_PANEL_PASSWORD` | admin panel | Panel disabled unless both are set; production also refuses a password shorter than 16 characters |
-| `CORS_ORIGINS` | API | Comma-separated allowlist; default `https://checker.tobioffice.dev` |
+| `CORS_ORIGINS` | API | Comma-separated allowlist; default `https://checker.tobioffice.online` |
 | `PORTAL_BASE_URL` | constants | Optional; default `http://103.203.175.91` |
 | `HOST` / `PORT` | API | Bind address and port; defaults `127.0.0.1:3000` |
 | `STATUS_PAGE_PATH` | `src/api/server.ts` | Optional override for the `/status` file; defaults to `public/status/index.html` |
@@ -58,7 +58,7 @@ bot chat and the student has to tap the menu button.
 
 1. Open [@BotFather](https://t.me/BotFather) → `/mybots` → the bot →
    **Bot Settings** → **Configure Mini App** → **Enable Mini App**.
-2. Set the URL to `https://checker.tobioffice.dev/library/`.
+2. Set the URL to `https://checker.tobioffice.online/library/`.
 3. Optionally set a short name (`app`), which makes
    `https://t.me/NbkristQik_bot/app?startapp=rank` the explicit form.
 4. Upload screenshots and a short demo video from the bot's profile page.
@@ -454,7 +454,7 @@ Put these in `/etc/nbkristqik-uptime.env` (root:root 0600):
 UPTIME_INGEST_SECRET=<same 64-hex value as the production host>
 MONITOR_TELEGRAM_BOT_TOKEN=<dedicated alert bot token>
 ADMIN_ID=<telegram id>
-MONITOR_BASE_URL=https://checker.tobioffice.dev
+MONITOR_BASE_URL=https://checker.tobioffice.online
 MONITOR_STATE_DIR=/var/lib/nbkristqik-uptime
 ```
 
@@ -491,7 +491,7 @@ were stored.
 - `/internal/*` is protected by a constant-time bearer check, a rate limit and
   an nginx `allow` rule for monitor-host's address. Disabling the secret removes the
   routes entirely. Add this block to the
-  `checker.tobioffice.dev` server before `location /`:
+  `checker.tobioffice.online` server before `location /`:
 
   ```nginx
   location /internal/ {

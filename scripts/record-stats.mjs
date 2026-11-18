@@ -20,7 +20,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const HEADER = "date,registered_users,dau,wau,mau,commands_7d";
-const DEFAULT_URL = "https://checker.tobioffice.dev/api/stats";
+const DEFAULT_URL = "https://checker.tobioffice.online/api/stats";
 const DEFAULT_FILE = "stats/history.csv";
 
 const die = (message) => {

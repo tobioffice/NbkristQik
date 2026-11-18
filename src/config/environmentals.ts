@@ -76,10 +76,10 @@ const LIBRARY_WATERMARK_SECRET =
   process.env.LIBRARY_WATERMARK_SECRET?.trim() || TELEGRAM_BOT_TOKEN || "";
 
 // Comma-separated allowlist for the web app origin(s). The app is served
-// same-origin from checker.tobioffice.dev, so that is the default; deployments
+// same-origin from checker.tobioffice.online, so that is the default; deployments
 // can still override this.
 const CORS_ORIGINS = (
-  process.env.CORS_ORIGINS || "https://checker.tobioffice.dev"
+  process.env.CORS_ORIGINS || "https://checker.tobioffice.online"
 )
   .split(",")
   .map((origin) => origin.trim())
