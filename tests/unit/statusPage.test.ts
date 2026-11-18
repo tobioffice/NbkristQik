@@ -45,6 +45,9 @@ describe("status page", () => {
     }
     expect(html).toContain("--radius: 8px");
     expect(html).toContain("max-width: 720px");
+    expect(html).toContain("viewport-fit=cover");
+    expect(html).toContain("env(safe-area-inset-top)");
+    expect(html).toContain("env(safe-area-inset-bottom)");
     expect(html).toContain("gap: 1px");
     expect(html).not.toContain("box-shadow");
     expect(html).not.toContain("text-transform: uppercase");

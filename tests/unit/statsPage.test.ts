@@ -52,6 +52,9 @@ describe("stats page", () => {
     }
     expect(html).toContain("--radius: 8px");
     expect(html).toContain("max-width: 720px");
+    expect(html).toContain("viewport-fit=cover");
+    expect(html).toContain("env(safe-area-inset-top)");
+    expect(html).toContain("env(safe-area-inset-bottom)");
     expect(html).toContain("border-spacing: 0 1px");
     expect(html).toContain(
       "a { color: var(--accent); text-decoration: none; }",

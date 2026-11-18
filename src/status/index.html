@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#1a2026" />
   <title>NbkristQik status</title>
   <style>
@@ -125,7 +125,10 @@
       padding: 56px 16px; color: var(--secondary); font-size: 13px;
       line-height: 18px; text-align: center;
     }
-    .loading.is-error { color: var(--danger); padding: 24px 16px; }
+    .loading.is-error {
+      display: block; padding: 14px; background: var(--surface);
+      border-radius: var(--radius); color: var(--danger); text-align: left;
+    }
     .spinner {
       width: 22px; height: 22px; border: 2px solid var(--surface-active);
       border-top-color: var(--accent); border-radius: 50%;
