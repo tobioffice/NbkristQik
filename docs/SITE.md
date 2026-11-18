@@ -98,6 +98,13 @@ The site has no test suite. Check it by hand:
 
 ## Numbers on the site
 
+The landing carries a proof strip under the hero: 3,534 users, 1,131 daily
+actives on 17 November 2026, and 99.6% uptime over 90 days. It links once to
+<https://checker.tobioffice.dev/stats>, which serves the live numbers and the
+JSON at `/api/stats`. The figures come from that page and are a dated snapshot,
+not live values. Update them only from a dated snapshot; never estimate, round
+up, or mix snapshot and live counts.
+
 The site quotes real counts, so they must match the source:
 
 | Figure | Value |

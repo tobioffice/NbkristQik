@@ -47,6 +47,7 @@ import { verificationRouter } from "./verification.js";
 import { libraryRouter } from "./library.js";
 import { readSessionFromCookies } from "../services/library/session.js";
 import { registerInternalRoutes } from "./internal.js";
+import { registerPublicStatsRoutes } from "./publicStats.js";
 
 export const app = express();
 
@@ -156,6 +157,51 @@ app.get(
       {
         cacheControl: false,
         headers: { "Cache-Control": "no-store" },
+      },
+      (error) => {
+        if (!error) return;
+        if (!res.headersSent) {
+          res.status(404).json({ success: false, error: "Not Found" });
+        }
+      },
+    );
+  },
+);
+
+/**
+ * Static usage page. Same contract as /status: the deploy copies src/status
+ * to public/status, and a missing file answers a clean 404. The path is read
+ * per request so tests can point STATS_PAGE_PATH at a fixture.
+ */
+const defaultStatsPage = path.resolve(
+  process.cwd(),
+  "public",
+  "status",
+  "stats.html",
+);
+
+app.get(
+  "/stats",
+  // Mounted before the global API limiter, so it carries its own. The page is
+  // static and must not spend a student's API budget.
+  rateLimit({
+    windowMs: 60_000,
+    limit: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      success: false,
+      error: "Too many stats requests. Try again in a minute.",
+    },
+  }),
+  (_req: Request, res: Response) => {
+    const statsPage = process.env.STATS_PAGE_PATH?.trim() || defaultStatsPage;
+    res.setHeader("Cache-Control", "no-cache");
+    res.sendFile(
+      statsPage,
+      {
+        cacheControl: false,
+        headers: { "Cache-Control": "no-cache" },
       },
       (error) => {
         if (!error) return;
@@ -866,6 +912,10 @@ const withStatusFreshness = (components: StatusComponentBase[]) =>
       buckets: c.buckets,
     };
   });
+
+// Public aggregate-only usage counts for the static /stats page. Mounted next
+// to /api/status, after the global API middleware.
+registerPublicStatsRoutes(app);
 
 app.get("/api/status", securityLogger, async (_req: Request, res: Response) => {
   try {

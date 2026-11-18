@@ -76,9 +76,10 @@ library read-burst check) lives in the service that knows the caller.
 | Admin `POST {base}/login` | 20 requests / 10 min burst, plus a 5-failure / 10 min lockout |
 
 `/health` has no dedicated limiter but is mounted after the global API
-middleware, so it shares the account/IP limit. `/api/status` also uses the
-global limit. The static `/status` page and the `/library/` bundle are mounted
-before the API middleware and are not rate-limited.
+middleware, so it shares the account/IP limit. `/api/status` and `/api/stats`
+also use the global limit. The static `/status` and `/stats` pages are mounted
+before the API middleware and carry their own 120 requests/minute limiter
+each; the `/library/` bundle is not rate-limited.
 
 The rate-limit response is `429 { "success": false, "error": "...", "retryAfter": <seconds> }`.
 
@@ -266,6 +267,43 @@ Each component carries `component`, `uptimePct`, `pings`, `lastPing`,
 `lastPingAgeSec`, `avgLatencyMs`, `current`, `stale` and `buckets`, where each
 bucket is `{ day, pings, ups, avgLatencyMs }` in IST calendar days.
 
+### `GET /api/stats`
+
+Aggregate-only usage counts for the public `/stats` page. Every number comes
+from the same `getOverviewTotals()` queries as the admin Overview, so the two
+surfaces cannot drift. The JSON is cached in Redis for five minutes, with a
+five-minute in-process fallback when Redis is unavailable. HTTP caching is
+`public, max-age=300, stale-while-revalidate=60`; `X-Stats-Cache` is `hit` or
+`miss`. A database failure is
+`500 { "success": false, "error": "Internal Server Error" }`.
+
+```json
+{
+  "generated_at": "2026-11-18T10:30:00+05:30",
+  "registered_users": 3538,
+  "dau": 477,
+  "wau": 2876,
+  "mau": 3478,
+  "commands_7d": 51471,
+  "uptime_90d": "99.6%",
+  "method": "users = rows in botusers ...; aggregates only, no identifiers."
+}
+```
+
+- `registered_users` — rows in `botusers`: distinct Telegram users with at
+  least one recorded action. It is not the number of saved roll
+  registrations.
+- `dau`, `wau`, `mau` — distinct `activity_log.user_id` in the trailing
+  1/7/30 IST calendar days, including today.
+- `commands_7d` — `activity_log` rows in the trailing 7 IST days.
+- `uptime_90d` — successful `uptime_log` probes divided by all probes across
+  components over the last 90 days, one decimal place; `"n/a"` before the
+  first probe.
+- `generated_at` — server time in IST (`+05:30`), seconds precision.
+- `method` — the same definitions as one sentence.
+
+Only aggregates are published: no user ids, names or per-student rows.
+
 ### `GET /status`
 
 The public status page itself, served by Express from
@@ -275,6 +313,16 @@ single static HTML file with no external font or script request; it fetches
 the route answers `404 { "success": false, "error": "Not Found" }` instead of
 crashing the API. `STATUS_PAGE_PATH` can point the route at another file for
 development.
+
+### `GET /stats`
+
+The public usage page itself, served by Express from
+`public/status/stats.html` (the deploy copies `src/status` there). It reads
+`/api/stats` for its figures. `Cache-Control: no-cache` so a deploy is picked
+up immediately. The route is mounted before the global API middleware with its
+own 120 requests/minute limiter. `STATS_PAGE_PATH` can point it at another
+file for development or tests; a missing file answers
+`404 { "success": false, "error": "Not Found" }`.
 
 ## Library endpoints
 

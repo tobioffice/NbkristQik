@@ -37,6 +37,8 @@ describe("scripts/deploy.sh safety invariants", () => {
     expect(script).toContain("dist.old");
     expect(script).toContain("dist.prev");
     expect(script).toContain("/status");
+    expect(script).toContain("/stats");
+    expect(script).toContain("/api/stats");
     expect(script).toContain("/library/");
     expect(script).toContain("rollback");
   });

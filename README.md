@@ -20,11 +20,67 @@ number, get an answer in seconds. No install, no separate account.
 
 ---
 
+## Usage (verifiable)
+
+Dated snapshot: end of IST day, 17 November 2026. New history rows are
+captured around 23:30 IST.
+
+| Metric                               | Value  | Definition                                                                      |
+| ------------------------------------ | ------ | ------------------------------------------------------------------------------- |
+| Users (`registered_users`)           | 3,534  | Distinct Telegram users with at least one recorded action (rows in `botusers`). |
+| Daily active (`dau`)                 | 1,131  | Distinct users with an action on 17 November 2026 (IST).                        |
+| Weekly active (`wau`)                | 2,967  | Distinct users with an action in the trailing 7 IST days.                       |
+| Monthly active (`mau`)               | 3,485  | Distinct users with an action in the trailing 30 IST days.                      |
+| Actions, last 7 days (`commands_7d`) | 60,571 | Recorded actions in the trailing 7 IST days.                                    |
+| Uptime, 90 days (`uptime_90d`)       | 99.6%  | Successful uptime probes across all monitored components, last 90 days.         |
+
+`registered_users` counts distinct Telegram users with at least one recorded
+action, not roll-number registrations. The live page's `dau` is the current IST
+day so far; the 1,131 above is the completed 17 November day.
+
+Only aggregates are published; no usernames, user IDs or per-student rows leave
+the database.
+
+Live: [checker.tobioffice.dev/stats](https://checker.tobioffice.dev/stats) ·
+JSON: [/api/stats](https://checker.tobioffice.dev/api/stats) ·
+Method: [publicStats.ts](src/api/publicStats.ts) and
+[activityStats.model.ts](src/db/activityStats.model.ts) ·
+History: [stats/history.csv](stats/history.csv)
+
+[![30-day usage: registered, daily, weekly and monthly active users](stats/history.svg)](stats/history.csv)
+
+The chart is regenerated daily by
+[`stats-history.yml`](.github/workflows/stats-history.yml); the CSV rows are the
+committed snapshots behind it.
+
+<details>
+<summary>The SQL behind the active counts</summary>
+
+```sql
+SELECT
+  COUNT(DISTINCT CASE WHEN created_at >= datetime('now','start of day','-330 minutes') THEN user_id END) dau,
+  COUNT(DISTINCT CASE WHEN created_at >= datetime('now','start of day','-330 minutes','-6 days') THEN user_id END) wau,
+  COUNT(DISTINCT CASE WHEN created_at >= datetime('now','start of day','-330 minutes','-29 days') THEN user_id END) mau
+FROM activity_log
+WHERE created_at >= datetime('now','start of day','-330 minutes','-29 days');
+```
+
+`registered_users` is `SELECT COUNT(*) FROM botusers`. `commands_7d` is the
+row count in `activity_log` over the same trailing 7 IST days. The full queries
+live in
+[`src/db/activityStats.model.ts`](src/db/activityStats.model.ts).
+
+</details>
+
 ## Overview
 
 NbkristQik reads the college portal so students do not have to. Attendance
 percentages, mid-term marks and a "how much can I bunk?" plan arrive as a
 Telegram reply, formatted for a phone held in a corridor between classes.
+
+3,534 users have used it, 1,131 checked in on 17 November (about a third of
+tracked users), and the API stayed up 99.6% over 90 days. The
+[live numbers](https://checker.tobioffice.dev/stats) are public.
 
 The same service also runs a Telegram Mini App with the live leaderboard, an
 optional roll-number profile, a watermarked library of semester material and a
@@ -104,7 +160,7 @@ needs no migration step.
 | Scraping   | Axios and Cheerio                                                 |
 | Frontend   | React 19, Vite 7 and Tailwind CSS                                 |
 | Testing    | Vitest, v8 coverage, ESLint and Prettier                          |
-| Deployment | systemd behind nginx; app and status page served same-origin  |
+| Deployment | GitHub Actions to systemd behind nginx; app and status page served same-origin |
 
 ## Repository layout
 
@@ -118,12 +174,13 @@ needs no migration step.
 │   ├── db/           libSQL client, schema and models
 │   ├── middleware/   Request sanitisation and security
 │   ├── services/     Portal scraping, caches, library, uptime, tracking
-│   ├── status/       Static 90-day status page
+│   ├── status/       Static status and public stats pages
 │   ├── tools/        Library ingest and catalogue utilities
 │   └── web/          React Mini App and marketing site (own package)
 ├── tests/            Unit and integration tests
 ├── docs/             Hand-written guides
 ├── scripts/          Deploy, backup and import helpers
+├── stats/            Dated aggregate history and generated chart
 └── assets/           Brand assets
 ```
 
@@ -258,9 +315,11 @@ or `develop` runs the same checks.
 
 ## Deployment
 
-The bot runs as the `nbkristqik` systemd service. Builds happen locally because
-the production host has little memory, and only `dist/` and the static
-surfaces are shipped:
+The bot runs as the `nbkristqik` systemd service. A push to `main` runs
+`.github/workflows/deploy.yml`, which executes `scripts/deploy.sh` on a GitHub
+runner with its SSH, database and smoke-check values taken from GitHub secrets.
+Only `dist/` and the static surfaces are shipped, because the production host
+has little memory. The same script still deploys from a developer shell:
 
 ```bash
 scripts/deploy.sh
@@ -274,8 +333,10 @@ then promotes it to `dist.prev`; takes a `VACUUM INTO` backup when
 `DEPLOY_DB_URL` is set; ships `dist/`, the manifests, ops scripts,
 `src/status` → `public/status`, the library bundle and the syllabus catalogue;
 installs production dependencies with a frozen lockfile; restarts the service;
-and smoke-checks `/health`, `/status`, `/library/` and a hashed asset. A failed
-check restores `dist.old`, restarts the old build and exits non-zero. `DEPLOY_HOST` (the ssh alias) is required; the rest default to directory
+and smoke-checks `/health`, `/status`, `/stats`, `/api/stats`, `/library/` and
+a hashed asset. A failed check restores `dist.old`, restarts the old build and
+exits non-zero. `DEPLOY_HOST` (the ssh alias) is required; the rest default to
+directory
 `/home/ubuntu/nbkristqik`, service `nbkristqik` and loopback
 `http://127.0.0.1:3000`, overridable with `DEPLOY_DIR`, `DEPLOY_SERVICE` and
 `DEPLOY_BASE_URL`. See

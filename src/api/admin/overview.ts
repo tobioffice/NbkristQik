@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { turso } from "../../db/db.js";
+import { getOverviewTotals } from "../../db/activityStats.model.js";
 import { logger } from "../../config/logger.js";
 import { cached } from "./cache.js";
 import type { RequireAdmin } from "./auth.js";
@@ -10,6 +11,7 @@ interface OverviewPayload {
     activeToday: number;
     active7d: number;
     active30d: number;
+    commands7d: number;
     totalActions: number;
   };
   daily: Array<{
@@ -27,73 +29,52 @@ interface OverviewPayload {
 }
 
 const computeOverview = async (): Promise<OverviewPayload> => {
-  const results = await turso.batch(
-    [
-      { sql: `SELECT COUNT(*) n FROM botusers`, args: [] },
-      {
-        // "today" = since midnight IST (IST is UTC+5:30, so its
-        // midnight is 18:30 UTC the day before)
-        sql: `SELECT COUNT(*) n FROM botusers
-            WHERE last_seen >= datetime('now', 'start of day', '-330 minutes')`,
-        args: [],
-      },
-      {
-        sql: `SELECT COUNT(*) n FROM botusers WHERE last_seen >= datetime('now', '-7 days')`,
-        args: [],
-      },
-      {
-        sql: `SELECT COUNT(*) n FROM botusers WHERE last_seen >= datetime('now', '-30 days')`,
-        args: [],
-      },
-      {
-        sql: `SELECT COALESCE(SUM(total_actions), 0) n FROM botusers`,
-        args: [],
-      },
-      {
-        sql: `SELECT date(created_at, '+330 minutes') d, COUNT(*) actions, COUNT(DISTINCT user_id) users
+  // usage totals are shared with /api/stats, so the public page and this panel
+  // cannot report different numbers
+  const [totals, results] = await Promise.all([
+    getOverviewTotals(),
+    turso.batch(
+      [
+        {
+          sql: `SELECT COALESCE(SUM(total_actions), 0) n FROM botusers`,
+          args: [],
+        },
+        {
+          sql: `SELECT date(created_at, '+330 minutes') d, COUNT(*) actions, COUNT(DISTINCT user_id) users
              FROM activity_log
              WHERE created_at >= datetime('now', '-30 days')
              GROUP BY d ORDER BY d`,
-        args: [],
-      },
-      {
-        sql: `SELECT CASE WHEN chat_type = 'supergroup' THEN 'group' ELSE chat_type END AS surface,
+          args: [],
+        },
+        {
+          sql: `SELECT CASE WHEN chat_type = 'supergroup' THEN 'group' ELSE chat_type END AS surface,
                    COUNT(*) n
             FROM activity_log
             WHERE created_at >= datetime('now', '-30 days')
             GROUP BY surface`,
-        args: [],
-      },
-      {
-        sql: `SELECT action, COUNT(*) n FROM activity_log
+          args: [],
+        },
+        {
+          sql: `SELECT action, COUNT(*) n FROM activity_log
             WHERE created_at >= datetime('now', '-7 days') AND action != 'roll_lookup'
             GROUP BY action ORDER BY n DESC LIMIT 8`,
-        args: [],
-      },
-      {
-        // day+hour keys in IST (+330 min shift) — storage stays UTC,
-        // grouping follows IST wall-clock boundaries
-        sql: `SELECT strftime('%Y-%m-%d %H', created_at, '+330 minutes') h,
+          args: [],
+        },
+        {
+          // day+hour keys in IST (+330 min shift) — storage stays UTC,
+          // grouping follows IST wall-clock boundaries
+          sql: `SELECT strftime('%Y-%m-%d %H', created_at, '+330 minutes') h,
                    COUNT(*) actions, COUNT(DISTINCT user_id) users
              FROM activity_log
              WHERE created_at >= datetime('now', '-30 hours')
              GROUP BY h ORDER BY h`,
-        args: [],
-      },
-    ],
-    "read",
-  );
-  const [
-    usersQ,
-    todayQ,
-    weekQ,
-    monthQ,
-    actionsQ,
-    dailyQ,
-    surfaceQ,
-    topQ,
-    hourlyQ,
-  ] = results;
+          args: [],
+        },
+      ],
+      "read",
+    ),
+  ]);
+  const [actionsQ, dailyQ, surfaceQ, topQ, hourlyQ] = results;
 
   const surfaces: Record<string, number> = {};
   for (const row of surfaceQ.rows) {
@@ -102,10 +83,11 @@ const computeOverview = async (): Promise<OverviewPayload> => {
 
   return {
     totals: {
-      users: Number(usersQ.rows[0]?.n || 0),
-      activeToday: Number(todayQ.rows[0]?.n || 0),
-      active7d: Number(weekQ.rows[0]?.n || 0),
-      active30d: Number(monthQ.rows[0]?.n || 0),
+      users: totals.users,
+      activeToday: totals.activeToday,
+      active7d: totals.active7d,
+      active30d: totals.active30d,
+      commands7d: totals.commands7d,
       totalActions: Number(actionsQ.rows[0]?.n || 0),
     },
     daily: dailyQ.rows.map((r) => ({

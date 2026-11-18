@@ -24,11 +24,19 @@ mkdirSync(path.dirname(statusFile), { recursive: true });
 writeFileSync(statusFile, "<!doctype html><html><body>status</body></html>");
 const missingStatusFile = path.join(temp, "status", "missing.html");
 
+const statsFile = path.join(temp, "status", "stats.html");
+writeFileSync(
+  statsFile,
+  "<!doctype html><html><body>usage stats</body></html>",
+);
+const missingStatsFile = path.join(temp, "status", "missing-stats.html");
+
 const { app } = await import("../../src/api/server.js");
 
 afterAll(() => {
   rmSync(temp, { recursive: true, force: true });
   delete process.env.STATUS_PAGE_PATH;
+  delete process.env.STATS_PAGE_PATH;
 });
 
 describe("GET /status", () => {
@@ -46,6 +54,27 @@ describe("GET /status", () => {
     process.env.STATUS_PAGE_PATH = missingStatusFile;
 
     const res = await request(app).get("/status");
+
+    expect(res.status).toBe(404);
+    expect(res.body).toMatchObject({ success: false });
+  });
+});
+
+describe("GET /stats", () => {
+  it("serves the usage page with revalidation", async () => {
+    process.env.STATS_PAGE_PATH = statsFile;
+
+    const res = await request(app).get("/stats");
+
+    expect(res.status).toBe(200);
+    expect(res.headers["cache-control"]).toBe("no-cache");
+    expect(res.text).toContain("usage stats");
+  });
+
+  it("answers a clean 404 when the page is missing", async () => {
+    process.env.STATS_PAGE_PATH = missingStatsFile;
+
+    const res = await request(app).get("/stats");
 
     expect(res.status).toBe(404);
     expect(res.body).toMatchObject({ success: false });

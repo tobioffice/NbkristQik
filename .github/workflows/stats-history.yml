@@ -1,0 +1,75 @@
+name: Stats history
+
+# One snapshot a day, at 23:30 IST (18:00 UTC). The endpoint reports current
+# totals, so a missed run only loses that day's point; the next run does not
+# backfill. The explicit window guard below refuses to record a partial day if
+# GitHub delays the run past midnight IST.
+on:
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: stats-history
+  cancel-in-progress: false
+
+jobs:
+  record:
+    name: Record daily stats
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Run from main only
+        if: github.ref_name != 'main'
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          echo "::error::Stats history runs only from main (got '$REF_NAME')."
+          exit 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Check the IST snapshot window
+        run: |
+          set -euo pipefail
+          hour="$(TZ=Asia/Kolkata date +%H)"
+          if [ "$hour" -lt 18 ]; then
+            echo "::error::Run after 18:00 IST so the day's figures are not partial."
+            exit 1
+          fi
+
+      - name: Record the snapshot
+        run: node scripts/record-stats.mjs
+
+      - name: Render the history chart
+        run: node scripts/render-stats-chart.mjs
+
+      # The push uses GITHUB_TOKEN from actions/checkout. GitHub suppresses
+      # workflow runs caused by a GITHUB_TOKEN push, so this daily data commit
+      # cannot trigger the Deploy or Tests workflows.
+      - name: Commit the snapshot
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add stats/history.csv stats/history.svg
+          if git diff --cached --quiet; then
+            echo "No stats changes to commit."
+            exit 0
+          fi
+          stamp="$(TZ=Asia/Kolkata date +%F)"
+          git commit -m "chore(stats): daily snapshot $stamp"
+          # Another push may have landed while this job ran; replay the data
+          # commit on top of it instead of failing on a non-fast-forward.
+          git pull --rebase origin main
+          git push origin HEAD:main

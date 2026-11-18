@@ -134,12 +134,108 @@ student's chosen display name or a masked roll, never the portal name.
 ## Production deployment
 
 The bot runs as the `nbkristqik` **systemd** service on the production server.
-The server has very little RAM, so the TypeScript build runs locally and only
-`dist/` and the built static surfaces are shipped:
+The server has very little RAM, so the TypeScript build runs on the deploy
+machine and only `dist/` and the built static surfaces are shipped:
 
 ```bash
 DEPLOY_DB_URL=file:/home/ubuntu/nbkristqik/data/qik.db scripts/deploy.sh
 ```
+
+### Deploy from GitHub Actions
+
+`.github/workflows/deploy.yml` deploys on every push to `main` and on manual
+dispatch. It runs the same `scripts/deploy.sh` on an ephemeral GitHub-hosted
+runner, so the checks, staging, pre-restart backup, restart, smoke checks and
+rollback path are unchanged. The job is limited to `main`, runs one release at
+a time, and reads no ops file: it refuses a checkout that contains
+`.env.deploy`.
+
+Every deployment value comes from GitHub secrets, preferably on a `production`
+environment (repository secrets with the same names also work). The three SSH
+values fall back to the existing `SERVER_SSH_KEY`, `SERVER_HOST` and
+`SERVER_USER` repository secrets; the `DEPLOY_*` names take precedence when
+both exist. Check that the older values still point at the current production
+host before relying on them.
+
+| Secret | Required | Purpose |
+|---|---|---|
+| `DEPLOY_SSH_KEY` | yes | Private OpenSSH key for the deploy user, without a passphrase (`SERVER_SSH_KEY` fallback) |
+| `DEPLOY_SSH_HOST` | yes | Hostname or IP of the production host, not an ssh alias (`SERVER_HOST` fallback) |
+| `DEPLOY_SSH_USER` | yes | Unix user that owns the checkout and may restart the unit (`SERVER_USER` fallback) |
+| `DEPLOY_SSH_PORT` | no | SSH port, default `22` |
+| `DEPLOY_KNOWN_HOSTS` | no | Pinned `known_hosts` line(s); when unset the job does `ssh-keyscan` for that run |
+| `DEPLOY_DIR` | no | Defaults to `/home/ubuntu/nbkristqik`; do not reuse the old `SERVER_PATH`, which pointed at its parent |
+| `DEPLOY_SERVICE` | no | Defaults to `nbkristqik` |
+| `DEPLOY_BASE_URL` | no | Defaults to `http://127.0.0.1:3000` |
+| `DEPLOY_DB_URL` | recommended | Server-side `file:` URL for the pre-restart `VACUUM INTO` backup |
+| `DEPLOY_DB_BACKUP_DIR` | no | Defaults to `$DEPLOY_DIR/backups` |
+| `DEPLOY_INTERNAL_SECRET` | no | Same value as the server's `UPTIME_INGEST_SECRET`; enables the authenticated smoke check |
+
+One-time setup:
+
+1. Generate a dedicated key and install its public half for the deploy user:
+
+   ```bash
+   ssh-keygen -t ed25519 -C github-actions-deploy -f ~/.ssh/nbkristqik-gha -N ""
+   ssh-copy-id -i ~/.ssh/nbkristqik-gha.pub deploy-user@deploy-host
+   ```
+
+2. Create the `production` environment under **Settings → Environments** and
+   store the private key as `DEPLOY_SSH_KEY`, the hostname or IP as
+   `DEPLOY_SSH_HOST`, and the Unix user as `DEPLOY_SSH_USER`. Use the
+   `production` environment secrets so the values can be rotated in one place
+   (repository secrets with the same names also work). If the repository still
+   has `SERVER_SSH_KEY`, `SERVER_HOST` and `SERVER_USER` from the retired
+   workflow, the job falls back to them; set the `DEPLOY_*` names when rotating
+   or when the older values are stale.
+3. Allow that user to restart only this unit without a password:
+
+   ```sudoers
+   deploy-user ALL=(root) NOPASSWD: /usr/bin/systemctl restart nbkristqik
+   ```
+
+   Put the line in `/etc/sudoers.d/nbkristqik-deploy` with mode `0440`. The
+   script runs `systemctl is-active` without sudo.
+4. Optionally pin the host key. For a non-default port the entry must include
+   `[host]:port`:
+
+   ```bash
+   ssh-keyscan -p 22 -H deploy-host
+   ```
+
+   Store the output as `DEPLOY_KNOWN_HOSTS`.
+
+The host must accept SSH from GitHub-hosted runner addresses. If its firewall
+or nginx-equivalent allowlist only admits the operator's IP, allow GitHub's
+runner ranges or run the workflow on a self-hosted runner on a trusted network.
+The job is otherwise unattended: there is no TTY, so the deploy user needs the
+passwordless sudo rule above.
+
+Add required reviewers to the `production` environment if a push to `main`
+should not deploy unattended. The private key exists on the runner only for the
+life of the job and disappears with it.
+
+### Usage stats and history
+
+`GET /stats` is the public usage page; `GET /api/stats` is the aggregate-only
+JSON it reads. Both are public and read-only. The numbers come from the same
+`getOverviewTotals()` queries as the admin Overview, so the two surfaces cannot
+drift. The JSON is cached in Redis for five minutes, with a five-minute
+in-process fallback, so the page cannot be used to load-test the database.
+`uptime_90d` pools the same `uptime_log` probes that `/api/status` shows. The
+response's `method` field restates the definitions, and the page links to
+`src/api/publicStats.ts`.
+
+The daily history lives in the repository, not only in the database.
+`.github/workflows/stats-history.yml` runs at 23:30 IST, fetches `/api/stats`,
+appends or replaces that IST date in `stats/history.csv`, regenerates
+`stats/history.svg`, and commits both. The chart is embedded in the README.
+The workflow pushes with the repository `GITHUB_TOKEN`, so that commit does not
+trigger the test or deploy workflows. The CSV records
+`date,registered_users,dau,wau,mau,commands_7d`; snapshots are taken near the
+end of the IST day, so each daily figure is within a few minutes of the full
+day. Only aggregates are stored; no usernames, user ids or per-student rows
+leave the database.
 
 ### Clean tree
 
@@ -168,11 +264,12 @@ hotfix; it prints a warning and continues.
 6. The optional `VACUUM INTO` backup described below.
 7. `sudo systemctl restart $SERVICE`.
 8. Smoke checks with `curl` from the server itself: retry `/health` for about
-   30 s, then require `/status`, `/library/` and the hashed JS asset referenced
-   by the freshly built HTML to return 200 (`-L` follows the `/status` →
-   `/status/` redirect if the route is mounted as a static directory). With
-   `DEPLOY_INTERNAL_SECRET` set, the authenticated `/internal/health` must also
-   return 200; otherwise that check is skipped with a note.
+   30 s, then require `/status`, `/stats`, `/api/stats`, `/library/` and the
+   hashed JS asset referenced by the freshly built HTML to return 200 (`-L`
+   follows the `/status` → `/status/` redirect if the route is mounted as a
+   static directory). With `DEPLOY_INTERNAL_SECRET` set, the authenticated
+   `/internal/health` must also return 200; otherwise that check is skipped with
+   a note.
 9. Only after all checks pass, promote `dist.old` to `dist.prev`.
 
 ### Rollback
@@ -212,8 +309,10 @@ private routes are off.
 
 No host alias, address or ssh user is committed. Copy `.env.deploy.example` to
 `.env.deploy` at the repo root and fill in real values; it is gitignored, and
-`deploy.sh` and `deploy-monitor.sh` source it before reading their variables.
-`DEPLOY_ENV_FILE` points them at a different file.
+`deploy.sh` and `deploy-monitor.sh` source it before reading their
+variables. `DEPLOY_ENV_FILE` points them at a different file. The GitHub Actions
+deploy never reads this file: its values come from the secrets listed above,
+and the job fails if `.env.deploy` is present in the checkout.
 
 Required: `DEPLOY_HOST`, `MONITOR_RELAY`, `MONITOR_HOST`, `BACKUP_REMOTE`.
 Everything else has a usable default. On the server, `backup-db.sh` also reads

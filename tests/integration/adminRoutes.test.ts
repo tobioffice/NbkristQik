@@ -139,7 +139,14 @@ describe("admin routes", () => {
       .set("Cookie", `qik_admin=${rawToken}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.totals).toBeDefined();
+    expect(res.body.totals).toMatchObject({
+      users: expect.any(Number),
+      activeToday: expect.any(Number),
+      active7d: expect.any(Number),
+      active30d: expect.any(Number),
+      commands7d: expect.any(Number),
+      totalActions: expect.any(Number),
+    });
   });
 
   it("rejects an expired session", async () => {

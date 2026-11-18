@@ -270,9 +270,9 @@ else
   rollback
 fi
 
-echo "==> Smoke-checking /status, /library/ and a hashed asset"
+echo "==> Smoke-checking /status, /stats, /library/ and a hashed asset"
 smoke_failed=0
-SMOKE_PATHS=(/status /library/)
+SMOKE_PATHS=(/status /stats /library/ /api/stats)
 # A 200 on the shell proves nothing if its hashed JS is missing. Read the
 # asset path out of the freshly built HTML and fetch that too.
 ASSET_PATH="$(grep -oE '/library/assets/[^"]+\.js' src/web/dist-library/index.html 2>/dev/null | head -1 || true)"
@@ -327,4 +327,4 @@ if ssh "$HOST" "test -d '$DIR/dist.old'"; then
   fi
 fi
 
-echo "==> Deployed. Service '$SERVICE' is active and /health, /status and /library/ return 200."
+echo "==> Deployed. Service '$SERVICE' is active and /health, /status, /stats and /library/ return 200."

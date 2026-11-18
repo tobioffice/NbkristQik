@@ -13,6 +13,8 @@ export const redisKeys = {
   isMember: (userId: number | string) => `isMember:${userId}`,
   /** Leaderboard API response cache: lb:{sort}:{page}:{limit}:{...filters} */
   leaderboard: (key: string) => `lb:${key}`,
+  /** Public /api/stats aggregate-only JSON */
+  publicStats: "stats:public",
   /** Per-user tracker profile upsert throttle (SET NX) */
   trackProfile: (userId: number | string) => `track:p:${userId}`,
   /** Semester type for /syncdb ("1" | "2") */
