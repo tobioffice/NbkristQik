@@ -1,11 +1,12 @@
 import { fetchWithTimeout, readJson, UPLOAD_TIMEOUT_MS } from "./http";
 import { telegramWebApp } from "./telegram";
 
-// Centralized API origin. Dev builds default to same-origin so the vite
-// proxy forwards /api to the local backend; prod builds need the real origin.
-export const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? "" : "https://checker.tobioffice.online");
+// Centralized API origin. The app is served same-origin by the API host
+// (dev: the vite proxy forwards /api; prod: /library/ and /api share the
+// origin), so same-origin is the correct default for every documented
+// deployment — including a self-hosted one built from this repo. A
+// deployment that splits the two origins sets VITE_API_URL at build time.
+export const API_BASE = import.meta.env.VITE_API_URL || "";
 
 /** Who is calling: signed Telegram initData, with a dev userId fallback. */
 export interface ApiIdentity {

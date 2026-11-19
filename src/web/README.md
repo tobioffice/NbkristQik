@@ -28,6 +28,22 @@ Run these from `src/web`:
   the site under `dist-site/site/` and pushes that branch). The app itself is
   deployed with the backend at `/library/`, not by this script.
 
+## Build-time configuration
+
+The app calls the API same-origin by default: `/library/` and `/api` are
+served by the same host in every documented deployment, and the dev server
+proxies `/api` to `localhost:3000`. A deployment that serves the app from a
+different origin than the API sets `VITE_API_URL` at build time:
+
+```bash
+VITE_API_URL=https://api.example.com pnpm build
+```
+
+Never rely on the previous behavior, which hardcoded
+`https://checker.tobioffice.online` when `VITE_API_URL` was unset: a
+self-hosted build would silently have pointed every student's API call at the
+upstream deployment.
+
 ## Marketing site
 
 `public/site/` is static HTML, CSS and JS. It is not part of the Vite build and

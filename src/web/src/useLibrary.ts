@@ -80,9 +80,12 @@ const clearPcToken = (): void => {
  * With no credential, a live cookie is enough and `/me` is the only call.
  * The computer-link token leaves the address bar as soon as it is spent.
  *
- * `retry` starts again from the session — the retry button, the roll-number
- * form and the admin's view switch all do, because a session can have gone
- * stale between two looks at the shelf.
+ * The hand-off and the shelf read are two effects. `retry` starts again
+ * from the session — the retry button and the roll-number form both do,
+ * because a session can have gone stale between two looks at the shelf —
+ * but the admin's view switch only re-reads the list: every hand-off costs
+ * a POST /api/library/session against the exchange limit (20 an hour), so
+ * a toggle must not spend that budget.
  */
 export const useLibrary = (
   identity: LibraryIdentity,
@@ -98,30 +101,11 @@ export const useLibrary = (
   const [status, setStatus] = useState<LibraryStatus>({ state: "loading" });
   const [attempt, setAttempt] = useState(0);
   const [view, setView] = useState<LibraryView>("all");
+  const [session, setSession] = useState<SessionResponse | null>(null);
 
+  // The account hand-off: a presented credential, or the cookie's own /me.
   useEffect(() => {
     let cancelled = false;
-
-    const readShelf = async (session: SessionResponse) => {
-      if (cancelled) return;
-
-      if (!session.registered || !session.student) {
-        setStatus({ state: "unregistered" });
-        return;
-      }
-
-      const shelf = await fetchLibrarySubjects(view);
-      if (cancelled) return;
-
-      setStatus({
-        state: "ready",
-        student: session.student,
-        subjects: shelf.subjects ?? [],
-        kind: session.kind ?? "telegram",
-        admin: shelf.admin === true,
-        preview: shelf.preview === true,
-      });
-    };
 
     const load = async () => {
       // A credential that was just presented is the account hand-off: the
@@ -133,14 +117,14 @@ export const useLibrary = (
         // The one-time token should not sit in the address bar even while
         // the exchange is in flight or if it fails.
         if (credential === "pcToken") clearPcToken();
-        const session = await openLibrarySession({ initData, pcToken });
+        const opened = await openLibrarySession({ initData, pcToken });
         if (cancelled) return;
         if (credential === "pcToken") {
           // The server consumed the link. Tell the shell not to present it
           // again on the next mount; the cookie is the session now.
           onPcConsumed?.();
         }
-        await readShelf(session);
+        setSession(opened);
         return;
       }
 
@@ -149,7 +133,7 @@ export const useLibrary = (
       if (cancelled) return;
 
       if (existing) {
-        await readShelf(existing);
+        setSession(existing);
         return;
       }
 
@@ -171,16 +155,63 @@ export const useLibrary = (
     return () => {
       cancelled = true;
     };
-  }, [initData, pcToken, onPcConsumed, attempt, view]);
+  }, [initData, pcToken, onPcConsumed, attempt]);
+
+  // Reading the shelf for the resolved session and the chosen view. The
+  // rows stay on screen while a switch re-reads; only the data lands late.
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+
+    const readShelf = async () => {
+      if (!session.registered || !session.student) {
+        setStatus({ state: "unregistered" });
+        return;
+      }
+
+      const shelf = await fetchLibrarySubjects(view);
+      if (cancelled) return;
+
+      setStatus({
+        state: "ready",
+        student: session.student,
+        subjects: shelf.subjects ?? [],
+        kind: session.kind ?? "telegram",
+        admin: shelf.admin === true,
+        preview: shelf.preview === true,
+      });
+    };
+
+    readShelf().catch((e) => {
+      if (cancelled) return;
+      const message =
+        e instanceof Error ? e.message : "Could not open the library";
+      if (/not open yet/i.test(message)) {
+        setStatus({ state: "closed" });
+        return;
+      }
+      setStatus({ state: "error", message });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session, view]);
 
   const signOut = async (): Promise<void> => {
     await closeLibrarySession();
+    setSession(null);
     setStatus({ state: "no-session" });
   };
 
   return {
     status,
-    retry: () => setAttempt((count) => count + 1),
+    retry: () => {
+      // the full hand-off again: a session that went stale is replaced end
+      // to end, not just its shelf read
+      setSession(null);
+      setAttempt((count) => count + 1);
+    },
     setView,
     signOut,
   };
