@@ -308,10 +308,12 @@ status as text with a keyboard and tap detail line.
 `pnpm test` starts Vitest in watch mode; use `pnpm exec vitest run` in scripts
 and CI.
 
-Continuous integration runs lint, type-check, a production dependency audit and
-coverage on Node 22 and 24, and a separate job for the web package's lint,
-unit tests and the same-origin `/library/` build. Every pull request to `main`
-or `develop` runs the same checks.
+Continuous integration runs lint, type-check (sources and tests), a
+production dependency audit and coverage on Node 22 and 24, and a separate
+job for the web package's lint, test type-check, unit tests and the
+same-origin `/library/` build. Every pull request to `main` or `develop`
+runs the same checks, and a scheduled weekly run keeps the audit current
+when the repository is quiet.
 
 ## Deployment
 
@@ -350,6 +352,12 @@ script:
 cd src/web
 pnpm build        # same build as build:library
 ```
+
+The app talks to the API same-origin (the dev server proxies `/api` to
+`localhost:3000`). Only a deployment that splits the app and the API onto
+different origins needs
+[`VITE_API_URL`](src/web/README.md#build-time-configuration); it is a build
+variable for `src/web`, not a server environment variable.
 
 The marketing site has its own Pages-only deploy:
 

@@ -264,8 +264,9 @@ is different from a recorded outage. The assembled payload is cached in memory
 for 5 minutes.
 
 Each component carries `component`, `uptimePct`, `pings`, `lastPing`,
-`lastPingAgeSec`, `avgLatencyMs`, `current`, `stale` and `buckets`, where each
-bucket is `{ day, pings, ups, avgLatencyMs }` in IST calendar days.
+`lastStatus`, `lastPingAgeSec`, `avgLatencyMs`, `current`, `stale` and
+`buckets`, where each bucket is `{ day, pings, ups, avgLatencyMs }` in IST
+calendar days.
 
 ### `GET /api/stats`
 
@@ -349,6 +350,15 @@ reused, and a bad token is a `401` with no fallback to `initData`.
 | `GET` | `/api/library/page/:id/:page` | One watermarked SVG page (`Cache-Control: private, max-age=300`, `Content-Disposition: inline`, no text layer). `400`/`404` for a bad page, `503` when no watermark secret is configured |
 | `POST` | `/api/library/document/:id/send` | Sends the stamped PDF to the reader's own Telegram chat as a document and returns `{ ok, fileName }`. Rate limited to 6 per reader per hour (`429` with `Retry-After`); `502` when Telegram refuses the upload (usually "user never pressed Start") |
 | `GET` | `/api/library/document/:id/pdf` | A whole PDF stamped with the reader's token (`application/pdf`, attachment, `private, max-age=3600`). Same session/registration/entitlement checks as a page; `503` if the watermark secret is missing or the generation queue is full |
+
+The session cookie is `SameSite=None` (the Telegram webview runs the app in a
+cross-site iframe), so the mutating routes above refuse a request that names
+a foreign origin: a `POST` or `DELETE` with an `Origin` outside the
+deployment's host/`CORS_ORIGINS`, or a `Sec-Fetch-Site` other than
+`same-origin`/`same-site`/`none`, answers
+`403 { "error": "This request came from another site." }`. Header-less
+callers (old webviews, non-browser tools) are unaffected — a browser's
+cross-site POST always carries one of the two.
 
 ## Private monitor endpoints
 
