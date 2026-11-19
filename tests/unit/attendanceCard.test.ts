@@ -242,6 +242,27 @@ describe("attendance card", () => {
     );
   });
 
+  it("never echoes a raw error message into the chat", async () => {
+    vi.mocked(getAttendanceCard).mockRejectedValueOnce(
+      new Error("ETELEGRAM: 403 Forbidden"),
+    );
+
+    sendRoll(251);
+
+    const { SOMETHING_BROKE } = await import("../../src/bot/replies.js");
+    await vi.waitFor(() =>
+      expect(sendMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ text: SOMETHING_BROKE }),
+      ),
+    );
+
+    const sentText = sendMessage.mock.calls
+      .map(([params]) => params.text)
+      .join("\n");
+    expect(sentText).not.toContain("ETELEGRAM");
+    expect(sentText).not.toContain("403");
+  });
+
   it("answers a typed roll with the attendance card instead of a menu", async () => {
     sendRoll(201);
 

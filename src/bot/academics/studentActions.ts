@@ -10,6 +10,7 @@ import type {
 } from "../../services/student.utils/errorMessages.js";
 
 import { bot } from "../bot.js";
+import { SOMETHING_BROKE } from "../replies.js";
 import type { InputRichMessage, Message } from "node-telegram-bot-api";
 import { logger } from "../../config/logger.js";
 import { getUserTheme } from "../../db/userSettings.model.js";
@@ -250,12 +251,14 @@ const fetchAndEditText = async (
       }
     }
   } catch (error: unknown) {
-    const err = error as Error;
     logger.error("Error in student action:", error);
+    // Never echo the raw error to the student: it is infrastructure noise
+    // ("ETELEGRAM: 403", a DB driver message), not product copy. The detail
+    // is already in the log line above.
     bot.api
       .sendMessage({
         chat_id: chatId,
-        text: err?.message || "Something broke on my side. Try again in a bit.",
+        text: SOMETHING_BROKE,
       })
       .catch(() => {});
   }
