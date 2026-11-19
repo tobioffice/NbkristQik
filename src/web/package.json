@@ -9,6 +9,7 @@
     "build:library": "tsc -b && vite build --config vite.library.config.ts",
     "lint": "eslint .",
     "test": "vitest run",
+    "typecheck:tests": "tsc -p tsconfig.test.json --noEmit",
     "preview": "vite preview --config vite.library.config.ts",
     "deploy:site": "rm -rf dist-site && mkdir -p dist-site/site && cp -R public/site/. dist-site/site/ && gh-pages -d dist-site --nojekyll"
   },

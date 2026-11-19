@@ -23,6 +23,8 @@ Run these from `src/web`:
 - `pnpm build:library` — the same build, kept for the deploy script and CI.
 - `pnpm preview` — serve the built `dist-library/` bundle at `/library/`.
 - `pnpm test` — Vitest unit tests under `tests/`.
+- `pnpm typecheck:tests` — typecheck the test files (`tests/` are outside
+  `tsconfig.app.json`, so `tsc -b` alone never sees them).
 - `pnpm lint` — ESLint.
 - `pnpm deploy:site` — publish only `public/site/` to GitHub Pages (it stages
   the site under `dist-site/site/` and pushes that branch). The app itself is
