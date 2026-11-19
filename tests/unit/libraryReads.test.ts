@@ -123,6 +123,19 @@ describe("library read dedupe", () => {
     expect(recordLibraryRead).toHaveBeenCalledTimes(1);
   });
 
+  it("arms the burst window atomically before counting", async () => {
+    await watchForBurst("u1");
+    await settle();
+
+    // SET ... NX EX in one step, so a crash between the count and the
+    // timer cannot leave a counter that never resets
+    expect(redisSet).toHaveBeenCalledWith("lib:reads:u1", "0", {
+      NX: true,
+      EX: 300,
+    });
+    expect(incrBy).toHaveBeenCalledWith("lib:reads:u1", 1);
+  });
+
   it("carries the reading surface through to the audit row", async () => {
     const { noteDownload } =
       await import("../../src/services/library/reads.js");

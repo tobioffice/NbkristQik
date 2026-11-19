@@ -146,10 +146,11 @@ export const watchForBurst = async (
   try {
     const client = await getClient();
     const key = redisKeys.libraryReads(userId);
+    // Arm the window atomically before counting, so a crash between the
+    // count and the timer cannot leave a counter that never resets and
+    // never expires. For a live window the NX arm is a no-op.
+    await client.set(key, "0", { NX: true, EX: BURST_WINDOW_SECONDS });
     const count = await client.incrBy(key, Math.max(1, weight));
-    if (count === Math.max(1, weight)) {
-      await client.expire(key, BURST_WINDOW_SECONDS);
-    }
     if (count > BURST_LIMIT) {
       logger.warn(
         `[library] user ${userId} pulled ${count} pages in five minutes`,
