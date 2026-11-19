@@ -12,7 +12,7 @@ let clientPromise: ReturnType<typeof createRedisClient> | null = null;
 const RETRY_COOLDOWN_MS = 30_000;
 let lastFailureAt = 0;
 
-async function createRedisClient() {
+async function createRedisClient(onEnded: () => void) {
   const client = createClient({
     url: REDIS_URL,
     // bound the reconnect loop: if Redis stays down, connect() settles with
@@ -31,6 +31,7 @@ async function createRedisClient() {
   client.on("connect", () => {
     logger.info("Connected to Redis");
   });
+  client.on("end", onEnded);
 
   await client.connect();
   return client;
@@ -42,15 +43,29 @@ export const getClient = () => {
   if (!clientPromise && Date.now() - lastFailureAt < RETRY_COOLDOWN_MS) {
     return Promise.reject(new Error("Redis connect in cooldown after failure"));
   }
-  clientPromise ??= createRedisClient();
-  const promise = clientPromise;
-  // If the initial connect fails, clear the rejected promise so the next
-  // caller retries instead of reusing the same failure forever.
-  void promise.catch(() => {
-    if (clientPromise === promise) {
-      clientPromise = null;
-      lastFailureAt = Date.now();
-    }
-  });
-  return promise;
+  if (!clientPromise) {
+    const promise = createRedisClient(() => {
+      // The client later *ended* — Redis restarted and the bounded reconnect
+      // loop gave up — so every command on it rejects forever. Drop it so
+      // the next caller dials a fresh connection; without this a Redis
+      // restart degrades the process (sessions 401, gates fail open) until
+      // someone restarts it by hand. The guard keeps a stale socket's late
+      // "end" from dropping a newer live client.
+      if (clientPromise === promise) {
+        clientPromise = null;
+        lastFailureAt = Date.now();
+        logger.warn("Redis connection ended; next caller reconnects");
+      }
+    });
+    clientPromise = promise;
+    // If the initial connect fails, clear the rejected promise so the next
+    // caller retries instead of reusing the same failure forever.
+    void promise.catch(() => {
+      if (clientPromise === promise) {
+        clientPromise = null;
+        lastFailureAt = Date.now();
+      }
+    });
+  }
+  return clientPromise;
 };
