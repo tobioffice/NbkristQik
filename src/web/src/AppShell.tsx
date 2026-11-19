@@ -9,6 +9,7 @@ import {
 import Band from "./components/Band";
 import BandStampProvider from "./BandStampProvider";
 import type { BandStamp } from "./bandStamp";
+import ErrorBoundary from "./ErrorBoundary";
 import { useBackHandler } from "./backButton";
 import { IdentityProvider } from "./identity";
 import { useAppConfig } from "./useAppConfig";
@@ -254,37 +255,52 @@ export default function AppShell() {
 
           <BandStampProvider onChange={setStamp}>
             <main className="shell-body">
-              <Suspense fallback={<PageLoading />}>
-                {route.section === "rank" && <Leaderboard showBand={false} />}
-                {route.section === "library" && libraryAllowed && (
-                  <LibraryView
-                    initData={initData}
-                    pcToken={pcToken}
-                    onPcConsumed={onPcConsumed}
-                    onImmersiveChange={setImmersive}
-                  />
-                )}
-                {route.section === "profile" && (
-                  <ProfileSection
-                    onReportIssue={() =>
-                      go({ section: "issues", issue: null, mine: false })
-                    }
-                  />
-                )}
-                {route.section === "issues" && (
-                  <IssuesSection
-                    route={{
-                      view: route.issue
-                        ? "thread"
-                        : route.mine
-                          ? "history"
-                          : "form",
-                      issue: route.issue,
-                    }}
-                    onRoute={onIssuesRoute}
-                  />
-                )}
-              </Suspense>
+              {/* Keyed per section: a failure in one tab (most often a lazy
+                  chunk that a deploy deleted) must not close the others. A
+                  tab switch remounts the boundary fresh. */}
+              <ErrorBoundary key={route.section}>
+                <Suspense fallback={<PageLoading />}>
+                  {route.section === "rank" && (
+                    <Leaderboard showBand={false} />
+                  )}
+                  {route.section === "library" && libraryAllowed && (
+                    <LibraryView
+                      initData={initData}
+                      pcToken={pcToken}
+                      onPcConsumed={onPcConsumed}
+                      onImmersiveChange={setImmersive}
+                    />
+                  )}
+                  {/* A deep link to the shelf paints the loading shape
+                      while /api/config decides whether this reader may open
+                      it; after the config lands, the redirect above folds a
+                      shut door back to the first screen. Without this the
+                      band and tab rail frame an empty middle. */}
+                  {route.section === "library" &&
+                    !libraryAllowed &&
+                    appConfig.loading && <PageLoading />}
+                  {route.section === "profile" && (
+                    <ProfileSection
+                      onReportIssue={() =>
+                        go({ section: "issues", issue: null, mine: false })
+                      }
+                    />
+                  )}
+                  {route.section === "issues" && (
+                    <IssuesSection
+                      route={{
+                        view: route.issue
+                          ? "thread"
+                          : route.mine
+                            ? "history"
+                            : "form",
+                        issue: route.issue,
+                      }}
+                      onRoute={onIssuesRoute}
+                    />
+                  )}
+                </Suspense>
+              </ErrorBoundary>
             </main>
           </BandStampProvider>
 
