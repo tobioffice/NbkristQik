@@ -9,9 +9,12 @@ import {
   getLeaderboardCoverage,
   getLastSyncAt,
   getStudentRanks,
-  getUptimeSummary,
-  getUptimeDailyBuckets,
 } from "../db/student_stats.model.js";
+import {
+  computeStatusComponents,
+  withStatusFreshness,
+  type StatusComponentBase,
+} from "./statusComponents.js";
 import { deleteTgUser, getTgUserRoll } from "../db/student.model.js";
 import { getRegistration } from "../db/registration.model.js";
 import { getStudentCached } from "../services/redis/utils.js";
@@ -854,62 +857,8 @@ const warmLeaderboardCache = async () => {
 // payload is cached in-memory for 5 minutes instead of rebuilt per request.
 const STATUS_TTL_MS = 5 * 60 * 1000;
 
-interface StatusComponentBase {
-  component: string;
-  uptimePct: number;
-  pings: number;
-  lastPing: string;
-  lastStatus: string;
-  avgLatencyMs: number | null;
-  buckets: Awaited<ReturnType<typeof getUptimeDailyBuckets>>;
-}
-
 let statusCache: { at: number; components: StatusComponentBase[] } | null =
   null;
-
-const computeStatusComponents = async (): Promise<StatusComponentBase[]> => {
-  const summary = await getUptimeSummary();
-  return Promise.all(
-    summary.map(async (s) => ({
-      component: s.component,
-      uptimePct: s.uptimePct,
-      pings: s.pings,
-      lastPing: s.lastPing,
-      lastStatus: s.lastStatus,
-      avgLatencyMs: s.avgLatencyMs,
-      buckets: await getUptimeDailyBuckets(s.component, 90),
-    })),
-  );
-};
-
-/**
- * Derives "current"/"stale" at read time. The summary and 90-day buckets are
- * cacheable for five minutes, but a heartbeat crossing the 15-minute stale
- * line must not keep showing "Operational" until that cache expires.
- */
-const withStatusFreshness = (components: StatusComponentBase[]) =>
-  components.map((c) => {
-    const lastPingAgeSec = Math.floor(
-      (Date.now() - new Date(c.lastPing + "Z").getTime()) / 1000,
-    );
-    // up = the newest heartbeat said up, and it is recent. A down probe also
-    // writes a heartbeat, so age alone would report an outage as "up". stale
-    // separates "the service is down" from "the monitor stopped reporting".
-    const stale = lastPingAgeSec >= 15 * 60;
-    const current: "up" | "down" =
-      c.lastStatus === "up" && !stale ? "up" : "down";
-    return {
-      component: c.component,
-      uptimePct: c.uptimePct,
-      pings: c.pings,
-      lastPing: c.lastPing,
-      lastPingAgeSec,
-      avgLatencyMs: c.avgLatencyMs,
-      current,
-      stale,
-      buckets: c.buckets,
-    };
-  });
 
 // Public aggregate-only usage counts for the static /stats page. Mounted next
 // to /api/status, after the global API middleware.

@@ -1,9 +1,10 @@
 import type { Express, Request, Response } from "express";
 import { turso } from "../../db/db.js";
 import {
-  getUptimeSummary,
-  getUptimeDailyBuckets,
-} from "../../db/student_stats.model.js";
+  computeStatusComponents,
+  withStatusFreshness,
+  type StatusComponentBase,
+} from "../statusComponents.js";
 import { logger } from "../../config/logger.js";
 import { cached } from "./cache.js";
 import type { RequireAdmin } from "./auth.js";
@@ -69,48 +70,16 @@ export const registerHealthRoute = (
     requireAdmin,
     async (_req: Request, res: Response) => {
       try {
-        // uptime data only changes on the 5-min probe
-        const data = await cached("health", 300_000, async () => {
-          const summary = await getUptimeSummary();
-          const components = await Promise.all(
-            summary.map(async (s) => ({
-              component: s.component,
-              uptimePct: s.uptimePct,
-              pings: s.pings,
-              lastPing: s.lastPing,
-              lastStatus: s.lastStatus,
-              avgLatencyMs: s.avgLatencyMs,
-              buckets: await getUptimeDailyBuckets(s.component, 90),
-            })),
-          );
-          return { components };
-        });
+        // uptime data only changes on the 5-min probe; freshness is derived
+        // per request so a heartbeat crossing the stale line cannot hide
+        // behind the cache
+        const components: StatusComponentBase[] = await cached(
+          "health",
+          300_000,
+          computeStatusComponents,
+        );
 
-        // Same 15-minute stale rule as the public /api/status payload in
-        // src/api/server.ts: a heartbeat older than 15 minutes means the
-        // monitor stopped reporting, not that the component recovered. Age is
-        // recomputed per request because the summary itself is cached.
-        const components = data.components.map((c) => {
-          const lastPingAgeSec = Math.floor(
-            (Date.now() - new Date(c.lastPing + "Z").getTime()) / 1000,
-          );
-          const stale = lastPingAgeSec >= 15 * 60;
-          const current: "up" | "down" =
-            c.lastStatus === "up" && !stale ? "up" : "down";
-          return {
-            component: c.component,
-            uptimePct: c.uptimePct,
-            pings: c.pings,
-            lastPing: c.lastPing,
-            lastPingAgeSec,
-            current,
-            stale,
-            avgLatencyMs: c.avgLatencyMs,
-            buckets: c.buckets,
-          };
-        });
-
-        res.json({ components });
+        res.json({ components: withStatusFreshness(components) });
       } catch (e) {
         logger.error("[admin] health failed:", e);
         res.status(500).json({ error: "Internal Server Error" });
