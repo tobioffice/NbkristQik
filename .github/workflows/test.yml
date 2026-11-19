@@ -5,6 +5,11 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  # Advisories without a released patch would otherwise sit unseen between
+  # pushes while every push to main deploys. A weekly run keeps the audit
+  # (and the suite) honest when the repo is quiet.
+  schedule:
+    - cron: "0 6 * * 1"
 
 permissions:
   contents: read
@@ -86,6 +91,9 @@ jobs:
 
       - name: Run linter
         run: pnpm run lint
+
+      - name: Typecheck tests
+        run: pnpm run typecheck:tests
 
       - name: Audit production dependencies (fail on high or critical)
         run: pnpm audit --prod --audit-level=high
