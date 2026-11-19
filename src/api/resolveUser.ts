@@ -123,3 +123,31 @@ export const attachedIdentity = (req: Request, res?: Response): Identity => {
   const stored = res?.locals?.identity as Identity | undefined;
   return stored ?? resolveOptionalIdentity(req);
 };
+
+/** One 401 body for every identity-checked API route. */
+export const unauthorized = (res: Response, error?: string): void => {
+  res
+    .status(401)
+    .json({ ok: false, error: error ?? "Telegram initData required" });
+};
+
+/**
+ * The caller's identity, resolved once: whatever `attachIdentity` already
+ * stored on the request, falling back to a fresh resolution for routers
+ * mounted without it. Sends the shared 401 and returns null when the caller
+ * is anonymous or presented a bad signature; the route just returns on null.
+ *
+ * Re-resolving here would both waste the HMAC work and let the limiter and
+ * the route disagree across the replay boundary.
+ */
+export const requireIdentity = (
+  req: Request,
+  res: Response,
+): { userId: string; user?: TgInitUser } | null => {
+  const identity = attachedIdentity(req, res);
+  if (identity.status === "authenticated") {
+    return { userId: identity.userId, user: identity.user };
+  }
+  unauthorized(res, identity.status === "invalid" ? identity.error : undefined);
+  return null;
+};

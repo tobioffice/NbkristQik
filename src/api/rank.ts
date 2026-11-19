@@ -1,16 +1,10 @@
 import { Router, type Request, type Response } from "express";
-import { resolveUserId } from "./resolveUser.js";
+import { requireIdentity } from "./resolveUser.js";
 import { prepareRankShare, type RankSort } from "../services/rankShare.js";
 import { trackActivity } from "../services/tracker.js";
 import { logger } from "../config/logger.js";
 
 export const rankRouter = Router();
-
-const unauthorized = (res: Response, error: string | undefined): void => {
-  res
-    .status(401)
-    .json({ ok: false, error: error ?? "Telegram initData required" });
-};
 
 const sortOf = (raw: unknown): RankSort =>
   raw === "midmarks" ? "midmarks" : "attendance";
@@ -23,11 +17,8 @@ const sortOf = (raw: unknown): RankSort =>
 rankRouter.post("/rank/share", async (req: Request, res: Response) => {
   res.set("Cache-Control", "private, no-store");
   try {
-    const resolved = resolveUserId(req);
-    if (!resolved || resolved.error) {
-      unauthorized(res, resolved?.error);
-      return;
-    }
+    const resolved = requireIdentity(req, res);
+    if (!resolved) return;
 
     const userId = Number(resolved.userId);
     const sort = sortOf(req.body?.sort);

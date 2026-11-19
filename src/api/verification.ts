@@ -1,5 +1,5 @@
 import { Request, Response, Router } from "express";
-import { resolveUserId } from "./resolveUser.js";
+import { requireIdentity } from "./resolveUser.js";
 import {
   VerificationError,
   confirmEmailVerification,
@@ -10,12 +10,6 @@ import {
 import { logger } from "../config/logger.js";
 
 export const verificationRouter = Router();
-
-const unauthorized = (res: Response, error: string | undefined) => {
-  res
-    .status(401)
-    .json({ ok: false, error: error ?? "Telegram initData required" });
-};
 
 const fail = (res: Response, e: unknown, where: string): void => {
   if (e instanceof VerificationError) {
@@ -34,11 +28,8 @@ const fail = (res: Response, e: unknown, where: string): void => {
 verificationRouter.get("/verification", async (req: Request, res: Response) => {
   res.set("Cache-Control", "private, no-store");
   try {
-    const resolved = resolveUserId(req);
-    if (!resolved || resolved.error) {
-      unauthorized(res, resolved?.error);
-      return;
-    }
+    const resolved = requireIdentity(req, res);
+    if (!resolved) return;
     const state = await getVerificationState(resolved.userId);
     res.json({ ok: true, ...state });
   } catch (e) {
@@ -51,11 +42,8 @@ verificationRouter.post(
   "/verification/start",
   async (req: Request, res: Response) => {
     try {
-      const resolved = resolveUserId(req);
-      if (!resolved || resolved.error) {
-        unauthorized(res, resolved?.error);
-        return;
-      }
+      const resolved = requireIdentity(req, res);
+      if (!resolved) return;
       const rollNo = String(req.body?.rollNo ?? "").trim();
       const sent = await startEmailVerification(resolved.userId, rollNo);
       res.json({ ok: true, ...sent });
@@ -70,11 +58,8 @@ verificationRouter.post(
   "/verification/confirm",
   async (req: Request, res: Response) => {
     try {
-      const resolved = resolveUserId(req);
-      if (!resolved || resolved.error) {
-        unauthorized(res, resolved?.error);
-        return;
-      }
+      const resolved = requireIdentity(req, res);
+      if (!resolved) return;
       const rollNo = String(req.body?.rollNo ?? "").trim();
       const code = String(req.body?.code ?? "").trim();
       const state = await confirmEmailVerification(
@@ -94,11 +79,8 @@ verificationRouter.post(
   "/verification/options",
   async (req: Request, res: Response) => {
     try {
-      const resolved = resolveUserId(req);
-      if (!resolved || resolved.error) {
-        unauthorized(res, resolved?.error);
-        return;
-      }
+      const resolved = requireIdentity(req, res);
+      if (!resolved) return;
       const { hideLeaderboard, blockLookups, blockRegistration } =
         req.body ?? {};
       if (
@@ -130,11 +112,8 @@ verificationRouter.post(
   "/verification/block",
   async (req: Request, res: Response) => {
     try {
-      const resolved = resolveUserId(req);
-      if (!resolved || resolved.error) {
-        unauthorized(res, resolved?.error);
-        return;
-      }
+      const resolved = requireIdentity(req, res);
+      if (!resolved) return;
       const blocked = req.body?.blocked;
       if (typeof blocked !== "boolean") {
         res.status(400).json({ ok: false, error: "blocked must be a boolean" });

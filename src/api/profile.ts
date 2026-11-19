@@ -1,5 +1,5 @@
 import { Request, Response, Router } from "express";
-import { resolveUserId } from "./resolveUser.js";
+import { attachedIdentity } from "./resolveUser.js";
 import {
   getRegistration,
   upsertRegistration,
@@ -28,11 +28,17 @@ const unauthorized = (res: Response, error: string | undefined) => {
 profileRouter.get("/profile", async (req: Request, res: Response) => {
   res.set("Cache-Control", "private, no-store");
   try {
-    const resolved = resolveUserId(req);
-    if (!resolved || resolved.error) {
-      unauthorized(res, resolved?.error);
+    // the identity middleware already settled the signature once; the 401
+    // body keeps the `found` field the app reads on a failure
+    const identity = attachedIdentity(req, res);
+    if (identity.status !== "authenticated") {
+      unauthorized(
+        res,
+        identity.status === "invalid" ? identity.error : undefined,
+      );
       return;
     }
+    const resolved = { userId: identity.userId, user: identity.user };
 
     const registration = await getRegistration(resolved.userId);
     const student = registration
@@ -70,11 +76,15 @@ profileRouter.get("/profile", async (req: Request, res: Response) => {
 // POST /api/register — create or edit the registration
 profileRouter.post("/register", async (req: Request, res: Response) => {
   try {
-    const resolved = resolveUserId(req);
-    if (!resolved || resolved.error) {
-      unauthorized(res, resolved?.error);
+    const identity = attachedIdentity(req, res);
+    if (identity.status !== "authenticated") {
+      unauthorized(
+        res,
+        identity.status === "invalid" ? identity.error : undefined,
+      );
       return;
     }
+    const resolved = { userId: identity.userId, user: identity.user };
 
     const rollNo = String(req.body?.rollNo ?? "")
       .trim()

@@ -1,5 +1,5 @@
 import { Request, Response, Router } from "express";
-import { resolveUserId } from "./resolveUser.js";
+import { requireIdentity } from "./resolveUser.js";
 import {
   appendUserMessage,
   createAndAnnounce,
@@ -24,12 +24,6 @@ import {
 import { logger } from "../config/logger.js";
 
 export const reportRouter = Router();
-
-const unauthorized = (res: Response, error: string | undefined) => {
-  res
-    .status(401)
-    .json({ ok: false, error: error ?? "Telegram initData required" });
-};
 
 /** The wire shape of one screenshot: a URL plus what the client needs to render it. */
 const attachmentJson = (attachment: ReportAttachment) => ({
@@ -75,11 +69,8 @@ reportRouter.post("/report", async (req: Request, res: Response) => {
       .catch((e) => logger.warn("[report] upload cleanup failed:", e));
   };
   try {
-    const resolved = resolveUserId(req);
-    if (!resolved || resolved.error) {
-      unauthorized(res, resolved?.error);
-      return;
-    }
+    const resolved = requireIdentity(req, res);
+    if (!resolved) return;
 
     try {
       upload = await readUpload(req);
@@ -139,11 +130,8 @@ reportRouter.post("/report", async (req: Request, res: Response) => {
 // thread roll-up: how many messages, who spoke last, how many are unseen
 reportRouter.get("/myreports", async (req: Request, res: Response) => {
   try {
-    const resolved = resolveUserId(req);
-    if (!resolved || resolved.error) {
-      unauthorized(res, resolved?.error);
-      return;
-    }
+    const resolved = requireIdentity(req, res);
+    if (!resolved) return;
 
     const rows = await listUserReports(Number(resolved.userId));
     res.json({
@@ -170,11 +158,8 @@ reportRouter.get("/myreports", async (req: Request, res: Response) => {
 // a single round trip. Opening it marks everything in it as read.
 reportRouter.get("/thread/:issue", async (req: Request, res: Response) => {
   try {
-    const resolved = resolveUserId(req);
-    if (!resolved || resolved.error) {
-      unauthorized(res, resolved?.error);
-      return;
-    }
+    const resolved = requireIdentity(req, res);
+    if (!resolved) return;
 
     const id = parseIssueId(String(req.params.issue));
     const data = id ? await getReportThread(id, "user") : null;
@@ -230,11 +215,8 @@ reportRouter.post("/thread/:issue", async (req: Request, res: Response) => {
       .catch((e) => logger.warn("[report] upload cleanup failed:", e));
   };
   try {
-    const resolved = resolveUserId(req);
-    if (!resolved || resolved.error) {
-      unauthorized(res, resolved?.error);
-      return;
-    }
+    const resolved = requireIdentity(req, res);
+    if (!resolved) return;
 
     try {
       upload = await readUpload(req);

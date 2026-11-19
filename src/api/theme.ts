@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { resolveUserId } from "./resolveUser.js";
+import { requireIdentity } from "./resolveUser.js";
 import { setUserTheme } from "../db/userSettings.model.js";
 import { logger } from "../config/logger.js";
 
@@ -15,11 +15,8 @@ const HEX = /^#[0-9a-f]{6}$/i;
 themeRouter.post("/theme", async (req: Request, res: Response) => {
   res.set("Cache-Control", "private, no-store");
 
-  const resolved = resolveUserId(req);
-  if (!resolved || resolved.error) {
-    res.status(401).json({ ok: false, error: "Telegram initData required" });
-    return;
-  }
+  const resolved = requireIdentity(req, res);
+  if (!resolved) return;
 
   const bgColor =
     typeof req.body?.bgColor === "string" ? req.body.bgColor.trim() : "";
