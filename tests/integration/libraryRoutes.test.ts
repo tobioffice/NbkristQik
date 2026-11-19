@@ -227,6 +227,70 @@ const makePage = (docId: string, page: number): void => {
   );
 };
 
+describe("cross-site guard on mutating routes", () => {
+  // The session cookie is SameSite=None, so a third-party page can attach
+  // it to a form POST. The guard refuses anything that names a foreign
+  // origin or an explicit cross-site fetch context; header-less callers
+  // (old webviews, tests) are unaffected.
+  //
+  // A dedicated account keeps these exchanges off the shared per-account
+  // session budget the rest of this file carefully manages.
+  const GUARD_USER = 666777888;
+
+  it("refuses a POST with a foreign Origin", async () => {
+    const res = await request(app)
+      .post("/api/library/session")
+      .set("Origin", "https://evil.example")
+      .set("X-Forwarded-For", "198.51.100.1")
+      .send({ initData: makeInitData(GUARD_USER) });
+
+    expect(res.status).toBe(403);
+    expect(res.body.error).toContain("another site");
+  });
+
+  it("refuses a POST that declares itself cross-site", async () => {
+    const res = await request(app)
+      .post("/api/library/session")
+      .set("Sec-Fetch-Site", "cross-site")
+      .set("X-Forwarded-For", "198.51.100.2")
+      .send({ initData: makeInitData(GUARD_USER) });
+
+    expect(res.status).toBe(403);
+  });
+
+  it("accepts a POST whose Origin is the deployment's allowlisted web app", async () => {
+    const res = await request(app)
+      .post("/api/library/session")
+      .set("Origin", "https://checker.tobioffice.online")
+      .set("X-Forwarded-For", "198.51.100.3")
+      .send({ initData: makeInitData(GUARD_USER) });
+
+    expect(res.status).not.toBe(403);
+  });
+
+  it("accepts a same-origin POST and a same-origin fetch context", async () => {
+    const res = await request(app)
+      .post("/api/library/session")
+      .set("Host", "checker.tobioffice.online")
+      .set("Origin", "https://checker.tobioffice.online")
+      .set("Sec-Fetch-Site", "same-origin")
+      .set("X-Forwarded-For", "198.51.100.4")
+      .send({ initData: makeInitData(GUARD_USER) });
+
+    expect(res.status).not.toBe(403);
+  });
+
+  it("still serves GETs with a foreign Origin: no side effect to guard", async () => {
+    const res = await request(app)
+      .get("/api/library/subjects")
+      .set("Origin", "https://evil.example");
+
+    // no session on the request: the answer is the auth failure, not a
+    // cross-site refusal
+    expect(res.status).not.toBe(403);
+  });
+});
+
 describe("opening the library", () => {
   it("swaps a signed initData for a session cookie", async () => {
     await upsertRegistration(String(REGISTERED), "23CS1042", "Test Student");

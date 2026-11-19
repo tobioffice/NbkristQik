@@ -105,6 +105,14 @@ const buildOverlay = (
   ${rows.join("\n  ")}`;
 };
 
+/** The page file is not on disk: a bad ingest or a pruned document. */
+export class MissingPageError extends Error {
+  constructor() {
+    super("no such page");
+    this.name = "MissingPageError";
+  }
+}
+
 /**
  * Stamps one page. Returns the SVG to send.
  *
@@ -120,7 +128,7 @@ export const stampPage = async (
     page = await readFile(pagePath, "utf8");
   } catch (e) {
     if ((e as { code?: string }).code === "ENOENT") {
-      throw new Error("no such page");
+      throw new MissingPageError();
     }
     throw e;
   }

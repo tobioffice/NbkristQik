@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { existsSync } from "fs";
+import type { NextFunction } from "express";
 import path from "path";
 import { verifyInitData } from "../services/telegramAuth.js";
 import {
@@ -8,7 +8,7 @@ import {
 } from "../services/library/access.js";
 import { trackActivity } from "../services/tracker.js";
 import { logger } from "../config/logger.js";
-import { ENV } from "../config/environmentals.js";
+import { ENV, CORS_ORIGINS } from "../config/environmentals.js";
 import {
   consumePcLoginToken,
   createSession,
@@ -34,7 +34,11 @@ import {
   type LibraryDocument,
 } from "../db/library.model.js";
 import { documentPagesDir, pageFileName } from "../services/library/paths.js";
-import { stampPage, watermarkToken } from "../services/library/watermark.js";
+import {
+  MissingPageError,
+  stampPage,
+  watermarkToken,
+} from "../services/library/watermark.js";
 import {
   ensureWatermarkedPdf,
   PdfBusyError,
@@ -61,11 +65,9 @@ import { bot } from "../bot/bot.js";
  *
  * Both are checked by the two helpers below, so no route can forget one.
  *
- * TODO(P3-06): `src/api/profile.ts` is the registration writer and should call
- * `invalidateStudentContext(userId)` (exported by services/library/entitlement)
- * after a successful upsert, so a changed roll reaches the library on the next
- * request instead of the next one-minute window. That file is outside this
- * change; until it is wired, the TTL is the worst case.
+ * `src/api/profile.ts`, the registration writer, invalidates the library
+ * context after a successful upsert; the verification flow and the bot's
+ * registration path do the same.
  */
 
 export const libraryRouter = Router();
@@ -75,6 +77,52 @@ export const libraryRouter = Router();
 libraryRouter.use((_req, res, next) => {
   res.set("Cache-Control", "private, no-store");
   res.vary("Cookie");
+  next();
+});
+
+// The session cookie is SameSite=None (the Telegram webview runs the app in
+// a cross-site iframe), so a browser attaches it to third-party form POSTs
+// too. A browser POST always carries an Origin — and on modern engines a
+// Sec-Fetch-Site — so refuse anything that names a foreign origin or an
+// explicit cross-site context. Header-less callers (old webviews, tests, the
+// bot's own tools) pass: a cross-site browser POST cannot be header-less.
+libraryRouter.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.method !== "POST" && req.method !== "DELETE") {
+    next();
+    return;
+  }
+
+  const secFetchSite = String(req.headers["sec-fetch-site"] ?? "");
+  if (secFetchSite) {
+    if (
+      secFetchSite !== "same-origin" &&
+      secFetchSite !== "same-site" &&
+      secFetchSite !== "none"
+    ) {
+      refuse(res, 403, "This request came from another site.");
+      return;
+    }
+    next();
+    return;
+  }
+
+  const origin = String(req.headers.origin ?? "");
+  if (origin) {
+    let host: string | null = null;
+    try {
+      host = new URL(origin).host;
+    } catch {
+      host = null;
+    }
+    const sameHost =
+      host !== null &&
+      typeof req.headers.host === "string" &&
+      host === req.headers.host;
+    if (!sameHost && !CORS_ORIGINS.includes(origin)) {
+      refuse(res, 403, "This request came from another site.");
+      return;
+    }
+  }
   next();
 });
 
@@ -601,10 +649,6 @@ libraryRouter.get("/page/:id/:page", async (req: Request, res: Response) => {
   }
 
   const file = path.join(documentPagesDir(doc.id), pageFileName(page));
-  if (!existsSync(file)) {
-    refuse(res, 404, "No such page.");
-    return;
-  }
 
   // The page carries an opaque token, not the reader's id or roll number:
   // the student sees a code they cannot read, and we resolve it server side
@@ -622,10 +666,27 @@ libraryRouter.get("/page/:id/:page", async (req: Request, res: Response) => {
     refuse(res, 503, "Library pages are temporarily unavailable.");
     return;
   }
-  const stamped = await stampPage(file, {
-    token,
-    label: `${doc.title}${doc.unit ? ` · Unit ${doc.unit}` : ""} · p${page}`,
-  });
+
+  let stamped: string;
+  try {
+    stamped = await stampPage(file, {
+      token,
+      label: `${doc.title}${doc.unit ? ` · Unit ${doc.unit}` : ""} · p${page}`,
+    });
+  } catch (e) {
+    // stampPage reads the page file itself and classifies a missing one, so
+    // no synchronous stat blocks the event loop on this hot path
+    if (e instanceof MissingPageError) {
+      refuse(res, 404, "No such page.");
+      return;
+    }
+    logger.error(
+      "[library] could not stamp a page:",
+      e instanceof Error ? e.message : e,
+    );
+    refuse(res, 500, "Could not open this page.");
+    return;
+  }
 
   res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
   // The mark is per reader, so the bytes may live in that reader's private
