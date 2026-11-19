@@ -27,6 +27,7 @@ import {
 } from "../../db/registration.model.js";
 import { getStudentCached, StudentNotFoundError } from "../redis/utils.js";
 import { invalidateStudentContext } from "../library/entitlement.js";
+import { turso } from "../../db/db.js";
 import { ADMIN_ID, VERIFY_EMAIL_DOMAIN } from "../../config/environmentals.js";
 import { ROLL_REGEX } from "../../constants/index.js";
 import { logger } from "../../config/logger.js";
@@ -211,22 +212,36 @@ export const confirmEmailVerification = async (
     throw new VerificationError("That code doesn't match.", 400);
   }
 
-  await consumeVerification(row.id);
-  await upsertRollClaim(rollNo, userId, row.email);
-
-  // Verification proves ownership: every other account holding this roll
-  // loses the registration now, not on its next edit.
-  const removed = await deleteRegistrationsForRollExcept(rollNo, userId);
-  for (const other of removed) invalidateStudentContext(other);
-
+  // One transaction: a crash between consuming the code and writing the
+  // caller's registration would otherwise leave a claimed roll whose owner
+  // has no registration — and the consumed code means no retry. The reads
+  // for the invalidations stay inside so no other account is dropped on a
+  // half-finished confirm.
   const existing = await getRegistration(userId);
-  await upsertRegistration(
-    userId,
-    rollNo,
-    existing && existing.roll_no.toUpperCase() === rollNo
-      ? existing.display_name
-      : null,
-  );
+  const tx = await turso.transaction("write");
+  let removed: string[];
+  try {
+    await consumeVerification(row.id, tx);
+    await upsertRollClaim(rollNo, userId, row.email, tx);
+
+    // Verification proves ownership: every other account holding this roll
+    // loses the registration now, not on its next edit.
+    removed = await deleteRegistrationsForRollExcept(rollNo, userId, tx);
+
+    await upsertRegistration(
+      userId,
+      rollNo,
+      existing && existing.roll_no.toUpperCase() === rollNo
+        ? existing.display_name
+        : null,
+      tx,
+    );
+    await tx.commit();
+  } catch (e) {
+    await tx.rollback().catch(() => undefined);
+    throw e;
+  }
+  for (const other of removed) invalidateStudentContext(other);
   invalidateStudentContext(userId);
   logger.info(
     `[verify] roll ${rollNo} claimed by user ${userId}; ${removed.length} other registration(s) removed`,

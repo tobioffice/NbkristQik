@@ -1,4 +1,4 @@
-import { turso } from "./db.js";
+import { turso, type SqlExecutor } from "./db.js";
 
 /**
  * Optional user registration: a Telegram user pins their default roll number
@@ -10,10 +10,13 @@ import { turso } from "./db.js";
  * (including friend lookups) and would silently overwrite an explicit
  * registration. Registration is deliberate user state that must not drift.
  *
- * One roll belongs to one Telegram account. Two accounts claiming the same
- * roll would make the leaderboard name and the admin trace ambiguous, so the
- * app-level guard below rejects the second claim. A unique index added by the
- * schema migration backs this up for concurrent writers.
+ * A roll may be held by several accounts at once — schema v4 deliberately
+ * dropped the unique index that used to prevent it. Ownership is settled
+ * separately by college-email verification (see roll_claims and
+ * services/verification/otp.ts): confirming a code makes one account the
+ * roll's verified owner, removes every other registration for it, and can
+ * bar other accounts from registering or reading it. Until a roll is
+ * verified, this table stays shared and unverified on purpose.
  */
 
 export interface Registration {
@@ -37,8 +40,9 @@ export const upsertRegistration = async (
   userId: string,
   rollNo: string,
   displayName: string | null,
+  exec: SqlExecutor = turso,
 ): Promise<void> => {
-  await turso.execute({
+  await exec.execute({
     sql: `INSERT INTO registrations (userId, roll_no, display_name, registered_at, updated_at)
           VALUES (?, ?, ?, datetime('now'), datetime('now'))
           ON CONFLICT(userId) DO UPDATE SET
@@ -88,9 +92,10 @@ export const getRegistrationByRoll = async (
 export const deleteRegistrationsForRollExcept = async (
   rollNo: string,
   keepUserId: string,
+  exec: SqlExecutor = turso,
 ): Promise<string[]> => {
   const roll = rollNo.toUpperCase();
-  const found = await turso.execute({
+  const found = await exec.execute({
     sql: `SELECT userId FROM registrations
           WHERE UPPER(roll_no) = ? AND userId <> ?`,
     args: [roll, String(keepUserId)],
@@ -98,7 +103,7 @@ export const deleteRegistrationsForRollExcept = async (
   const removed = found.rows.map((row) => String(row.userId));
   if (removed.length === 0) return [];
 
-  await turso.execute({
+  await exec.execute({
     sql: `DELETE FROM registrations WHERE UPPER(roll_no) = ? AND userId <> ?`,
     args: [roll, String(keepUserId)],
   });

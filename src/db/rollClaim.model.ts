@@ -1,4 +1,4 @@
-import { turso } from "./db.js";
+import { turso, type SqlExecutor } from "./db.js";
 
 /**
  * A roll proved by its college email. Exactly one account owns a roll; the
@@ -70,8 +70,9 @@ export const upsertRollClaim = async (
   rollNo: string,
   userId: string,
   email: string,
+  exec: SqlExecutor = turso,
 ): Promise<void> => {
-  await turso.execute({
+  await exec.execute({
     sql: `INSERT INTO roll_claims (roll_no, user_id, email, verified_at, updated_at)
           VALUES (?, ?, ?, datetime('now'), datetime('now'))
           ON CONFLICT(roll_no) DO UPDATE SET

@@ -1,4 +1,4 @@
-import { turso } from "./db.js";
+import { turso, type SqlExecutor } from "./db.js";
 
 /**
  * One verification code, stored as a salted hash. The newest unconsumed,
@@ -102,8 +102,11 @@ export const bumpVerificationAttempts = async (id: number): Promise<void> => {
   });
 };
 
-export const consumeVerification = async (id: number): Promise<void> => {
-  await turso.execute({
+export const consumeVerification = async (
+  id: number,
+  exec: SqlExecutor = turso,
+): Promise<void> => {
+  await exec.execute({
     sql: `UPDATE email_verifications SET consumed_at = datetime('now') WHERE id = ?`,
     args: [id],
   });

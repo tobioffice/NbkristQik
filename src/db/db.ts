@@ -1,4 +1,5 @@
 import { createClient } from "@libsql/client";
+import type { Client, Transaction } from "@libsql/client";
 import { config } from "dotenv";
 import { logger } from "../config/logger.js";
 config();
@@ -30,6 +31,15 @@ export const turso = localUrl
       url: remoteUrl,
       authToken: process.env.TURSO_AUTH_TOKEN,
     });
+
+/**
+ * A client or an open write transaction — both run statements the same way.
+ * Model functions take this as an optional last parameter so a service can
+ * compose several of them into one atomic sequence (see `createReport` and
+ * the verification confirm path) without duplicating SQL.
+ */
+export type SqlExecutor =
+  Pick<Client, "execute"> | Pick<Transaction, "execute">;
 
 /**
  * Apply the durability/concurrency settings the embedded database needs.
