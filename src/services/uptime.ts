@@ -20,7 +20,6 @@ import { BASE_URL } from "../constants/index.js";
 import { logger } from "../config/logger.js";
 
 const INTERVAL_MS = 5 * 60 * 1000;
-const RETENTION_DAYS = 95;
 // The production VM occasionally pauses for several seconds (host-level CPU
 // steal / storage hiccups): observed stalls of 3–8.2s hit ALL components in
 // the same second. The timeout sits just above that band, and anything that
@@ -246,27 +245,6 @@ const probe = async () => {
   );
 };
 
-const prune = async () => {
-  try {
-    const { turso } = await import("../db/db.js");
-    // RETENTION_DAYS is a module constant (not user input), so interpolating
-    // the integer into the datetime() modifier is safe
-    await turso.execute(
-      `DELETE FROM uptime_log WHERE created_at < datetime('now', '-${RETENTION_DAYS} days')`,
-    );
-    // Reuse the existing daily job to keep activity log and expired admin
-    // sessions from growing forever on the low-memory server.
-    await turso.execute(
-      `DELETE FROM activity_log WHERE created_at < datetime('now', '-${RETENTION_DAYS} days')`,
-    );
-    await turso.execute(
-      `DELETE FROM admin_sessions WHERE expires_at < datetime('now')`,
-    );
-  } catch (e) {
-    logger.warn("[uptime] prune failed:", e);
-  }
-};
-
 export const startUptimeMonitor = async () => {
   if (inited) return;
   inited = true;
@@ -280,10 +258,8 @@ export const startUptimeMonitor = async () => {
   // initial probe after short delay (let API server bind first)
   setTimeout(probe, 15 * 1000);
   setInterval(probe, INTERVAL_MS);
-  // prune once a day
-  setInterval(prune, 24 * 60 * 60 * 1000);
 
   logger.info(
-    `[uptime] monitor started (${Object.keys(componentProbes).join("/")}, 5min interval, 90d retention)`,
+    `[uptime] monitor started (${Object.keys(componentProbes).join("/")}, 5min interval; retention runs in maintenance)`,
   );
 };
