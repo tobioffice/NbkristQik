@@ -15,14 +15,16 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      // floor ~2 points below the measured total (2026-11-04:
-      // statements 72.22, branches 76.85, functions 84.02, lines 72.22),
-      // so ordinary test churn does not flip CI; raise as coverage improves
+      // floor ~2 points below the measured total (2026-11-19, vitest 5:
+      // statements 83.31, branches 71.87, functions 80.83, lines 85.42 —
+      // vitest 5 counts branches and functions more strictly than 2.x, so
+      // those two dropped while statements and lines rose), so ordinary
+      // test churn does not flip CI; raise as coverage improves
       thresholds: {
-        statements: 70,
-        branches: 75,
-        functions: 82,
-        lines: 70,
+        statements: 81,
+        branches: 70,
+        functions: 79,
+        lines: 83,
       },
       exclude: [
         'node_modules/',
