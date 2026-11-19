@@ -456,6 +456,78 @@ export const getStudentRank = async (
   };
 };
 
+export interface StudentMetricRank {
+  rank: number;
+  total: number;
+  value: number | null;
+}
+
+export interface StudentRanks {
+  attendance: StudentMetricRank | null;
+  midmarks: StudentMetricRank | null;
+}
+
+/**
+ * Both metric ranks for one student in a single scan.
+ *
+ * `/api/me` needs attendance and mid-marks together, and two calls to
+ * `getStudentRank` meant two full-table window sorts on every app open. The
+ * windows run over the union of rows with either metric set: SQLite sorts
+ * NULL scores last in DESC order, so a null-metric row cannot precede a
+ * real one and the ranks are identical to the per-metric queries. The
+ * totals count only non-null scores, exactly like the filtered sets there.
+ */
+export const getStudentRanks = async (
+  rollNo: string,
+): Promise<StudentRanks> => {
+  const result = await turso.execute({
+    sql: `
+      WITH ranked AS (
+        SELECT st.roll_no,
+               ROUND(st.attendance_percentage, 2) AS att_score,
+               RANK() OVER (
+                 ORDER BY ROUND(st.attendance_percentage, 2) DESC
+               ) AS att_rank,
+               COUNT(ROUND(st.attendance_percentage, 2)) OVER () AS att_total,
+               ROUND(st.mid_marks_avg, 1) AS mid_score,
+               RANK() OVER (
+                 ORDER BY ROUND(st.mid_marks_avg, 1) DESC
+               ) AS mid_rank,
+               COUNT(ROUND(st.mid_marks_avg, 1)) OVER () AS mid_total
+        FROM student_stats st
+        JOIN studentsnew s ON st.roll_no = s.roll_no
+        WHERE (st.attendance_percentage IS NOT NULL
+               OR st.mid_marks_avg IS NOT NULL)
+          AND st.year_sem = s.year
+      )
+      SELECT att_score, att_rank, att_total, mid_score, mid_rank, mid_total
+      FROM ranked WHERE roll_no = ?
+    `,
+    args: [rollNo.toUpperCase()],
+  });
+
+  const row = result.rows[0];
+  if (!row) return { attendance: null, midmarks: null };
+
+  const metric = (
+    score: unknown,
+    rank: unknown,
+    total: unknown,
+  ): StudentMetricRank | null =>
+    score == null
+      ? null
+      : {
+          rank: Number(rank),
+          total: Number(total || 0),
+          value: Number(score),
+        };
+
+  return {
+    attendance: metric(row.att_score, row.att_rank, row.att_total),
+    midmarks: metric(row.mid_score, row.mid_rank, row.mid_total),
+  };
+};
+
 /**
  * The sections that actually exist for the chosen year/branch, so the filter
  * offers live options instead of a hard-coded A-J.

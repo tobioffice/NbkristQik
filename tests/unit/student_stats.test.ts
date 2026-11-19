@@ -6,6 +6,7 @@ import {
   getLeaderboardFacets,
   getLastSyncAt,
   getStudentRank,
+  getStudentRanks,
   initLeaderboardIndexes,
   initUptimeTable,
   getUptimeDailyBuckets,
@@ -164,6 +165,57 @@ describe("getLeaderboard", () => {
         "DELETE FROM student_stats WHERE roll_no = 'CCC00001'",
       );
       await turso.execute("DELETE FROM studentsnew WHERE roll_no = 'CCC00001'");
+    }
+  });
+});
+
+describe("getStudentRanks", () => {
+  it("answers both metrics in one scan, matching the per-metric ranks", async () => {
+    const { attendance, midmarks } = await getStudentRanks("AAA00001");
+
+    // Alice ties Bob on attendance (90.00), so both share rank 1 of 3;
+    // her 28.0 mid average is second behind Cara's 29.0
+    expect(attendance).toEqual({ rank: 1, total: 3, value: 90 });
+    expect(midmarks).toEqual({ rank: 2, total: 3, value: 28 });
+
+    const attOnly = await getStudentRank("AAA00001", "attendance");
+    const midOnly = await getStudentRank("AAA00001", "midmarks");
+    expect(attendance).toEqual(attOnly);
+    expect(midmarks).toEqual(midOnly);
+  });
+
+  it("returns null only for the metric the student lacks", async () => {
+    await turso.batch(
+      [
+        `INSERT INTO studentsnew VALUES ('DDD00001', 'Dov', 'A', '5', '31')`,
+        `INSERT INTO student_stats
+           (roll_no, attendance_percentage, mid_marks_avg, year_sem)
+         VALUES ('DDD00001', 70.0, NULL, '31')`,
+      ],
+      "write",
+    );
+
+    try {
+      const { attendance, midmarks } = await getStudentRanks("DDD00001");
+      expect(attendance).toEqual({ rank: 4, total: 4, value: 70 });
+      // the union set contains the row, but its null mid score ranks last
+      // and reports as absent, exactly like the per-metric query
+      expect(midmarks).toBeNull();
+
+      // a student with no stats row gets neither
+      await turso.execute(
+        `INSERT INTO studentsnew VALUES ('EEE00001', 'Eve', 'A', '5', '31')`,
+      );
+      expect(await getStudentRanks("EEE00001")).toEqual({
+        attendance: null,
+        midmarks: null,
+      });
+    } finally {
+      await turso.execute(
+        "DELETE FROM student_stats WHERE roll_no = 'DDD00001'",
+      );
+      await turso.execute("DELETE FROM studentsnew WHERE roll_no = 'DDD00001'");
+      await turso.execute("DELETE FROM studentsnew WHERE roll_no = 'EEE00001'");
     }
   });
 });

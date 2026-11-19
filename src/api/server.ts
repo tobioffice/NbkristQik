@@ -8,7 +8,7 @@ import {
   getLeaderboardFacets,
   getLeaderboardCoverage,
   getLastSyncAt,
-  getStudentRank,
+  getStudentRanks,
   getUptimeSummary,
   getUptimeDailyBuckets,
 } from "../db/student_stats.model.js";
@@ -739,10 +739,8 @@ app.get(
       }
 
       const rollNo = registration.roll_no;
-      const [attendance, midmarks] = await Promise.all([
-        getStudentRank(rollNo, "attendance"),
-        getStudentRank(rollNo, "midmarks"),
-      ]);
+      // one scan for both ranks: this runs on every app open
+      const { attendance, midmarks } = await getStudentRanks(rollNo);
 
       res.json({
         found: true,
