@@ -30,7 +30,7 @@ fn options() -> StampOptions<'static> {
 }
 
 #[test]
-fn stamps_every_page_and_leaves_the_page_count_alone() {
+fn marks_only_the_first_page_and_leaves_the_page_count_alone() {
     let directory = scratch("stamp");
     let output = directory.join("stamped.pdf");
 
@@ -41,58 +41,64 @@ fn stamps_every_page_and_leaves_the_page_count_alone() {
     let page_ids: Vec<_> = document.get_pages().into_values().collect();
     assert_eq!(page_ids.len(), 2);
 
-    for (index, page_id) in page_ids.iter().enumerate() {
-        let content = document.get_page_content(*page_id);
-        let content = String::from_utf8_lossy(&content);
+    let first = String::from_utf8_lossy(&document.get_page_content(page_ids[0])).to_string();
+    // one footer on page 1, carrying the token once
+    assert_eq!(first.matches(TOKEN).count(), 1);
+    assert!(first.contains("23CS31T2"));
+    assert!(first.contains("Unit II"));
+    assert!(first.contains("p1"));
 
-        // three diagonal rows and one footer, each carrying the token
-        assert_eq!(content.matches(TOKEN).count(), 4);
-        assert!(content.contains(&format!("p{}", index + 1)));
-        assert!(content.contains("23CS31T2"));
-        assert!(content.contains("Unit II"));
+    let resources = document.get_page_resources(page_ids[0]).unwrap().0.unwrap();
+    let fonts = resources.get(b"Font").unwrap().as_dict().unwrap();
+    assert!(fonts.iter().any(|(_, font)| {
+        document
+            .get_object(font.as_reference().unwrap())
+            .ok()
+            .and_then(|object| object.as_dict().ok())
+            .and_then(|font| font.get(b"BaseFont").ok())
+            .and_then(|name| name.as_name().ok())
+            == Some(b"Helvetica-Bold")
+    }));
 
-        let resources = document.get_page_resources(*page_id).unwrap().0.unwrap();
-        let fonts = resources.get(b"Font").unwrap().as_dict().unwrap();
-        assert!(fonts.iter().any(|(_, font)| {
-            document
-                .get_object(font.as_reference().unwrap())
-                .ok()
-                .and_then(|object| object.as_dict().ok())
-                .and_then(|font| font.get(b"BaseFont").ok())
-                .and_then(|name| name.as_name().ok())
-                == Some(b"Helvetica-Bold")
-        }));
+    let states = resources.get(b"ExtGState").unwrap().as_dict().unwrap();
+    assert_eq!(states.len(), 1);
 
-        let states = resources.get(b"ExtGState").unwrap().as_dict().unwrap();
-        assert_eq!(states.len(), 2);
-    }
+    // Page 2 is not marked.
+    let second = String::from_utf8_lossy(&document.get_page_content(page_ids[1])).to_string();
+    assert_eq!(second.matches(TOKEN).count(), 0);
 
     fs::remove_dir_all(directory).unwrap();
 }
 
 #[test]
-fn keeps_the_source_content_stream_before_the_overlay() {
+fn marks_the_first_page_and_leaves_later_pages_alone() {
     let directory = scratch("order");
     let output = directory.join("stamped.pdf");
     stamp_file(&fixture(), &output, &options()).unwrap();
 
     let source = Document::load(fixture()).unwrap();
-    let source_page = source.get_pages().into_values().next().unwrap();
-    let source_content = source.get_page_content(source_page);
+    let source_pages: Vec<_> = source.get_pages().into_values().collect();
+    let source_first = source.get_page_content(source_pages[0]);
+    let source_second = source.get_page_content(source_pages[1]);
 
     let document = Document::load(&output).unwrap();
-    let page_id = document.get_pages().into_values().next().unwrap();
-    let content = document.get_page_content(page_id);
+    let page_ids: Vec<_> = document.get_pages().into_values().collect();
+    let first = document.get_page_content(page_ids[0]);
+    let second = document.get_page_content(page_ids[1]);
 
-    // The overlay is appended, so the source bytes come first unchanged.
-    assert!(content.starts_with(&source_content));
-    assert!(String::from_utf8_lossy(&content).contains(TOKEN));
+    // The overlay is appended, so page 1's source bytes come first unchanged.
+    assert!(first.starts_with(&source_first));
+    assert!(String::from_utf8_lossy(&first).contains(TOKEN));
 
-    // One balanced q/Q wraps the overlay, so the viewer's graphics state is
+    // One balanced q/Q wraps the footer, so the viewer's graphics state is
     // exactly where the source left it.
-    let overlay = String::from_utf8_lossy(&content[source_content.len()..]).to_string();
+    let overlay = String::from_utf8_lossy(&first[source_first.len()..]).to_string();
     assert!(overlay.trim_start_matches('\n').starts_with("q\n"));
     assert!(overlay.trim_end_matches('\n').ends_with('Q'));
+
+    // Page 2 is byte-for-byte the source page.
+    assert_eq!(second, source_second);
+    assert!(!String::from_utf8_lossy(&second).contains(TOKEN));
 
     fs::remove_dir_all(directory).unwrap();
 }

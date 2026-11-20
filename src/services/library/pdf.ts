@@ -25,10 +25,10 @@ import {
  * is a copy stamped with the reader's opaque token, so a file that turns up
  * somewhere it should not still names the account it was issued to.
  *
- * The stamp is fixed for a reader and a document version, so the first
- * download pays for the copy and every later one is a sendfile. The cache
- * filename carries the document version and byte size: a re-ingest changes
- * the version, so an old copy can never be served for new bytes.
+ * The stamp is fixed for a reader, a stamp revision and a document version,
+ * so the first download pays for the copy and every later one is a sendfile.
+ * The cache filename carries the layout revision, the document version and
+ * the byte size: a re-ingest or a layout change can never serve stale bytes.
  *
  * The drawing happens in `native/pdfstamp`, a small Rust binary. Node keeps
  * the source check, the queue, the cache and the atomic rename; the document
@@ -63,9 +63,9 @@ const inFlight = new Map<string, Promise<string>>();
  * A global cap on concurrent PDF stamps. Each stamp is a short-lived native
  * process, so the document lives outside the Node heap; two at a time keeps
  * memory and CPU predictable on the small VM. A 20 MB source measured about
- * 44 MB peak and 11 ms in the binary, so the cap is about bounding the number
- * of processes, not the JavaScript heap it used to protect. Overflow is a
- * clear 503, never an unbounded fork.
+ * 43.5 MB peak and 10.5 ms in the binary, so the cap is about bounding the
+ * number of processes, not the JavaScript heap it used to protect. Overflow
+ * is a clear 503, never an unbounded fork.
  */
 const MAX_CONCURRENT_GENERATIONS = 2;
 const MAX_QUEUED_GENERATIONS = 8;
@@ -99,9 +99,19 @@ const releaseGeneration = (): void => {
 const safeFilePart = (value: string): string =>
   value.replace(/[^A-Za-z0-9._-]/g, "_") || "token";
 
-/** `<token>-v<version>-<bytes>.pdf`: the version and size pin the bytes. */
+/**
+ * Bumped when the drawing changes. Keep it in sync with the layout in
+ * `native/pdfstamp`; the cache filename carries it so a deploy cannot serve a
+ * copy stamped the previous way. Old files stay until the seven-day sweep.
+ */
+const STAMP_REVISION = 2;
+
+/**
+ * `<token>-s<stamp>-v<version>-<bytes>.pdf`: the layout, version and size pin
+ * the bytes.
+ */
 const cacheFileName = (doc: LibraryDocument, token: string): string =>
-  `${safeFilePart(token)}-v${doc.version}-${doc.bytes}.pdf`;
+  `${safeFilePart(token)}-s${STAMP_REVISION}-v${doc.version}-${doc.bytes}.pdf`;
 
 const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
@@ -149,8 +159,8 @@ const sourceFileFor = async (doc: LibraryDocument): Promise<string> => {
 };
 
 /**
- * Stamps every page into `output`: the token repeated diagonally, and a
- * footer naming the token, the subject and the page.
+ * Marks page 1 with a footer naming the token, the subject and the page.
+ * Later pages are left as they are; the source never leaves the server.
  *
  * The native binary does the drawing; this function owns the source check
  * and keeps the caller's error wording stable.

@@ -1,13 +1,17 @@
-//! Draws the library's per-reader watermark onto every page of a PDF.
+//! Draws the library's per-reader watermark onto a PDF.
 //!
 //! This is the native half of `src/services/library/pdf.ts`. The Node side
 //! owns sessions, entitlement, the disk cache and the queue; this program
-//! owns one job: read a source PDF, append the overlay to each page, write a
-//! new file.
+//! owns one job: read a source PDF, mark it, write a new file.
 //!
-//! The output must match the SVG page watermark (`watermark.ts`): the token
-//! three times on a -28° diagonal at 5% opacity, and a footer naming the
-//! token, the subject and the page at 42%. The ink is the same #1e2a38.
+//! The PDF carries a lighter mark than the SVG reader pages: one footer at
+//! the bottom of page 1, naming the token, the subject and the page at 42%.
+//! The ink is the same #1e2a38. Later pages are unstamped, but the file is
+//! always a marked copy, never the raw source.
+//!
+//! The Node cache key carries a matching `STAMP_REVISION` in `pdf.ts`. Bump
+//! both when this layout changes, or a deploy will serve a copy stamped the
+//! old way for up to seven days.
 //!
 //! # Why a separate process
 //!
@@ -19,10 +23,10 @@
 //! process boundary also means a malformed document cannot take the bot
 //! down with it.
 //!
-//! On the development box a 100-page text PDF stamps in about 4 ms at a
-//! 14 MB peak, against 39 ms warm (88 ms cold) and 65 MB of marginal memory
-//! for pdf-lib. A 300-page document is about 10.5 ms at the same peak,
-//! against 105 ms and 110 MB. See `docs/PDF-DELIVERY.md` for the full
+//! On the development box a 100-page text PDF stamps in about 3 ms at a
+//! 15 MB peak, against 36 ms warm (85 ms cold) and 67 MB of marginal memory
+//! for pdf-lib. A 300-page document is about 7.4 ms at the same peak,
+//! against 104 ms and 110 MB. See `docs/PDF-DELIVERY.md` for the full
 //! comparison.
 
 use lopdf::content::{Content, Operation};
@@ -35,13 +39,8 @@ const INK_R: f32 = 30.0 / 255.0;
 const INK_G: f32 = 42.0 / 255.0;
 const INK_B: f32 = 56.0 / 255.0;
 
-/// The same weights as the SVG page stamp.
-const REPEAT_OPACITY: f32 = 0.05;
+/// The footer weight, the same as the SVG page stamp.
 const FOOTER_OPACITY: f32 = 0.42;
-
-/// cos(-28°) and sin(-28°), the diagonal the page watermark uses.
-const ROT_COS: f32 = 0.882_947_6;
-const ROT_SIN: f32 = -0.469_471_57;
 
 /// The text drawn on one page, without the page number.
 #[derive(Debug, Clone, Copy)]
@@ -121,11 +120,10 @@ pub fn stamp_file(
         return Err(StampError::Encrypted);
     }
 
-    // One font and two alpha states serve every page. Standard-14
+    // One font and one alpha state, used on page 1. Standard-14
     // Helvetica-Bold is not embedded, exactly as pdf-lib drew it: the PDF
     // viewer supplies the face, so the output stays small.
     let font_id = add_font(&mut document);
-    let repeat_state = add_alpha_state(&mut document, REPEAT_OPACITY);
     let footer_state = add_alpha_state(&mut document, FOOTER_OPACITY);
 
     let pages: Vec<(u32, ObjectId)> = document.get_pages().into_iter().collect();
@@ -133,23 +131,24 @@ pub fn stamp_file(
         return Err(StampError::Unreadable("the PDF has no pages".into()));
     }
 
-    for (page_number, page_id) in &pages {
-        let (width, height) = page_size(&document, *page_id);
-        let names =
-            install_resources(&mut document, *page_id, font_id, repeat_state, footer_state)?;
-        let content = page_overlay(
-            width,
-            height,
-            options,
-            *page_number,
-            &names.font,
-            &names.repeat_state,
-            &names.footer_state,
-        );
-        document
-            .add_to_page_content(*page_id, content)
-            .map_err(|error| StampError::Invalid(error.to_string()))?;
-    }
+    // Only the first page is marked. A download is still a stamped copy:
+    // the footer names the account the file was issued to, and the source
+    // never leaves the server. A later page copied out of the file carries
+    // no mark; that is the accepted trade-off for a lighter handout.
+    let (page_number, page_id) = pages[0];
+    let (width, height) = page_size(&document, page_id);
+    let names = install_resources(&mut document, page_id, font_id, footer_state)?;
+    let content = first_page_overlay(
+        width,
+        height,
+        options,
+        page_number,
+        &names.font,
+        &names.footer_state,
+    );
+    document
+        .add_to_page_content(page_id, content)
+        .map_err(|error| StampError::Invalid(error.to_string()))?;
 
     document
         .save(output)
@@ -158,11 +157,11 @@ pub fn stamp_file(
     Ok(pages.len())
 }
 
-/// The three resource names a page's content stream refers to. They are
-/// chosen per page because a source may already use the obvious names.
+/// The resource names page 1's content stream refers to. They are chosen
+/// against the source's own resources because it may already use the obvious
+/// names.
 struct ResourceNames {
     font: Vec<u8>,
-    repeat_state: Vec<u8>,
     footer_state: Vec<u8>,
 }
 
@@ -185,20 +184,19 @@ fn add_alpha_state(document: &mut Document, opacity: f32) -> ObjectId {
     document.add_object(state)
 }
 
-/// Adds the font and alpha states to this page's own resource dictionary,
-/// preserving whatever it inherited or referenced.
+/// Adds the font and footer alpha state to this page's own resource
+/// dictionary, preserving whatever it inherited or referenced.
 ///
 /// A page may have `/Resources` as a direct dictionary, a reference on the
 /// page, or on an ancestor. The nearest one wins (ISO 32000-1 §7.7.3.4), so
 /// the base is the nearest direct dictionary, else the first reference in
 /// the chain. The result is written as a direct dictionary on the page: a
-/// small copy per page is cheaper than reasoning about one shared dictionary
-/// that must not be mutated under other pages.
+/// small copy on one page is cheaper than reasoning about one shared
+/// dictionary that must not be mutated under other pages.
 fn install_resources(
     document: &mut Document,
     page_id: ObjectId,
     font_id: ObjectId,
-    repeat_state: ObjectId,
     footer_state: ObjectId,
 ) -> Result<ResourceNames, StampError> {
     let mut resources = base_resources(document, page_id);
@@ -208,8 +206,6 @@ fn install_resources(
     fonts.set(font.clone(), Object::Reference(font_id));
 
     let mut states = child_dictionary(document, &resources, b"ExtGState");
-    let repeat = unique_name(&states, "NbkQikRpt");
-    states.set(repeat.clone(), Object::Reference(repeat_state));
     let footer = unique_name(&states, "NbkQikFtr");
     states.set(footer.clone(), Object::Reference(footer_state));
 
@@ -224,7 +220,6 @@ fn install_resources(
 
     Ok(ResourceNames {
         font,
-        repeat_state: repeat,
         footer_state: footer,
     })
 }
@@ -331,94 +326,51 @@ fn as_number(object: &Object) -> Option<f32> {
     }
 }
 
-/// The overlay for one page: three diagonal token rows and the footer.
-fn page_overlay(
+/// The mark for the first page: one footer at the bottom left.
+fn first_page_overlay(
     width: f32,
     height: f32,
     options: &StampOptions<'_>,
     page: u32,
     font: &[u8],
-    repeat_state: &[u8],
     footer_state: &[u8],
 ) -> Content {
-    let repeat_size = (width / 36.0).round().max(8.0);
     let footer_size = (width / 52.0).round().max(7.0);
-    let step = (height / 3.2).round();
     let ink = [INK_R, INK_G, INK_B];
 
-    let mut operations = Vec::with_capacity(4 + 3 * 9 + 10);
-    // One balanced q/Q around the whole overlay. The source keeps its own
-    // graphics state: appending a stream does not disturb it, and an extra
-    // `Q` on an empty stack makes poppler log a syntax error even though the
-    // specification calls it a no-op.
-    operations.push(operation("q", vec![]));
-
-    for row in 0..3 {
-        let x = -height * 0.12;
-        let y = step * (row as f32 + 0.8);
-        operations.push(operation("q", vec![]));
-        operations.push(operation("gs", vec![Object::Name(repeat_state.to_vec())]));
-        operations.push(operation(
+    let operations = vec![
+        // One balanced q/Q around the footer. The source keeps its own
+        // graphics state: appending a stream does not disturb it.
+        operation("q", vec![]),
+        operation("gs", vec![Object::Name(footer_state.to_vec())]),
+        operation(
             "rg",
             vec![
                 Object::Real(ink[0]),
                 Object::Real(ink[1]),
                 Object::Real(ink[2]),
             ],
-        ));
-        operations.push(operation("BT", vec![]));
-        operations.push(operation(
+        ),
+        operation("BT", vec![]),
+        operation(
             "Tf",
-            vec![Object::Name(font.to_vec()), Object::Real(repeat_size)],
-        ));
-        // [cos sin -sin cos x y]: the same -28° rotation pdf-lib applied.
-        operations.push(operation(
+            vec![Object::Name(font.to_vec()), Object::Real(footer_size)],
+        ),
+        operation(
             "Tm",
             vec![
-                Object::Real(ROT_COS),
-                Object::Real(ROT_SIN),
-                Object::Real(-ROT_SIN),
-                Object::Real(ROT_COS),
-                Object::Real(x),
-                Object::Real(y),
+                Object::Real(1.0),
+                Object::Real(0.0),
+                Object::Real(0.0),
+                Object::Real(1.0),
+                Object::Real((width * 0.03).round()),
+                Object::Real((height * 0.02).round()),
             ],
-        ));
-        operations.push(operation("Tj", vec![text(options.token)]));
-        operations.push(operation("ET", vec![]));
-        operations.push(operation("Q", vec![]));
-    }
-
-    operations.push(operation("q", vec![]));
-    operations.push(operation("gs", vec![Object::Name(footer_state.to_vec())]));
-    operations.push(operation(
-        "rg",
-        vec![
-            Object::Real(ink[0]),
-            Object::Real(ink[1]),
-            Object::Real(ink[2]),
-        ],
-    ));
-    operations.push(operation("BT", vec![]));
-    operations.push(operation(
-        "Tf",
-        vec![Object::Name(font.to_vec()), Object::Real(footer_size)],
-    ));
-    operations.push(operation(
-        "Tm",
-        vec![
-            Object::Real(1.0),
-            Object::Real(0.0),
-            Object::Real(0.0),
-            Object::Real(1.0),
-            Object::Real((width * 0.03).round()),
-            Object::Real((height * 0.02).round()),
-        ],
-    ));
-    operations.push(operation("Tj", vec![text(&options.footer(page))]));
-    operations.push(operation("ET", vec![]));
-    operations.push(operation("Q", vec![]));
-
-    operations.push(operation("Q", vec![]));
+        ),
+        operation("Tj", vec![text(&options.footer(page))]),
+        operation("ET", vec![]),
+        operation("Q", vec![]),
+    ];
 
     Content { operations }
 }
@@ -484,51 +436,31 @@ mod tests {
     }
 
     #[test]
-    fn the_overlay_draws_the_token_three_times_and_the_footer_once() {
-        let content = page_overlay(595.0, 842.0, &options(), 2, b"F", b"R", b"D");
+    fn the_first_page_draws_the_token_once() {
+        let content = first_page_overlay(595.0, 842.0, &options(), 1, b"F", b"D");
         let encoded = String::from_utf8_lossy(&content.encode().unwrap()).to_string();
 
-        assert_eq!(encoded.matches(options().token).count(), 4);
-        assert!(encoded.contains("p2"));
-        assert!(encoded.contains("/R gs"));
+        assert_eq!(encoded.matches(options().token).count(), 1);
+        assert!(encoded.contains("p1"));
         assert!(encoded.contains("/D gs"));
+        assert!(!encoded.contains("/R gs"));
     }
 
     #[test]
-    fn the_repeat_uses_the_same_geometry_as_the_previous_stamper() {
-        let content = page_overlay(595.0, 842.0, &options(), 1, b"F", b"R", b"D");
+    fn the_footer_sits_at_the_bottom_left_of_the_media_box() {
+        let content = first_page_overlay(595.0, 842.0, &options(), 1, b"F", b"D");
         let text_matrix = content
             .operations
             .iter()
             .find(|operation| operation.operator == "Tm")
             .unwrap();
-
         let values: Vec<f32> = text_matrix.operands.iter().filter_map(as_number).collect();
 
-        // cos, sin, -sin, cos, -height*0.12, round(height/3.2)*0.8
-        assert!((values[0] - 0.882_947_6).abs() < 1e-5);
-        assert!((values[1] + 0.469_471_57).abs() < 1e-5);
-        assert!((values[2] - 0.469_471_57).abs() < 1e-5);
-        assert!((values[3] - 0.882_947_6).abs() < 1e-5);
-        assert!((values[4] + 101.04).abs() < 0.01);
-        assert!((values[5] - 210.4).abs() < 0.01);
-    }
-
-    #[test]
-    fn the_footer_sits_at_the_bottom_left_of_the_media_box() {
-        let content = page_overlay(595.0, 842.0, &options(), 1, b"F", b"R", b"D");
-        let footer_matrix = content
-            .operations
-            .iter()
-            .filter(|operation| operation.operator == "Tm")
-            .nth(3)
-            .unwrap();
-        let values: Vec<f32> = footer_matrix
-            .operands
-            .iter()
-            .filter_map(as_number)
-            .collect();
-
+        assert_eq!(values.len(), 6);
+        assert!((values[0] - 1.0).abs() < 1e-6);
+        assert!((values[1] - 0.0).abs() < 1e-6);
+        assert!((values[2] - 0.0).abs() < 1e-6);
+        assert!((values[3] - 1.0).abs() < 1e-6);
         assert_eq!(values[4], 18.0); // round(595 * 0.03)
         assert_eq!(values[5], 17.0); // round(842 * 0.02)
     }

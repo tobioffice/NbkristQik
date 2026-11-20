@@ -57,7 +57,7 @@ Monitor (monitor-host) ──> /health, /internal/health, portal
 - **Native stamp:** the library's whole-PDF download is the one native code
   path. `bin/pdfstamp` (Rust) draws the per-reader watermark; Node keeps the
   session, entitlement, cache and queue. A 100-page text PDF stamps in about
-  4 ms at a 14 MB peak, against about 39 ms and 65 MB of marginal memory for
+  3 ms at a 15 MB peak, against about 36 ms and 67 MB of marginal memory for
   the retired pdf-lib path. See `docs/PDF-DELIVERY.md`.
 
 ## HTTP surface
