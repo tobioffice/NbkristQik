@@ -18,7 +18,9 @@ Escape `&<>` in user text sent as Telegram HTML — unescaped names break sendin
 ## Operations
 
 - Don't do anything critical without asking. No destructive data changes, production migrations, deploys, or irreversible file operations without explicit approval.
+- Don't be over-cautious or add unnecessary ceremony. Do what was asked directly; ask only when the action is genuinely risky or irreversible.
 - Don't commit, push, or deploy without being asked.
+- Pushing to `main` deploys automatically through GitHub Actions. Treat a push as a deploy: get explicit approval before pushing, and check the Deploy workflow afterward.
 - The uptime monitor host is not spare. Never repurpose it for app work.
 - Journal queries keyword/count-only — logs contain token-bearing URLs.
 - CI logs are public. Never print student identifiers, portal response bodies, tokens or secrets in tests or scripts; use synthetic fixtures. Debug logs are off in CI and tests.
