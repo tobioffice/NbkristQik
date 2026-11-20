@@ -3,9 +3,11 @@
 Status: implemented 8 November 2026. The stamp moved from `pdf-lib` to a
 native Rust binary on 20 November 2026; the endpoint and headers did not
 change. The download cache key gained a stamp revision, and the PDF mark is
-now one footer on every page. The reader stays SVG; this document covers the
-one place the library serves a whole PDF, plus the PC session that makes
-downloading practical on a computer.
+now one footer on every page. The PDF action then moved from "send it to the
+chat" to "open it in the platform's own viewer": a short-lived one-document
+link stands in for the cookie the viewer's browser does not have. The reader
+stays SVG; this document covers the one place the library serves a whole PDF,
+plus the PC session that makes downloading practical on a computer.
 
 This is a deliberate exception to the no-file rule in `docs/LIBRARY.md` §5 and
 `docs/DOCUMENTS.md`. The file is entitlement-checked and watermarked; the
@@ -20,15 +22,30 @@ The public copy currently says there is no PDF to download
 ## 1. Chosen design
 
 ```
-GET /api/library/document/:id/pdf
+POST /api/library/document/:id/open
   requireSession()                   same cookie as every library route
   requireStudent()                   registered roll number
   requireReadableDocument()          live + semester entitlement
-  watermarkToken(ctx.userId)         stable opaque token, 64-bit HMAC
+  link: lib:pdf:{random}             opaque, one reader + one document, 1 h
+  answer { url: /api/library/document/:id/pdf?link=…, fileName }
+  client: WebApp.openLink(url)       the platform's native PDF viewer
+
+GET /api/library/document/:id/pdf?link=…
+  readDocumentLink(token, :id)       opaque token -> reader, or 401
+  requireStudent()                   same registration check
+  requireReadableDocument()          live + semester entitlement
+  watermarkToken(userId)             stable opaque token, 64-bit HMAC
   cache: data/downloads/<docId>/<token>-s<stamp>-v<version>-<bytes>.pdf
-  miss:  bin/pdfstamp (Rust) -> temp file -> atomic rename -> res.download
-  hit:   res.sendFile (Range-capable, through res.download)
+  miss:  bin/pdfstamp (Rust) -> temp file -> atomic rename -> res.sendFile
+  hit:   res.sendFile (Range-capable), Content-Disposition: inline
 ```
+
+The PDF button never embeds a viewer. It asks for the link and hands it to
+`WebApp.openLink`, so Safari or the system browser opens the file with its
+own native PDF viewer: smooth zoom, no iframe, nothing for us to ship. That
+browser has a different cookie jar, which is why the URL carries a token
+instead of the session cookie. A client too old for `openLink` still gets the
+chat fallback (`POST /document/:id/send`).
 
 The pieces already exist:
 
@@ -60,8 +77,11 @@ The pieces already exist:
 
 ### What the endpoint does
 
-1. Resolve the session and reader exactly as `/api/library/page/:id/:page`
-   does. `canOpenLibrary` still gates the whole feature.
+1. Resolve the reader: the session cookie for a direct call, or the
+   one-document `?link=` token when the platform viewer opens the file in its
+   own browser. Both paths run `canOpenLibrary` and the same registered-roll
+   check. `POST /document/:id/open` mints the token only after its own
+   session, registration and entitlement checks.
 2. Load the document row, reject a missing/non-live document or one outside
    the reader's semester, and use `doc.version`, `doc.bytes` and
    `doc.source_path`.
@@ -82,20 +102,20 @@ The pieces already exist:
    temp file; an uncaught crash can leave a `.tmp` for the sweep to clean. The
    source bytes never enter the Node heap.
 5. On a hit, skip the binary entirely.
-6. Send with `res.download(cachePath, safeFilename)`. `res.download` is the
-   attachment form of `sendFile`, so a range request still works. If the PC
-   viewer ever opens the PDF in place, use `res.sendFile` with
-   `Content-Disposition: inline`; the cache path is the same.
+6. Send with `res.sendFile` and `Content-Disposition: inline`, so the
+   platform's own viewer takes the file instead of saving it out from under
+   itself. `sendFile` is Range-capable; the viewer can ask for byte ranges as
+   it scrolls. The link token rides every range request.
 
 The response headers that matter:
 
 | Header | Value | Why |
 | --- | --- | --- |
 | `Content-Type` | `application/pdf` | explicit |
-| `Content-Disposition` | attachment with a safe filename, or inline | drive the browser |
+| `Content-Disposition` | `inline; filename="…"` | hand the file to the native viewer |
 | `X-Content-Type-Options` | `nosniff` | no content sniffing |
 | `Cross-Origin-Resource-Policy` | `same-origin` | no embedding elsewhere |
-| `Cache-Control` | `private, max-age=3600` + `Vary: Cookie` (current) | per-reader bytes; the hour matches the audit dedupe |
+| `Cache-Control` | `private, max-age=3600` + `Vary: Cookie` | per-reader bytes; the hour matches the audit dedupe |
 | `Accept-Ranges` | set by `sendFile` | resume and PDF viewers |
 
 `res.sendFile` supports byte ranges and conditional requests. A cached
@@ -497,11 +517,11 @@ efficiency case for the cache.
    well: a crashed generation must not block empty-directory cleanup.
 
 3. **Use `sendFile` for both paths, and keep the server cache authoritative.**
-   `res.download` for an attachment, `res.sendFile` for inline PC preview.
-   Both support Range, so a PDF viewer or a resumed download does not fetch
-   the whole file again. The current route sets `private, max-age=3600` with
-   `Vary: Cookie`, which matches the one-hour `noteDownload()` dedupe; keep
-   that, or switch to `private, no-store` if every click must produce an
+   `res.sendFile` with `Content-Disposition: inline` hands the file to the
+   platform's viewer; it supports Range, so a PDF viewer or a resumed download
+   does not fetch the whole file again. The route sets `private, max-age=3600`
+   with `Vary: Cookie`, which matches the one-hour `noteDownload()` dedupe;
+   keep that, or switch to `private, no-store` if every click must produce an
    audit row. Always set `nosniff` and
    `Cross-Origin-Resource-Policy: same-origin`.
 

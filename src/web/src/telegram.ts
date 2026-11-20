@@ -49,6 +49,8 @@ export interface TelegramWebApp {
   HapticFeedback?: HapticFeedback;
   /** Opens the native share sheet for a prepared inline message. */
   shareMessage?: (msgId: string, callback?: (sent: boolean) => void) => void;
+  /** Hands a URL to the browser outside the mini app (Bot API 6.0+). */
+  openLink?: (url: string, options?: { try_instant_view?: boolean }) => void;
   ready?: () => void;
   expand?: () => void;
   requestFullscreen?: () => void;

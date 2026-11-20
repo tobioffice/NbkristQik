@@ -30,6 +30,10 @@ import {
   type StudentContext,
 } from "../services/library/entitlement.js";
 import {
+  createDocumentLink,
+  readDocumentLink,
+} from "../services/library/links.js";
+import {
   getLibraryDocument,
   type LibraryDocument,
 } from "../db/library.model.js";
@@ -526,23 +530,98 @@ libraryRouter.post(
   },
 );
 
+/**
+ * POST /api/library/document/:id/open — a link the phone's own PDF viewer can
+ * open.
+ *
+ * The PDF action hands the file out of the mini app (`WebApp.openLink`), to
+ * the system browser and its native viewer. That browser has a different
+ * cookie jar, so the session is not there. The response carries an opaque
+ * one-document token instead; `/pdf?link=…` accepts it for an hour. The
+ * token is minted only after the same session, registration and entitlement
+ * checks a page gets.
+ */
+libraryRouter.post(
+  "/document/:id/open",
+  async (req: Request, res: Response) => {
+    const auth = await requireSession(req, res);
+    if (!auth) return;
+
+    const ctx = requireStudent(res, auth.ctx);
+    if (!ctx) return;
+
+    const doc = await requireReadableDocument(res, ctx, req.params.id);
+    if (!doc) return;
+
+    let link: string;
+    try {
+      link = await createDocumentLink(auth.userId, doc.id, auth.kind);
+    } catch (e) {
+      logger.error(
+        "[library] could not mint a PDF link:",
+        e instanceof Error ? e.message : e,
+      );
+      refuse(res, 503, "Could not open this document. Try again.");
+      return;
+    }
+
+    res.json({
+      ok: true,
+      url: `${req.baseUrl}/document/${encodeURIComponent(
+        doc.id,
+      )}/pdf?link=${encodeURIComponent(link)}`,
+      fileName: downloadFileName(doc),
+    });
+  },
+);
+
 // GET /api/library/document/:id/pdf — the whole document, stamped for this
 // reader. Registered before `/document/:id` so the two can never be confused.
+//
+// Two callers: the mini app with the session cookie, and the system browser
+// the PDF button hands the file to, which carries the one-document `link`
+// token instead. Both are the same reader, the same entitlement check and the
+// same stamped bytes. `inline` is deliberate: the platform's viewer is what
+// makes the zoom native and smooth.
 libraryRouter.get("/document/:id/pdf", async (req: Request, res: Response) => {
-  const auth = await requireSession(req, res);
-  if (!auth) return;
+  const linkToken = typeof req.query.link === "string" ? req.query.link : "";
 
-  const ctx = requireStudent(res, auth.ctx);
-  if (!ctx) return;
+  let userId: string;
+  let kind: LibrarySessionKind;
+  let ctx: StudentContext | null;
 
-  const doc = await requireReadableDocument(res, ctx, req.params.id);
+  if (linkToken) {
+    const link = await readDocumentLink(linkToken, String(req.params.id));
+    if (!link) {
+      refuse(res, 401, "This PDF link has expired. Open the library again.");
+      return;
+    }
+    if (!canOpenLibrary(link.userId)) {
+      refuse(res, 403, "The library is not open yet.");
+      return;
+    }
+    userId = link.userId;
+    kind = link.kind;
+    ctx = await resolveStudentContextCached(linkToken, link.userId);
+  } else {
+    const auth = await requireSession(req, res);
+    if (!auth) return;
+    userId = auth.userId;
+    kind = auth.kind;
+    ctx = auth.ctx;
+  }
+
+  const student = requireStudent(res, ctx);
+  if (!student) return;
+
+  const doc = await requireReadableDocument(res, student, req.params.id);
   if (!doc) return;
 
   // Same rule as a page: no server secret means no trustworthy mark, and an
   // unstamped copy must never leave the box.
   let token: string;
   try {
-    token = watermarkToken(auth.userId);
+    token = watermarkToken(userId);
   } catch (e) {
     logger.error(
       "[library] watermark unavailable:",
@@ -577,12 +656,17 @@ libraryRouter.get("/document/:id/pdf", async (req: Request, res: Response) => {
     return;
   }
 
-  res.download(
+  // `sendFile` streams, honours Range and leaves the bytes out of the Node
+  // heap. A native viewer asks for a byte range as it scrolls; the link token
+  // rides every one of those requests.
+  res.sendFile(
     file,
-    downloadFileName(doc),
     {
       headers: {
         "Content-Type": "application/pdf",
+        // `inline` hands the file to the viewer rather than saving it from
+        // under it. The name is still there for "Save as".
+        "Content-Disposition": `inline; filename="${downloadFileName(doc)}"`,
         // The bytes are the reader's own copy, so only a private cache may
         // keep them. `Vary: Cookie` keeps two accounts on one browser apart.
         "Cache-Control": "private, max-age=3600",
@@ -599,12 +683,15 @@ libraryRouter.get("/document/:id/pdf", async (req: Request, res: Response) => {
   );
 
   // one audit row per reader, document and hour, carrying the same token as
-  // the pages; the file is already on its way
-  noteDownload(auth.userId, doc.id, token, auth.kind);
-  // A download delivers the whole unit at once, so count its pages in the
-  // same five-minute burst window as page views. The audit row is deduped;
-  // this counter is not.
-  void watchForBurst(auth.userId, Math.max(1, doc.page_count));
+  // the pages; the file is already on its way. Deduping makes the extra range
+  // requests of a viewer harmless.
+  noteDownload(userId, doc.id, token, kind);
+  // A whole document delivers in one go, so count its pages in the same
+  // five-minute burst window as page views. Range requests are the viewer
+  // fetching the same document again; only the first request counts.
+  if (!req.headers.range) {
+    void watchForBurst(userId, Math.max(1, doc.page_count));
+  }
 });
 
 // GET /api/library/document/:id — what is in a document, and may I read it

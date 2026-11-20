@@ -29,6 +29,11 @@ export const redisKeys = {
   librarySession: (token: string) => `lib:sess:${token}`,
   /** One-shot link that signs a browser on a PC in: lib:pc:{token} */
   libraryPcLogin: (token: string) => `lib:pc:${token}`,
+  /** One-document link for the platform's native PDF viewer: lib:pdf:{token} */
+  libraryPdfLink: (token: string) => `lib:pdf:${token}`,
+  /** The live PDF link one reader holds for one document: lib:pdf:at:{userId}:{docId} */
+  libraryPdfLinkFor: (userId: string, docId: string) =>
+    `lib:pdf:at:${userId}:${docId}`,
   /** Pages pulled by one student in the last five minutes: lib:reads:{userId} */
   libraryReads: (userId: number | string) => `lib:reads:${userId}`,
   /** Documents the bot sent to one student in the hour: lib:send:{userId} */

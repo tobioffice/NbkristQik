@@ -749,7 +749,7 @@ describe("downloading a document", () => {
     expect(res.status).toBe(403);
   });
 
-  it("sends the stamped PDF as an attachment, privately cached", async () => {
+  it("serves the stamped PDF inline for the native viewer, privately cached", async () => {
     const cookie = await openSession(REGISTERED, "198.51.100.41");
 
     const res = await request(app)
@@ -758,17 +758,88 @@ describe("downloading a document", () => {
 
     expect(res.status).toBe(200);
     expect(res.headers["content-type"]).toContain("application/pdf");
-    expect(res.headers["content-disposition"]).toContain("attachment");
+    expect(res.headers["content-disposition"]).toContain("inline");
     expect(res.headers["content-disposition"]).toContain(
       "NbkristQik-23CS31T2-uII.pdf",
     );
     expect(res.headers["cache-control"]).toContain("private");
     expect(res.headers["cache-control"]).toContain("max-age=3600");
+    expect(res.headers["accept-ranges"]).toBe("bytes");
     expect(res.headers["x-content-type-options"]).toBe("nosniff");
     expect(res.headers["cross-origin-resource-policy"]).toBe("same-origin");
     expect(Buffer.from(res.body).subarray(0, 5).toString("latin1")).toBe(
       "%PDF-",
     );
+  });
+
+  it("mints a viewer link that opens without the session cookie", async () => {
+    // a session minted straight in the store: the exchange limiter has a
+    // per-account budget the suite shares
+    const cookie = `nbq_lib=${await createSession(String(REGISTERED))}`;
+
+    const open = await request(app)
+      .post("/api/library/document/23CS31T2-u2/open")
+      .set("Cookie", cookie);
+
+    expect(open.status).toBe(200);
+    expect(open.headers["cache-control"]).toContain("no-store");
+    expect(open.body.ok).toBe(true);
+    expect(open.body.fileName).toBe("NbkristQik-23CS31T2-uII.pdf");
+    expect(open.body.url).toContain(
+      "/api/library/document/23CS31T2-u2/pdf?link=",
+    );
+
+    // the platform's viewer is another browser: no library cookie rides along
+    const res = await request(app).get(open.body.url);
+
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toContain("application/pdf");
+    expect(res.headers["content-disposition"]).toContain("inline");
+    expect(res.headers["cache-control"]).toContain("private");
+    expect(Buffer.from(res.body).subarray(0, 5).toString("latin1")).toBe(
+      "%PDF-",
+    );
+  });
+
+  it("refuses a viewer link for another document", async () => {
+    const cookie = `nbq_lib=${await createSession(String(REGISTERED))}`;
+    const open = await request(app)
+      .post("/api/library/document/23CS31T2-u2/open")
+      .set("Cookie", cookie);
+    const link = new URL(open.body.url, "https://x.test").searchParams.get(
+      "link",
+    );
+
+    const res = await request(app).get(
+      `/api/library/document/23CS31T2-u3/pdf?link=${encodeURIComponent(
+        link ?? "",
+      )}`,
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it("refuses an unknown viewer link", async () => {
+    const res = await request(app).get(
+      "/api/library/document/23CS31T2-u2/pdf?link=not-a-real-link",
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it("needs a session to mint a viewer link", async () => {
+    const res = await request(app).post(
+      "/api/library/document/23CS31T2-u2/open",
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it("refuses another semester's document before minting", async () => {
+    await upsertRegistration(String(FIRST_YEAR), "23CS1001", "First Year");
+    const cookie = `nbq_lib=${await createSession(String(FIRST_YEAR))}`;
+
+    const res = await request(app)
+      .post("/api/library/document/23CS31T2-u2/open")
+      .set("Cookie", cookie);
+    expect(res.status).toBe(403);
   });
 
   it("sends the stamped PDF to the reader's own chat", async () => {

@@ -1,15 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { documentSendPath } from "../src/libraryApi";
+import { documentOpenPath, documentSendPath } from "../src/libraryApi";
 import { addressWithoutPcToken, sessionCredential } from "../src/useLibrary";
 
 describe("the PDF action", () => {
-  it("asks the API to send a document to the reader's chat", () => {
+  it("asks the API for a link the native viewer can open", () => {
+    expect(documentOpenPath("dbms-u1")).toBe(
+      "/api/library/document/dbms-u1/open",
+    );
+  });
+
+  it("keeps the chat fallback path for clients without openLink", () => {
     expect(documentSendPath("dbms-u1")).toBe(
       "/api/library/document/dbms-u1/send",
     );
   });
 
   it("keeps a document id inside one path segment", () => {
+    expect(documentOpenPath("a b/c?#")).toBe(
+      "/api/library/document/a%20b%2Fc%3F%23/open",
+    );
     expect(documentSendPath("a b/c?#")).toBe(
       "/api/library/document/a%20b%2Fc%3F%23/send",
     );

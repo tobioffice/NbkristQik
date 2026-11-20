@@ -8,7 +8,7 @@ import {
 } from "../libraryApi";
 import { useBandStamp } from "../bandStamp";
 import { useLibrary } from "../useLibrary";
-import { useDocumentSend } from "../useDocumentSend";
+import { useDocumentPdf } from "../useDocumentPdf";
 import DocumentReader from "./DocumentReader";
 
 /**
@@ -371,7 +371,7 @@ function UnitList({
   onOpen: (unit: LibraryUnit) => void;
   onBack: () => void;
 }) {
-  const { busyId, send } = useDocumentSend();
+  const { busyId, open } = useDocumentPdf();
 
   return (
     <div className="page">
@@ -396,12 +396,12 @@ function UnitList({
                 <button
                   type="button"
                   className="lib-pdf"
-                  onClick={() => send(unit.id)}
+                  onClick={() => open(unit.id)}
                   disabled={busyId === unit.id}
                   aria-label={
                     unit.unit
-                      ? `Send Unit ${unit.unit} PDF to my chat`
-                      : "Send the full subject PDF to my chat"
+                      ? `Open Unit ${unit.unit} PDF in the viewer`
+                      : "Open the full subject PDF in the viewer"
                   }
                 >
                   {busyId === unit.id ? "…" : "PDF"}

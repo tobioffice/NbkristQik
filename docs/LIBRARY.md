@@ -306,17 +306,22 @@ keeps the pages on disk. The source PDF stays on the server.
 
 ### Downloads in a mini app
 
-A link to a PDF does not download inside Telegram: the webview displays the
-file, the HTML `download` attribute is ignored, and iOS WKWebView cannot
-download at all. So the PDF button asks `POST /api/library/document/:id/send`,
-and the bot uploads the stamped copy to the reader's own chat as a document.
-The chat is the one place every client already knows how to save a file, and
-the file still carries the reader's watermark.
+The PDF button opens the stamped file in the platform's own viewer rather
+than embedding one: the app asks `POST /api/library/document/:id/open` for a
+short-lived one-document link and hands it to `WebApp.openLink`. On a phone
+that is Safari or the system browser, whose native PDF viewer zooms smoothly
+and needs nothing from us; on a computer it is the browser's viewer. The file
+is served `inline`, and the link stands in for the session cookie because the
+viewer's browser has a different cookie jar. It is opaque, bound to one
+reader and one document, and lasts an hour.
 
-A send is the most expensive thing the library does per reader, so it is rate
-limited: six an hour per account (`lib:send:{userId}` in Redis), with `429`
-and `Retry-After` past that. `WebApp.downloadFile` is not used: it is Bot API
-8.0 only, and the chat works on every client.
+A client too old for `openLink` falls back to `POST
+/api/library/document/:id/send`: the bot uploads the stamped copy to the
+reader's own chat. The chat was the only route to a file before the viewer
+link, and it still works everywhere. A send is rate limited to six an hour per
+account (`lib:send:{userId}` in Redis), with `429` and `Retry-After` past that.
+`WebApp.downloadFile` is not used: it is Bot API 8.0 only, and the viewer link
+works now.
 
 The clean PDF is not served, ranged, or proxied. The only endpoint that
 returns document bytes is `/api/library/document/:id/pdf`, and it returns a

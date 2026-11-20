@@ -111,15 +111,39 @@ export interface SendResult {
   error?: string;
 }
 
+export interface OpenResult {
+  ok: boolean;
+  /** The one-document URL the platform's own PDF viewer opens. */
+  url: string;
+  fileName: string;
+  error?: string;
+}
+
+/** The endpoint that mints a link for the platform's native PDF viewer. */
+export const documentOpenPath = (id: string): string =>
+  `/api/library/document/${encodeURIComponent(id)}/open`;
+
 /** The endpoint that sends one document to the reader's chat. */
 export const documentSendPath = (id: string): string =>
   `/api/library/document/${encodeURIComponent(id)}/send`;
 
 /**
+ * Ask for a short-lived link to the stamped PDF.
+ *
+ * The link opens outside the mini app, in the phone's or computer's own PDF
+ * viewer, where zoom is native and smooth. It carries the reader's mark and
+ * expires in an hour.
+ */
+export const requestDocumentOpen = async (id: string): Promise<OpenResult> =>
+  readJson<OpenResult>(
+    await fetchWithTimeout(documentOpenPath(id), { method: "POST" }),
+  );
+
+/**
  * Ask the bot to send one document to the reader's own chat.
  *
- * A mini app cannot download a file, so the file arrives as a Telegram
- * document instead; the server stamps it with the reader's mark first.
+ * Kept for clients whose webview has no `openLink`: the file still arrives as
+ * a Telegram document, stamped with the reader's mark.
  */
 export const requestDocumentSend = async (id: string): Promise<SendResult> =>
   readJson<SendResult>(

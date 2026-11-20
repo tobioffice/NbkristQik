@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useReaderViewport } from "../reader/useReaderViewport";
 import { useReaderGestures } from "../reader/useReaderGestures";
 import { useBackHandler } from "../backButton";
-import { useDocumentSend } from "../useDocumentSend";
+import { useDocumentPdf } from "../useDocumentPdf";
 import ReaderPage from "../reader/ReaderPage";
 import { usePageWindow } from "../usePageWindow";
 
@@ -41,7 +41,7 @@ export default function DocumentReader({
   onClose,
 }: DocumentReaderProps) {
   const viewport = useReaderViewport(pages);
-  const { busyId, send } = useDocumentSend();
+  const { busyId, open } = useDocumentPdf();
   const [current, setCurrent] = useState(1);
   const [failed, setFailed] = useState<Set<number>>(() => new Set());
   const [loaded, setLoaded] = useState<Set<number>>(() => new Set());
@@ -260,9 +260,9 @@ export default function DocumentReader({
           <button
             type="button"
             className="reader__pdf"
-            onClick={() => send(docId)}
+            onClick={() => open(docId)}
             disabled={busyId === docId}
-            aria-label={`Send ${title}, ${unitLabel}, PDF to my chat`}
+            aria-label={`Open ${title}, ${unitLabel}, PDF in the viewer`}
           >
             {busyId === docId ? "…" : "PDF"}
           </button>
