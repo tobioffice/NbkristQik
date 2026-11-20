@@ -17,6 +17,7 @@ Escape `&<>` in user text sent as Telegram HTML — unescaped names break sendin
 
 ## Operations
 
+- Don't do anything critical without asking. No destructive data changes, production migrations, deploys, or irreversible file operations without explicit approval.
 - Don't commit, push, or deploy without being asked.
 - The uptime monitor host is not spare. Never repurpose it for app work.
 - Journal queries keyword/count-only — logs contain token-bearing URLs.

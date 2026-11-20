@@ -44,6 +44,9 @@ describe("the admin panel document", () => {
     expect(html).not.toContain('role="tablist"');
     expect(html).toContain('aria-current="page"');
     expect(html).toContain('aria-pressed="true"');
+    // the private processing list for the question-paper collection
+    expect(html).toContain('data-view="papers"');
+    expect(html).toContain('id="view-papers"');
   });
 
   it("uses standard scrollbar styling with a wrapped WebKit fallback", () => {
@@ -97,6 +100,7 @@ describe("the production admin password gate", () => {
     const fakeApp = {
       get: (route: string) => routes.push(`GET ${route}`),
       post: (route: string) => routes.push(`POST ${route}`),
+      delete: (route: string) => routes.push(`DELETE ${route}`),
     } as unknown as Express;
 
     registerAdminRoutes(fakeApp);

@@ -53,6 +53,7 @@ ${panelCss}
     <button data-view="verified">Verified</button>
     <button data-view="library">Library</button>
     <button data-view="reports">Reports</button>
+    <button data-view="papers">Papers</button>
     <button data-view="live">Live</button>
     <button data-view="health">Health</button>
   </nav>
@@ -247,6 +248,29 @@ ${panelCss}
       <button class="btn-ghost" id="reportsrefresh">Refresh</button>
     </div>
     <div class="reports" id="reports"></div>
+  </section>
+
+  <section class="view" id="view-papers">
+    <div class="section-head" style="margin-bottom:12px">
+      <h2>Question papers</h2>
+      <span class="hint">student uploads — remove anything that should not be public</span>
+    </div>
+    <div class="toolbar">
+      <input class="search" id="papersearch" placeholder="Search subject, exam, note or uploader&hellip;" aria-label="Search papers">
+      <button class="btn-ghost" id="papersrefresh">Refresh</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Paper</th><th>Uploaded by</th>
+            <th class="num">Pages</th><th>Added</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="paperrows"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="paperempty" style="display:none">No papers uploaded yet.</div>
   </section>
 
   <section class="view" id="view-health">

@@ -52,7 +52,8 @@ export const appDirectLink = (route: string): string =>
   )}`;
 
 /** The sections the bot links to. */
-export type AppPage = "profile" | "rank" | "library" | "issues" | "issues/new";
+export type AppPage =
+  "profile" | "rank" | "library" | "issues" | "issues/new" | "papers";
 
 /** The same section as a Mini App button target or a direct link. */
 export const appPageUrl = (
@@ -72,6 +73,9 @@ export const LIBRARY_WEBAPP_URL = section("/library");
 /** The issue form, and the reporter's own list. */
 export const REPORT_WEBAPP_URL = section("/issues/new");
 export const REPORT_LIST_WEBAPP_URL = section("/issues");
+
+/** The hidden question-paper intake; there is deliberately no tab for it. */
+export const PAPER_INTAKE_WEBAPP_URL = section("/papers");
 
 /** One conversation, for a reply notification. */
 export const reportThreadUrl = (issueId: string): string =>

@@ -45,6 +45,7 @@ import {
   isReportAttachmentName,
   reportFilesDir,
 } from "../services/reportFiles.js";
+import { paperRouter } from "./papers.js";
 import { getRankCard } from "../services/rankCardStore.js";
 import { rankRouter } from "./rank.js";
 import { verificationRouter } from "./verification.js";
@@ -377,6 +378,25 @@ const threadLimit = createRateLimit(
 );
 app.use("/api/thread", threadLimit);
 app.use("/api", reportRouter);
+
+// A paper is up to five photos: a real write, so intake gets its own
+// per-account ceiling. Reading and removal are admin-only, behind the panel's
+// session gate. Mounted before the router so a rejected upload never touches
+// disk.
+const paperUploadLimit = createRateLimit(
+  60 * 60 * 1000,
+  10,
+  "Too many paper uploads, please try again later.",
+  identityRateLimitKey,
+);
+app.use("/api/papers", (req, res, next) => {
+  if (req.method !== "POST") {
+    next();
+    return;
+  }
+  paperUploadLimit(req, res, next);
+});
+app.use("/api", paperRouter);
 
 // Sharing a rank card mints a Telegram prepared message: a per-account
 // ceiling keeps one phone from turning the share sheet into a broadcast tool.

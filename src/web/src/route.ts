@@ -13,7 +13,7 @@
  * were already sent still open the right section.
  */
 
-export type Section = "profile" | "rank" | "issues" | "library";
+export type Section = "profile" | "rank" | "papers" | "issues" | "library";
 
 export interface Route {
   section: Section;
@@ -30,7 +30,11 @@ export const HOME_ROUTE: Route = {
   mine: false,
 };
 
-const SECTIONS: Section[] = ["profile", "rank", "issues", "library"];
+/**
+ * The hidden `papers` page is routable by direct link but is not in the
+ * shell's tab rail: it is an intake form, not a section students browse.
+ */
+const SECTIONS: Section[] = ["profile", "rank", "papers", "issues", "library"];
 
 const isSection = (value: string): value is Section =>
   (SECTIONS as string[]).includes(value);

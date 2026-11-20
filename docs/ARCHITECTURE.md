@@ -46,14 +46,17 @@ Monitor (monitor-host) ──> /health, /internal/health, portal
   non-admin students; there is no daily check-in.
 - **Web shell:** one shipped app at `/library/` with hash routes `#/rank`,
   `#/profile`, `#/library`, `#/issues` (reports) and `#/issues/new` (form).
-  Bot buttons in private chats name the section in `?page=`, because Telegram
-  replaces the fragment with its own launch data; group buttons use the Main
-  Mini App direct link (`?startapp=`). The shell folds either into the hash at
-  startup (`takePageLink` / `takeStartParam`). The rank page can share a
-  prepared rank card through the native Telegram share sheet. `/api/config`
-  decides whether the library tab exists for this caller; the server enforces
-  the same gate on the library API. The legacy GitHub Pages app build is
-  retired; the marketing site remains a separate static surface.
+  The hidden `#/papers` route is a question-paper intake page, reachable by
+  direct link (`?page=papers` / `?startapp=papers`) but deliberately absent
+  from the tab rail. Bot buttons in private chats name the section in
+  `?page=`, because Telegram replaces the fragment with its own launch data;
+  group buttons use the Main Mini App direct link (`?startapp=`). The shell
+  folds either into the hash at startup (`takePageLink` / `takeStartParam`).
+  The rank page can share a prepared rank card through the native Telegram
+  share sheet. `/api/config` decides whether the library tab exists for this
+  caller; the server enforces the same gate on the library API. The legacy
+  GitHub Pages app build is retired; the marketing site remains a separate
+  static surface.
 - **Native stamp:** the library's whole-PDF download is the one native code
   path. `bin/pdfstamp` (Rust) draws the per-reader watermark; Node keeps the
   session, entitlement, cache and queue. A 100-page text PDF stamps in about
@@ -76,9 +79,12 @@ Monitor (monitor-host) ──> /health, /internal/health, portal
   with `Cache-Control: no-store` and a clean JSON 404 if the deploy did not
   copy it.
 - **API:** `/health`, `/api/*` including `/api/config`, `/api/leaderboard`,
-  `/api/me`, `/api/rank/share`, profile/registration, reports and library
-  endpoints. They pass through suspicious-request logging, body sanitization
-  and an IP rate limit; validation and route-specific limits sit on top.
+  `/api/me`, `/api/rank/share`, profile/registration, reports, the
+  `POST /api/papers` intake and library endpoints. They pass through
+  suspicious-request logging, body sanitization and an IP rate limit;
+  validation and route-specific limits sit on top. Paper pages are private to
+  the admin list; the only student-facing paper route is `POST /api/papers`,
+  and it requires signed Telegram identity.
 - **Admin:** mounted at the secret `ADMIN_PANEL_PATH`, before the global API
   sanitizer and limiter. The panel document carries a fresh nonce CSP,
   `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` and `nosniff`; data

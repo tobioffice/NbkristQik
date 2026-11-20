@@ -203,6 +203,31 @@ td .surfn { display: inline-block; min-width: 28px; text-align: right; }
 .rolls { color: var(--text-2); }
 .dim { color: var(--text-3); }
 
+/* question papers */
+.papercell { display: flex; align-items: center; gap: 12px; min-width: 260px; }
+.paperthumb {
+  flex: none; display: block; width: 40px; height: 52px;
+  padding: 0; border: 0; border-radius: 4px; overflow: hidden;
+  background: var(--surface-active);
+}
+.paperthumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.rowactions { display: flex; gap: 6px; }
+.paperviewnote {
+  margin: 14px 0 0; color: var(--text-2);
+  font-size: 14px; line-height: 20px; white-space: pre-wrap;
+}
+.paperviewer { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+.paperview { display: block; border-radius: 6px; overflow: hidden; background: #fff; }
+.paperview img { display: block; width: 100%; height: auto; }
+.paperbody { min-width: 0; display: flex; flex-direction: column; gap: 1px; white-space: normal; }
+.papertitle { font-weight: 600; color: var(--text); }
+.papersub { font-size: 12px; line-height: 16px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.papernote {
+  max-width: 360px; overflow: hidden; text-overflow: ellipsis;
+  font-size: 12px; line-height: 16px; color: var(--text-3); white-space: nowrap;
+}
+.btn-ghost.danger { color: var(--danger); }
+
 /* ---------- controls ---------- */
 .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
 .search {

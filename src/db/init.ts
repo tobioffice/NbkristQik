@@ -5,6 +5,7 @@ import {
   initLeaderboardIndexes,
 } from "./student_stats.model.js";
 import { initLibraryTables } from "./library.model.js";
+import { initPaperTables } from "./paper.model.js";
 import { initUserSettingsTable } from "./userSettings.model.js";
 import { initGameTables, seedGameQuestions } from "./game.model.js";
 import { logger } from "../config/logger.js";
@@ -48,10 +49,12 @@ import { logger } from "../config/logger.js";
  * Version 7 adds the league: questions, daily rounds, attempts, duels, season
  * points and the channel-post claims. Version 8 adds user_settings, the chat
  * theme the Mini App syncs for the attendance bar image. Version 9 adds
- * report_attachments, the screenshots filed with a report message. Every table
- * is CREATE IF NOT EXISTS, so an older database only needs the stamp.
+ * report_attachments, the screenshots filed with a report message. Version 10
+ * adds the question-paper collection: one paper row plus one row per page.
+ * Every table is CREATE IF NOT EXISTS, so an older database only needs the
+ * stamp.
  */
-export const SCHEMA_VERSION = 9;
+export const SCHEMA_VERSION = 10;
 
 /** Reads the database's user_version, treating a missing row as 0. */
 const readSchemaVersion = async (): Promise<number> => {
@@ -281,6 +284,7 @@ export const initDatabase = async () => {
   await initUptimeTable();
   await initLeaderboardIndexes();
   await initLibraryTables();
+  await initPaperTables();
   await initUserSettingsTable();
   await initGameTables();
   await seedGameQuestions();

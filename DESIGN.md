@@ -112,12 +112,13 @@ The old paper register is retired. The Mini App, the admin panel and the public
 status and stats pages all use the native surface described here.
 
 **Status:** shipped. The Ranks, Profile, Issues, Library and Reader screens in
-`src/web` follow this document, and so does the server-rendered admin panel
-(`src/api/admin/panel.css.ts`). The admin panel keeps the same ground, surfaces,
-type and two blues; its data tables take a wider column and a top nav because it
-is a desktop operator console. The public status and stats pages
-(`src/status/index.html`, `src/status/stats.html`) use the same ground, surfaces,
-type and two blues, with their own page-specific layouts.
+`src/web` follow this document, and so does the hidden question-paper intake
+(the collection form has no tab of its own). The server-rendered admin panel
+(`src/api/admin/panel.css.ts`) follows the same ground, surfaces, type and two
+blues; its data tables take a wider column and a top nav because it is a desktop
+operator console. The public status and stats pages (`src/status/index.html`,
+`src/status/stats.html`) use the same ground, surfaces, type and two blues, with
+their own page-specific layouts.
 
 **Key Characteristics:**
 
@@ -286,6 +287,22 @@ secondary. It is the only line in the list, and it is never decorative.
   on desktop. Disabled keeps the fill and uses `#a6d8ff` text at reduced alpha.
 - Secondary action: `#212a33` ground, white text; hover `#293440`.
 - Link action: `#4cb2ff`, 13/500, underline only on hover.
+
+### Question papers (hidden intake)
+
+- The page opens from a direct link (`#/papers`), never a tab. It is a
+  collection form, not a gallery: there is no public list or image viewer.
+- Photos: a fieldset of up to five 72px previews with round remove buttons;
+  "Add pages" is a secondary surface button with an accent photo icon.
+- Fields: Subject and Exam (single line, required), then an optional Note with
+  a tabular character count. The filled action is "Add to the collection".
+- A surface note above the form explains that metadata is stripped and asks
+  the student to crop names, roll numbers or faces they do not want processed.
+- Receipt: a surface panel with a green "Paper received" sentence and one
+  filled "Add another paper" action. No image URLs are returned.
+- Admin processing list: a table with a 40×52 cover, subject over exam/page
+  count, the note, uploader, added time, a "View pages" action that opens the
+  full drawer, and a danger-text Remove action.
 
 ### Profile summary
 

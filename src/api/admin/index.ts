@@ -8,6 +8,7 @@ import { registerOverviewRoute } from "./overview.js";
 import { registerUsersRoutes } from "./users.js";
 import { registerRecentRoute, registerHealthRoute } from "./feed.js";
 import { registerReportsRoutes } from "./reports.js";
+import { registerPapersRoutes } from "./papers.js";
 import { registerLibraryRoutes } from "./library.js";
 import { registerVerifiedRoutes } from "./verified.js";
 
@@ -69,6 +70,7 @@ export const registerAdminRoutes = (app: Express): void => {
   registerUsersRoutes(app, base, requireAdmin);
   registerRecentRoute(app, base, requireAdmin);
   registerReportsRoutes(app, base, requireAdmin);
+  registerPapersRoutes(app, base, requireAdmin);
   registerHealthRoute(app, base, requireAdmin);
   registerLibraryRoutes(app, base, requireAdmin);
   registerVerifiedRoutes(app, base, requireAdmin);

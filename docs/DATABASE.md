@@ -27,10 +27,11 @@ reports `journal_mode = memory` instead of `wal`, which is expected.
 
 ## Schema versioning
 
-The schema version lives in `PRAGMA user_version` and is currently **6**
+The schema version lives in `PRAGMA user_version` and is currently **10**
 (`SCHEMA_VERSION` in `src/db/init.ts`). Version 5 added `roll_claims` and
 `email_verifications` for college-email verification; version 6 split the
-single hide switch into three independent options.
+single hide switch into three independent options; version 9 added
+`report_attachments`; version 10 added the question-paper collection.
 
 - `0` means a fresh or pre-versioning database. Every table is created first,
   then the version is stamped, so a crash mid-init leaves version 0 and the
@@ -156,6 +157,21 @@ first two entries (idempotent, runs every boot).
 `(report_id, reader)`. Drives the "2 new" stamp on the report list and the
 panel's unread markers; opening a thread moves the marker forward only.
 
+### `question_papers` — one student submission
+
+`id` INTEGER PRIMARY KEY AUTOINCREMENT, `user_id` (the Telegram uploader,
+kept for processing and abuse handling, never printed in the Mini App),
+`subject`, `exam`, `note` (optional, up to 240 characters), `created_at` (UTC).
+There is no public list query; the private admin panel is the only reader.
+
+### `question_paper_images` — the pages of one paper
+
+`id` INTEGER PRIMARY KEY AUTOINCREMENT, `paper_id`, `file_name` (opaque
+32-hex name under `data/papers`), `mime_type`, `byte_size`, `position`,
+`created_at`. Every upload is identified by magic bytes and rewritten without
+EXIF/XMP/text metadata before these rows are written. Deleting the paper
+deletes its rows and unlinks the files.
+
 ### `library_documents` — the shelf registry
 
 One row per ingestable document (a subject unit, or a whole subject):
@@ -197,6 +213,9 @@ not skew the history.
 | `idx_library_reads_token` | `library_reads` | `token` |
 | `idx_library_reads_user` | `library_reads` | `user_id, at` |
 | `idx_registrations_roll` | `registrations` | `roll_no` |
+| `idx_question_paper_images_paper` | `question_paper_images` | `paper_id, position, id` |
+| `idx_question_papers_created` | `question_papers` | `created_at` |
+| `idx_question_papers_user` | `question_papers` | `user_id, created_at` |
 | `idx_report_messages` | `report_messages` | `report_id, id` |
 | `idx_reports_created` | `reports` | `created_at` |
 | `idx_reports_status` | `reports` | `status, id` |

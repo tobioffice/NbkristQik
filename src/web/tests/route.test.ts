@@ -28,6 +28,7 @@ describe("the hash router", () => {
   it("reads every section", () => {
     expect(parseRouteHash("#/profile").section).toBe("profile");
     expect(parseRouteHash("#/rank").section).toBe("rank");
+    expect(parseRouteHash("#/papers").section).toBe("papers");
     expect(parseRouteHash("#/library").section).toBe("library");
     expect(parseRouteHash("#/issues")).toEqual({
       section: "issues",
@@ -65,6 +66,7 @@ describe("the hash router", () => {
     const routes = [
       HOME_ROUTE,
       { section: "rank", issue: null, mine: false },
+      { section: "papers", issue: null, mine: false },
       { section: "library", issue: null, mine: false },
       { section: "issues", issue: null, mine: false },
       { section: "issues", issue: null, mine: true },
@@ -124,6 +126,13 @@ describe("a bot deep link", () => {
     expect(takePageLink("https://x.test/library/?page=rank")).toEqual({
       route: { section: "rank", issue: null, mine: false },
       href: "/library/#/rank",
+    });
+  });
+
+  it("opens the hidden paper intake from its direct link", () => {
+    expect(takePageLink("https://x.test/library/?page=papers")).toEqual({
+      route: { section: "papers", issue: null, mine: false },
+      href: "/library/#/papers",
     });
   });
 

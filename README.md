@@ -110,11 +110,15 @@ public status page for service health.
   admin-first until `LIBRARY_ACCESS=all`.
 - **Issue reports** — file a report with a trackable id (for example
   `QIK-0007`) and keep the whole conversation with the admin in one thread.
+- **Question papers** — a hidden intake page collects photos of past papers
+  with a subject and exam line. The upload is Telegram-only, the photos are
+  private, and metadata such as location is stripped before storage.
 
 **For the maintainer**
 
 - **Admin panel** — overview, student search, live activity feed, report
-  threads and 90-day health, behind a secret path and a password.
+  threads, question-paper processing and 90-day health, behind a secret path
+  and a password.
 - **Uptime monitoring** — five-minute probes from a second host (monitor-host) for
   the API, database, Redis and college portal, with Telegram alerts on state
   changes and a replay spool for outages.
@@ -280,9 +284,9 @@ public command menu.
 
 | Surface        | Location                                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Mini App       | [`/library/`](https://checker.tobioffice.online/library/) — hash routes `#/` (my attendance), `#/rank`, `#/profile`, `#/library`, `#/issues` (reports), `#/issues/new` (the report form) |
+| Mini App       | [`/library/`](https://checker.tobioffice.online/library/) — hash routes `#/` (my attendance), `#/rank`, `#/profile`, `#/library`, `#/issues` (reports), `#/issues/new` (the report form), and the hidden `#/papers` intake |
 | Status page    | [`/status`](https://checker.tobioffice.online/status) — Express-served, live health and 90-day bars per component     |
-| Admin panel    | `/<ADMIN_PANEL_PATH>` — Overview, Students, Live, Health, Reports                                                   |
+| Admin panel    | `/<ADMIN_PANEL_PATH>` — Overview, Students, Verified, Library, Reports, Papers, Live, Health                       |
 | Marketing site | [NbkristQik site](https://tobioffice.github.io/NbkristQik/site/)                                                    |
 
 API routes and their validation rules are documented in

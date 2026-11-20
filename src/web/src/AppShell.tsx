@@ -34,6 +34,8 @@ import ProfileView from "./views/Profile";
 const LibraryView = lazy(() => import("./views/LibraryView"));
 const Issues = lazy(() => import("./views/Issues"));
 const Leaderboard = lazy(() => import("./Leaderboard"));
+// The intake page is reachable by direct link but has no tab of its own.
+const PapersPage = lazy(() => import("./views/Papers"));
 
 /**
  * The app: every surface the bot has, on one sheet.
@@ -128,6 +130,7 @@ const BAND_SUB: Record<Section, string> = {
   rank: "Leaderboard",
   library: "Library",
   profile: "Student profile",
+  papers: "Question papers",
   issues: "Issue reports",
 };
 
@@ -260,9 +263,8 @@ export default function AppShell() {
                   tab switch remounts the boundary fresh. */}
               <ErrorBoundary key={route.section}>
                 <Suspense fallback={<PageLoading />}>
-                  {route.section === "rank" && (
-                    <Leaderboard showBand={false} />
-                  )}
+                  {route.section === "rank" && <Leaderboard showBand={false} />}
+                  {route.section === "papers" && <PapersSection />}
                   {route.section === "library" && libraryAllowed && (
                     <LibraryView
                       initData={initData}
@@ -391,6 +393,16 @@ const ProfileSection = ({ onReportIssue }: { onReportIssue: () => void }) => {
       onReportIssue={onReportIssue}
     />
   );
+};
+
+/**
+ * The hidden question-paper intake. There is no tab: a bot link opens it by
+ * name, the page collects the photos and a subject/exam line, and the private
+ * admin list is where the papers are processed.
+ */
+const PapersSection = () => {
+  const { tgUser, initData } = useTelegramIdentity();
+  return <PapersPage identity={{ userId: tgUser ?? undefined, initData }} />;
 };
 
 const IssuesSection = ({

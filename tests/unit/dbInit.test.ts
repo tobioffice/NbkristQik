@@ -94,7 +94,7 @@ describe("initDatabase", () => {
 
   it("stamps user_version on a previously unversioned database", async () => {
     expect(await pragmaNumber("PRAGMA user_version")).toBe(SCHEMA_VERSION);
-    expect(SCHEMA_VERSION).toBe(9);
+    expect(SCHEMA_VERSION).toBe(10);
 
     // the screenshots table ships with v9, even on an older database
     const attachments = await turso.execute(
@@ -102,6 +102,13 @@ describe("initDatabase", () => {
        WHERE type = 'table' AND name = 'report_attachments'`,
     );
     expect(attachments.rows).toHaveLength(1);
+
+    // the question-paper collection ships with v10
+    const papers = await turso.execute(
+      `SELECT name FROM sqlite_master
+       WHERE type = 'table' AND name IN ('question_papers', 'question_paper_images')`,
+    );
+    expect(papers.rows).toHaveLength(2);
 
     // a second boot is idempotent and does not move the stamp
     await initDatabase();

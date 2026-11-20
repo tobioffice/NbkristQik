@@ -52,7 +52,7 @@ deployment that forgets to set it does not inherit the shortcut.
 | `GET /api/leaderboard` | allowed; `name` is `null`, search matches rolls only | names; search matches rolls and names |
 | `GET /api/config` | allowed; both flags `false` | flags reflect the caller |
 | `GET /api/me` | `401` | allowed |
-| `/api/profile`, `/api/register`, `/api/report`, `/api/thread/*`, `/api/rank/share`, `/api/rank/card`, `/api/rank/card/send` | `401` | allowed |
+| `/api/profile`, `/api/register`, `/api/report`, `/api/thread/*`, `/api/rank/share`, `/api/rank/card`, `/api/rank/card/send`, `POST /api/papers` | `401` | allowed |
 | `GET /api/rank/card/:name` | allowed; random token, 30-minute TTL | same |
 | `POST /api/library/session` | `401` without signed `initData` in the body | sets the `nbq_lib` session cookie |
 | other `/api/library/*` | `401` without that cookie | cookie from the session exchange |
@@ -75,6 +75,7 @@ library read-burst check) lives in the service that knows the caller.
 | `POST /api/rank/card/send` | 5 / 15 min per account |
 | `GET /api/rank/card/:name` | 1,200 / min per network address (mounted before the API limiter) |
 | `/api/thread/*` | 120 / 15 min per account, plus a 3 s per-user gate on follow-ups |
+| `POST /api/papers` | 10 / hour per account |
 | `POST /api/library/session` | 20 / hour per account (other library calls use the global limit) |
 | `/internal/*` | 120 / 15 min (on top of the global limit) |
 | Admin `POST {base}/login` | 20 requests / 10 min burst, plus a 5-failure / 10 min lockout |
@@ -478,6 +479,9 @@ checking the lock is read-only, and a successful login clears the counter.
 | `GET` | `{base}/api/users` | Searchable/sortable student table |
 | `GET` | `{base}/api/users/:id` | Profile + recent activity + 30-day shape |
 | `GET` | `{base}/api/recent` | Live activity feed |
+| `GET` | `{base}/api/papers` | Question-paper intake: newest first, with uploader, subject, exam, note and page count |
+| `GET` | `{base}/api/paper-images/:name` | One stored paper page; admin session only |
+| `DELETE` | `{base}/api/papers/:id` | Remove a paper and every page file |
 | `GET` | `{base}/api/health` | Uptime health (same data as `/api/status`) |
 
 Day and hour groupings use IST (`+330 minutes`); storage stays UTC.
@@ -558,3 +562,35 @@ the thread is opened.
 
 Bot-side admin replies: `/reply QIK-0007 <answer>` and `/close QIK-0007` —
 `/reply` writes the same thread entry the panel does.
+
+## Question-paper intake
+
+This is a collection endpoint, not a public bank. Students open the hidden
+intake page (`#/papers`, or a bot link with `?page=papers` /
+`?startapp=papers`), add photos of one paper and the subject/exam line, and the
+processing team reads the submissions in the private admin list. The page has
+no tab and there is no public read, list or image URL.
+
+`POST /api/papers` accepts multipart/form-data with signed Telegram identity:
+
+| Field | Rules |
+|---|---|
+| `subject` | 2–60 characters after trimming and whitespace collapsing |
+| `exam` | 2–60 characters |
+| `note` | optional, up to 240 characters |
+| `images` | 1–5 files, PNG/JPEG/WebP, 5 MB each |
+
+The server identifies each file by its magic bytes, rejects anything that does
+not parse as its container, removes EXIF/XMP/text metadata (including location)
+and stores the cleaned bytes under a random 32-hex name in `PAPER_FILES_DIR`
+(`data/papers` by default). Each upload is limited to 10 per hour per account.
+Success is `201 { "ok": true, "id": 12, "pageCount": 2 }`; the files have no
+public URL.
+
+The admin panel is the only read path:
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `{base}/api/papers` | Newest first: `{id, subject, exam, note, createdAt, pageCount, images, userId, name, username}` |
+| `GET` | `{base}/api/paper-images/:name` | One stored page; requires the admin session cookie and answers `private, max-age=300` |
+| `DELETE` | `{base}/api/papers/:id` | Remove the paper, its page rows and every stored file |

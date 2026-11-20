@@ -132,7 +132,7 @@ export const panelJs = `(function () {
   var drawerIssue = null;
   var threadCache = {};
   var userCache = {};
-  var STALE_MS = { overview: 60000, students: 30000, verified: 20000, library: 30000, reports: 60000, live: 0, health: 300000 };
+  var STALE_MS = { overview: 60000, students: 30000, verified: 20000, library: 30000, reports: 60000, papers: 30000, live: 0, health: 300000 };
   var isStale = function (name) {
     return !lastLoad[name] || Date.now() - lastLoad[name] > STALE_MS[name];
   };
@@ -156,6 +156,7 @@ export const panelJs = `(function () {
     if (name === "library" && isStale("library")) loadLibrary();
     if (name === "live") loadFeed();
     if (name === "reports" && isStale("reports")) loadReports();
+    if (name === "papers" && isStale("papers")) loadPapers();
     if (name === "health" && isStale("health")) loadHealth();
   };
   var tabs = document.querySelectorAll(".nav button");
@@ -1116,6 +1117,138 @@ export const panelJs = `(function () {
   if (reportsRefresh) reportsRefresh.addEventListener("click", loadReports);
   setInterval(function () {
     if (current === "reports" && document.visibilityState === "visible" && isStale("reports")) loadReports();
+  }, 30000);
+
+  /* ---------- question papers ---------- */
+  var lastPapers = [];
+  var paperFilter = "";
+
+  var paperMatches = function (p) {
+    if (!paperFilter) return true;
+    var haystack = [p.subject, p.exam, p.note, p.name, p.username, String(p.userId)]
+      .join(" ")
+      .toLowerCase();
+    return haystack.indexOf(paperFilter.toLowerCase()) !== -1;
+  };
+
+  var renderPapers = function () {
+    var rows = lastPapers.filter(paperMatches);
+    var el = $("paperrows");
+    var empty = $("paperempty");
+    if (!rows.length) {
+      el.innerHTML = "";
+      empty.style.display = "block";
+      empty.textContent = lastPapers.length
+        ? "No papers match."
+        : "No papers uploaded yet.";
+      return;
+    }
+    empty.style.display = "none";
+    var html = "";
+    for (var i = 0; i < rows.length; i++) {
+      var p = rows[i];
+      var coverUrl = p.images && p.images.length ? p.images[0] : null;
+      var cover = coverUrl
+        ? '<button type="button" class="paperthumb" data-paperview="' + p.id + '" aria-label="View the pages of ' + esc(p.subject) + '">' +
+          '<img src="' + esc(coverUrl) + '" alt="" loading="lazy" width="40" height="52"></button>'
+        : '<span class="paperthumb paperthumb--empty" aria-hidden="true"></span>';
+      var pages = p.pageCount + (p.pageCount === 1 ? " page" : " pages");
+      html +=
+        '<tr><td><div class="papercell">' + cover +
+        '<div class="paperbody"><span class="papertitle">' + esc(p.subject) + "</span>" +
+        '<span class="papersub">' + esc(p.exam) + " · " + pages + "</span>" +
+        (p.note ? '<span class="papernote">' + esc(p.note) + "</span>" : "") +
+        "</div></div></td>" +
+        '<td><div class="who"><span class="name">' + reporterLabel(p) + "</span>" +
+        '<span class="handle">' + esc(String(p.userId)) +
+        (p.username ? " · @" + esc(p.username) : "") + "</span></div></td>" +
+        '<td class="num">' + p.pageCount + "</td>" +
+        "<td>" + esc(clockOrAgo(p.createdAt)) + "</td>" +
+        '<td><div class="rowactions">' +
+        '<button class="btn-ghost" data-paperview="' + p.id + '">View pages</button>' +
+        '<button class="btn-ghost danger" data-paperdel="' + p.id + '">Remove</button>' +
+        "</div></td></tr>";
+    }
+    el.innerHTML = html;
+
+    var viewBtns = el.querySelectorAll("[data-paperview]");
+    for (var vb = 0; vb < viewBtns.length; vb++) {
+      viewBtns[vb].addEventListener("click", function () {
+        var id = String(this.dataset.paperview);
+        for (var k = 0; k < lastPapers.length; k++) {
+          if (String(lastPapers[k].id) === id) {
+            openPaperViewer(lastPapers[k]);
+            return;
+          }
+        }
+      });
+    }
+
+    var btns = el.querySelectorAll("[data-paperdel]");
+    for (var b = 0; b < btns.length; b++) {
+      btns[b].addEventListener("click", function () {
+        var btn = this;
+        var id = this.dataset.paperdel;
+        if (!window.confirm("Remove this paper from the collection? This cannot be undone.")) return;
+        btn.disabled = true;
+        fetch(BASE + "/api/papers/" + id, { method: "DELETE" })
+          .then(function (r) {
+            if (!r.ok) throw new Error("delete failed");
+            lastPapers = lastPapers.filter(function (p) {
+              return String(p.id) !== String(id);
+            });
+            renderPapers();
+          })
+          .catch(function () {
+            btn.disabled = false;
+          });
+      });
+    }
+  };
+
+  var openPaperViewer = function (paper) {
+    var pages = paper.images || [];
+    var html = '<div class="dhead"><div><h3 id="drawer-title">' +
+      esc(paper.subject) + " · " + esc(paper.exam) + "</h3>" +
+      '<div class="meta">' + reporterLabel(paper) + " · " +
+      paper.pageCount + (paper.pageCount === 1 ? " page" : " pages") +
+      " · " + esc(clockOrAgo(paper.createdAt)) + "</div></div>" +
+      '<button class="x" id="dclose" aria-label="Close">&times;</button></div>';
+    if (paper.note) html += '<p class="paperviewnote">' + esc(paper.note) + "</p>";
+    html += '<div class="paperviewer">';
+    for (var i = 0; i < pages.length; i++) {
+      html += '<a class="paperview" href="' + esc(pages[i]) +
+        '" target="_blank" rel="noopener noreferrer">' +
+        '<img src="' + esc(pages[i]) + '" alt="Page ' + (i + 1) + ' of ' +
+        pages.length + '" loading="lazy" decoding="async"></a>';
+    }
+    html += "</div>";
+    $("drawer").innerHTML = html;
+    $("dclose").addEventListener("click", closeDrawer);
+    drawerIssue = null;
+    showDrawer();
+    $("drawer").scrollTop = 0;
+  };
+
+  var loadPapers = function () {
+    if (inflight.papers) return;
+    inflight.papers = true;
+    lastLoad.papers = Date.now();
+    api("papers?limit=500").then(function (d) {
+      lastPapers = d.papers || [];
+      renderPapers();
+    }).catch(function () {}).then(function () { inflight.papers = false; });
+  };
+
+  var papersRefresh = $("papersrefresh");
+  if (papersRefresh) papersRefresh.addEventListener("click", loadPapers);
+  var papersSearch = $("papersearch");
+  if (papersSearch) papersSearch.addEventListener("input", function () {
+    paperFilter = this.value.trim();
+    renderPapers();
+  });
+  setInterval(function () {
+    if (current === "papers" && document.visibilityState === "visible" && isStale("papers")) loadPapers();
   }, 30000);
 
   /* ---------- health ---------- */

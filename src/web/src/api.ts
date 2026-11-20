@@ -46,7 +46,7 @@ export const syncTheme = async (): Promise<void> => {
 };
 
 /** The dev fallback is a bare userId, and only when initData is absent. */
-const devIdentityParams = (identity: ApiIdentity): URLSearchParams => {
+export const devIdentityParams = (identity: ApiIdentity): URLSearchParams => {
   const params = new URLSearchParams();
   if (!identity.initData && identity.userId) {
     params.set("userId", identity.userId);
