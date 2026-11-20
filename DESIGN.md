@@ -296,8 +296,6 @@ secondary. It is the only line in the list, and it is never decorative.
   "Add pages" is a secondary surface button with an accent photo icon.
 - Fields: Subject and Exam (single line, required), then an optional Note with
   a tabular character count. The filled action is "Add to the collection".
-- A surface note above the form explains that metadata is stripped and asks
-  the student to crop names, roll numbers or faces they do not want processed.
 - Receipt: a surface panel with a green "Paper received" sentence and one
   filled "Add another paper" action. No image URLs are returned.
 - Admin processing list: a table with a 40×52 cover, subject over exam/page

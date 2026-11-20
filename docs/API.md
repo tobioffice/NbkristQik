@@ -581,8 +581,8 @@ no tab and there is no public read, list or image URL.
 | `images` | 1–5 files, PNG/JPEG/WebP, 5 MB each |
 
 The server identifies each file by its magic bytes, rejects anything that does
-not parse as its container, removes EXIF/XMP/text metadata (including location)
-and stores the cleaned bytes under a random 32-hex name in `PAPER_FILES_DIR`
+not parse as its container, rewrites the container without EXIF/XMP/text
+metadata chunks, and stores the cleaned bytes under a random 32-hex name in `PAPER_FILES_DIR`
 (`data/papers` by default). Each upload is limited to 10 per hour per account.
 Success is `201 { "ok": true, "id": 12, "pageCount": 2 }`; the files have no
 public URL.

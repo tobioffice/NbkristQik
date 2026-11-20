@@ -111,8 +111,8 @@ public status page for service health.
 - **Issue reports** — file a report with a trackable id (for example
   `QIK-0007`) and keep the whole conversation with the admin in one thread.
 - **Question papers** — a hidden intake page collects photos of past papers
-  with a subject and exam line. The upload is Telegram-only, the photos are
-  private, and metadata such as location is stripped before storage.
+  with a subject and exam line. The upload is Telegram-only and the photos stay
+  private to the processing team.
 
 **For the maintainer**
 

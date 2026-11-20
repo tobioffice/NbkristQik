@@ -1674,16 +1674,6 @@ body {
 
 /* ---------- question-paper intake ---------- */
 
-.sheet--tg .note-paper {
-  margin: 0 0 14px;
-  padding: 12px 14px;
-  border-radius: var(--tg-radius);
-  background: var(--tg-surface);
-  color: var(--tg-secondary);
-  font-size: 13px;
-  line-height: 18px;
-}
-
 .sheet--tg .paper-photos {
   min-width: 0;
   margin: 16px 0 0;

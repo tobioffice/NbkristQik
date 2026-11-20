@@ -183,12 +183,6 @@ export default function PapersPage({ identity }: PapersPageProps) {
             noValidate
             aria-labelledby="paper-upload-title"
           >
-            <p className="note-paper">
-              We remove photo metadata (including location) before storing the
-              photos. Please still crop out names, roll numbers or faces you do
-              not want the processing team to see.
-            </p>
-
             <fieldset
               ref={photosRef}
               className="paper-photos"
