@@ -127,33 +127,50 @@ All students                                 3,180
 
 ### 4.1 Format
 
-- 1080 × 1920 JPEG (9:16), dark ground `#1a2026`, Figtree, tabular figures.
-- All content sits between y=260 and y=1560 so story UI does not cover it.
+- 1080 × 1920 JPEG (9:16), dark ground `#1a2026`, Figtree.
+- All content sits between y=260 and y=1660 so story UI does not cover it.
 - Only the viewer's figure and aggregate counts. No names, no rolls, no other
   students' scores.
 
 ### 4.2 Layout
 
 ```
-NbkristQik
-Attendance register
+┌ corner bracket                    corner bracket ┐
+  NbkristQik
+  Attendance register
 
-        Attendance rank
-             #4
-   CSE · Year 3 · Section A
-          87.40%
-   ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬  ← 75% tick, red, labelled
-      63 students ranked
+              First in the section
+                Attendance rank
 
-See where you stand
-t.me/NbkristQik_bot
+                 ♛   (leader only)
+              ╭── laurel ──╮
+              │     #4     │
+              ╰────────────╯
+           CSE · Year 3 · Section A
+                 ─── ◆ ───
+                 87.40%
+            ● 12.4 above the 75% line
+              63 students ranked
+
+  See where you stand
+  t.me/NbkristQik_bot
+└ corner bracket                    corner bracket ┘
 ```
 
-- The rank numeral is the hero (260px), with `#` at 0.55×.
-- Attendance: a 10px track, white fill to the score, a 4px `#f88277` tick at
-  75%, label `75% minimum` under the tick. Below 75, the score turns
-  `#f88277`, exactly as the row does.
-- Mid marks: no bar; a quiet `Average of M1 and M2` line instead.
+- The poster is a spotlight, not a dashboard: a radial action-blue glow behind
+  a very large rank, a vignette at the edges, and the rank repeated as a ghost
+  numeral for ranks of two or more digits.
+- The rank is the hero (400px for one or two digits, 320/250px as it grows),
+  with `#` in accent at 0.42× and the number in Figtree 800.
+- A two-branch laurel wreath frames it: pointed leaves, a joined base with a
+  diamond, open at the top. The leader gets a small stroked crown in the
+  opening; the top three get `First/Second/Third in the section` (or
+  `overall`).
+- Thin certificate brackets sit in the four corners, and a rule with a diamond
+  separates the board's name from the score.
+- Attendance carries a small dot note, `12.4 above the 75% line` or the below
+  version in red; mid marks print `Average of M1 and M2`. Below 75, the score
+  itself turns `#f88277`, exactly as the row does.
 - Scope variants: section label, or `All students`.
 - `63 students ranked`, never `63 students`: the register is partial.
 
@@ -161,10 +178,10 @@ t.me/NbkristQik_bot
 
 - Client-side Canvas 2D. Figtree is already loaded; wait on
   `document.fonts.ready`, then draw at a fixed 1080×1920.
-- `canvas.toBlob("image/jpeg", 0.9)`, roughly 80–200 KB. JPEG because
+- `canvas.toBlob("image/jpeg", 0.92)`, roughly 80–250 KB. JPEG because
   Telegram's `photo_url` requires it and stories accept it.
-- Pure `cardModel(data)` builds strings and percentages for unit tests;
-  `drawRankCard(ctx, model)` only paints.
+- Pure `buildRankCardModel(data)` builds the strings, the gap note and the
+  merit line for unit tests; `drawRankCard(ctx, model)` only paints.
 - The sheet draws and uploads the card **as it opens**, not after the tap:
   `shareToStory` and `navigator.share` should run inside the tap, and the
   preview can say "Preparing card" for the second the upload takes.

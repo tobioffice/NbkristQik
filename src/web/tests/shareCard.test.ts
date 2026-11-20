@@ -18,9 +18,10 @@ describe("buildRankCardModel", () => {
     expect(model.unit).toBe("%");
     expect(model.scopeLabel).toBe("CSE · Year 3 · Section A");
     expect(model.count).toBe("63 students ranked");
-    expect(model.showBar).toBe(true);
-    expect(model.barPercent).toBe(87.4);
+    expect(model.gapNote).toBe("12.4 above the 75% line");
     expect(model.belowMinimum).toBe(false);
+    expect(model.merit).toBeNull();
+    expect(model.crown).toBe(false);
     expect(model.alt).toContain("#4 of 63");
     expect(model.alt).toContain("87.40%");
   });
@@ -36,10 +37,34 @@ describe("buildRankCardModel", () => {
     });
 
     expect(model.belowMinimum).toBe(true);
-    expect(model.barPercent).toBe(71.25);
+    expect(model.gapNote).toBe("3.7 below the 75% line");
   });
 
-  it("has no bar or percent on the mid-mark card", () => {
+  it("crowns the leader and calls the top three by name", () => {
+    const first = buildRankCardModel({
+      sort: "attendance",
+      rank: 1,
+      total: 63,
+      value: 96,
+      scope: "section",
+      scopeLabel: "CSE · Year 3 · Section A",
+    });
+    expect(first.crown).toBe(true);
+    expect(first.merit).toBe("First in the section");
+
+    const third = buildRankCardModel({
+      sort: "attendance",
+      rank: 3,
+      total: 63,
+      value: 90,
+      scope: "all",
+      scopeLabel: "All students",
+    });
+    expect(third.crown).toBe(false);
+    expect(third.merit).toBe("Third overall");
+  });
+
+  it("has no percent or 75% note on the mid-mark card", () => {
     const model = buildRankCardModel({
       sort: "midmarks",
       rank: 7,
@@ -52,7 +77,7 @@ describe("buildRankCardModel", () => {
     expect(model.eyebrow).toBe("Mid-mark rank");
     expect(model.score).toBe("24.5");
     expect(model.unit).toBeNull();
-    expect(model.showBar).toBe(false);
+    expect(model.gapNote).toBe("Average of M1 and M2");
     expect(model.count).toBe("63 students ranked");
   });
 
