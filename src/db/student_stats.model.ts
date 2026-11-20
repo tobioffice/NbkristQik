@@ -408,26 +408,33 @@ export const initLeaderboardIndexes = async () => {
 };
 
 /**
- * Global rank of a single student for a given sort (no filters).
- * Uses the same RANK() + rounded-score scheme as getLeaderboard above —
- * see the ranking notes there (esp: no tiebreaker inside the window
- * ORDER BY, Turso breaks ties otherwise).
+ * Rank of a single student for a given sort, over the same filtered set the
+ * register shows. With no filters this is the global rank; with a section's
+ * filters it is the section rank `getStudentRanks` reports.
+ *
+ * Uses the same RANK() + rounded-score scheme and the same WHERE builder as
+ * `getLeaderboard` — see the ranking notes there (esp: no tiebreaker inside
+ * the window ORDER BY, Turso breaks ties otherwise).
  */
 export const getStudentRank = async (
   rollNo: string,
   sortBy: "attendance" | "midmarks",
+  filters: LeaderboardFilters = {},
 ): Promise<{ rank: number; total: number; value: number | null } | null> => {
   const column =
     sortBy === "attendance" ? "attendance_percentage" : "mid_marks_avg";
 
   const scoreExpr =
     sortBy === "attendance"
-      ? "ROUND(attendance_percentage, 2)"
-      : "ROUND(mid_marks_avg, 1)";
+      ? "ROUND(st.attendance_percentage, 2)"
+      : "ROUND(st.mid_marks_avg, 1)";
+
+  // The list's own guards: non-null metric, the same year-semester row, the
+  // same year/branch/section filters. One WHERE builder means the strip and
+  // the badge cannot drift apart.
+  const { whereClause, args } = buildLeaderboardWhere(column, filters, false);
 
   // Single round trip: rank + COUNT(*) OVER() over the same filtered set.
-  // INNER JOIN studentsnew so ghost stats rows (student gone from the master
-  // table) can't hand the caller a bogus rank.
   const result = await turso.execute({
     sql: `
       WITH ranked AS (
@@ -437,12 +444,11 @@ export const getStudentRank = async (
                COUNT(*) OVER() as total
         FROM student_stats st
         JOIN studentsnew s ON st.roll_no = s.roll_no
-        WHERE ${column} IS NOT NULL
-          AND st.year_sem = s.year
+        ${whereClause}
       )
       SELECT rank, total, score FROM ranked WHERE roll_no = ?
     `,
-    args: [rollNo.toUpperCase()],
+    args: [...args, rollNo.toUpperCase()],
   });
 
   if (!result.rows[0]) return null;
@@ -456,19 +462,45 @@ export const getStudentRank = async (
   };
 };
 
+/**
+ * The leaderboard's year digit from the portal's year-semester code:
+ * "31" and "32" are both year 3. Returns null when the value carries no
+ * year in 1..4; the caller then has no section context.
+ */
+export const yearDigit = (value: unknown): string | null => {
+  if (value == null) return null;
+  const match = String(value)
+    .trim()
+    .match(/^([1-4])/);
+  return match ? match[1] : null;
+};
+
 export interface StudentMetricRank {
   rank: number;
   total: number;
   value: number | null;
 }
 
-export interface StudentRanks {
+/** The caller's two ranks inside their own section. */
+export interface StudentSectionRanks {
+  /** The leaderboard's year digit, branch id and section letter. */
+  year: string;
+  branch: string;
+  section: string;
   attendance: StudentMetricRank | null;
   midmarks: StudentMetricRank | null;
 }
 
+export interface StudentRanks {
+  attendance: StudentMetricRank | null;
+  midmarks: StudentMetricRank | null;
+  /** Null when the master row has no year, branch or section. */
+  section: StudentSectionRanks | null;
+}
+
 /**
- * Both metric ranks for one student in a single scan.
+ * Both metric ranks for one student in a single scan, global and inside the
+ * student's own section.
  *
  * `/api/me` needs attendance and mid-marks together, and two calls to
  * `getStudentRank` meant two full-table window sorts on every app open. The
@@ -476,6 +508,11 @@ export interface StudentRanks {
  * NULL scores last in DESC order, so a null-metric row cannot precede a
  * real one and the ranks are identical to the per-metric queries. The
  * totals count only non-null scores, exactly like the filtered sets there.
+ *
+ * The section windows partition on the *year digit*, branch and section —
+ * the same triple the leaderboard filters on, so `31` and `32` stay one
+ * section board. They cost one more sort key inside the scan that already
+ * runs; no second query, no second Turso read.
  */
 export const getStudentRanks = async (
   rollNo: string,
@@ -484,30 +521,51 @@ export const getStudentRanks = async (
     sql: `
       WITH ranked AS (
         SELECT st.roll_no,
+               s.year AS year_sem,
+               s.branch AS branch,
+               s.section AS section,
                ROUND(st.attendance_percentage, 2) AS att_score,
                RANK() OVER (
                  ORDER BY ROUND(st.attendance_percentage, 2) DESC
                ) AS att_rank,
                COUNT(ROUND(st.attendance_percentage, 2)) OVER () AS att_total,
+               RANK() OVER (
+                 PARTITION BY SUBSTR(s.year, 1, 1), s.branch, s.section
+                 ORDER BY ROUND(st.attendance_percentage, 2) DESC
+               ) AS att_section_rank,
+               COUNT(ROUND(st.attendance_percentage, 2)) OVER (
+                 PARTITION BY SUBSTR(s.year, 1, 1), s.branch, s.section
+               ) AS att_section_total,
                ROUND(st.mid_marks_avg, 1) AS mid_score,
                RANK() OVER (
                  ORDER BY ROUND(st.mid_marks_avg, 1) DESC
                ) AS mid_rank,
-               COUNT(ROUND(st.mid_marks_avg, 1)) OVER () AS mid_total
+               COUNT(ROUND(st.mid_marks_avg, 1)) OVER () AS mid_total,
+               RANK() OVER (
+                 PARTITION BY SUBSTR(s.year, 1, 1), s.branch, s.section
+                 ORDER BY ROUND(st.mid_marks_avg, 1) DESC
+               ) AS mid_section_rank,
+               COUNT(ROUND(st.mid_marks_avg, 1)) OVER (
+                 PARTITION BY SUBSTR(s.year, 1, 1), s.branch, s.section
+               ) AS mid_section_total
         FROM student_stats st
         JOIN studentsnew s ON st.roll_no = s.roll_no
         WHERE (st.attendance_percentage IS NOT NULL
                OR st.mid_marks_avg IS NOT NULL)
           AND st.year_sem = s.year
       )
-      SELECT att_score, att_rank, att_total, mid_score, mid_rank, mid_total
+      SELECT att_score, att_rank, att_total,
+             att_section_rank, att_section_total,
+             mid_score, mid_rank, mid_total,
+             mid_section_rank, mid_section_total,
+             year_sem, branch, section
       FROM ranked WHERE roll_no = ?
     `,
     args: [rollNo.toUpperCase()],
   });
 
   const row = result.rows[0];
-  if (!row) return { attendance: null, midmarks: null };
+  if (!row) return { attendance: null, midmarks: null, section: null };
 
   const metric = (
     score: unknown,
@@ -522,9 +580,31 @@ export const getStudentRanks = async (
           value: Number(score),
         };
 
+  const year = yearDigit(row.year_sem);
+  const branch = row.branch == null ? "" : String(row.branch).trim();
+  const sectionName = row.section == null ? "" : String(row.section).trim();
+
   return {
     attendance: metric(row.att_score, row.att_rank, row.att_total),
     midmarks: metric(row.mid_score, row.mid_rank, row.mid_total),
+    section:
+      year && branch && sectionName
+        ? {
+            year,
+            branch,
+            section: sectionName,
+            attendance: metric(
+              row.att_score,
+              row.att_section_rank,
+              row.att_section_total,
+            ),
+            midmarks: metric(
+              row.mid_score,
+              row.mid_section_rank,
+              row.mid_section_total,
+            ),
+          }
+        : null,
   };
 };
 

@@ -136,6 +136,7 @@ export const EmptyState = ({
   sortBy,
   filtered,
   identified,
+  sectionLabel,
   onClearFilters,
 }: {
   search: string;
@@ -144,6 +145,8 @@ export const EmptyState = ({
   filtered: boolean;
   /** Anonymous callers can search rolls only; names stay hidden. */
   identified: boolean;
+  /** The section board being shown, when it is one. */
+  sectionLabel?: string | null;
   onClearFilters: () => void;
 }) => (
   <div className="state-block">
@@ -155,6 +158,13 @@ export const EmptyState = ({
           {identified
             ? "Try a roll number or part of a name"
             : "Try a roll number"}
+        </p>
+      </>
+    ) : sectionLabel ? (
+      <>
+        <p>No one in {sectionLabel} is ranked yet.</p>
+        <p className="sub">
+          The register fills as students check. Be the first.
         </p>
       </>
     ) : filtered ? (

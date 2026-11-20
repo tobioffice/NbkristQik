@@ -388,6 +388,17 @@ body {
   color: var(--tg-secondary);
 }
 
+/* ---------- board switch ---------- */
+
+.sheet--tg .tg-board-switch {
+  padding: 0 16px;
+  margin-bottom: 16px;
+}
+
+.sheet--tg .tg-board-switch .tg-hint {
+  margin-top: 6px;
+}
+
 /* ---------- controls ---------- */
 
 .sheet--tg .tg-controls {
@@ -949,6 +960,104 @@ body {
 
 .sheet--tg .tg-sheet-done:hover {
   background: #207cc2;
+}
+
+/* ---------- share sheet ---------- */
+
+.sheet--tg .tg-share-sheet .tg-sheet-body {
+  padding-bottom: calc(16px + var(--tg-safe-bottom, 0px));
+}
+
+.sheet--tg .tg-share-preview {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 14px;
+}
+
+.sheet--tg .tg-share-card {
+  display: block;
+  width: 144px;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  border: 1px solid #111417;
+  border-radius: var(--tg-radius);
+  background: var(--tg-bg);
+  color: var(--tg-secondary);
+}
+
+.sheet--tg .tg-share-card--empty {
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+}
+
+.sheet--tg .tg-sheet-body .tg-share-actions {
+  margin: 0;
+}
+
+.sheet--tg .tg-share-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  margin: 0 0 1px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 0;
+  background: var(--tg-surface);
+  color: var(--tg-text);
+  text-align: left;
+}
+
+.sheet--tg .tg-share-row:last-child {
+  margin-bottom: 0;
+}
+
+.sheet--tg .tg-share-row:hover {
+  background: var(--tg-surface-hover);
+}
+
+.sheet--tg .tg-share-row:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sheet--tg .tg-share-row:disabled:hover {
+  background: var(--tg-surface);
+}
+
+.sheet--tg .tg-share-row__icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--tg-surface-active);
+  color: var(--tg-accent);
+}
+
+.sheet--tg .tg-share-row .tg-row__sub {
+  white-space: normal;
+}
+
+.sheet--tg .tg-share-status {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--tg-secondary);
+}
+
+.sheet--tg .tg-share-note {
+  margin: 14px 0 0;
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--tg-secondary);
+  text-align: center;
 }
 
 /* ---------- bottom rail ---------- */

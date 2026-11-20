@@ -1,9 +1,11 @@
-import type { MyRank } from "./api";
+import type { MyRank, SectionRank } from "./api";
 import { useIdentity } from "./identity";
 
 interface TelegramUser {
   myRoll: string | null;
   myRank: MyRank | null;
+  /** The same ranks inside the saved roll's own section. */
+  mySection: SectionRank | null;
   /** How the server resolved this caller: a saved roll only. */
   source: "registered" | null;
   /** True while the shell is still checking the roll. */
@@ -19,11 +21,12 @@ interface TelegramUser {
  * how many views read the answer.
  */
 export const useTelegramUser = (): TelegramUser => {
-  const { roll, ranks, source, status, error } = useIdentity();
+  const { roll, ranks, section, source, status, error } = useIdentity();
 
   return {
     myRoll: roll,
     myRank: ranks,
+    mySection: section,
     source,
     loading: status === "loading",
     error: status === "error" ? error : null,

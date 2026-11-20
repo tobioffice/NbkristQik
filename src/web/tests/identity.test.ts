@@ -18,9 +18,46 @@ describe("mapMe", () => {
         attendance: { rank: 12, total: 940, value: 82.4 },
         midmarks: { rank: 31, total: 800, value: 18.5 },
       },
+      section: null,
       source: "registered",
       lastLookup: null,
     });
+  });
+
+  it("keeps the section board's ranks beside the global ones", () => {
+    const mapped = mapMe({
+      found: true,
+      source: "registered",
+      roll_no: "23CS1042",
+      attendance: { rank: 12, total: 940, value: 82.4 },
+      midmarks: { rank: 31, total: 800, value: 18.5 },
+      section: {
+        year: "3",
+        branch: "5",
+        section: "A",
+        attendance: { rank: 4, total: 63, value: 82.4 },
+        midmarks: { rank: 7, total: 63, value: 18.5 },
+      },
+    });
+
+    expect(mapped.section).toEqual({
+      year: "3",
+      branch: "5",
+      section: "A",
+      attendance: { rank: 4, total: 63, value: 82.4 },
+      midmarks: { rank: 7, total: 63, value: 18.5 },
+    });
+  });
+
+  it("never invents a section from a partial payload", () => {
+    const mapped = mapMe({
+      found: true,
+      source: "registered",
+      roll_no: "23CS1042",
+      section: { year: "3", branch: "5" } as never,
+    });
+
+    expect(mapped.section).toBeNull();
   });
 
   it("keeps a past lookup out of the identity", () => {
@@ -40,6 +77,7 @@ describe("mapMe", () => {
       status: "no-roll",
       roll: null,
       ranks: null,
+      section: null,
       source: null,
       lastLookup: "22CS0001",
     });
@@ -50,6 +88,7 @@ describe("mapMe", () => {
       status: "no-roll",
       roll: null,
       ranks: null,
+      section: null,
       source: null,
       lastLookup: null,
     });
@@ -66,6 +105,7 @@ describe("mapMe", () => {
 
     expect(mapped.status).toBe("ready");
     expect(mapped.ranks).toEqual({ attendance: null, midmarks: null });
+    expect(mapped.section).toBeNull();
   });
 
   it("ignores malformed rank objects", () => {

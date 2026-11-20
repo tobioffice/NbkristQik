@@ -23,10 +23,24 @@ interface HapticFeedback {
   notificationOccurred: (type: "error" | "success" | "warning") => void;
 }
 
+interface StoryShareParams {
+  /** The story caption, 0–200 characters for regular users. */
+  text?: string;
+  /** A link sticker; posting with it needs Telegram Premium. */
+  widget_link?: { url: string; name: string };
+}
+
+interface DownloadFileParams {
+  /** A public HTTPS URL. */
+  url: string;
+  /** The suggested filename for the native popup. */
+  file_name: string;
+}
+
 export interface TelegramWebApp {
   initData?: string;
   initDataUnsafe?: {
-    user?: { id?: number };
+    user?: { id?: number; is_premium?: boolean };
     /** The `startapp` value of a direct link, when the app was opened by one. */
     start_param?: string;
   };
@@ -49,6 +63,13 @@ export interface TelegramWebApp {
   HapticFeedback?: HapticFeedback;
   /** Opens the native share sheet for a prepared inline message. */
   shareMessage?: (msgId: string, callback?: (sent: boolean) => void) => void;
+  /** Opens the story editor with an HTTPS image (Bot API 7.8+). */
+  shareToStory?: (mediaUrl: string, params?: StoryShareParams) => void;
+  /** A native download popup for a public HTTPS file (Bot API 8.0+). */
+  downloadFile?: (
+    params: DownloadFileParams,
+    callback?: (accepted: boolean) => void,
+  ) => void;
   /** Hands a URL to the browser outside the mini app (Bot API 6.0+). */
   openLink?: (url: string, options?: { try_instant_view?: boolean }) => void;
   ready?: () => void;

@@ -52,7 +52,8 @@ deployment that forgets to set it does not inherit the shortcut.
 | `GET /api/leaderboard` | allowed; `name` is `null`, search matches rolls only | names; search matches rolls and names |
 | `GET /api/config` | allowed; both flags `false` | flags reflect the caller |
 | `GET /api/me` | `401` | allowed |
-| `/api/profile`, `/api/register`, `/api/report`, `/api/thread/*`, `/api/rank/share` | `401` | allowed |
+| `/api/profile`, `/api/register`, `/api/report`, `/api/thread/*`, `/api/rank/share`, `/api/rank/card`, `/api/rank/card/send` | `401` | allowed |
+| `GET /api/rank/card/:name` | allowed; random token, 30-minute TTL | same |
 | `POST /api/library/session` | `401` without signed `initData` in the body | sets the `nbq_lib` session cookie |
 | other `/api/library/*` | `401` without that cookie | cookie from the session exchange |
 
@@ -70,6 +71,9 @@ library read-burst check) lives in the service that knows the caller.
 | `POST /api/register` | 20 / 15 min per account (on top of the global limit) |
 | `POST /api/report` | 5 / 15 min per account, plus a 60 s per-user gate in the service |
 | `POST /api/rank/share` | 30 / 15 min per account |
+| `POST /api/rank/card` | 10 / 15 min per account |
+| `POST /api/rank/card/send` | 5 / 15 min per account |
+| `GET /api/rank/card/:name` | 1,200 / min per network address (mounted before the API limiter) |
 | `/api/thread/*` | 120 / 15 min per account, plus a 3 s per-user gate on follow-ups |
 | `POST /api/library/session` | 20 / hour per account (other library calls use the global limit) |
 | `/internal/*` | 120 / 15 min (on top of the global limit) |
@@ -200,11 +204,15 @@ the register prints (`value`) so the personal strip and the row agree. A
 verified identity is required; an anonymous request or an invalid one is
 `401 { "found": false, "error": "..." }`.
 
+The same scan also returns the caller's **section** ranks, so the section
+board's strip uses the same number as its row badge. `section.year` is the
+leaderboard's year digit (`"3"`), not the portal's year-semester code (`"31"`).
+
 Identity is the registration, never the last lookup. `tgusers` is auto-upserted
 by every roll lookup, including a friend's, so it is returned separately as a
 suggestion:
 
-- Registered: `{ found: true, source: "registered", roll_no, attendance, midmarks }`.
+- Registered: `{ found: true, source: "registered", roll_no, attendance, midmarks, section }`.
 - Not registered: `{ found: false, lastLookup: "<roll>|null" }`; no rank queries
   run.
 
@@ -214,12 +222,21 @@ suggestion:
   "source": "registered",
   "roll_no": "21B81A05E9",
   "attendance": { "rank": 12, "total": 245, "value": 95.5 },
-  "midmarks": { "rank": 30, "total": 245, "value": 18.8 }
+  "midmarks": { "rank": 30, "total": 245, "value": 18.8 },
+  "section": {
+    "year": "3",
+    "branch": "5",
+    "section": "A",
+    "attendance": { "rank": 4, "total": 63, "value": 95.5 },
+    "midmarks": { "rank": 7, "total": 63, "value": 18.8 }
+  }
 }
 ```
 
-Ranks are global over all ranked students in the register, not over the
-current filters. `Cache-Control: private, no-store`.
+Global ranks are over all ranked students in the register, not over the
+current filters; the `section` ranks are over the caller's own year/branch/
+section. `section` is `null` when the master row has no section context.
+`Cache-Control: private, no-store`.
 
 `DELETE /api/me/last-lookup` removes the caller's suggestion row; the
 registration is untouched.
@@ -230,15 +247,53 @@ Stores a prepared inline message for the caller's own rank. The Mini App hands
 its `id` to `Telegram.WebApp.shareMessage`, and Telegram's native sheet asks
 the student which chat to send it to. The bot never posts the card itself.
 
-Body: `{ "sort": "attendance" | "midmarks" }`, default `attendance`.
+Body: `{ "sort": "attendance" | "midmarks", "scope": "section" | "all", "cardId"?: "<id>" }`.
+`sort` defaults to `attendance`; `scope` defaults to `all`. With `scope=section`
+the server resolves the caller's own section through the registration and
+master row and ranks over the same filters the register uses; if the section
+cannot be resolved it falls back to the whole register. A `cardId` is honoured
+only when it is the caller's current card.
+
 `400` without a registration, `404` before the student has a ranked figure.
-The card carries the roll, rank and score, never a name, and its button is a
-`startapp=rank` direct link.
+The message carries the roll, rank and score, never a name, and its button is a
+`startapp=rank` direct link. With a card, the prepared result is a photo
+(JavaScript 1080×1920 JPEG) with the card's caption; without one, or when
+Telegram cannot fetch the photo, it is the text article.
 
 ```json
 { "ok": true, "id": "prepared-message-id", "expiresAt": 1763000000 }
 ```
 
+`Cache-Control: private, no-store`.
+
+### `POST /api/rank/card`
+
+Uploads the JPEG the phone drew for a share card. Identity required; the body
+is raw `image/jpeg`, at most 1.5 MB, checked by magic bytes. The caller's
+previous card is replaced, and the bytes live for 30 minutes. The response is
+the public URL Telegram fetches:
+
+```json
+{ "ok": true, "id": "<32-char token>", "url": "https://.../api/rank/card/<token>.jpg" }
+```
+
+### `GET /api/rank/card/:name`
+
+Serves a live card as `image/jpeg` from an unguessable URL, with
+`Cache-Control: private, max-age=1800`, `X-Content-Type-Options: nosniff`,
+`X-Robots-Tag: noindex` and `Content-Security-Policy: default-src 'none'`.
+No identity is required: Telegram's servers fetch it for a photo message or a
+story. `?download=1` switches to `Content-Disposition: attachment` and allows
+`https://web.telegram.org` for `WebApp.downloadFile`. Unknown or expired tokens
+are `404`.
+
+### `POST /api/rank/card/send`
+
+Sends the caller's current card to the caller's own chat with a short
+"Long-press it to save it to your photos" caption and an `Open the register`
+button. Body: `{ "cardId": "<id>" }`. This is the reliable Instagram hand-off:
+Telegram webviews do not implement the Web Share API. `404` when the token is
+not the caller's live card; `502` when Telegram refuses the send.
 `Cache-Control: private, no-store`.
 
 ### `GET /health`

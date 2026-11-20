@@ -28,6 +28,7 @@ const StudentRow = ({
     <li
       ref={isLast && lastElementRef ? lastElementRef : null}
       className={`tg-row${isMe ? " tg-row--me" : ""}`}
+      data-roll={stat.roll_no ?? undefined}
     >
       <span
         className={`tg-rank-badge${

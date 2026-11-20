@@ -141,10 +141,32 @@ export interface RankInfo {
   value: number | null;
 }
 
+/**
+ * The caller's two ranks inside their own section, from the same scan as the
+ * global ones. `year` is the leaderboard's year digit ("3"), not the portal's
+ * year-semester code ("31").
+ */
+export interface SectionRank {
+  year: string;
+  branch: string;
+  section: string;
+  attendance: RankInfo | null;
+  midmarks: RankInfo | null;
+}
+
+/** Which board a shared figure belongs to. */
+export type RankScope = "section" | "all";
+
 /** A prepared message the Mini App can hand to the native share sheet. */
 export interface RankShare {
   id: string;
   expiresAt: number;
+}
+
+/** A card the phone drew, now with a public URL Telegram can fetch. */
+export interface RankCard {
+  id: string;
+  url: string;
 }
 
 /**
@@ -152,7 +174,11 @@ export interface RankShare {
  * Telegram client is the only sender; the server never posts it anywhere.
  */
 export const requestRankShare = async (
-  identity: ApiIdentity & { sort: SortBy },
+  identity: ApiIdentity & {
+    sort: SortBy;
+    scope?: RankScope;
+    cardId?: string | null;
+  },
 ): Promise<RankShare> => {
   const res = await fetchWithTimeout(
     withQuery("/api/rank/share", devIdentityParams(identity)),
@@ -162,10 +188,55 @@ export const requestRankShare = async (
         ...authHeaders(identity.initData),
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ ...identityBody(identity), sort: identity.sort }),
+      body: JSON.stringify({
+        ...identityBody(identity),
+        sort: identity.sort,
+        scope: identity.scope ?? "all",
+        ...(identity.cardId ? { cardId: identity.cardId } : {}),
+      }),
     },
   );
   return readJson<RankShare>(res);
+};
+
+/** Upload the phone's 1080×1920 JPEG; returns the URL Telegram will fetch. */
+export const uploadRankCard = async (
+  identity: ApiIdentity & { blob: Blob },
+): Promise<RankCard> => {
+  const res = await fetchWithTimeout(
+    withQuery("/api/rank/card", devIdentityParams(identity)),
+    {
+      method: "POST",
+      headers: {
+        ...authHeaders(identity.initData),
+        "Content-Type": "image/jpeg",
+      },
+      body: identity.blob,
+    },
+    UPLOAD_TIMEOUT_MS,
+  );
+  return readJson<RankCard>(res);
+};
+
+/** Ask the bot to send the card to the caller's own chat, to save to Photos. */
+export const sendRankCard = async (
+  identity: ApiIdentity & { cardId: string },
+): Promise<void> => {
+  const res = await fetchWithTimeout(
+    withQuery("/api/rank/card/send", devIdentityParams(identity)),
+    {
+      method: "POST",
+      headers: {
+        ...authHeaders(identity.initData),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...identityBody(identity),
+        cardId: identity.cardId,
+      }),
+    },
+  );
+  await readJson(res);
 };
 
 /** What page 1 adds to the envelope: sync freshness and live filter options. */
@@ -218,6 +289,8 @@ export interface MeResponse {
   roll_no?: string;
   attendance?: RankInfo | null;
   midmarks?: RankInfo | null;
+  /** The same two figures inside the caller's own section. */
+  section?: SectionRank | null;
   /**
    * The last roll this account looked up. It is a suggestion for an
    * unregistered user, never their identity.
@@ -232,6 +305,8 @@ export interface MeState {
   status: "ready" | "no-roll";
   roll: string | null;
   ranks: MyRank | null;
+  /** The caller's own section and section ranks, when the server knows it. */
+  section: SectionRank | null;
   source: "registered" | null;
   /** Kept apart from `roll` so a friend's lookup is never read as identity. */
   lastLookup: string | null;
@@ -248,6 +323,25 @@ const rankInfo = (raw: unknown): RankInfo | null => {
   };
 };
 
+const sectionRank = (raw: unknown): SectionRank | null => {
+  if (!raw || typeof raw !== "object") return null;
+  const section = raw as Partial<SectionRank>;
+  if (
+    typeof section.year !== "string" ||
+    typeof section.branch !== "string" ||
+    typeof section.section !== "string"
+  ) {
+    return null;
+  }
+  return {
+    year: section.year,
+    branch: section.branch,
+    section: section.section,
+    attendance: rankInfo(section.attendance),
+    midmarks: rankInfo(section.midmarks),
+  };
+};
+
 /**
  * `/api/me` is the registration, nothing else. `lastLookup` is returned as a
  * separate suggestion and is deliberately not allowed to fill `roll`.
@@ -258,6 +352,7 @@ export const mapMe = (me: MeResponse): MeState => {
       status: "no-roll",
       roll: null,
       ranks: null,
+      section: null,
       source: null,
       lastLookup: me.lastLookup ?? null,
     };
@@ -270,6 +365,7 @@ export const mapMe = (me: MeResponse): MeState => {
       attendance: rankInfo(me.attendance),
       midmarks: rankInfo(me.midmarks),
     },
+    section: sectionRank(me.section),
     source: "registered",
     lastLookup: null,
   };

@@ -11,7 +11,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { getMe, mapMe, type ApiIdentity, type MyRank } from "./api";
+import {
+  getMe,
+  mapMe,
+  type ApiIdentity,
+  type MyRank,
+  type SectionRank,
+} from "./api";
 import { useTelegramIdentity } from "./useTelegramIdentity";
 
 /**
@@ -24,17 +30,15 @@ import { useTelegramIdentity } from "./useTelegramIdentity";
  */
 
 export type IdentityStatus =
-  | "loading"
-  | "anonymous"
-  | "no-roll"
-  | "ready"
-  | "error";
+  "loading" | "anonymous" | "no-roll" | "ready" | "error";
 
 export interface Identity {
   status: IdentityStatus;
   /** The saved registration's roll. Never a past lookup. */
   roll: string | null;
   ranks: MyRank | null;
+  /** The caller's own section and the section ranks behind it. */
+  section: SectionRank | null;
   source: "registered" | null;
   /** The last roll this account looked up, kept separate from `roll`. */
   lastLookup: string | null;
@@ -47,6 +51,7 @@ const IDLE: Identity = {
   status: "anonymous",
   roll: null,
   ranks: null,
+  section: null,
   source: null,
   lastLookup: null,
   error: null,
@@ -59,6 +64,7 @@ interface MeSnapshot {
   status: "ready" | "no-roll" | "error";
   roll: string | null;
   ranks: MyRank | null;
+  section: SectionRank | null;
   source: "registered" | null;
   lastLookup: string | null;
   error: string | null;
@@ -90,6 +96,7 @@ const loadMe = (
         status: "error",
         roll: null,
         ranks: null,
+        section: null,
         source: null,
         lastLookup: null,
         error:
@@ -138,6 +145,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
       status: snapshot.status,
       roll: snapshot.roll,
       ranks: snapshot.ranks,
+      section: snapshot.section,
       source: snapshot.source,
       lastLookup: snapshot.lastLookup,
       error: snapshot.error,
@@ -156,5 +164,4 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
  * The shared identity. Outside a provider it reads as anonymous, which keeps
  * a view renderable in isolation without pretending a roll exists.
  */
-export const useIdentity = (): Identity =>
-  useContext(IdentityContext) ?? IDLE;
+export const useIdentity = (): Identity => useContext(IdentityContext) ?? IDLE;

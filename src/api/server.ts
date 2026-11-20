@@ -45,6 +45,7 @@ import {
   isReportAttachmentName,
   reportFilesDir,
 } from "../services/reportFiles.js";
+import { getRankCard } from "../services/rankCardStore.js";
 import { rankRouter } from "./rank.js";
 import { verificationRouter } from "./verification.js";
 import { libraryRouter } from "./library.js";
@@ -270,6 +271,56 @@ app.get(
   },
 );
 
+/**
+ * A shared rank card. The URL carries a random 24-byte token and the bytes
+ * live for thirty minutes. Telegram's servers fetch it for a photo message
+ * or a story, so it is public and must not spend a student's API budget.
+ * The card is an image, never a document: JPEG only, no sniffing, no HTML.
+ */
+const rankCardReadLimit = rateLimit({
+  windowMs: 60_000,
+  limit: 1_200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: "Too many image requests. Try again in a minute.",
+  },
+});
+
+app.get(
+  "/api/rank/card/:name",
+  rankCardReadLimit,
+  (req: Request, res: Response) => {
+    const name = String(req.params.name);
+    const id = name.endsWith(".jpg") ? name.slice(0, -4) : "";
+    const card = id ? getRankCard(id) : null;
+    if (!card) {
+      res.setHeader("Cache-Control", "no-store");
+      res.status(404).json({ success: false, error: "Not Found" });
+      return;
+    }
+
+    const download = req.query.download === "1";
+    res.setHeader("Content-Type", "image/jpeg");
+    res.setHeader("Cache-Control", "private, max-age=1800");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Security-Policy", "default-src 'none'");
+    res.setHeader("X-Robots-Tag", "noindex");
+    res.setHeader(
+      "Content-Disposition",
+      download ? 'attachment; filename="nbkristqik-rank.jpg"' : "inline",
+    );
+    if (download) {
+      // WebApp.downloadFile asks for this exact origin, and a public image
+      // has no credentials to protect.
+      res.setHeader("Access-Control-Allow-Origin", "https://web.telegram.org");
+      res.vary("Origin");
+    }
+    res.send(card.bytes);
+  },
+);
+
 // Apply security middleware to all routes
 app.use(apiSecurityMiddlewares);
 
@@ -336,6 +387,25 @@ const rankShareLimit = createRateLimit(
   identityRateLimitKey,
 );
 app.use("/api/rank/share", rankShareLimit);
+
+// The card upload is a real image write, and the save-to-photos hand-off
+// sends a message into the caller's chat. Both are per-account and small.
+const rankCardSendLimit = createRateLimit(
+  15 * 60 * 1000,
+  5,
+  "Too many card sends, please try again later.",
+  identityRateLimitKey,
+);
+app.use("/api/rank/card/send", rankCardSendLimit);
+
+const rankCardUploadLimit = createRateLimit(
+  15 * 60 * 1000,
+  10,
+  "Too many rank cards, please try again later.",
+  identityRateLimitKey,
+);
+app.use("/api/rank/card", rankCardUploadLimit);
+
 app.use("/api", rankRouter);
 
 // Library web app: session exchange, then the student's own subject list.
@@ -743,7 +813,7 @@ app.get(
 
       const rollNo = registration.roll_no;
       // one scan for both ranks: this runs on every app open
-      const { attendance, midmarks } = await getStudentRanks(rollNo);
+      const { attendance, midmarks, section } = await getStudentRanks(rollNo);
 
       res.json({
         found: true,
@@ -763,6 +833,10 @@ app.get(
               value: midmarks.value,
             }
           : null,
+        // The same figures inside the caller's own section, from the same
+        // scan. The leaderboard strip uses these whenever the section board
+        // is on, so its number can never disagree with the row badge.
+        section,
       });
     } catch (error) {
       logger.error("Error fetching /api/me:", error);

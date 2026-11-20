@@ -171,17 +171,45 @@ describe("getLeaderboard", () => {
 
 describe("getStudentRanks", () => {
   it("answers both metrics in one scan, matching the per-metric ranks", async () => {
-    const { attendance, midmarks } = await getStudentRanks("AAA00001");
+    const { attendance, midmarks, section } = await getStudentRanks("AAA00001");
 
     // Alice ties Bob on attendance (90.00), so both share rank 1 of 3;
     // her 28.0 mid average is second behind Cara's 29.0
     expect(attendance).toEqual({ rank: 1, total: 3, value: 90 });
     expect(midmarks).toEqual({ rank: 2, total: 3, value: 28 });
 
+    // Section A is Alice and Bob only: she leads both metrics there.
+    expect(section).toEqual({
+      year: "3",
+      branch: "5",
+      section: "A",
+      attendance: { rank: 1, total: 2, value: 90 },
+      midmarks: { rank: 1, total: 2, value: 28 },
+    });
+
     const attOnly = await getStudentRank("AAA00001", "attendance");
     const midOnly = await getStudentRank("AAA00001", "midmarks");
     expect(attendance).toEqual(attOnly);
     expect(midmarks).toEqual(midOnly);
+  });
+
+  it("matches the section-filtered register for the same board", async () => {
+    const global = await getStudentRank("AAA00001", "attendance");
+    const section = await getStudentRank("AAA00001", "attendance", {
+      year: "3",
+      branch: "5",
+      section: "A",
+    });
+    const other = await getStudentRank("AAA00001", "attendance", {
+      year: "3",
+      branch: "5",
+      section: "B",
+    });
+
+    expect(global).toEqual({ rank: 1, total: 3, value: 90 });
+    expect(section).toEqual({ rank: 1, total: 2, value: 90 });
+    // Alice is not in section B: the filter is a real board, not a label.
+    expect(other).toBeNull();
   });
 
   it("returns null only for the metric the student lacks", async () => {
@@ -196,19 +224,24 @@ describe("getStudentRanks", () => {
     );
 
     try {
-      const { attendance, midmarks } = await getStudentRanks("DDD00001");
+      const { attendance, midmarks, section } =
+        await getStudentRanks("DDD00001");
       expect(attendance).toEqual({ rank: 4, total: 4, value: 70 });
       // the union set contains the row, but its null mid score ranks last
       // and reports as absent, exactly like the per-metric query
       expect(midmarks).toBeNull();
+      // Section A: Alice 90, Bob 90, Dov 70 -> third of three.
+      expect(section?.attendance).toEqual({ rank: 3, total: 3, value: 70 });
+      expect(section?.midmarks).toBeNull();
 
-      // a student with no stats row gets neither
+      // a student with no stats row gets neither rank and no section
       await turso.execute(
         `INSERT INTO studentsnew VALUES ('EEE00001', 'Eve', 'A', '5', '31')`,
       );
       expect(await getStudentRanks("EEE00001")).toEqual({
         attendance: null,
         midmarks: null,
+        section: null,
       });
     } finally {
       await turso.execute(
