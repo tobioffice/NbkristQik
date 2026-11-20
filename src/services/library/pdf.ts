@@ -2,18 +2,16 @@ import crypto from "crypto";
 import {
   lstat,
   mkdir,
-  readFile,
   readdir,
   rename,
   rm,
   rmdir,
   stat,
   unlink,
-  writeFile,
 } from "fs/promises";
 import path from "path";
-import { PDFDocument, StandardFonts, degrees, rgb } from "pdf-lib";
 import type { LibraryDocument } from "../../db/library.model.js";
+import { PdfStampSourceError, stampPdfFile } from "./pdfstamp.js";
 import {
   documentDownloadsDir,
   libraryDocsDir,
@@ -31,6 +29,10 @@ import {
  * download pays for the copy and every later one is a sendfile. The cache
  * filename carries the document version and byte size: a re-ingest changes
  * the version, so an old copy can never be served for new bytes.
+ *
+ * The drawing happens in `native/pdfstamp`, a small Rust binary. Node keeps
+ * the source check, the queue, the cache and the atomic rename; the document
+ * never enters the JavaScript heap.
  */
 
 /** How long a stamped copy may be reused. */
@@ -51,11 +53,6 @@ export class PdfTooLargeError extends Error {
   }
 }
 
-/** The same ink and weights as the page watermark (watermark.ts). */
-const INK = rgb(30 / 255, 42 / 255, 56 / 255);
-const REPEAT_OPACITY = 0.05;
-const FOOTER_OPACITY = 0.42;
-
 /**
  * One generation per cache path. Two readers on the same account (or one
  * reader double-clicking) must not stamp and write the same file twice.
@@ -63,10 +60,12 @@ const FOOTER_OPACITY = 0.42;
 const inFlight = new Map<string, Promise<string>>();
 
 /**
- * A global cap on concurrent PDF stamps. pdf-lib holds the whole document in
- * memory; on the small production VM a burst of different readers must not
- * turn into a burst of 50 MB heaps. The queue is bounded, and overflow is a
- * clear 503 rather than an OOM.
+ * A global cap on concurrent PDF stamps. Each stamp is a short-lived native
+ * process, so the document lives outside the Node heap; two at a time keeps
+ * memory and CPU predictable on the small VM. A 20 MB source measured about
+ * 44 MB peak and 9 ms in the binary, so the cap is about bounding the number
+ * of processes, not the JavaScript heap it used to protect. Overflow is a
+ * clear 503, never an unbounded fork.
  */
 const MAX_CONCURRENT_GENERATIONS = 2;
 const MAX_QUEUED_GENERATIONS = 8;
@@ -118,8 +117,8 @@ const isFresh = async (file: string): Promise<boolean> => {
 };
 
 /**
- * Stamps every page: the token repeated diagonally, and a footer naming the
- * token, the subject and the page. The reader's id and roll never appear.
+ * Resolves the source and applies the limits that keep a stamp bounded:
+ * inside the library store, a regular file, under the byte and page caps.
  */
 const sourceFileFor = async (doc: LibraryDocument): Promise<string> => {
   const root = path.resolve(libraryDocsDir());
@@ -149,62 +148,35 @@ const sourceFileFor = async (doc: LibraryDocument): Promise<string> => {
   return source;
 };
 
-const stampPdf = async (
+/**
+ * Stamps every page into `output`: the token repeated diagonally, and a
+ * footer naming the token, the subject and the page.
+ *
+ * The native binary does the drawing; this function owns the source check
+ * and keeps the caller's error wording stable.
+ */
+const stampPdfToFile = async (
   doc: LibraryDocument,
   token: string,
-): Promise<Uint8Array> => {
-  const sourcePath = await sourceFileFor(doc);
-  let source: Uint8Array;
+  output: string,
+): Promise<void> => {
+  const source = await sourceFileFor(doc);
   try {
-    source = await readFile(sourcePath);
-  } catch (e) {
-    throw new Error(`could not read the source PDF: ${errorMessage(e)}`);
-  }
-
-  let pdf: PDFDocument;
-  try {
-    pdf = await PDFDocument.load(source, { updateMetadata: false });
-  } catch (e) {
-    // pdf-lib refuses an encrypted PDF unless told to ignore encryption, and
-    // a corrupt file throws here too. Either way there is nothing safe to
-    // serve, so the route turns this into a 500.
-    throw new Error(
-      `the source PDF is encrypted or unreadable: ${errorMessage(e)}`,
-    );
-  }
-
-  const font = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const unit = doc.unit ? ` · Unit ${doc.unit}` : "";
-
-  pdf.getPages().forEach((page, index) => {
-    const { width, height } = page.getSize();
-    const repeatSize = Math.max(8, Math.round(width / 36));
-    const footerSize = Math.max(7, Math.round(width / 52));
-    const step = Math.round(height / 3.2);
-
-    for (let row = 0; row < 3; row++) {
-      page.drawText(token, {
-        x: -height * 0.12,
-        y: step * (row + 0.8),
-        size: repeatSize,
-        font,
-        color: INK,
-        opacity: REPEAT_OPACITY,
-        rotate: degrees(-28),
-      });
-    }
-
-    page.drawText(`${token} · ${doc.code}${unit} · p${index + 1}`, {
-      x: Math.round(width * 0.03),
-      y: Math.round(height * 0.02),
-      size: footerSize,
-      font,
-      color: INK,
-      opacity: FOOTER_OPACITY,
+    await stampPdfFile({
+      source,
+      output,
+      token,
+      code: doc.code,
+      unit: doc.unit,
     });
-  });
-
-  return pdf.save();
+  } catch (error) {
+    if (error instanceof PdfStampSourceError) {
+      throw new Error(
+        `the source PDF is encrypted or unreadable: ${error.message}`,
+      );
+    }
+    throw error;
+  }
 };
 
 /**
@@ -229,24 +201,23 @@ export const ensureWatermarkedPdf = async (
 
     await mkdir(dir, { recursive: true });
 
-    await acquireGeneration();
-    let stamped: Uint8Array;
-    try {
-      stamped = await stampPdf(doc, token);
-    } finally {
-      releaseGeneration();
-    }
-
-    // Write beside the final name and rename: a reader never sees a
+    // The binary writes beside the final name; a reader never sees a
     // half-written PDF, and a crash leaves a temp file, not a broken cache.
     const temp = path.join(
       dir,
       `.${cacheFileName(doc, token)}.${crypto.randomBytes(6).toString("hex")}.tmp`,
     );
+
     try {
-      await writeFile(temp, stamped);
+      await acquireGeneration();
+      try {
+        await stampPdfToFile(doc, token, temp);
+      } finally {
+        releaseGeneration();
+      }
       await rename(temp, file);
     } catch (e) {
+      // A failed stamp may have left a partial file under the temp name.
       await unlink(temp).catch(() => {});
       throw e;
     }

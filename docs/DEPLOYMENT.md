@@ -21,21 +21,30 @@
 | `ATTENDANCE_WIDGET` | `src/bot/academics/widgetCard.ts` | `off` (default) while Telegram rejects widgets; `admin` tests it on `ADMIN_ID`; `all` opens it to every private chat |
 | `GAME_CHANNEL_POSTS` | `src/games/channel.ts` | `on` enables the 8:30am prompt, 1:15pm result and Sunday board; default off |
 | `GAME_SEASON` | `src/games/config.ts` | Season key for the weekly boards; default `S1` |
+| `PDFSTAMP_BIN` | `src/services/library/pdfstamp.ts` | Optional override for the native PDF stamp; default `bin/pdfstamp` at the repository root |
 
 Start from [`.env.example`](../.env.example).
 
 ## Build and run
 
-Node 22 or 24 is required (`.nvmrc` pins 24; Node 20 is EOL). The web app is a
+Node 22 or 24 is required (`.nvmrc` pins 24; Node 20 is EOL). Rust 1.88 or
+newer is required to build the library's PDF stamp; the production host does
+not need it, because the deploy ships the built binary. The web app is a
 separate package with its own lockfile.
 
 ```bash
 pnpm install
 pnpm dev        # TypeScript, bot + API
 pnpm build      # tsc -> dist/
+pnpm run build:pdfstamp   # native/pdfstamp -> bin/pdfstamp
 pnpm start      # node dist/bot/index.js
 (cd src/web && pnpm install && pnpm build:library)  # /library/ bundle
 ```
+
+The PDF download path runs `bin/pdfstamp`. `scripts/build-pdfstamp.sh` builds
+it, and the Vitest suite builds it on first use when `bin/pdfstamp` is
+missing. Without the binary, library downloads answer 500 and the log names
+the script; every other surface keeps working.
 
 Checks: `pnpm lint`, `pnpm typecheck`, `pnpm exec vitest run` (or
 `test:coverage`). `build`/`build:library` build only the `/library/` app; the
@@ -268,17 +277,17 @@ hotfix; it prints a warning and continues.
 ### What the script does
 
 1. Preflight: `pnpm run typecheck`, `pnpm run typecheck:tests`, `pnpm run lint`,
-   the root Vitest suite and the `src/web` Vitest suite, then `pnpm build` and
-   `pnpm run build:library`.
+   the root Vitest suite and the `src/web` Vitest suite, then `pnpm build`,
+   `scripts/build-pdfstamp.sh` and `pnpm run build:library`.
 2. On `$HOST`: `mkdir -p $DIR`; refuse to start if an unfinished previous
    release left `$DIR/dist.old` in place.
 3. Sync the compiled `dist/` into `$DIR/dist.new/`, then swap it into `$DIR/dist`
    while moving the live build to `$DIR/dist.old`. A failed rsync never touches
    the live `dist/`.
 4. Sync the manifests, the ops scripts (`backup-db.sh`, `restore-db.sh`,
-   `import-turso-snapshot.mjs`), then `src/status/` →
-   `$DIR/public/status/`, `src/web/dist-library/` → `$DIR/public/library/` and
-   `data/syllabus-catalog.json` → `$DIR/data/`.
+   `import-turso-snapshot.mjs`), the native stamp to `$DIR/bin/pdfstamp`, then
+   `src/status/` → `$DIR/public/status/`, `src/web/dist-library/` →
+   `$DIR/public/library/` and `data/syllabus-catalog.json` → `$DIR/data/`.
 5. `pnpm install --prod --frozen-lockfile` (pnpm is installed into `~/.local`
    if the server does not have it).
 6. The optional `VACUUM INTO` backup described below.

@@ -1,5 +1,7 @@
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { execFileSync } from "child_process";
 import {
+  chmodSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -11,6 +13,7 @@ import {
 } from "fs";
 import os from "os";
 import path from "path";
+import { fileURLToPath } from "url";
 import { PDFDocument } from "pdf-lib";
 import type { LibraryDocument } from "../../src/db/library.model.js";
 import {
@@ -23,9 +26,29 @@ import {
 } from "../../src/services/library/paths.js";
 
 /**
- * Stamping and caching. The fixtures are real PDFs made with the same library
- * the service uses, so the output is loaded back rather than eyeballed.
+ * Stamping and caching. The source fixtures are made with pdf-lib and the
+ * output is loaded back rather than eyeballed. The stamp itself is the Rust
+ * binary in `native/pdfstamp`; if this checkout has not built it yet, build
+ * it once so `pnpm test` works from a fresh clone.
  */
+
+const repositoryRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
+const binary = path.join(repositoryRoot, "bin", "pdfstamp");
+beforeAll(() => {
+  if (!existsSync(binary)) {
+    execFileSync(
+      "bash",
+      [path.join(repositoryRoot, "scripts/build-pdfstamp.sh")],
+      {
+        cwd: repositoryRoot,
+        stdio: "inherit",
+      },
+    );
+  }
+}, 180_000);
 
 const previousDataDir = process.env.LIBRARY_DATA_DIR;
 const dataDir = mkdtempSync(path.join(os.tmpdir(), "nbq-pdf-test-"));
@@ -57,6 +80,13 @@ const doc: LibraryDocument = {
 
 const TOKEN = "NBK-AAAA-BBBB-CCCC-DDDD";
 
+// Each test starts with an empty download tree, so an earlier marker, an
+// extra document or an old pruning fixture can never decide what a later
+// test sees.
+beforeEach(() => {
+  rmSync(libraryDownloadsDir(), { recursive: true, force: true });
+});
+
 afterAll(() => {
   rmSync(dataDir, { recursive: true, force: true });
   delete process.env.LIBRARY_DOWNLOAD_CACHE_MB;
@@ -68,12 +98,66 @@ describe("stamping a PDF", () => {
   it("writes a stamped copy that still loads, with both pages", async () => {
     const file = await ensureWatermarkedPdf(doc, TOKEN);
     const bytes = readFileSync(file);
+    const text = bytes.toString("latin1");
 
     expect(bytes.subarray(0, 5).toString("latin1")).toBe("%PDF-");
     expect(bytes.length).toBeGreaterThan(statSync(sourcePath).size);
 
+    // Three diagonal rows and the footer on each page. The native overlay
+    // is uncompressed, so the token is visible in the bytes.
+    expect(text.match(new RegExp(TOKEN, "g"))).toHaveLength(8);
+    expect(text).toContain("23CS31T2");
+    expect(text).toContain("Unit II");
+    expect(text).toContain("/Helvetica-Bold");
+    expect(text).toContain("/ExtGState");
+
     const stamped = await PDFDocument.load(bytes);
     expect(stamped.getPageCount()).toBe(2);
+  });
+
+  it("says how to build the stamp when the binary is missing", async () => {
+    const previous = process.env.PDFSTAMP_BIN;
+    process.env.PDFSTAMP_BIN = path.join(dataDir, "no-such-pdfstamp");
+
+    try {
+      await expect(ensureWatermarkedPdf(doc, TOKEN)).rejects.toThrow(
+        /build-pdfstamp/,
+      );
+    } finally {
+      if (previous === undefined) delete process.env.PDFSTAMP_BIN;
+      else process.env.PDFSTAMP_BIN = previous;
+    }
+  });
+
+  it("passes a non-source failure through with the binary's detail", async () => {
+    const fake = path.join(dataDir, "fail-pdfstamp.sh");
+    writeFileSync(
+      fake,
+      "#!/bin/sh\necho 'pdfstamp: could not write the stamped PDF: disk full' >&2\nexit 4\n",
+    );
+    chmodSync(fake, 0o755);
+
+    const previous = process.env.PDFSTAMP_BIN;
+    process.env.PDFSTAMP_BIN = fake;
+    try {
+      await expect(ensureWatermarkedPdf(doc, TOKEN)).rejects.toThrow(
+        /disk full/,
+      );
+    } finally {
+      if (previous === undefined) delete process.env.PDFSTAMP_BIN;
+      else process.env.PDFSTAMP_BIN = previous;
+    }
+  });
+
+  it("omits the unit from the footer when the document has none", async () => {
+    const file = await ensureWatermarkedPdf(
+      { ...doc, id: "23CS31T2-u1", unit: null },
+      TOKEN,
+    );
+    const text = readFileSync(file).toString("latin1");
+
+    expect(text).toContain("23CS31T2 · p1");
+    expect(text).not.toContain("Unit II");
   });
 
   it("reuses a cached copy instead of stamping again", async () => {

@@ -17,3 +17,6 @@ src/web/dist-library
 # the library's runtime data (the catalogue snapshot is the one file we keep)
 /data/*
 !/data/syllabus-catalog.json
+# the native PDF stamp is built, not committed
+/bin
+native/pdfstamp/target

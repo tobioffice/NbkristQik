@@ -72,6 +72,9 @@ pnpm exec vitest run
 echo "==> Building locally"
 pnpm build
 
+echo "==> Building the native PDF stamp"
+scripts/build-pdfstamp.sh
+
 echo "==> Building the library web app"
 (cd src/web && pnpm run build:library)
 
@@ -109,6 +112,11 @@ rsync -az package.json pnpm-lock.yaml pnpm-workspace.yaml "$HOST:$DIR/"
 # backup and the manual restore are part of the release contract.
 rsync -az scripts/backup-db.sh scripts/restore-db.sh \
   scripts/import-turso-snapshot.mjs "$HOST:$DIR/"
+
+echo "==> Syncing the native PDF stamp"
+ssh "$HOST" "mkdir -p '$DIR/bin'"
+rsync -az bin/pdfstamp "$HOST:$DIR/bin/pdfstamp"
+ssh "$HOST" "chmod 755 '$DIR/bin/pdfstamp' && '$DIR/bin/pdfstamp' --version"
 
 echo "==> Syncing the status page, library bundle and syllabus catalogue"
 ssh "$HOST" "mkdir -p '$DIR/public/status' '$DIR/public/library' '$DIR/data'"

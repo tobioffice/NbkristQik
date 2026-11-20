@@ -6,6 +6,7 @@
     "scripts": {
         "start": "node dist/bot/index.js",
         "build": "tsc",
+        "build:pdfstamp": "bash scripts/build-pdfstamp.sh",
         "dev": "tsx src/bot/index.ts",
         "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
         "lint:fix": "eslint \"src/**/*.ts\" \"tests/**/*.ts\" --fix",
@@ -34,7 +35,6 @@
         "express-validator": "^7.3.2",
         "formidable": "^3.5.4",
         "node-telegram-bot-api": "^2.4.0",
-        "pdf-lib": "^1.17.1",
         "redis": "^5.8.2"
     },
     "devDependencies": {
@@ -55,6 +55,7 @@
         "eslint-plugin-prettier": "^5.5.7",
         "express-rate-limit": "^8.7.4",
         "nodemailer": "^10.6.0",
+        "pdf-lib": "^1.17.1",
         "prettier": "^3.10.1",
         "supertest": "^7.3.2",
         "tsx": "^4.23.15",

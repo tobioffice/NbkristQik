@@ -669,17 +669,19 @@ case.
   already proxies to Express. The SPA is a separate Vite build
   (`src/web/vite.library.config.ts` → `dist-library/`) because it is the only
   page that talks to `/api/library`.
-- **Packages**: no native modules on the server — the page path is plain
+- **Packages**: no Node native modules on the server. The PDF download path
+  adds one small native binary, `bin/pdfstamp` (Rust), built on the deploy
+  machine and shipped by `scripts/deploy.sh`; the page path is still plain
   string work. `poppler-utils` via apt gives `pdftocairo` and `pdfinfo` for
   the render, and the ingest tool says so plainly if it is missing.
 - **Disk**: `data/docs/` for the source PDFs, `data/pages/` for the vector
   pages (443 MB for the whole shelf). `backup-db.sh` should be extended to
   include `data/docs/`; the pages are regenerable from the PDFs and are not
   worth backing up.
-- **Deploy**: `scripts/deploy.sh` syncs `dist/`, the library bundle and
-  `data/syllabus-catalog.json`. The ingest CLI runs as a separate process
-  (never inside the service, so the 600 MB cap is safe): it renders the
-  pages to `data/pages/` on the server.
+- **Deploy**: `scripts/deploy.sh` syncs `dist/`, `bin/pdfstamp`, the library
+  bundle and `data/syllabus-catalog.json`. The ingest CLI runs as a separate
+  process (never inside the service, so the 600 MB cap is safe): it renders
+  the pages to `data/pages/` on the server.
 - **Config**: `LIBRARY_DATA_DIR` moves the data tree, `LIBRARY_WEB_DIR` moves
   the built bundle (both default to the working directory),
   `LIBRARY_WATERMARK_SECRET` is the secret behind the watermark tokens (it

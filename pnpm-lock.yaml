@@ -43,9 +43,6 @@ importers:
       node-telegram-bot-api:
         specifier: ^2.4.0
         version: 2.4.0
-      pdf-lib:
-        specifier: ^1.17.1
-        version: 1.17.1
       redis:
         specifier: ^5.8.2
         version: 5.8.2
@@ -101,6 +98,9 @@ importers:
       nodemailer:
         specifier: ^10.6.0
         version: 10.6.0
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
       prettier:
         specifier: ^3.10.1
         version: 3.10.1

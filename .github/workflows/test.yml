@@ -37,8 +37,22 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "pnpm"
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache the native build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: native/pdfstamp
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Test the native PDF stamp
+        run: cargo test --locked --manifest-path native/pdfstamp/Cargo.toml
+
+      - name: Build the native PDF stamp
+        run: scripts/build-pdfstamp.sh
 
       - name: Run linter
         run: pnpm run lint

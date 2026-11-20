@@ -190,6 +190,8 @@ needs no migration step.
 
 - Node.js 22 or 24 (Node 20 is EOL; `.nvmrc` pins 24)
 - pnpm 10
+- Rust 1.88 or newer (builds the library's PDF stamp; the production host
+  receives the built binary and needs no toolchain)
 - A Redis instance
 - A Telegram bot token from [@BotFather](https://t.me/BotFather)
 - NBKRIST portal credentials with access to attendance and marks
@@ -298,6 +300,7 @@ status as text with a keyboard and tap detail line.
 | ---------------------- | ----------------------------------- |
 | `pnpm dev`             | Run the bot and API from TypeScript |
 | `pnpm build`           | Compile to `dist/`                  |
+| `pnpm run build:pdfstamp` | Build the native PDF stamp        |
 | `pnpm start`           | Run the compiled build              |
 | `pnpm lint`            | ESLint over `src/` and `tests/`     |
 | `pnpm typecheck`       | Type-check without emitting         |
@@ -308,9 +311,9 @@ status as text with a keyboard and tap detail line.
 `pnpm test` starts Vitest in watch mode; use `pnpm exec vitest run` in scripts
 and CI.
 
-Continuous integration runs lint, type-check (sources and tests), a
-production dependency audit and coverage on Node 22 and 24, and a separate
-job for the web package's lint, test type-check, unit tests and the
+Continuous integration runs lint, type-check (sources and tests), the native
+stamp tests, a production dependency audit and coverage on Node 22 and 24, and
+a separate job for the web package's lint, test type-check, unit tests and the
 same-origin `/library/` build. Every pull request to `main` or `develop`
 runs the same checks, and a scheduled weekly run keeps the audit current
 when the repository is quiet.
@@ -320,8 +323,9 @@ when the repository is quiet.
 The bot runs as the `nbkristqik` systemd service. A push to `main` runs
 `.github/workflows/deploy.yml`, which executes `scripts/deploy.sh` on a GitHub
 runner with its SSH, database and smoke-check values taken from GitHub secrets.
-Only `dist/` and the static surfaces are shipped, because the production host
-has little memory. The same script still deploys from a developer shell:
+Only `dist/`, `bin/pdfstamp` and the static surfaces are shipped, because the
+production host has little memory. The same script still deploys from a
+developer shell:
 
 ```bash
 scripts/deploy.sh

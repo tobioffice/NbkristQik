@@ -1,8 +1,10 @@
 # PDF delivery: per-reader downloads and PC access
 
-Status: implemented 8 November 2026. The reader stays SVG; this document
-covers the one place the library serves a whole PDF, plus the PC session that
-makes downloading practical on a computer.
+Status: implemented 8 November 2026. The stamp moved from `pdf-lib` to a
+native Rust binary on 20 November 2026; the endpoint, cache and headers did
+not change. The reader stays SVG; this document covers the one place the
+library serves a whole PDF, plus the PC session that makes downloading
+practical on a computer.
 
 This is a deliberate exception to the no-file rule in `docs/LIBRARY.md` §5 and
 `docs/DOCUMENTS.md`. The file is entitlement-checked and watermarked; the
@@ -23,7 +25,7 @@ GET /api/library/document/:id/pdf
   requireReadableDocument()          live + semester entitlement
   watermarkToken(ctx.userId)         stable opaque token, 64-bit HMAC
   cache: data/downloads/<docId>/<token>-v<version>-<bytes>.pdf
-  miss:  pdf-lib stamp -> temp file -> atomic rename -> res.download
+  miss:  bin/pdfstamp (Rust) -> temp file -> atomic rename -> res.download
   hit:   res.sendFile (Range-capable, through res.download)
 ```
 
@@ -45,11 +47,14 @@ The pieces already exist:
   (`src/api/library.ts`). The download route is registered before
   `/document/:id` so the two routes cannot be confused. It must not add a
   second, weaker path.
-- The implementation is `src/services/library/pdf.ts`:
-  `ensureWatermarkedPdf()` owns the cache, stamp and in-flight promise. The
-  route is `GET /api/library/document/:id/pdf` in `src/api/library.ts`.
+- The implementation is split. `src/services/library/pdf.ts` owns the cache,
+  the source check, the queue and the in-flight promise;
+  `src/services/library/pdfstamp.ts` runs the binary;
+  `native/pdfstamp` draws the overlay and writes the file. The route is
+  `GET /api/library/document/:id/pdf` in `src/api/library.ts`.
   `tests/unit/libraryPdf.test.ts` covers cache reuse, version separation,
-  corrupt sources and both pruning rules.
+  corrupt sources and both pruning rules; `native/pdfstamp/tests/stamp.rs`
+  covers the drawing and the encrypted/corrupt refusals.
 
 ### What the endpoint does
 
@@ -64,11 +69,14 @@ The pieces already exist:
    route trusts `doc.source_path` from the registry; if that row can ever be
    written outside the ingest tool, verify the resolved path is inside
    `data/docs` before reading it.
-4. On a miss, read the source PDF, `PDFDocument.load()`, draw the overlay on
-   every page, and `save()`. Write to a temporary file in the same directory,
-   then `rename()` it into place. A caught failure removes its temp file; an
-   uncaught crash can leave a `.tmp` for the sweep to clean.
-5. On a hit, skip `pdf-lib` entirely.
+4. On a miss, run `bin/pdfstamp` with the source path and a temporary output
+   path. The binary loads the PDF, appends one balanced `q...Q` overlay stream
+   to every page, adds a standard-14 Helvetica-Bold font and two
+   `/ExtGState` alpha entries to the page's own resource dictionary, and
+   writes the output. Node then `rename()`s the temporary file into place. A
+   caught failure removes its temp file; an uncaught crash can leave a `.tmp`
+   for the sweep to clean. The source bytes never enter the Node heap.
+5. On a hit, skip the binary entirely.
 6. Send with `res.download(cachePath, safeFilename)`. `res.download` is the
    attachment form of `sendFile`, so a range request still works. If the PC
    viewer ever opens the PDF in place, use `res.sendFile` with
@@ -86,7 +94,7 @@ The response headers that matter:
 | `Accept-Ranges` | set by `sendFile` | resume and PDF viewers |
 
 `res.sendFile` supports byte ranges and conditional requests. A cached
-download is a file stat plus a streamed send, not a `pdf-lib` pass. That is the
+download is a file stat plus a streamed send, not a stamp pass. That is the
 whole point of the cache.
 
 The current route sets `private, max-age=3600` and `Vary: Cookie`.
@@ -96,6 +104,35 @@ with the audit. If every click must produce a row, use `private, no-store`
 instead; the file is then sent on each click, but the server-side cache still
 avoids generation.
 
+### Build and deploy
+
+The binary is built on the deploy machine, not the server:
+
+```bash
+scripts/build-pdfstamp.sh        # native/pdfstamp -> bin/pdfstamp
+```
+
+`scripts/deploy.sh` runs it before syncing and ships `bin/pdfstamp` to
+`$DIR/bin/pdfstamp`; the production host needs no Rust toolchain.
+`PDFSTAMP_BIN` overrides the location. CI builds it before the Vitest suite
+and runs `cargo test --locked`; the Vitest suite builds it on first use when
+`bin/pdfstamp` is missing. `native/pdfstamp/Cargo.lock` is committed, so the
+dependency versions do not drift between a developer's build and a deploy.
+
+The hand-off is deliberately file-to-file. Node passes the source and a
+temporary output path; the binary writes the result; Node renames it into the
+cache. A missing or broken binary fails one download with a 500 and a log line
+that names the build script, while the bot and the rest of the API keep
+running. Nothing about the stamp is loaded into the Node process, so a
+malformed PDF cannot crash the service; the source byte and page caps and the
+60-second child timeout keep the work bounded.
+
+The release binary links the builder's glibc (the current build needs 2.34,
+so Ubuntu 22.04 or newer). If the deploy machine and the server ever diverge,
+build in a container that matches the server, or add a musl target. The deploy
+runs `bin/pdfstamp --version` on the server before the restart, so a mismatch
+stops the release instead of shipping a download path that cannot start.
+
 ### Why this design
 
 **It does not rasterise.** The source is already a PDF; the output is a PDF
@@ -103,7 +140,9 @@ with a few text operators added per page. Rasterising 100 pages would create
 images many times larger, lose vector zoom and print quality, and reintroduce
 the native image memory that took the box down before. `docs/LIBRARY.md` §5
 records the earlier libvips/sharp incident: a few readers pushed the 1 GB box
-into swap. `pdf-lib` is pure JavaScript and needs no native image library.
+into swap. The stamp is native code, but it is not an image library: `lopdf`
+reads and writes PDF objects, and `pdftocairo` still does the vector page
+rendering at ingest.
 
 **It does not use a browser.** Puppeteer or a headless Chromium would add
 hundreds of megabytes per instance before the document is even loaded, plus a
@@ -144,18 +183,20 @@ Cost is proportional to page count and source bytes:
 | Step | Cost | Notes |
 | --- | --- | --- |
 | session + entitlement | Redis read + cached student/document rows | same as the page route; ~1 Redis GET, DB only on cache miss |
-| read source | O(source bytes) | `data/docs/<id>.pdf` |
-| `PDFDocument.load` | O(source bytes) | parses objects, fonts, images |
-| draw overlay | O(pages) | 3 diagonal text rows + 1 footer per page |
-| `save` | O(pages + source bytes) | writes a new object graph; usually the largest CPU share |
+| source check | `lstat` + path guard | `data/docs/<id>.pdf` |
+| `pdfstamp` load | O(source bytes) | parses objects and the page tree |
+| draw overlay | O(pages) | 3 diagonal text rows + 1 footer, appended as one stream |
+| `pdfstamp` save | O(pages + source bytes) | writes the object graph |
 | write cache | O(output bytes) | temp file then atomic rename |
 | send | O(output bytes) | network dominates |
 
-Memory is the constraint. A 100-page text PDF added about 50 MB of RSS over
-the idle Node process in the benchmark below. A 100-page, 1.2 MB PDF with
-embedded images added about 64 MB in the median run, with a 52-65 MB spread
-across three runs. The service already has its own baseline; the marginal cost
-is what matters for the 600 MB cap.
+Memory is bounded by the source, not the JavaScript heap. On the development
+box, peak RSS was 12.2 MB for a 100-page text PDF (102 KB source), 12.3 MB for
+300 pages (306 KB), and 43.5 MB for a 20 MB source carrying a 20 MB embedded
+blob. The process is short-lived and Node holds only paths, so the service's
+600 MB cap is not the constraint it was with `pdf-lib`'s 9-64 MB marginal JS
+heap per generation. The 20 MB case is close to the 25 MB ingest ceiling, so
+two concurrent generations are still bounded at under 100 MB.
 
 ### Cached download
 
@@ -166,7 +207,7 @@ stat(data/downloads/<docId>/<token>-v<version>-<bytes>.pdf)
 res.sendFile(...)
 ```
 
-There is no `pdf-lib`, no source read, and no full-file JavaScript buffer. The
+There is no stamp process, no source read, and no full-file buffer. The
 server does a metadata lookup and streams the file. Range requests are handled
 by `sendFile`; a resumed download starts where it stopped.
 
@@ -233,38 +274,37 @@ alive forever.
 
 ### Concurrency
 
-The per-key in-flight promise in `ensureWatermarkedPdf()` is necessary but not
-sufficient: it stops two requests for the same file from both running
-`pdf-lib`, but it does not stop ten different students from generating ten
-different documents at once. The implementation therefore has:
+The per-key in-flight promise in `ensureWatermarkedPdf()` stops two requests
+for the same file from stamping twice. The stamp is a child process, so ten
+different readers would still mean ten processes; the implementation therefore
+has:
 
 - at most 2 generations at once;
 - a bounded queue of 8;
 - waiters on the same key share the in-flight promise;
-- a full queue answers `503` with `Retry-After`, not an unbounded allocation.
+- a full queue answers `503` with `Retry-After`, never an unbounded fork.
 
-Two concurrent 100-page text PDFs cost about 100 MB of marginal RSS, or about
-128 MB for two image-heavy PDFs. That leaves room under the service cap. Four
-would be tighter and would make the event loop less responsive. If the queue
-is regularly full, that is the signal to move to the qpdf/Ghostscript path or
-to generate at ingest, not to remove the limit.
+Two concurrent 20 MB sources are about 87 MB of peak RSS, well under the
+600 MB service cap. The limit is no longer protecting the Node heap, and the
+event loop is free while the child works; it bounds CPU contention and disk
+writes on the small VM. If the queue is regularly full, raise the limit after
+measuring the server, not because the old memory reason still applies.
 
-`pdf-lib` work is JavaScript and mostly CPU-bound. A 100-page document took
-about 72 ms to generate on the development box; a 30-page unit should be in
-the tens of milliseconds. That is small enough to do in the request path with
-a queue. A much larger document, a slow VM, or many concurrent generations
-would justify a worker thread. Do not add a worker thread until measurements
-on the server show the event loop is the bottleneck.
+The binary is brief: about 0.8 ms for a 2-page source, 1.2 ms for 20 pages,
+3.7 ms for 100 pages, 10.5 ms for 300 pages, and about 10 ms for a 20 MB
+source on the development box. A 30-page unit is on the order of a
+millisecond. That is small enough to run in the request path, and the cache
+means most requests never run it at all.
 
 ## 3. Options considered
 
 | Option | CPU | Memory | Disk | Security / traceability | Operational complexity | When it would be preferable |
 | --- | --- | --- | --- | --- | --- | --- |
-| **On-demand `pdf-lib` per reader + disk cache (chosen)** | O(pages) first time; ~0 cached | ~9-64 MB marginal per generation; ~0 cached | One output per reader/document/version, capped at 512 MB (env-tunable) | Token on every page; clean source stays server-side; cache is per reader | Medium: `pdf-lib`, cache, lock, sweep | Default for a small library with modest PDFs and low concurrency |
+| **On-demand native stamp per reader + disk cache (chosen)** | O(pages) first time; ~0 cached | ~12 MB peak for text PDFs; ~2.1x source bytes for a 20 MB blob | One output per reader/document/version, capped at 512 MB (env-tunable) | Token on every page; clean source stays server-side; cache is per reader | Medium: Rust binary, cache, lock, sweep | Default for a small library with modest PDFs and low concurrency |
 | **Clean PDF + signed URL** | ~0 | ~0 | One source file | Signed URL protects the link, not the bytes; a forwarded file has no reader mark | Low | Public material, or a product where sharing is allowed; not this library |
 | **Pre-generate every reader at ingest** | N × generation at ingest | N × generation peak | N × documents; combinatorial | Traceable, but every file exists whether used or not | High: new students, re-ingest, token rotation, cleanup | A tiny fixed cohort with a guaranteed download set and no new registrations |
 | **Puppeteer / server-side PDF.js rasterisation** | High: browser layout or canvas per page | Hundreds of MB per Chromium plus page buffers | Large image pages | Traceable if stamped after render, but loses vector text and zoom | High: Chromium, sandbox, fonts, system packages | Rendering HTML that has no PDF source, or producing page images for a non-PDF viewer |
-| **Ghostscript/qpdf overlay of a per-reader watermark PDF** | Low to medium: C tools | Low | Small one-page overlay + output | Traceable; same token | Medium-high: extra system package, command-line quoting, version differences | Large PDFs or many pages where `pdf-lib` memory/time is the bottleneck; also useful to linearise, with a separate step to strip active content |
+| **Ghostscript/qpdf overlay of a per-reader watermark PDF** | Low to medium: C tools | Low | Small one-page overlay + output | Traceable; same token | Medium-high: extra system package, command-line quoting, version differences | A fallback if the custom binary cannot be maintained; qpdf remains another apt package and another PDF parser to trust |
 | **Serve the SVG pages zipped** | Low: zip | Low | Reuses `data/pages` | Per-page mark only if zipped per reader; not a PDF | Low-medium: zip endpoint, MIME handling | An offline HTML/SVG bundle is the goal; it is not a PDF and is poor for print/share |
 
 Notes on the rejected rows:
@@ -277,29 +317,55 @@ Notes on the rejected rows:
   512 MB cap would be consumed by files nobody requested.
 - **Puppeteer/PDF.js** is the right tool when the source is a web page. Here
   the source is already a PDF. Paying for a browser to draw text on it is
-  strictly worse than `pdf-lib`.
-- **qpdf/Ghostscript** is the serious future option. A hybrid can be cheaper
-  than the current design: generate one small watermark overlay PDF per reader
-  token (cache that), then use `qpdf --overlay` with a repeated overlay across
-  the document. qpdf is fast and uses little memory, but it is another apt
-  dependency and the command line must be built with `execFile` arguments, not
-  a shell string. Ghostscript is heavier and has a larger attack surface;
-  prefer qpdf if the overlay is enough.
+  strictly worse than appending a text stream.
+- **qpdf/Ghostscript** is the fallback if the native binary ever becomes a
+  maintenance problem. A hybrid can be cheaper than a custom writer: generate
+  one small watermark overlay PDF per reader token (cache that), then use
+  `qpdf --overlay` with a repeated overlay across the document. qpdf is fast
+  and uses little memory, but it is another apt dependency and the command
+  line must be built with `execFile` arguments, not a shell string.
+  Ghostscript is heavier and has a larger attack surface; prefer qpdf if the
+  overlay is enough.
 - **Zipped SVG** is not a PDF. It does not open in a phone's PDF viewer, does
   not print predictably, and does not give the student one file. It is only
   interesting if the requirement is "offline HTML", which this is not.
 
 ## 4. Benchmark
 
-Environment: Linux development box, measured 2026-11-08, Node v26.13.0,
-`pdf-lib` 1.17.1 from the repository. This is not the production VM; use the ratios and the memory
-shape, not the absolute milliseconds, for capacity planning. The expected
-corpus is kilobytes to a few megabytes per source PDF (the Bot API cap in
-`docs/DOCUMENTS.md` is 20 MB); these runs cover 0.23-1.2 MB sources.
+Environment: Linux development box. This is not the production VM; use the
+ratios and the memory shape, not the absolute milliseconds, for capacity
+planning. The expected corpus is kilobytes to a few megabytes per source PDF
+(the Bot API cap in `docs/DOCUMENTS.md` is 20 MB).
 
-The overlay used Helvetica-Bold, a standard PDF font that is not embedded.
-Embedding a custom font would add a one-time subset to each output but would
-not change the page-count scaling. The script matches
+### Native stamp (2026-11-20)
+
+The current path. `bin/pdfstamp` is spawned once per cache miss with
+`--in`, `--out`, `--token`, `--code` and `--unit`; peak RSS is
+`getrusage(RUSAGE_CHILDREN)` for the child, including the 1.3 MB binary and
+loader. Three runs per size, medians. Sources are synthetic A4 PDFs with 40
+lines of Helvetica text per page; the heavy case embeds 20 MB of random bytes,
+which is the worst shape for a loader that keeps stream bytes in memory.
+
+| Pages | Source bytes | Median (ms) | Output bytes | Peak RSS (MB) |
+| ---: | ---: | ---: | ---: | ---: |
+| 2 | 2,782 | 0.7 | 6,585 | 12.3 |
+| 20 | 21,522 | 1.2 | 56,583 | 12.5 |
+| 100 | 104,936 | 3.8 | 279,774 | 12.3 |
+| 300 | 313,368 | 10.7 | 838,100 | 12.3 |
+| 60, with 20 MB attachment | 20,991,755 | 10.2 | 21,049,561 | 43.4 |
+
+The output carries about 1.75 KB per page of uncompressed overlay, so a
+30-page unit adds roughly 50 KB. The 100-page case is 3.8 ms against the
+`pdf-lib` baseline's 72.2 ms, and the whole process peaks at 12.3 MB against
+50.4 MB marginal over a 63 MB Node baseline. The 20 MB case is about 2.1x the
+source, which is the number the 600 MB service cap has to budget for.
+
+### pdf-lib baseline (2026-11-08)
+
+Historical, for comparison. Node v26.13.0, `pdf-lib` 1.17.1 from the
+repository. The overlay used Helvetica-Bold, a standard PDF font that is not
+embedded. Embedding a custom font would add a one-time subset to each output
+but would not change the page-count scaling. The script matched the old
 `src/services/library/pdf.ts`: `PDFDocument.load(source, { updateMetadata:
 false })`, `pdf.save()` with pdf-lib defaults, and the same diagonal/footer
 coordinates.
@@ -374,9 +440,10 @@ loopback and is dominated by the actual transfer. The `Range` probe returned
 `206` with the expected `Content-Range`, so `sendFile` is doing the right
 thing for a PDF viewer or a resume.
 
-The first download of a 100-page text PDF is about 72 ms of generation and
-about 50 MB of marginal memory. A repeat download is a stat and a send. That
-is the efficiency case for the cache.
+The first download of a 100-page text PDF is about 4 ms of stamping and
+12 MB of peak RSS. A repeat download is a stat and a send. (The `pdf-lib`
+baseline was 72 ms and about 50 MB of marginal memory.) That is the efficiency
+case for the cache.
 
 ## 5. Recommendations
 
@@ -384,8 +451,9 @@ is the efficiency case for the cache.
    promise and the global semaphore of 2 with a bounded queue; the queue-full
    path answers `503`/`429` with `Retry-After`. Reject source PDFs over a sane
    ingest limit (the existing Bot API cap is 20 MB, `docs/DOCUMENTS.md`; a
-   page-count limit is also useful). This is the difference between a
-   50-64 MB spike and an out-of-memory restart on a 600 MB service.
+   page-count limit is also useful). The binary bounds a text stamp at about
+   12 MB and a 20 MB source at about 44 MB; the queue still matters because it
+   bounds the number of processes, not because of a JavaScript heap.
 
 2. **Make the cache accountable.** The 512 MB cap is currently enforced by
    the daily sweep, not on write, so a burst can exceed it until the next run.
@@ -408,18 +476,20 @@ is the efficiency case for the cache.
    audit row. Always set `nosniff` and
    `Cross-Origin-Resource-Policy: same-origin`.
 
-When to switch to qpdf/Ghostscript:
+When to reconsider the path:
 
-- generation p95 is consistently over about 1 second, or a single generation
-  adds more than about 150 MB;
-- the corpus contains many 300+ page or 5 MB+ documents;
-- two concurrent generations are not enough, or the queue is regularly full;
-- you need to linearise, repair or strip active content from the source.
+- the native binary cannot be maintained, or a target platform without Rust
+  1.88+ must run the service;
+- the source needs linearising, repair or active-content stripping that a
+  full PDF tool does better;
+- a measured document still makes the two-generation queue overflow, or the
+  binary's peak RSS on the real corpus is out of budget.
 
-The lowest-risk migration is the hybrid: generate and cache a one-page overlay
-PDF per reader token with `pdf-lib`, then use `qpdf --overlay` with a repeated
-overlay on the source. Benchmark that against the current path before adding
-the package. Ghostscript only if qpdf cannot do the job.
+qpdf/Ghostscript is the fallback, not the next step. The hybrid: generate and
+cache a one-page overlay PDF per reader token with any PDF writer, then use
+`qpdf --overlay` with a repeated overlay on the source. Benchmark it against
+`bin/pdfstamp` before adding the package. Ghostscript only if qpdf cannot do
+the job.
 
 What not to do:
 

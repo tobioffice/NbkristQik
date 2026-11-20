@@ -73,9 +73,9 @@ vi.mock("../../src/services/tracker.js", () => ({
 }));
 
 /**
- * The PDF route is exercised against a fixed file instead of running pdf-lib:
- * stamping is covered by tests/unit/libraryPdf.test.ts, and a real multi-page
- * PDF per request would only make this suite slower.
+ * The PDF route is exercised against a fixed file instead of running the
+ * native stamp: stamping is covered by tests/unit/libraryPdf.test.ts, and a
+ * real multi-page PDF per request would only make this suite slower.
  */
 const downloadFixture = path.join(
   os.tmpdir(),
