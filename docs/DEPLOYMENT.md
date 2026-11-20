@@ -46,6 +46,20 @@ it, and the Vitest suite builds it on first use when `bin/pdfstamp` is
 missing. Without the binary, library downloads answer 500 and the log names
 the script; every other surface keeps working.
 
+Anything imported by `src/` at runtime belongs in `dependencies`, not
+`devDependencies`: the server installs with `pnpm install --prod`.
+`tests/unit/runtimeDependencies.test.ts` fails the suite when a runtime import
+is only a dev dependency. The deploy's rollback reinstalls the full tree
+before restarting the old build for the same reason.
+
+`pnpm run check:prod` is the stronger gate. It copies the manifest, lockfile,
+`dist/` and `bin/pdfstamp` to a temporary directory, runs
+`pnpm install --prod --frozen-lockfile`, resolves every bare import in the
+compiled output, and runs the stamp. CI runs it on every push; the deploy runs
+it before the first SSH command, so a missing production package stops the
+release with the server untouched. It needs `pnpm build` and
+`scripts/build-pdfstamp.sh` first.
+
 Checks: `pnpm lint`, `pnpm typecheck`, `pnpm exec vitest run` (or
 `test:coverage`). `build`/`build:library` build only the `/library/` app; the
 static marketing site publishes separately with `cd src/web && pnpm deploy:site`
@@ -277,8 +291,9 @@ hotfix; it prints a warning and continues.
 ### What the script does
 
 1. Preflight: `pnpm run typecheck`, `pnpm run typecheck:tests`, `pnpm run lint`,
-   the root Vitest suite and the `src/web` Vitest suite, then `pnpm build`,
-   `scripts/build-pdfstamp.sh` and `pnpm run build:library`.
+   `scripts/build-pdfstamp.sh`, the root Vitest suite and the `src/web` Vitest
+   suite, then `pnpm build`, `pnpm run check:prod` and
+   `pnpm run build:library`.
 2. On `$HOST`: `mkdir -p $DIR`; refuse to start if an unfinished previous
    release left `$DIR/dist.old` in place.
 3. Sync the compiled `dist/` into `$DIR/dist.new/`, then swap it into `$DIR/dist`
@@ -315,6 +330,12 @@ A first deploy has no `dist.old`; there is nothing to promote.
 The static assets (`public/library`, `public/status`) are not rolled back; the
 previous server build ignores the new files. No database restore is attempted
 automatically — the pre-restart backup is for a deliberate manual restore.
+
+Before restarting the old build, the rollback reinstalls the full dependency
+tree from the manifest on the host (`pnpm install --prod=false`). A failed
+release may have changed `package.json` and pruned a package the old build
+needs; the 20 November outage was exactly that. The next successful release
+prunes the dev dependencies again.
 
 ### Deploy overrides
 

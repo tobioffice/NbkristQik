@@ -69,6 +69,12 @@ jobs:
       - name: Run tests
         run: pnpm run test:coverage
 
+      - name: Build for the production check
+        run: pnpm build
+
+      - name: Check the production install
+        run: pnpm run check:prod
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:

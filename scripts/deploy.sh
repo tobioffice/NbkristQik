@@ -66,14 +66,24 @@ echo "==> Checking before anything ships"
 pnpm run typecheck
 pnpm run typecheck:tests
 pnpm run lint
+
+# Build the native stamp before the suite so the tests exercise the binary
+# that will ship, not a stale bin/pdfstamp from an earlier checkout.
+echo "==> Building the native PDF stamp"
+scripts/build-pdfstamp.sh
+
 pnpm exec vitest run
 (cd src/web && pnpm install --frozen-lockfile && pnpm exec vitest run)
 
 echo "==> Building locally"
 pnpm build
 
-echo "==> Building the native PDF stamp"
-scripts/build-pdfstamp.sh
+# The unit suite runs with devDependencies. This installs exactly what the
+# server will install, then resolves every import in dist/. It runs before the
+# first SSH command, so a missing production package halts the deploy with the
+# server untouched.
+echo "==> Checking the production install"
+pnpm run check:prod
 
 echo "==> Building the library web app"
 (cd src/web && pnpm run build:library)
@@ -225,6 +235,19 @@ restart_service() {
 
 rollback() {
   echo "==> ROLLBACK: restoring the previous build" >&2
+  # The failed release may have changed package.json and pruned packages the
+  # old build needs. The 20 November outage was exactly that: the new manifest
+  # moved runtime packages to devDependencies, `pnpm install --prod` removed
+  # them, and the old dist could not start either. Install the full tree from
+  # the manifest on the host before restarting the old build; the next
+  # successful release prunes it again.
+  echo "==> ROLLBACK: reinstalling dependencies for the previous build" >&2
+  if ! ssh "$HOST" "cd '$DIR' && export PATH=\$HOME/.local/bin:\$PATH &&
+    command -v pnpm >/dev/null 2>&1 || { export NPM_CONFIG_PREFIX=\$HOME/.local; npm install -g pnpm@10; } &&
+    pnpm install --prod=false --frozen-lockfile"; then
+    echo "ROLLBACK WARNING: dependency reinstall failed; the previous build may still be missing packages." >&2
+  fi
+
   # The just-replaced live build is dist.old until the smoke checks pass.
   # Fall back to the last known-good dist.prev for an older layout.
   ROLLBACK_SRC="$DIR/dist.old"
@@ -240,14 +263,25 @@ rollback() {
 
   if ssh "$HOST" "rm -rf '$DIR/dist' && cp -a '$ROLLBACK_SRC' '$DIR/dist' &&
     sudo systemctl restart '$SERVICE' && sleep 2 && systemctl is-active '$SERVICE'"; then
-    echo "ROLLBACK COMPLETE: $DIR/dist is the previous build and '$SERVICE' is active." >&2
-    echo "  The snapshot is still at $ROLLBACK_SRC. The failed release's static" >&2
-    echo "  assets (public/library, public/status) were not rolled back; the old" >&2
-    echo "  build ignores the new ones. No database restore was attempted — use the" >&2
-    echo "  backup written before the restart if data needs manual recovery." >&2
-    # The restored build is now live; clear the failed-release marker so the
-    # next deploy can take a fresh snapshot instead of refusing on dist.old.
-    ssh "$HOST" "rm -rf '$DIR/dist.old'" || true
+    # `is-active` only proves the process started. The old build can still die
+    # a few seconds later, which is how the 20 November rollback reported
+    # success while the service kept crash-looping. Wait for /health before
+    # declaring the rollback good, and keep the snapshot if it never answers.
+    if ssh "$HOST" "for _ in \$(seq 1 30); do curl -fsS -m 2 '$BASE_URL/health' >/dev/null 2>&1 && exit 0; sleep 1; done; exit 1"; then
+      echo "ROLLBACK COMPLETE: $DIR/dist is the previous build and '$SERVICE' is active." >&2
+      echo "  The snapshot is still at $ROLLBACK_SRC. The failed release's static" >&2
+      echo "  assets (public/library, public/status) were not rolled back; the old" >&2
+      echo "  build ignores the new ones. No database restore was attempted — use the" >&2
+      echo "  backup written before the restart if data needs manual recovery." >&2
+      # The restored build is now healthy; clear the failed-release marker so the
+      # next deploy can take a fresh snapshot instead of refusing on dist.old.
+      ssh "$HOST" "rm -rf '$DIR/dist.old'" || true
+    else
+      echo "ROLLBACK ERROR: the previous build was restored but /health did not answer." >&2
+      echo "  The service may still be crash-looping. Check now:" >&2
+      echo "    ssh $HOST 'journalctl -u $SERVICE -n 80 --no-pager'" >&2
+      echo "  $ROLLBACK_SRC was kept so the next deploy refuses to overwrite it." >&2
+    fi
   else
     echo "ROLLBACK ERROR: the previous build was restored but '$SERVICE' is not active." >&2
     echo "  Check 'ssh $HOST journalctl -u $SERVICE -n 50 --no-pager' now." >&2
