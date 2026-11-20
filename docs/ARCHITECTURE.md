@@ -54,6 +54,11 @@ Monitor (monitor-host) ──> /health, /internal/health, portal
   decides whether the library tab exists for this caller; the server enforces
   the same gate on the library API. The legacy GitHub Pages app build is
   retired; the marketing site remains a separate static surface.
+- **Native stamp:** the library's whole-PDF download is the one native code
+  path. `bin/pdfstamp` (Rust) draws the per-reader watermark; Node keeps the
+  session, entitlement, cache and queue. A 100-page text PDF stamps in about
+  4 ms at a 14 MB peak, against about 39 ms and 65 MB of marginal memory for
+  the retired pdf-lib path. See `docs/PDF-DELIVERY.md`.
 
 ## HTTP surface
 

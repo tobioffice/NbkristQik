@@ -301,6 +301,7 @@ status as text with a keyboard and tap detail line.
 | `pnpm dev`             | Run the bot and API from TypeScript |
 | `pnpm build`           | Compile to `dist/`                  |
 | `pnpm run build:pdfstamp` | Build the native PDF stamp        |
+| `pnpm run check:prod`  | Check the production install         |
 | `pnpm start`           | Run the compiled build              |
 | `pnpm lint`            | ESLint over `src/` and `tests/`     |
 | `pnpm typecheck`       | Type-check without emitting         |
@@ -310,6 +311,11 @@ status as text with a keyboard and tap detail line.
 
 `pnpm test` starts Vitest in watch mode; use `pnpm exec vitest run` in scripts
 and CI.
+
+The library's whole-PDF stamp is `bin/pdfstamp` (Rust). A 100-page text PDF
+stamps in about 4 ms at a 14 MB peak, against about 39 ms and 65 MB of
+marginal memory for the retired pdf-lib path; the full comparison is in
+[`docs/PDF-DELIVERY.md`](docs/PDF-DELIVERY.md).
 
 Continuous integration runs lint, type-check (sources and tests), the native
 stamp tests, a production dependency audit and coverage on Node 22 and 24, and

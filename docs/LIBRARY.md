@@ -323,6 +323,16 @@ returns document bytes is `/api/library/document/:id/pdf`, and it returns a
 per-reader stamped copy, not the source. See `docs/PDF-DELIVERY.md` for the
 cache and efficiency model.
 
+### What the stamp costs
+
+The download is stamped by `bin/pdfstamp`, the Rust binary described in
+`docs/PDF-DELIVERY.md`; it replaced pdf-lib on 20 November 2026. On the
+development box a 100-page text PDF stamps in 3.9 ms with a 14 MB peak, where
+pdf-lib needed 39 ms warm (88 ms cold) and 65 MB of marginal memory. A
+300-page document is 10.5 ms / 14 MB against 105 ms / 110 MB. A 20 MB source is
+11 ms / 43 MB against 42 ms / 71 MB. The first download pays this; every cache
+hit is a stat and a send.
+
 ### 5.2 Watermark per reader
 
 Every page is stamped with the reader's mark before it is sent:

@@ -63,7 +63,7 @@ const inFlight = new Map<string, Promise<string>>();
  * A global cap on concurrent PDF stamps. Each stamp is a short-lived native
  * process, so the document lives outside the Node heap; two at a time keeps
  * memory and CPU predictable on the small VM. A 20 MB source measured about
- * 44 MB peak and 9 ms in the binary, so the cap is about bounding the number
+ * 44 MB peak and 11 ms in the binary, so the cap is about bounding the number
  * of processes, not the JavaScript heap it used to protect. Overflow is a
  * clear 503, never an unbounded fork.
  */

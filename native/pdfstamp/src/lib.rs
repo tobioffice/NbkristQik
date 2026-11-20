@@ -18,6 +18,12 @@
 //! the marginal cost tracks the source bytes instead of the JS heap. A
 //! process boundary also means a malformed document cannot take the bot
 //! down with it.
+//!
+//! On the development box a 100-page text PDF stamps in about 4 ms at a
+//! 14 MB peak, against 39 ms warm (88 ms cold) and 65 MB of marginal memory
+//! for pdf-lib. A 300-page document is about 10.5 ms at the same peak,
+//! against 105 ms and 110 MB. See `docs/PDF-DELIVERY.md` for the full
+//! comparison.
 
 use lopdf::content::{Content, Operation};
 use lopdf::{Dictionary, Document, Object, ObjectId};

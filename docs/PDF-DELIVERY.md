@@ -191,12 +191,12 @@ Cost is proportional to page count and source bytes:
 | send | O(output bytes) | network dominates |
 
 Memory is bounded by the source, not the JavaScript heap. On the development
-box, peak RSS was 12.2 MB for a 100-page text PDF (102 KB source), 12.3 MB for
-300 pages (306 KB), and 43.5 MB for a 20 MB source carrying a 20 MB embedded
-blob. The process is short-lived and Node holds only paths, so the service's
-600 MB cap is not the constraint it was with `pdf-lib`'s 9-64 MB marginal JS
-heap per generation. The 20 MB case is close to the 25 MB ingest ceiling, so
-two concurrent generations are still bounded at under 100 MB.
+box, the child peaked at about 14 MB for 2-300 page text PDFs and 43.4 MB for
+a 20 MB source carrying a 20 MB embedded blob. The process is short-lived and
+Node holds only paths, so the service's 600 MB cap is not the constraint it was
+with `pdf-lib`'s 9-64 MB marginal JS heap per generation. The 20 MB case is
+close to the 25 MB ingest ceiling, so two concurrent generations are still
+bounded at under 100 MB.
 
 ### Cached download
 
@@ -290,8 +290,8 @@ event loop is free while the child works; it bounds CPU contention and disk
 writes on the small VM. If the queue is regularly full, raise the limit after
 measuring the server, not because the old memory reason still applies.
 
-The binary is brief: about 0.8 ms for a 2-page source, 1.2 ms for 20 pages,
-3.7 ms for 100 pages, 10.5 ms for 300 pages, and about 10 ms for a 20 MB
+The binary is brief: about 0.7 ms for a 2-page source, 1.3 ms for 20 pages,
+3.9 ms for 100 pages, 10.5 ms for 300 pages, and about 11 ms for a 20 MB
 source on the development box. A 30-page unit is on the order of a
 millisecond. That is small enough to run in the request path, and the cache
 means most requests never run it at all.
@@ -300,7 +300,7 @@ means most requests never run it at all.
 
 | Option | CPU | Memory | Disk | Security / traceability | Operational complexity | When it would be preferable |
 | --- | --- | --- | --- | --- | --- | --- |
-| **On-demand native stamp per reader + disk cache (chosen)** | O(pages) first time; ~0 cached | ~12 MB peak for text PDFs; ~2.1x source bytes for a 20 MB blob | One output per reader/document/version, capped at 512 MB (env-tunable) | Token on every page; clean source stays server-side; cache is per reader | Medium: Rust binary, cache, lock, sweep | Default for a small library with modest PDFs and low concurrency |
+| **On-demand native stamp per reader + disk cache (chosen)** | O(pages) first time; ~0 cached | ~14 MB peak for text PDFs; ~2.1x source bytes for a 20 MB blob | One output per reader/document/version, capped at 512 MB (env-tunable) | Token on every page; clean source stays server-side; cache is per reader | Medium: Rust binary, cache, lock, sweep | Default for a small library with modest PDFs and low concurrency |
 | **Clean PDF + signed URL** | ~0 | ~0 | One source file | Signed URL protects the link, not the bytes; a forwarded file has no reader mark | Low | Public material, or a product where sharing is allowed; not this library |
 | **Pre-generate every reader at ingest** | N × generation at ingest | N × generation peak | N × documents; combinatorial | Traceable, but every file exists whether used or not | High: new students, re-ingest, token rotation, cleanup | A tiny fixed cohort with a guaranteed download set and no new registrations |
 | **Puppeteer / server-side PDF.js rasterisation** | High: browser layout or canvas per page | Hundreds of MB per Chromium plus page buffers | Large image pages | Traceable if stamped after render, but loses vector text and zoom | High: Chromium, sandbox, fonts, system packages | Rendering HTML that has no PDF source, or producing page images for a non-PDF viewer |
@@ -337,40 +337,60 @@ ratios and the memory shape, not the absolute milliseconds, for capacity
 planning. The expected corpus is kilobytes to a few megabytes per source PDF
 (the Bot API cap in `docs/DOCUMENTS.md` is 20 MB).
 
-### Native stamp (2026-11-20)
+### Head-to-head (2026-11-20)
 
-The current path. `bin/pdfstamp` is spawned once per cache miss with
-`--in`, `--out`, `--token`, `--code` and `--unit`; peak RSS is
-`getrusage(RUSAGE_CHILDREN)` for the child, including the 1.3 MB binary and
-loader. Three runs per size, medians. Sources are synthetic A4 PDFs with 40
-lines of Helvetica text per page; the heavy case embeds 20 MB of random bytes,
-which is the worst shape for a loader that keeps stream bytes in memory.
+Same sources and the same overlay geometry. "Old cold" is the first stamp in a
+fresh Node process, which is what a restarted service pays on its first
+download. "Old warm" is pdf-lib's steady state in one process, median of the
+last seven of nine runs. "New" is `bin/pdfstamp` invoked from Node, so it
+includes process spawn and binary startup; median of five runs. Peak RSS for
+the old path is marginal over a Node + pdf-lib baseline of 59.9 MB; for the new
+path it is the child process peak. Warm page cache, Linux development box.
 
-| Pages | Source bytes | Median (ms) | Output bytes | Peak RSS (MB) |
-| ---: | ---: | ---: | ---: | ---: |
-| 2 | 2,782 | 0.7 | 6,585 | 12.3 |
-| 20 | 21,522 | 1.2 | 56,583 | 12.5 |
-| 100 | 104,936 | 3.8 | 279,774 | 12.3 |
-| 300 | 313,368 | 10.7 | 838,100 | 12.3 |
-| 60, with 20 MB attachment | 20,991,755 | 10.2 | 21,049,561 | 43.4 |
+| Source | Old cold | Old warm | New | Speedup | Old marginal RSS | New peak RSS |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2 pages (2.8 KB) | 15.9 ms | 2.4 ms | 0.7 ms | 3.5x | 13.5 MB | 14.4 MB |
+| 20 pages (22 KB) | 31.3 ms | 7.1 ms | 1.3 ms | 5.5x | 20.4 MB | 14.4 MB |
+| 100 pages (105 KB) | 87.6 ms | 39.3 ms | 3.9 ms | 10.1x | 64.9 MB | 14.4 MB |
+| 300 pages (313 KB) | 177.2 ms | 105.4 ms | 10.5 ms | 10.0x | 109.7 MB | 14.4 MB |
+| 20 MB source (60p + 20 MB attachment) | 70.2 ms | 41.7 ms | 11.0 ms | 3.8x | 71.1 MB | 43.4 MB |
+| Real 55-page / 1.4 MB PDF | 52.1 ms | 22.5 ms | 3.6 ms | 6.3x | 37.6 MB | 14.4 MB |
 
-The output carries about 1.75 KB per page of uncompressed overlay, so a
-30-page unit adds roughly 50 KB. The 100-page case is 3.8 ms against the
-`pdf-lib` baseline's 72.2 ms, and the whole process peaks at 12.3 MB against
-50.4 MB marginal over a 63 MB Node baseline. The 20 MB case is about 2.1x the
-source, which is the number the 600 MB service cap has to budget for.
+The comparison is conservative: the old columns start their timer after Node
+and pdf-lib are loaded, while the new column includes spawning the binary
+every run.
 
-### pdf-lib baseline (2026-11-08)
+The synthetic sources are A4 PDFs with 40 lines of Helvetica text per page;
+the heavy case embeds 20 MB of random bytes, and the real case is
+`/usr/share/doc/glm/manual.pdf` (55 pages, 1.4 MB).
 
-Historical, for comparison. Node v26.13.0, `pdf-lib` 1.17.1 from the
-repository. The overlay used Helvetica-Bold, a standard PDF font that is not
+- **100-300 pages: about 10x faster.** Marginal memory drops from 65-110 MB to
+  a flat 14 MB. This is the range that matters for a unit handout and for the
+  600 MB service cap.
+- **A 20 MB source: 3.8x faster**, 71 -> 43 MB. The source bytes dominate; the
+  child peaks at about 2.1x the file size.
+- **A real 55-page PDF: 6.3x faster**, 37.6 -> 14.4 MB.
+- **Tiny documents: 3.5x faster**, but memory is a wash (14.4 MB child against
+  13.5 MB marginal) because the Rust process has a fixed ~14 MB floor. The win
+  is at scale.
+- The output carries about 1.75 KB per page of uncompressed overlay, so a
+  30-page unit adds roughly 50 KB. The 2-page fixture renders pixel-identical
+  to the pdf-lib output, so the speed is not from drawing less.
+
+### Historical pdf-lib baseline (2026-11-08)
+
+Kept as the original decision record. Node v26.13.0, `pdf-lib` 1.17.1 from the
+repository. Its fixtures (31 lines plus a vector figure) and its method differ
+from the head-to-head above; compare columns within one table, not across
+tables. The overlay used Helvetica-Bold, a standard PDF font that is not
 embedded. Embedding a custom font would add a one-time subset to each output
 but would not change the page-count scaling. The script matched the old
 `src/services/library/pdf.ts`: `PDFDocument.load(source, { updateMetadata:
 false })`, `pdf.save()` with pdf-lib defaults, and the same diagonal/footer
 coordinates.
 
-The benchmark is in `/tmp/opencode/pdf-bench` (not in the repository):
+The 2026-11-08 harness lived in `/tmp/opencode/pdf-bench` and was not
+committed:
 
 - `make-sources.cjs`: synthetic A4 PDFs with 2, 20 and 100 pages; each page has
   31 lines of Helvetica text and a simple vector figure.
@@ -441,9 +461,8 @@ loopback and is dominated by the actual transfer. The `Range` probe returned
 thing for a PDF viewer or a resume.
 
 The first download of a 100-page text PDF is about 4 ms of stamping and
-12 MB of peak RSS. A repeat download is a stat and a send. (The `pdf-lib`
-baseline was 72 ms and about 50 MB of marginal memory.) That is the efficiency
-case for the cache.
+14 MB of peak RSS. A repeat download is a stat and a send. That is the
+efficiency case for the cache.
 
 ## 5. Recommendations
 
@@ -452,7 +471,7 @@ case for the cache.
    path answers `503`/`429` with `Retry-After`. Reject source PDFs over a sane
    ingest limit (the existing Bot API cap is 20 MB, `docs/DOCUMENTS.md`; a
    page-count limit is also useful). The binary bounds a text stamp at about
-   12 MB and a 20 MB source at about 44 MB; the queue still matters because it
+   14 MB and a 20 MB source at about 44 MB; the queue still matters because it
    bounds the number of processes, not because of a JavaScript heap.
 
 2. **Make the cache accountable.** The 512 MB cap is currently enforced by
