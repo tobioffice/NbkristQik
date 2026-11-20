@@ -103,9 +103,9 @@ describe("stamping a PDF", () => {
     expect(bytes.subarray(0, 5).toString("latin1")).toBe("%PDF-");
     expect(bytes.length).toBeGreaterThan(statSync(sourcePath).size);
 
-    // One footer on page 1. The native overlay is uncompressed, so the
+    // One footer on each page. The native overlay is uncompressed, so the
     // token is visible in the bytes.
-    expect(text.match(new RegExp(TOKEN, "g"))).toHaveLength(1);
+    expect(text.match(new RegExp(TOKEN, "g"))).toHaveLength(2);
     expect(text).toContain("23CS31T2");
     expect(text).toContain("Unit II");
     expect(text).toContain("/Helvetica-Bold");

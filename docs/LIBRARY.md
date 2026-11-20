@@ -327,12 +327,11 @@ cache and efficiency model.
 
 The download is stamped by `bin/pdfstamp`, the Rust binary described in
 `docs/PDF-DELIVERY.md`; it replaced pdf-lib on 20 November 2026. On the
-development box a 100-page text PDF stamps in 3.0 ms with a 15 MB peak, where
-pdf-lib needed 36 ms warm (85 ms cold) and 67 MB of marginal memory. A
-300-page document is 7.4 ms / 15 MB against 104 ms / 110 MB. A 20 MB source is
-10.5 ms / 43.5 MB against 42 ms / 71 MB. Only page 1 carries the footer; the
-rest of the file is untouched. The first download pays this; every cache hit
-is a stat and a send.
+development box a 100-page text PDF stamps in 3.5 ms with a 14 MB peak, where
+pdf-lib needed 37 ms warm (88 ms cold) and 67 MB of marginal memory. A
+300-page document is 9.6 ms / 14 MB against 103 ms / 110 MB. A 20 MB source is
+10.6 ms / 43.5 MB against 40 ms / 71 MB. Every page carries the footer. The
+first download pays this; every cache hit is a stat and a send.
 
 ### 5.2 Watermark per reader
 
@@ -362,9 +361,10 @@ line of JavaScript.
 Because the base page is watermark-free, one page file serves every reader;
 the overlay is per request and is a string insertion.
 
-The **whole-PDF download** is lighter: one footer at the bottom of page 1, no
-diagonal repeat, and no mark on later pages. The file is still a stamped copy;
-a later page copied out of it is not traceable to a reader. See
+The **whole-PDF download** is lighter: one footer at the bottom of every page,
+no diagonal repeat. The source page's graphics state is wrapped so the footer
+stays at the bottom even for Chrome/Skia handouts, which start with a global
+flipped `cm`. Every page names the account the file was issued to. See
 `docs/PDF-DELIVERY.md`.
 
 To resolve a token back to a student:

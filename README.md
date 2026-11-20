@@ -313,7 +313,7 @@ status as text with a keyboard and tap detail line.
 and CI.
 
 The library's whole-PDF stamp is `bin/pdfstamp` (Rust). A 100-page text PDF
-stamps in about 3 ms at a 15 MB peak, against about 36 ms and 67 MB of
+stamps in about 3.5 ms at a 14 MB peak, against about 37 ms and 67 MB of
 marginal memory for the retired pdf-lib path; the full comparison is in
 [`docs/PDF-DELIVERY.md`](docs/PDF-DELIVERY.md).
 

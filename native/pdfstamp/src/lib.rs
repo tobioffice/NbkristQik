@@ -5,9 +5,15 @@
 //! owns one job: read a source PDF, mark it, write a new file.
 //!
 //! The PDF carries a lighter mark than the SVG reader pages: one footer at
-//! the bottom of page 1, naming the token, the subject and the page at 42%.
-//! The ink is the same #1e2a38. Later pages are unstamped, but the file is
-//! always a marked copy, never the raw source.
+//! the bottom of every page, naming the token, the subject and the page at
+//! 42%. The ink is the same #1e2a38. The file is always a marked copy, never
+//! the raw source.
+//!
+//! Each page's source content is wrapped in `q`/`Q`. Chrome/Skia handouts
+//! start with a global `cm` (a scale and a flip) that is never closed;
+//! without the wrapper the footer is drawn in that flipped space and lands at
+//! the top of the page. The source is expected to balance its own `q`/`Q`;
+//! the handouts do.
 //!
 //! The Node cache key carries a matching `STAMP_REVISION` in `pdf.ts`. Bump
 //! both when this layout changes, or a deploy will serve a copy stamped the
@@ -23,14 +29,14 @@
 //! process boundary also means a malformed document cannot take the bot
 //! down with it.
 //!
-//! On the development box a 100-page text PDF stamps in about 3 ms at a
-//! 15 MB peak, against 36 ms warm (85 ms cold) and 67 MB of marginal memory
-//! for pdf-lib. A 300-page document is about 7.4 ms at the same peak,
-//! against 104 ms and 110 MB. See `docs/PDF-DELIVERY.md` for the full
+//! On the development box a 100-page text PDF stamps in about 3.5 ms at a
+//! 14 MB peak, against 37 ms warm (88 ms cold) and 67 MB of marginal memory
+//! for pdf-lib. A 300-page document is about 9.6 ms at the same peak,
+//! against 103 ms and 110 MB. See `docs/PDF-DELIVERY.md` for the full
 //! comparison.
 
 use lopdf::content::{Content, Operation};
-use lopdf::{Dictionary, Document, Object, ObjectId};
+use lopdf::{Dictionary, Document, Object, ObjectId, Stream};
 use std::fmt;
 use std::path::Path;
 
@@ -120,7 +126,7 @@ pub fn stamp_file(
         return Err(StampError::Encrypted);
     }
 
-    // One font and one alpha state, used on page 1. Standard-14
+    // One font and one alpha state, shared by every page. Standard-14
     // Helvetica-Bold is not embedded, exactly as pdf-lib drew it: the PDF
     // viewer supplies the face, so the output stays small.
     let font_id = add_font(&mut document);
@@ -131,24 +137,30 @@ pub fn stamp_file(
         return Err(StampError::Unreadable("the PDF has no pages".into()));
     }
 
-    // Only the first page is marked. A download is still a stamped copy:
-    // the footer names the account the file was issued to, and the source
-    // never leaves the server. A later page copied out of the file carries
-    // no mark; that is the accepted trade-off for a lighter handout.
-    let (page_number, page_id) = pages[0];
-    let (width, height) = page_size(&document, page_id);
-    let names = install_resources(&mut document, page_id, font_id, footer_state)?;
-    let content = first_page_overlay(
-        width,
-        height,
-        options,
-        page_number,
-        &names.font,
-        &names.footer_state,
-    );
-    document
-        .add_to_page_content(page_id, content)
-        .map_err(|error| StampError::Invalid(error.to_string()))?;
+    // One footer on every page. The footer names the account the file was
+    // issued to; the source never leaves the server.
+    for (page_number, page_id) in &pages {
+        // Chrome/Skia handouts start each page with a global `cm` (a scale
+        // plus a flip) that is never wrapped in q/Q. Appending a stream then
+        // draws in that flipped space, which puts the footer at the top of
+        // the page. Save the page state before the source, then restore it
+        // before drawing the footer.
+        prepend_page_contents(&mut document, *page_id, b"q\n".to_vec())?;
+
+        let (width, height) = page_size(&document, *page_id);
+        let names = install_resources(&mut document, *page_id, font_id, footer_state)?;
+        let content = page_overlay(
+            width,
+            height,
+            options,
+            *page_number,
+            &names.font,
+            &names.footer_state,
+        );
+        document
+            .add_to_page_content(*page_id, content)
+            .map_err(|error| StampError::Invalid(error.to_string()))?;
+    }
 
     document
         .save(output)
@@ -157,7 +169,7 @@ pub fn stamp_file(
     Ok(pages.len())
 }
 
-/// The resource names page 1's content stream refers to. They are chosen
+/// The resource names a page's content stream refers to. They are chosen
 /// against the source's own resources because it may already use the obvious
 /// names.
 struct ResourceNames {
@@ -326,8 +338,39 @@ fn as_number(object: &Object) -> Option<f32> {
     }
 }
 
-/// The mark for the first page: one footer at the bottom left.
-fn first_page_overlay(
+/// Inserts a content stream before the page's existing content.
+fn prepend_page_contents(
+    document: &mut Document,
+    page_id: ObjectId,
+    content: Vec<u8>,
+) -> Result<(), StampError> {
+    let mut list: Vec<Object> = {
+        let page = document
+            .get_dictionary(page_id)
+            .map_err(|error| StampError::Invalid(error.to_string()))?;
+        match page.get(b"Contents") {
+            Ok(Object::Reference(id)) => match document.get_object(*id) {
+                Ok(Object::Array(array)) => array.clone(),
+                _ => vec![Object::Reference(*id)],
+            },
+            Ok(Object::Array(array)) => array.clone(),
+            _ => vec![],
+        }
+    };
+
+    let id = document.add_object(Stream::new(Dictionary::new(), content));
+    list.insert(0, Object::Reference(id));
+
+    let page = document
+        .get_object_mut(page_id)
+        .and_then(Object::as_dict_mut)
+        .map_err(|error| StampError::Invalid(error.to_string()))?;
+    page.set("Contents", list);
+    Ok(())
+}
+
+/// The mark for one page: one footer at the bottom left.
+fn page_overlay(
     width: f32,
     height: f32,
     options: &StampOptions<'_>,
@@ -338,9 +381,11 @@ fn first_page_overlay(
     let footer_size = (width / 52.0).round().max(7.0);
     let ink = [INK_R, INK_G, INK_B];
 
-    let operations = vec![
-        // One balanced q/Q around the footer. The source keeps its own
-        // graphics state: appending a stream does not disturb it.
+    let draw = vec![
+        // Restore the page state saved before the source content, so the
+        // footer is drawn in the page's default coordinate system.
+        operation("Q", vec![]),
+        // One balanced q/Q around the footer.
         operation("q", vec![]),
         operation("gs", vec![Object::Name(footer_state.to_vec())]),
         operation(
@@ -371,6 +416,8 @@ fn first_page_overlay(
         operation("ET", vec![]),
         operation("Q", vec![]),
     ];
+
+    let operations: Vec<Operation> = draw;
 
     Content { operations }
 }
@@ -436,10 +483,14 @@ mod tests {
     }
 
     #[test]
-    fn the_first_page_draws_the_token_once() {
-        let content = first_page_overlay(595.0, 842.0, &options(), 1, b"F", b"D");
+    fn a_page_draws_the_token_once() {
+        let content = page_overlay(595.0, 842.0, &options(), 1, b"F", b"D");
         let encoded = String::from_utf8_lossy(&content.encode().unwrap()).to_string();
 
+        assert!(
+            encoded.starts_with("Q\n"),
+            "the source state is restored first"
+        );
         assert_eq!(encoded.matches(options().token).count(), 1);
         assert!(encoded.contains("p1"));
         assert!(encoded.contains("/D gs"));
@@ -448,7 +499,7 @@ mod tests {
 
     #[test]
     fn the_footer_sits_at_the_bottom_left_of_the_media_box() {
-        let content = first_page_overlay(595.0, 842.0, &options(), 1, b"F", b"D");
+        let content = page_overlay(595.0, 842.0, &options(), 1, b"F", b"D");
         let text_matrix = content
             .operations
             .iter()

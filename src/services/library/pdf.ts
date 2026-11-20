@@ -63,7 +63,7 @@ const inFlight = new Map<string, Promise<string>>();
  * A global cap on concurrent PDF stamps. Each stamp is a short-lived native
  * process, so the document lives outside the Node heap; two at a time keeps
  * memory and CPU predictable on the small VM. A 20 MB source measured about
- * 43.5 MB peak and 10.5 ms in the binary, so the cap is about bounding the
+ * 43.5 MB peak and 10.6 ms in the binary, so the cap is about bounding the
  * number of processes, not the JavaScript heap it used to protect. Overflow
  * is a clear 503, never an unbounded fork.
  */
@@ -104,7 +104,7 @@ const safeFilePart = (value: string): string =>
  * `native/pdfstamp`; the cache filename carries it so a deploy cannot serve a
  * copy stamped the previous way. Old files stay until the seven-day sweep.
  */
-const STAMP_REVISION = 2;
+const STAMP_REVISION = 4;
 
 /**
  * `<token>-s<stamp>-v<version>-<bytes>.pdf`: the layout, version and size pin
@@ -159,8 +159,8 @@ const sourceFileFor = async (doc: LibraryDocument): Promise<string> => {
 };
 
 /**
- * Marks page 1 with a footer naming the token, the subject and the page.
- * Later pages are left as they are; the source never leaves the server.
+ * Marks every page with a footer naming the token, the subject and the page.
+ * The source never leaves the server.
  *
  * The native binary does the drawing; this function owns the source check
  * and keeps the caller's error wording stable.
