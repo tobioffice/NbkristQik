@@ -17,7 +17,8 @@ import { fiveResultCard } from "./cards.js";
 import { seasonKey } from "./config.js";
 import { sendOrEdit, showQuestion } from "./play.js";
 import { loadPlayer, sendRegistrationPrompt } from "./player.js";
-import { fivePoints, nextStreak } from "./scoring.js";
+import { fivePoints, nextStreak, QUESTIONS_PER_RUN } from "./scoring.js";
+import { pickQuestionIds } from "./selection.js";
 import { istStamp } from "./time.js";
 import type { GameAttempt } from "./types.js";
 
@@ -35,7 +36,7 @@ const say = async (
 };
 
 /**
- * Start or resume today's five.
+ * Start or resume today's run.
  *
  * The attempt is the source of truth: a second tap, a restart or a stale
  * result card all land on the same run, and the daily row makes tomorrow a
@@ -99,7 +100,7 @@ export const startDailyFive = async ({
     rollNo: player.rollNo,
     sectionKey: player.sectionKey,
     sectionLabel: player.sectionLabel,
-    questionIds: round.questionIds,
+    questionIds: pickQuestionIds(round.questionIds, QUESTIONS_PER_RUN),
     startedAt: new Date().toISOString(),
   });
   const attempt = await getAttempt(attemptId);
@@ -147,6 +148,7 @@ export const finishFive = async ({
       score: current.score,
       points,
       streak,
+      questionCount: current.questionIds.length,
       finishedAt,
     });
 

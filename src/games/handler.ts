@@ -79,8 +79,8 @@ const openFive = async (msg: Message): Promise<void> => {
   if (
     await privateLink(
       msg,
-      "Today's five is private. Tap below to play.",
-      "five",
+      "Today's run is private. Tap below to play.",
+      "quiz",
       "Open in private",
     )
   ) {
@@ -90,7 +90,7 @@ const openFive = async (msg: Message): Promise<void> => {
   const userId = await gate(msg, "game");
   if (!userId) return;
 
-  trackMessage(msg, "command:five");
+  trackMessage(msg, "command:quiz");
   await startDailyFive({
     chatId: msg.chat.id,
     userId,
@@ -140,10 +140,10 @@ const openDuel = async (msg: Message): Promise<void> => {
   });
 };
 
-bot.command("five", (ctx) => {
+bot.command("quiz", (ctx) => {
   const msg = ctx.message;
   if (!msg) return;
-  return openFive(msg).catch((e) => fail(msg.chat.id, "five", e));
+  return openFive(msg).catch((e) => fail(msg.chat.id, "quiz", e));
 });
 
 bot.command("league", (ctx) => {
@@ -158,13 +158,13 @@ bot.command("duel", (ctx) => {
   return openDuel(msg).catch((e) => fail(msg.chat.id, "duel", e));
 });
 
-/** The `/start=five` payload. */
+/** The `/start=quiz` payload; old `/start=five` links still land here. */
 export const startFiveFromMessage = async (msg: Message): Promise<void> => {
   if (
     await privateLink(
       msg,
-      "Today's five is private. Tap below to play.",
-      "five",
+      "Today's run is private. Tap below to play.",
+      "quiz",
       "Open in private",
     )
   ) {
@@ -262,7 +262,7 @@ export const handleGameCallback = async (ctx: Context): Promise<void> => {
 
   if (data === "five_play") {
     await ctx
-      .answerCallbackQuery({ text: "Opening today's five" })
+      .answerCallbackQuery({ text: "Opening today's run" })
       .catch(() => undefined);
     await startDailyFive({
       chatId: msg.chat.id,
@@ -293,7 +293,7 @@ export const handleGameCallback = async (ctx: Context): Promise<void> => {
     ) {
       await ctx
         .answerCallbackQuery({
-          text: "That run is gone. Play today's five.",
+          text: "That run is gone. Play today's run.",
           show_alert: true,
         })
         .catch(() => undefined);

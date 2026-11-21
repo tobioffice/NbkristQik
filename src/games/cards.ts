@@ -136,7 +136,7 @@ export const fiveResultCard = ({
 }): Card => {
   const correct = attempt.answers.filter((answer) => answer.correct).length;
   const bonus = Math.max(0, attempt.points - attempt.score);
-  const lines = ["<b>Five done</b>"];
+  const lines = ["<b>Run done</b>"];
 
   if (bonus > 0) {
     lines.push(
@@ -202,7 +202,7 @@ export const fiveResultCard = ({
   }
 
   const rich = [
-    "<p><b>Five done</b></p>",
+    "<p><b>Run done</b></p>",
     richPairs(rows),
     section
       ? ""
@@ -235,7 +235,7 @@ export const fiveResultCard = ({
 /** The share card a challenger forwards to a friend. */
 export const duelInviteCard = ({ duel }: { duel: GameDuel }): Card => {
   const link = botLink(`duel_${duel.id}`);
-  const shareText = `I scored ${duel.challengerScore} on today's five. Can you beat it?`;
+  const shareText = `I scored ${duel.challengerScore} on today's run. Can you beat it?`;
   const shareUrl =
     `https://t.me/share/url?url=${encodeURIComponent(link)}` +
     `&text=${encodeURIComponent(shareText)}`;
@@ -243,8 +243,8 @@ export const duelInviteCard = ({ duel }: { duel: GameDuel }): Card => {
   return {
     text:
       "<b>Challenge ready</b>\n" +
-      `You scored <b>${duel.challengerScore}</b> on today's five.\n` +
-      "The first friend to open it takes the challenge.",
+      `You scored <b>${duel.challengerScore}</b> on today's run.\n` +
+      "The first friend to open it gets the same questions in a different order.",
     markup: {
       inline_keyboard: [
         [
@@ -299,7 +299,7 @@ export const duelResultCard = ({
     markup: {
       inline_keyboard: [
         [
-          { text: "Today's five", callback_data: "five_play" },
+          { text: "Today's run", callback_data: "five_play" },
           { text: "Weekly board", callback_data: "league_show" },
         ],
       ],
@@ -352,7 +352,7 @@ export const leagueCard = ({
       )} points`,
     );
   } else if (me.points === 0 && sections.length > 0) {
-    lines.push("", "You haven't scored yet. Play today's five.");
+    lines.push("", "You haven't scored yet. Play today's run.");
   }
 
   if (mySection) {
@@ -418,7 +418,7 @@ export const leagueCard = ({
         )
       : "",
     meRows.length ? richPairs(meRows) : "",
-    me.points === 0 ? "<p>You haven't scored yet. Play today's five.</p>" : "",
+    me.points === 0 ? "<p>You haven't scored yet. Play today's run.</p>" : "",
   ]
     .filter(Boolean)
     .join("");
@@ -428,7 +428,7 @@ export const leagueCard = ({
     rich,
     markup: {
       inline_keyboard: [
-        [{ text: "Play today's five", callback_data: "five_play" }],
+        [{ text: "Play today's run", callback_data: "five_play" }],
       ],
     },
   };
@@ -451,14 +451,14 @@ export const duelRecordCard = ({
 
   const keyboard: InlineKeyboardMarkup["inline_keyboard"] = [];
   if (attemptId) {
-    lines.push("", "Turn today's five into a challenge.");
+    lines.push("", "Turn today's run into a challenge.");
     keyboard.push([
       { text: "Challenge a friend", callback_data: `duel_new_${attemptId}` },
     ]);
   } else {
-    lines.push("", "Finish today's five first, then challenge a friend.");
+    lines.push("", "Finish today's run first, then challenge a friend.");
   }
-  keyboard.push([{ text: "Play today's five", callback_data: "five_play" }]);
+  keyboard.push([{ text: "Play today's run", callback_data: "five_play" }]);
 
   return { text: lines.join("\n"), markup: { inline_keyboard: keyboard } };
 };
@@ -482,10 +482,10 @@ export const privateLinkCard = ({
 /** The 8:30am channel prompt. URL button only: channels take no callbacks. */
 export const morningPost = (label: string): Card => ({
   text:
-    "<b>Five questions. About a minute.</b>\n" +
+    "<b>10 questions. About two minutes.</b>\n" +
     `${label} · today's set is live.`,
   markup: {
-    inline_keyboard: [[{ text: "Play today's five", url: botLink("five") }]],
+    inline_keyboard: [[{ text: "Play today's run", url: botLink("quiz") }]],
   },
 });
 
@@ -503,7 +503,7 @@ export const resultsPost = ({
   fastestMs: number | null;
   section: BoardSection | null;
 }): Card => {
-  const lines = [`<b>Today's five · ${label}</b>`, `${played} played`];
+  const lines = [`<b>Today's run · ${label}</b>`, `${played} played`];
 
   top.slice(0, 3).forEach((player, index) => {
     lines.push(`${index + 1}. ${nameCell(player)} — <b>${player.points}</b>`);
@@ -523,7 +523,7 @@ export const resultsPost = ({
       inline_keyboard: [
         [
           { text: "See the board", url: botLink("league") },
-          { text: "Play today's five", url: botLink("five") },
+          { text: "Play today's run", url: botLink("quiz") },
         ],
       ],
     },
@@ -567,7 +567,7 @@ export const weeklyPost = ({
       inline_keyboard: [
         [
           { text: "See the board", url: botLink("league") },
-          { text: "Play today's five", url: botLink("five") },
+          { text: "Play today's run", url: botLink("quiz") },
         ],
       ],
     },

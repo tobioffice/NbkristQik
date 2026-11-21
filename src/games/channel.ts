@@ -213,7 +213,7 @@ bot.command("gamepost", async (ctx) => {
       await sendCard(morningPost(dayLabel(stamp.date)));
       await bot.api.sendMessage({
         chat_id: msg.chat.id,
-        text: "Posted today's five to the channel.",
+        text: "Posted today's run to the channel.",
       });
     } catch (e) {
       logger.warn("[games] channel launch post failed:", e);

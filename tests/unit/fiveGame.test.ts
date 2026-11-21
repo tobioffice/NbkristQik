@@ -8,9 +8,11 @@ import {
   getDuel,
   getDuelByAttempt,
   getGamePlayer,
+  getOrCreateDailyRound,
   initGameTables,
   upsertGamePlayer,
 } from "../../src/db/game.model.js";
+import { DAILY_POOL_SIZE, QUESTIONS_PER_RUN } from "../../src/games/scoring.js";
 import { istStamp } from "../../src/games/time.js";
 
 const users: Record<
@@ -79,7 +81,7 @@ const commandHandler = (name: string): CommandHandler | undefined => {
   const call = mocks.command.mock.calls.find(([command]) => command === name);
   return call?.[1] as CommandHandler | undefined;
 };
-const fiveCommand = commandHandler("five");
+const quizCommand = commandHandler("quiz");
 const leagueCommand = commandHandler("league");
 const duelCommand = commandHandler("duel");
 
@@ -98,7 +100,7 @@ const clear = async (): Promise<void> => {
 };
 
 const seedQuestions = async (): Promise<void> => {
-  for (let index = 0; index < 5; index += 1) {
+  for (let index = 0; index < DAILY_POOL_SIZE; index += 1) {
     await turso.execute({
       sql: `INSERT INTO game_questions (slug, prompt, options, correct, topic)
             VALUES (?, ?, ?, 0, 'test')`,
@@ -165,7 +167,7 @@ const answerAll = async (
   chatId = 900,
   wrongAt = -1,
 ): Promise<void> => {
-  for (let index = 0; index < 5; index += 1) {
+  for (let index = 0; index < QUESTIONS_PER_RUN; index += 1) {
     const option = index === wrongAt ? 1 : 0;
     await handleGameCallback(
       context(userId, `q5_${attemptId}_${index}_${option}`, chatId),
@@ -211,12 +213,15 @@ beforeEach(async () => {
 });
 
 describe("the Five flow", () => {
-  it("plays five questions and prints the result", async () => {
+  it("plays ten questions and prints the result", async () => {
     await startDailyFive({ chatId: 900, userId: 42 });
 
     expect(mocks.sendMessage).toHaveBeenCalledTimes(1);
-    expect(lastSent()?.text).toContain("Question 1 of 5");
+    expect(lastSent()?.text).toContain("Question 1 of 10");
     expect(lastSent()?.text).toContain("10s");
+
+    const round = await getOrCreateDailyRound(istStamp().date);
+    expect(round?.questionIds).toHaveLength(DAILY_POOL_SIZE);
 
     const attempt = await getAttemptForRound(
       "five",
@@ -224,18 +229,22 @@ describe("the Five flow", () => {
       42,
     );
     expect(attempt).not.toBeNull();
+    expect(attempt?.questionIds).toHaveLength(QUESTIONS_PER_RUN);
+    expect(
+      attempt?.questionIds.every((id) => round?.questionIds.includes(id)),
+    ).toBe(true);
 
     await answerAll(attempt!.id, 42);
 
     const result = lastEditHtml();
-    expect(result).toContain("Five done");
+    expect(result).toContain("Run done");
     expect(result).toContain("<table");
-    expect(result).toContain("5 of 5");
+    expect(result).toContain("10 of 10");
     expect(mocks.sendMessage).toHaveBeenCalledTimes(1);
 
     const done = await getAttempt(attempt!.id);
     expect(done?.status).toBe("done");
-    expect(done?.points).toBeGreaterThanOrEqual(700);
+    expect(done?.points).toBeGreaterThanOrEqual(1000);
     expect(mocks.answerCallbackQuery).toHaveBeenCalledWith({
       text: expect.stringContaining("Correct +"),
     });
@@ -292,7 +301,7 @@ describe("the Five flow", () => {
     expect(textCall[0].rich_message).toBeUndefined();
   });
 
-  it("resumes the same five instead of starting a second run", async () => {
+  it("resumes the same ten instead of starting a second run", async () => {
     await startDailyFive({ chatId: 900, userId: 42 });
     const attempt = await getAttemptForRound(
       "five",
@@ -303,7 +312,7 @@ describe("the Five flow", () => {
     await startDailyFive({ chatId: 900, userId: 42 });
 
     expect(mocks.sendMessage).toHaveBeenCalledTimes(2);
-    expect(lastSent()?.text).toContain("Question 1 of 5");
+    expect(lastSent()?.text).toContain("Question 1 of 10");
     const stillOne = await getAttemptForRound(
       "five",
       `five-${istStamp().date}`,
@@ -341,22 +350,26 @@ describe("the Five flow", () => {
     expect(invite?.text).toContain("Challenge ready");
     const duel = await getDuelByAttempt(attempt!.id);
     expect(duel?.status).toBe("open");
-    expect(duel?.challengerScore).toBeGreaterThanOrEqual(700);
+    expect(duel?.challengerScore).toBeGreaterThanOrEqual(1000);
 
     await startDuel({ chatId: 901, userId: 43, duelId: duel!.id });
     const duelCard = lastSent();
-    expect(duelCard?.text).toContain("Duel · Question 1 of 5");
+    expect(duelCard?.text).toContain("Duel · Question 1 of 10");
     expect(duelCard?.text).toContain("Target: <b>");
 
     const opponent = await getAttemptForRound("duel", `d${duel!.id}`, 43);
     expect(opponent).not.toBeNull();
+    expect([...opponent!.questionIds].sort((a, b) => a - b)).toEqual(
+      [...duel!.questionIds].sort((a, b) => a - b),
+    );
+    expect(opponent!.questionIds).not.toEqual(duel!.questionIds);
 
-    // One wrong answer: the challenger's ~750 beats the opponent's ~600.
+    // One wrong answer leaves the opponent below the challenger's clean run.
     await answerAll(opponent!.id, 43, 901, 0);
 
     const closed = await getDuel(duel!.id);
     expect(closed?.status).toBe("done");
-    expect(closed?.opponentScore).toBeGreaterThanOrEqual(550);
+    expect(closed?.opponentScore).toBeGreaterThanOrEqual(900);
     expect(closed?.opponentScore).toBeLessThan(duel!.challengerScore);
     expect(closed?.winnerId).toBe(42);
 
@@ -425,7 +438,7 @@ describe("game edge paths", () => {
 
     await startDailyFive({ chatId: 900, userId: 42 });
 
-    expect(lastSent()?.text).toContain("Question 1 of 5");
+    expect(lastSent()?.text).toContain("Question 1 of 10");
   });
 
   it("resets the section when the saved roll changes", async () => {
@@ -494,7 +507,7 @@ describe("game edge paths", () => {
 
     await startDuel({ chatId: 901, userId: 43, duelId: duel.id });
 
-    expect(lastSent()?.text).toContain("Duel · Question 1 of 5");
+    expect(lastSent()?.text).toContain("Duel · Question 1 of 10");
   });
 
   it("shows a finished duel to its players only", async () => {
@@ -520,7 +533,7 @@ describe("game edge paths", () => {
 
     await createDuelFromAttempt({ attempt: attempt!, chatId: 900 });
 
-    expect(lastSent()?.text).toContain("Finish today's five");
+    expect(lastSent()?.text).toContain("Finish today's run");
   });
 
   it("reuses an open challenge and refuses a finished one", async () => {
@@ -603,13 +616,13 @@ describe("game edge paths", () => {
   it("shows the duel record with no run yet", async () => {
     await sendDuelRecord({ chatId: 900, userId: 44 });
 
-    expect(lastSent()?.text).toContain("Finish today's five");
+    expect(lastSent()?.text).toContain("Finish today's run");
   });
 
-  it("starts today's five from the result button", async () => {
+  it("starts today's run from the result button", async () => {
     await handleGameCallback(context(42, "five_play"));
 
-    expect(lastSent()?.text).toContain("Question 1 of 5");
+    expect(lastSent()?.text).toContain("Question 1 of 10");
   });
 
   it("opens the weekly board from a result button", async () => {
@@ -642,7 +655,7 @@ describe("game edge paths", () => {
     expect(mocks.answerCallbackQuery).toHaveBeenCalledWith({
       text: "This run is already finished.",
     });
-    expect(lastEditHtml()).toContain("Five done");
+    expect(lastEditHtml()).toContain("Run done");
   });
 
   it("rejects a question that already moved on", async () => {
@@ -665,7 +678,7 @@ describe("game edge paths", () => {
     await handleGameCallback(context(42, "duel_new_999999"));
 
     expect(mocks.answerCallbackQuery).toHaveBeenCalledWith({
-      text: "That run is gone. Play today's five.",
+      text: "That run is gone. Play today's run.",
       show_alert: true,
     });
   });
@@ -687,16 +700,16 @@ describe("game edge paths", () => {
     expect(isGameCallback("save_23KB1A0599")).toBe(false);
   });
 
-  it("routes a group's five command to the private chat", async () => {
-    await fiveCommand!(commandContext("supergroup"));
+  it("routes a group's quiz command to the private chat", async () => {
+    await quizCommand!(commandContext("supergroup"));
 
-    expect(lastSent()?.text).toContain("Today's five is private");
+    expect(lastSent()?.text).toContain("Today's run is private");
   });
 
-  it("starts the five from a private command", async () => {
-    await fiveCommand!(commandContext("private"));
+  it("starts the quiz from a private command", async () => {
+    await quizCommand!(commandContext("private"));
 
-    expect(lastSent()?.text).toContain("Question 1 of 5");
+    expect(lastSent()?.text).toContain("Question 1 of 10");
   });
 
   it("routes a group's league command to the private chat", async () => {

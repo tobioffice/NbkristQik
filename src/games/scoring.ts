@@ -15,7 +15,9 @@ import { BRANCHES } from "../constants/index.js";
 export const QUESTION_LIMIT_MS = 10_000;
 export const CORRECT_POINTS = 100;
 export const MAX_SPEED_BONUS = 50;
-export const QUESTIONS_PER_RUN = 5;
+export const QUESTIONS_PER_RUN = 10;
+/** A larger daily pool, so two players rarely draw the same ten. */
+export const DAILY_POOL_SIZE = QUESTIONS_PER_RUN * 3;
 
 export const DUEL_WIN_POINTS = 200;
 export const DUEL_LOSS_POINTS = 75;

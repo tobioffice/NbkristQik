@@ -20,6 +20,7 @@ import { seasonKey } from "./config.js";
 import { sendOrEdit, showQuestion } from "./play.js";
 import { loadPlayer, sendRegistrationPrompt } from "./player.js";
 import { duelOutcome } from "./scoring.js";
+import { differentOrder } from "./selection.js";
 import { istStamp } from "./time.js";
 import type { GameAttempt, GameDuel } from "./types.js";
 
@@ -51,7 +52,7 @@ const say = async (
     if (attempt.game !== "five" || attempt.status !== "done") {
       await say(
         chatId,
-        "Finish today's five first, then challenge a friend.",
+        "Finish today's run first, then challenge a friend.",
         replyTo,
       );
       return;
@@ -136,7 +137,7 @@ export const startDuel = async ({
     new Date(duel.expiresAt).getTime() < Date.now()
   ) {
     await expireDuel(duel.id);
-    await say(chatId, "That challenge expired. Start today's five.", replyTo);
+    await say(chatId, "That challenge expired. Start today's run.", replyTo);
     return;
   }
 
@@ -146,7 +147,7 @@ export const startDuel = async ({
     } else {
       await say(
         chatId,
-        "That duel is already finished. Start today's five.",
+        "That duel is already finished. Start today's run.",
         replyTo,
       );
     }
@@ -154,7 +155,7 @@ export const startDuel = async ({
   }
 
   if (duel.status === "expired") {
-    await say(chatId, "That challenge expired. Start today's five.", replyTo);
+    await say(chatId, "That challenge expired. Start today's run.", replyTo);
     return;
   }
 
@@ -166,7 +167,7 @@ export const startDuel = async ({
         ...duelInviteCard({ duel }),
         text:
           "<b>That's your own challenge.</b>\n" +
-          "Send it to a friend; they get the same five questions.",
+          "Send it to a friend; they get the same questions in a different order.",
       },
     });
     return;
@@ -237,7 +238,9 @@ export const startDuel = async ({
     rollNo: player.rollNo,
     sectionKey: player.sectionKey,
     sectionLabel: player.sectionLabel,
-    questionIds: duel.questionIds,
+    // Same set as the challenger, never the same order: the duel is fair on
+    // content, not on a copied answer sequence.
+    questionIds: differentOrder(duel.questionIds, duel.questionIds),
     duelId: duel.id,
     startedAt: new Date().toISOString(),
   });
@@ -293,7 +296,7 @@ export const finishDuelAttempt = async ({
     return;
   }
   if (duel.status === "expired") {
-    await say(chatId, "That challenge expired. Start today's five.", replyTo);
+    await say(chatId, "That challenge expired. Start today's run.", replyTo);
     return;
   }
   if (attempt.userId === duel.challengerId) {

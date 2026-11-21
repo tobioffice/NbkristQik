@@ -119,7 +119,7 @@ message caption is the fallback for clients without widget support.
 
 ### League
 
-The league adds three private commands: `/five` (today's five questions),
+The league adds three private commands: `/quiz` (today's 10 questions),
 `/duel` (the duel record and today's challenge) and `/league` (the weekly
 board). A group gets a private deep link instead of a card.
 
@@ -134,7 +134,7 @@ GAME_CHANNEL_POSTS=on
 With `GAME_CHANNEL_POSTS=on` and the bot an admin in `PROD_CHANNEL`, the bot
 posts:
 
-- **08:30 IST**: today's five, with a Play button.
+- **08:30 IST**: today's run, with a Play button.
 - **13:15 IST**: the day's top three, fastest answer and section of the day.
 - **Sunday 19:00 IST**: the Section Wars board and player of the week.
 
@@ -149,7 +149,7 @@ The question bank is seeded from `src/games/questions.ts` once, keyed by slug.
 Add questions by appending new slugs (a restart seeds them) or by inserting
 rows directly; `active = 0` retires a question without deleting history.
 
-League rules: one Five attempt per account per IST day; each question closes
+League rules: one run attempt per account per IST day; each question closes
 after 10 seconds and a late tap scores nothing; duels last 48 hours; only the
 best ten players per section count on the weekly board; channel names are the
 student's chosen display name or a masked roll, never the portal name.

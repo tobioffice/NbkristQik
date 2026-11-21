@@ -26,7 +26,11 @@ import {
   syncGameDisplayName,
   upsertGamePlayer,
 } from "../../src/db/game.model.js";
-import { fivePoints } from "../../src/games/scoring.js";
+import {
+  DAILY_POOL_SIZE,
+  fivePoints,
+  QUESTIONS_PER_RUN,
+} from "../../src/games/scoring.js";
 
 const SEASON = "test-S1";
 const WEEK = "2026-W46";
@@ -74,20 +78,24 @@ beforeEach(async () => {
 });
 
 describe("daily rounds", () => {
-  it("picks once and returns the same five to everyone", async () => {
-    for (const slug of ["a", "b", "c", "d", "e"]) await question(slug);
+  it("picks one large pool and returns it to later callers", async () => {
+    for (let index = 0; index < DAILY_POOL_SIZE; index += 1) {
+      await question(`pool-${index}`);
+    }
 
     const first = await getOrCreateDailyRound(DAY);
     const second = await getOrCreateDailyRound(DAY);
 
     expect(first).not.toBeNull();
     expect(first?.id).toBe(`five-${DAY}`);
-    expect(first?.questionIds).toHaveLength(5);
+    expect(first?.questionIds).toHaveLength(DAILY_POOL_SIZE);
     expect(second?.questionIds).toEqual(first?.questionIds);
   });
 
-  it("returns null when the bank has fewer than five active questions", async () => {
-    await question("only");
+  it("returns null when the bank cannot fill one run", async () => {
+    for (let index = 0; index < QUESTIONS_PER_RUN - 1; index += 1) {
+      await question(`short-${index}`);
+    }
     expect(await getOrCreateDailyRound(DAY)).toBeNull();
   });
 });
@@ -103,7 +111,10 @@ describe("attempts", () => {
     rollNo: "23KB1A0021",
     sectionKey: "4|CSE|C",
     sectionLabel: "4 CSE C",
-    questionIds: [1, 2, 3, 4, 5],
+    questionIds: Array.from(
+      { length: QUESTIONS_PER_RUN },
+      (_, index) => index + 1,
+    ),
     startedAt: "2026-11-15T03:00:00.000Z",
   });
 
@@ -148,6 +159,7 @@ describe("attempts", () => {
       score: 612,
       points: fivePoints(612, 1),
       streak: 1,
+      questionCount: QUESTIONS_PER_RUN,
       finishedAt,
     });
     const second = await finishAttempt({
@@ -155,6 +167,7 @@ describe("attempts", () => {
       score: 612,
       points: 999,
       streak: 1,
+      questionCount: QUESTIONS_PER_RUN,
       finishedAt,
     });
 
@@ -163,7 +176,7 @@ describe("attempts", () => {
 
     const attempt = await getAttempt(id);
     expect(attempt?.status).toBe("done");
-    expect(attempt?.idx).toBe(5);
+    expect(attempt?.idx).toBe(QUESTIONS_PER_RUN);
     expect(attempt?.points).toBe(612);
 
     const award = {
@@ -199,6 +212,7 @@ describe("attempts", () => {
       score: 600,
       points: 600,
       streak: 1,
+      questionCount: QUESTIONS_PER_RUN,
       finishedAt: "2026-11-15T03:01:00.000Z",
     });
     await finishAttempt({
@@ -206,6 +220,7 @@ describe("attempts", () => {
       score: 700,
       points: 700,
       streak: 1,
+      questionCount: QUESTIONS_PER_RUN,
       finishedAt: "2026-11-15T03:02:00.000Z",
     });
     await finishAttempt({
@@ -213,6 +228,7 @@ describe("attempts", () => {
       score: 700,
       points: 700,
       streak: 1,
+      questionCount: QUESTIONS_PER_RUN,
       finishedAt: "2026-11-15T03:03:00.000Z",
     });
 

@@ -20,7 +20,7 @@ const USER_COMMANDS: BotCommand[] = [
   { command: "report", description: "Tell me something's broken" },
   { command: "help", description: "How this works" },
   { command: "leaderboard", description: "Open the attendance register" },
-  { command: "five", description: "Play today's five" },
+  { command: "quiz", description: "Play today's 10 questions" },
   { command: "league", description: "This week's section board" },
   { command: "duel", description: "Your duel record" },
 ];

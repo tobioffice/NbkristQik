@@ -58,6 +58,18 @@ describe("the bot menu button", () => {
     expect(defaultCommands.map((c) => c.command)).toContain("library");
   });
 
+  it("advertises the quiz, not the old five command", async () => {
+    process.env.LIBRARY_ACCESS = "all";
+
+    await setupBot(fakeApi);
+
+    const commands = setMyCommands.mock.calls[0][0].commands.map(
+      (command) => command.command,
+    );
+    expect(commands).toContain("quiz");
+    expect(commands).not.toContain("five");
+  });
+
   it("marks the private lookups ephemeral in groups only", async () => {
     process.env.LIBRARY_ACCESS = "all";
 

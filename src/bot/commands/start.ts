@@ -141,16 +141,16 @@ bot.command("start", (ctx) => {
     );
   }
 
-  const gamePayload = payload?.trim() ?? "";
-  if (gamePayload.toLowerCase() === "five") {
+  const gamePayload = payload?.trim().toLowerCase() ?? "";
+  if (gamePayload === "quiz" || gamePayload === "five") {
     return startFiveFromMessage(msg).catch((e) => {
-      logger.error("[start] five entry failed:", e);
+      logger.error("[start] quiz entry failed:", e);
       return bot.api
         .sendMessage({ chat_id: msg.chat.id, text: SOMETHING_BROKE })
         .catch(() => undefined);
     });
   }
-  if (gamePayload.toLowerCase() === "league") {
+  if (gamePayload === "league") {
     return startLeagueFromMessage(msg).catch((e) => {
       logger.error("[start] league entry failed:", e);
       return bot.api

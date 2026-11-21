@@ -13,7 +13,7 @@ web
 
 ## Product Purpose
 
-Give students instant, low-friction access to their college attendance and mid-term marks without the slow college portal, and keep them coming back through a playful leaderboard that ranks students by attendance percentage or mid-marks, plus a weekly league: a daily five-question run, 48-hour friend duels and a section board. A built-in report channel carries problems and app feedback straight to the admin with a trackable issue id (e.g. QIK-0007). The admin keeps the service observable and issues answered. Success means students check in regularly through Telegram, the leaderboard drives engagement, and the admin sees activity, reports, and health at a glance.
+Give students instant, low-friction access to their college attendance and mid-term marks without the slow college portal, and keep them coming back through a playful leaderboard that ranks students by attendance percentage or mid-marks, plus a weekly league: a daily 10-question run, 48-hour friend duels and a section board. A built-in report channel carries problems and app feedback straight to the admin with a trackable issue id (e.g. QIK-0007). The admin keeps the service observable and issues answered. Success means students check in regularly through Telegram, the leaderboard drives engagement, and the admin sees activity, reports, and health at a glance.
 
 ## Positioning
 
@@ -36,12 +36,12 @@ The product lives entirely inside Telegram â€” no install, no separate account â
 ## Capabilities and Constraints
 
 - **Capabilities (web surface):** one Telegram Mini App at `/library/` whose first screen is the student's own attendance (overall percentage, subject rows, bunk plan, freshness); the leaderboard and podium with section-scoped default, search, infinite scroll, personal-rank banner, coverage and per-metric freshness; profile/register page; issue report form with screenshots, history and admin replies; the library shelf and SVG reader, with a watermarked PDF download and a one-time PC link opened from the bot; public status page (live health, 90-day uptime, plus an Answers canary); password-protected admin panel with the five views above. The leaderboard is a rolling register that fills as students check; it prints ranked-vs-known coverage rather than claiming a complete college census. The legacy GitHub Pages mini-app entry points are retired; the marketing site remains separate.
-- **Capabilities (league):** `/five` plays one five-question run a day; each question closes after 10 seconds and a late tap scores nothing. `/duel` shows the record and turns a finished run into a 48-hour challenge link; `/league` prints the weekly player and section boards. Section Wars counts each section's best ten players. The channel gets a morning prompt, a lunchtime result and a Sunday board when `GAME_CHANNEL_POSTS=on`.
+- **Capabilities (league):** `/quiz` plays one 10-question run a day; each question closes after 10 seconds and a late tap scores nothing. `/duel` shows the record and turns a finished run into a 48-hour challenge link; `/league` prints the weekly player and section boards. Section Wars counts each section's best ten players. The channel gets a morning prompt, a lunchtime result and a Sunday board when `GAME_CHANNEL_POSTS=on`.
 - **Constraints:**
   - The app runs inside the Telegram WebApp SDK; identity comes from signed `initData`, sent in the `X-Telegram-Init-Data` header by the shipped client. Query/body `initData` is accepted for compatibility. The unsigned `userId` development shortcut requires `ALLOW_DEV_IDENTITY=1` or `ENV=test`.
   - The admin panel is served as server-rendered vanilla HTML/CSS/JS from the Express backend; the app is React 19 + Vite + Tailwind; the status page is a single static HTML file. The redesign must fit each surface's existing delivery mechanism.
   - The college portal is plain HTTP and unreliable; data can be missing or stale.
-  - League play is one Five attempt per registered account per IST day; duels expire in 48 hours; channel names are the chosen display name or a masked roll, never the portal name.
+  - League play is one run attempt per registered account per IST day; duels expire in 48 hours; channel names are the chosen display name or a masked roll, never the portal name.
   - The admin panel path and password come from env vars; if unset, or if the password is shorter than 16 characters in production, the panel is disabled.
 - **Undecided / open:** none recorded.
 

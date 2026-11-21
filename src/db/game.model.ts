@@ -1,7 +1,7 @@
 import { turso } from "./db.js";
 import { logger } from "../config/logger.js";
 import { STARTER_QUESTIONS } from "../games/questions.js";
-import { QUESTIONS_PER_RUN } from "../games/scoring.js";
+import { DAILY_POOL_SIZE, QUESTIONS_PER_RUN } from "../games/scoring.js";
 import type {
   AttemptAnswer,
   BoardPlayer,
@@ -219,7 +219,7 @@ const questionFromRow = (row: Record<string, unknown>): GameQuestion => ({
 export const getRandomQuestions = async (
   count: number,
 ): Promise<GameQuestion[]> => {
-  const limit = Math.max(1, Math.min(20, Math.floor(count)));
+  const limit = Math.max(1, Math.min(200, Math.floor(count)));
   const result = await turso.execute({
     sql: `SELECT id, prompt, options, correct, topic
           FROM game_questions
@@ -277,30 +277,44 @@ export const getRound = async (id: string): Promise<RoundRow | null> => {
 };
 
 /**
- * Today's set, created on the first play.
+ * Today's question pool, created on the first play.
  *
- * Everyone must get the same five questions, so the first caller picks and
- * stores them; a simultaneous second caller loses the `INSERT OR IGNORE` race
- * and reads the winner's set.
+ * The pool is larger than one run. Every attempt draws its own ten from it,
+ * so students do not all sit the same paper. A simultaneous first caller
+ * loses the `INSERT OR IGNORE` race and reads the winner's pool.
+ *
+ * An older round may hold only the five IDs from before the pool existed.
+ * Replace it once the bank can fill a larger pool; attempts already in
+ * progress keep their own stored IDs either way.
  */
 export const getOrCreateDailyRound = async (
   dayKey: string,
 ): Promise<RoundRow | null> => {
   const id = `five-${dayKey}`;
   const existing = await getRound(id);
-  if (existing) return existing;
+  if (existing && existing.questionIds.length >= DAILY_POOL_SIZE) {
+    return existing;
+  }
 
-  const questions = await getRandomQuestions(QUESTIONS_PER_RUN);
+  const questions = await getRandomQuestions(DAILY_POOL_SIZE);
   if (questions.length < QUESTIONS_PER_RUN) return null;
+
+  const questionIds = questions.map((question) => question.id);
+
+  if (existing) {
+    if (existing.questionIds.length >= questionIds.length) return existing;
+
+    await turso.execute({
+      sql: `UPDATE game_rounds SET question_ids = ? WHERE id = ?`,
+      args: [JSON.stringify(questionIds), id],
+    });
+    return getRound(id);
+  }
 
   await turso.execute({
     sql: `INSERT OR IGNORE INTO game_rounds (id, game, day_key, question_ids)
           VALUES (?, 'five', ?, ?)`,
-    args: [
-      id,
-      dayKey,
-      JSON.stringify(questions.map((question) => question.id)),
-    ],
+    args: [id, dayKey, JSON.stringify(questionIds)],
   });
   return getRound(id);
 };
@@ -551,6 +565,8 @@ export const finishAttempt = async (input: {
   score: number;
   points: number;
   streak: number;
+  /** The attempt's own length: old runs may hold five, new runs ten. */
+  questionCount: number;
   finishedAt: string;
 }): Promise<boolean> => {
   const result = await turso.execute({
@@ -562,7 +578,7 @@ export const finishAttempt = async (input: {
       input.score,
       input.points,
       input.streak,
-      QUESTIONS_PER_RUN,
+      input.questionCount,
       input.finishedAt,
       input.id,
     ],

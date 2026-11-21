@@ -150,17 +150,22 @@ const attempt: GameAttempt = {
   rollNo: "23KB1A0599",
   sectionKey: "4|CSE|C",
   sectionLabel: "4 CSE C",
-  questionIds: [1, 2, 3, 4, 5],
+  questionIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
   answers: [
     { option: 0, correct: true, ms: 1_000, points: 148 },
     { option: 1, correct: true, ms: 2_000, points: 145 },
     { option: 2, correct: false, ms: 3_000, points: 0 },
     { option: 3, correct: true, ms: 4_000, points: 140 },
     { option: 0, correct: true, ms: 5_000, points: 138 },
+    { option: 1, correct: true, ms: 6_000, points: 136 },
+    { option: 2, correct: true, ms: 7_000, points: 134 },
+    { option: 3, correct: false, ms: 8_000, points: 0 },
+    { option: 0, correct: true, ms: 9_000, points: 132 },
+    { option: 1, correct: false, ms: 10_000, points: 0 },
   ],
-  idx: 5,
-  score: 571,
-  points: 628,
+  idx: 10,
+  score: 900,
+  points: 990,
   streak: 2,
   duelId: null,
   status: "done",
@@ -180,7 +185,7 @@ const question: GameQuestion = {
 describe("the cards", () => {
   it("draws a question with one callback per option", () => {
     const card = questionCard({ attempt, question, index: 1 });
-    expect(card.text).toContain("Question 2 of 5 · 10s");
+    expect(card.text).toContain("Question 2 of 10 · 10s");
     expect(card.text).toContain("&lt;CPU&gt;");
     expect(card.markup?.inline_keyboard).toHaveLength(4);
     expect(card.markup?.inline_keyboard[0][0].callback_data).toBe("q5_7_1_0");
@@ -193,11 +198,11 @@ describe("the cards", () => {
       index: 0,
       duelTarget: 612,
     });
-    expect(card.text).toContain("Duel · Question 1 of 5 · 10s");
+    expect(card.text).toContain("Duel · Question 1 of 10 · 10s");
     expect(card.text).toContain("Target: <b>612</b>");
   });
 
-  it("puts the result, streak and section on the Five card", () => {
+  it("puts the result, streak and section on the run card", () => {
     const card = fiveResultCard({
       attempt,
       rank: 7,
@@ -206,10 +211,10 @@ describe("the cards", () => {
       alreadyPlayed: false,
     });
 
-    expect(card.text).toContain("4 of 5 correct");
-    expect(card.text).toContain("<b>571</b> run score");
-    expect(card.text).toContain("<b>628</b> season points");
-    expect(card.text).toContain("+57 streak");
+    expect(card.text).toContain("7 of 10 correct");
+    expect(card.text).toContain("<b>900</b> run score");
+    expect(card.text).toContain("<b>990</b> season points");
+    expect(card.text).toContain("+90 streak");
     expect(card.text).toContain("#7 of 143 today");
     expect(card.text).toContain("2-day streak");
     expect(card.text).toContain("4 CSE C · <b>#5</b> of 12 this week");
@@ -247,7 +252,7 @@ describe("the cards", () => {
     challengerSectionKey: "4|CSE|C",
     challengerSectionLabel: "4 CSE C",
     challengerScore: 612,
-    questionIds: [1, 2, 3, 4, 5],
+    questionIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     dayKey: "2026-11-15",
     weekKey: "2026-W46",
     season: "S1",
@@ -320,7 +325,8 @@ describe("the cards", () => {
 
   it("keeps the channel posts on URL buttons only", () => {
     const morning = morningPost("15 Nov");
-    expect(morning.markup?.inline_keyboard[0][0].url).toContain("five");
+    expect(morning.text).toContain("10 questions");
+    expect(morning.markup?.inline_keyboard[0][0].url).toContain("quiz");
 
     const results = resultsPost({
       label: "15 Nov",
@@ -371,7 +377,7 @@ describe("the empty and edge cards", () => {
       alreadyPlayed: false,
     });
 
-    expect(card.text).toContain("571</b> points");
+    expect(card.text).toContain("900</b> points");
     expect(card.text).toContain("First today");
     expect(card.text).toContain("4 CSE C · first this week");
     expect(card.text).not.toContain("streak");
@@ -428,7 +434,7 @@ describe("the empty and edge cards", () => {
       attemptId: null,
     });
 
-    expect(card.text).toContain("Finish today's five first");
+    expect(card.text).toContain("Finish today's run first");
     expect(card.markup?.inline_keyboard).toHaveLength(1);
   });
 
