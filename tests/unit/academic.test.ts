@@ -320,8 +320,8 @@ describe("Academic Module", () => {
       expect(result.subjects[2]).toMatchObject({
         subject: "DS Lab",
         M1: 25,
-        M2: 0,
-        average: 0,
+        M2: null,
+        average: null,
         type: "Lab",
       });
     });

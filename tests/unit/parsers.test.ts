@@ -166,8 +166,48 @@ describe("parseMidmarksSection", () => {
     expect(students.get("AAA00002")?.subjects[2]).toMatchObject({
       subject: "DS Lab",
       M1: 20,
+      M2: null,
+      average: null,
       type: "Lab",
     });
+  });
+
+  it("keeps the average when a paper is absent, and keeps real zeros", () => {
+    const doc = `
+<html><body><table>
+  <tr><td>Student</td><td>Report</td></tr>
+  <tr>
+    <td><a>MS</a></td>
+    <td><a>GS</a></td>
+    <td><a>BDA</a></td>
+    <td><a>ABS</a></td>
+    <td><a>ZERO</a></td>
+    <td><a>RL</a></td>
+  </tr>
+  <tr id="23KB1A3234">
+    <td>23KB1A3234</td><td>Azeem Mohammed</td>
+    <td>24/A(20)</td>
+    <td>23/5(20)</td>
+    <td>27/0(22)</td>
+    <td>A/19(21)</td>
+    <td>0/0(0)</td>
+    <td>22</td>
+  </tr>
+</table></body></html>
+`;
+
+    const marks = parseMidmarksSection(doc, context).get(
+      "23KB1A3234",
+    )?.subjects;
+
+    expect(marks).toEqual([
+      { subject: "MS", M1: 24, M2: null, average: 20, type: "Subject" },
+      { subject: "GS", M1: 23, M2: 5, average: 20, type: "Subject" },
+      { subject: "BDA", M1: 27, M2: 0, average: 22, type: "Subject" },
+      { subject: "ABS", M1: null, M2: 19, average: 21, type: "Subject" },
+      { subject: "ZERO", M1: 0, M2: 0, average: 0, type: "Subject" },
+      { subject: "RL", M1: 22, M2: null, average: null, type: "Subject" },
+    ]);
   });
 
   it("keeps the single-student wrapper working", async () => {

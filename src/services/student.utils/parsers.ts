@@ -250,6 +250,18 @@ const separateSubjectsAndLabs = (
   return { subjects, labs };
 };
 
+/** The number a mark cell starts with, or null when it carries no mark. */
+const leadingNumber = (value: string | undefined): number | null => {
+  const match = value?.trim().match(/^(\d+)/);
+  return match ? parseInt(match[1], 10) : null;
+};
+
+/** The portal's parenthesised average, independent of the M2 cell. */
+const parenthesisedNumber = (value: string): number | null => {
+  const match = value.match(/\((\d+)\)/);
+  return match ? parseInt(match[1], 10) : null;
+};
+
 const buildMidmarksList = (
   allSubjects: string[],
   marksList: string[],
@@ -261,22 +273,21 @@ const buildMidmarksList = (
 
     if (isSubject) {
       const [part1, part2] = marksStr.split("/");
-      const m2Match = part2?.match(/^(\d+)\((\d+)\)/);
 
       return {
         subject,
-        M1: parseInt(part1) || 0,
-        M2: m2Match ? parseInt(m2Match[1]) : 0,
-        average: m2Match ? parseInt(m2Match[2]) : 0,
+        M1: leadingNumber(part1),
+        M2: leadingNumber(part2),
+        average: parenthesisedNumber(marksStr),
         type: "Subject",
       };
     }
 
     return {
       subject,
-      M1: parseInt(marksStr) || 0,
-      M2: 0,
-      average: 0,
+      M1: leadingNumber(marksStr),
+      M2: null,
+      average: null,
       type: "Lab",
     };
   });

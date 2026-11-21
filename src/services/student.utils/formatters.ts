@@ -260,9 +260,9 @@ const buildMidmarksTable = (subjects: MidmarksBySubject[]): string =>
       truncateText(subject.subject, 11),
       truncateText(subject.type, 4),
       [
-        subject.M1 ? String(subject.M1).padStart(2) : "  ",
-        subject.M2 ? String(subject.M2).padStart(2) : "  ",
-        subject.average ? String(subject.average).padStart(3) : "   ",
+        subject.M1 == null ? "  " : String(subject.M1).padStart(2),
+        subject.M2 == null ? "  " : String(subject.M2).padStart(2),
+        subject.average == null ? "   " : String(subject.average).padStart(3),
       ].join(" "),
     ]),
   );
