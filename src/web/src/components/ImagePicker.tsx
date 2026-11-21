@@ -22,8 +22,8 @@ interface ImagePickerProps {
   addLabel: string;
   /** Singular noun used in errors and alt text, e.g. "screenshot". */
   noun: string;
-  /** The quiet line beside the button, e.g. "Up to 3 · 5 MB each". */
-  hint: string;
+  /** The quiet line under the button, e.g. "Up to 3 · 5 MB each". */
+  hint?: string;
 }
 
 /**
@@ -102,33 +102,36 @@ export default function ImagePicker({
 
   return (
     <div className="shots-field">
-      <div className="shots-head">
-        <input
-          ref={input}
-          className="shot-input"
-          type="file"
-          accept={ACCEPT_ATTR}
-          multiple
-          tabIndex={-1}
-          aria-hidden="true"
-          disabled={disabled}
-          onChange={(e) => {
-            const picked = Array.from(e.target.files ?? []);
-            // reset first, so picking the same file again still fires change
-            e.target.value = "";
-            pick(picked);
-          }}
-        />
+      <input
+        ref={input}
+        className="shot-input"
+        type="file"
+        accept={ACCEPT_ATTR}
+        multiple
+        tabIndex={-1}
+        aria-hidden="true"
+        disabled={disabled}
+        onChange={(e) => {
+          const picked = Array.from(e.target.files ?? []);
+          // reset first, so picking the same file again still fires change
+          e.target.value = "";
+          pick(picked);
+        }}
+      />
+
+      {files.length === 0 ? (
+        // Nothing picked yet: the add control is the field's empty state, so
+        // it gets the whole area instead of a chip beside a hint.
         <button
           type="button"
-          className="btn-outline btn-sm shot-add"
-          disabled={disabled || files.length >= maxFiles}
+          className="btn-outline shot-add shot-add--empty"
+          disabled={disabled}
           onClick={() => input.current?.click()}
         >
           <svg
             aria-hidden="true"
-            width="16"
-            height="16"
+            width="28"
+            height="28"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -140,49 +143,77 @@ export default function ImagePicker({
             <circle cx="8.5" cy="8.5" r="1.5" />
             <path d="m21 15-5-5L5 21" />
           </svg>
-          {files.length > 0 ? "Add another" : addLabel}
+          <span className="shot-add__label">{addLabel}</span>
+          {hint && <span className="shot-add__hint">{hint}</span>}
         </button>
-        <span className="shots-hint">{hint}</span>
-      </div>
+      ) : (
+        <>
+          {previews.length > 0 && (
+            <ul className="shots">
+              {previews.map((url, index) => (
+                <li key={url} className="shot">
+                  <img
+                    src={url}
+                    alt={`${noun} ${index + 1} of ${previews.length}`}
+                    decoding="async"
+                  />
+                  <button
+                    type="button"
+                    className="shot__remove"
+                    aria-label={`Remove ${noun} ${index + 1}`}
+                    disabled={disabled}
+                    onClick={() => remove(index)}
+                  >
+                    <svg
+                      aria-hidden="true"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                    >
+                      <path d="M6 6l12 12M18 6 6 18" />
+                    </svg>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {files.length < maxFiles && (
+            <button
+              type="button"
+              className="btn-outline shot-add shot-add--more"
+              disabled={disabled}
+              onClick={() => input.current?.click()}
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <path d="m21 15-5-5L5 21" />
+              </svg>
+              <span className="shot-add__label">Add another</span>
+            </button>
+          )}
+        </>
+      )}
 
       {error && (
         <p className="note note--err mt-4" role="alert">
           {error}
         </p>
-      )}
-
-      {previews.length > 0 && (
-        <ul className="shots">
-          {previews.map((url, index) => (
-            <li key={url} className="shot">
-              <img
-                src={url}
-                alt={`${noun} ${index + 1} of ${previews.length}`}
-                decoding="async"
-              />
-              <button
-                type="button"
-                className="shot__remove"
-                aria-label={`Remove ${noun} ${index + 1}`}
-                disabled={disabled}
-                onClick={() => remove(index)}
-              >
-                <svg
-                  aria-hidden="true"
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.4"
-                  strokeLinecap="round"
-                >
-                  <path d="M6 6l12 12M18 6 6 18" />
-                </svg>
-              </button>
-            </li>
-          ))}
-        </ul>
       )}
     </div>
   );

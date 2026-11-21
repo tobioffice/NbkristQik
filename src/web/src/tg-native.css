@@ -1702,12 +1702,6 @@ body {
   margin-top: 10px;
 }
 
-.sheet--tg .shots-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .sheet--tg .shot-input {
   position: absolute;
   width: 1px;
@@ -1721,10 +1715,70 @@ body {
 }
 
 .sheet--tg .shot-add {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+}
+
+/* The empty picker is the field's whole empty state, not a row beside a
+   hint: a generous, centred target with the photo icon sitting above it. */
+.sheet--tg .shot-add--empty {
+  flex-direction: column;
   gap: 6px;
-  min-height: 32px;
+  min-height: 108px;
+  padding: 20px 16px;
+}
+
+.sheet--tg .shot-add--empty svg {
+  width: 28px;
+  height: 28px;
+}
+
+.sheet--tg .shot-add--more {
+  margin-top: 10px;
+}
+
+.sheet--tg .shot-add__label {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.sheet--tg .shot-add__hint {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  color: var(--tg-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sheet--tg .shot-add:active {
+  background: var(--tg-surface-active);
+}
+
+.sheet--tg .shot-add:disabled {
+  color: var(--tg-tertiary);
+  cursor: default;
+}
+
+.sheet--tg .shot-add:disabled .shot-add__hint {
+  color: var(--tg-tertiary);
+}
+
+.sheet--tg .shot-add:disabled svg {
+  color: var(--tg-tertiary);
+}
+
+.sheet--tg .shot-add:disabled:hover {
+  background: var(--tg-surface);
 }
 
 .sheet--tg .shot-add svg {
@@ -1732,18 +1786,11 @@ body {
   color: var(--tg-accent);
 }
 
-.sheet--tg .shots-hint {
-  font-size: 12px;
-  line-height: 16px;
-  color: var(--tg-secondary);
-  font-variant-numeric: tabular-nums;
-}
-
 .sheet--tg .shots {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 10px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }

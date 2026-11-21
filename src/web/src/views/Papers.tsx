@@ -205,7 +205,6 @@ export default function PapersPage({ identity }: PapersPageProps) {
                 maxBytes={MAX_PAPER_FILE_BYTES}
                 addLabel="Add pages"
                 noun="page"
-                hint={`Up to ${MAX_PAPER_PAGES} · 5 MB each`}
               />
             </fieldset>
 

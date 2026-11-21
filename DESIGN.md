@@ -292,8 +292,9 @@ secondary. It is the only line in the list, and it is never decorative.
 
 - The page opens from a direct link (`#/papers`), never a tab. It is a
   collection form, not a gallery: there is no public list or image viewer.
-- Photos: a fieldset of up to five 72px previews with round remove buttons;
-  "Add pages" is a secondary surface button with an accent photo icon.
+- Photos: an empty field is one full-width surface tile with a 28px accent
+  photo icon and "Add pages"; once picked, up to five 72px previews with round
+  remove buttons sit above an "Add another" row.
 - Fields: Subject and Exam (single line, required), then an optional Note with
   a tabular character count. The filled action is "Add to the collection".
 - Receipt: a surface panel with a green "Paper received" sentence and one
