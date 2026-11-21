@@ -33,6 +33,14 @@ const isJpeg = (bytes: Buffer): boolean =>
   bytes[1] === 0xd8 &&
   bytes[2] === 0xff;
 
+/** The one rejection for a body that is not a card. */
+const rejectNotJpeg = (res: Response): void => {
+  res.status(415).json({
+    ok: false,
+    error: "The rank card needs to be a JPEG image.",
+  });
+};
+
 /**
  * POST /api/rank/share — a prepared message the Mini App hands to the
  * student's native share sheet. The message itself is stored by Telegram and
@@ -95,15 +103,19 @@ rankRouter.post(
       const resolved = requireIdentity(req, res);
       if (!resolved) return;
 
-      const bytes: unknown = req.body;
-      if (!Buffer.isBuffer(bytes) || !isJpeg(bytes)) {
-        res.status(415).json({
-          ok: false,
-          error: "The rank card needs to be a JPEG image.",
-        });
+      const body: unknown = req.body;
+      // `express.raw` yields a Buffer for image/jpeg and `{}` for anything
+      // else. Check the shape first: a body parser that hands back a string
+      // or an array must never reach the byte checks below.
+      if (typeof body !== "object") {
+        rejectNotJpeg(res);
         return;
       }
-      if (bytes.length > MAX_RANK_CARD_BYTES) {
+      if (!Buffer.isBuffer(body) || !isJpeg(body)) {
+        rejectNotJpeg(res);
+        return;
+      }
+      if (body.length > MAX_RANK_CARD_BYTES) {
         res.status(413).json({
           ok: false,
           error: "That rank card is too large.",
@@ -114,7 +126,7 @@ rankRouter.post(
       const baseUrl = `${req.protocol}://${req.get("host") ?? "localhost"}`;
       const card = putRankCard({
         userId: resolved.userId,
-        bytes,
+        bytes: body,
         baseUrl,
       });
 

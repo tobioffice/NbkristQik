@@ -1,4 +1,5 @@
 import type { Express, Request, Response } from "express";
+import rateLimit from "express-rate-limit";
 import { deletePaper, listPapersForAdmin } from "../../db/paper.model.js";
 import {
   isPaperImageName,
@@ -21,6 +22,16 @@ export const registerPapersRoutes = (
   base: string,
   requireAdmin: RequireAdmin,
 ): void => {
+  // The processing list loads many pages at once, so the cap is generous; it
+  // still keeps an authenticated session from hammering sendFile.
+  const paperImageReadLimit = rateLimit({
+    windowMs: 60_000,
+    limit: 600,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Too many image requests. Try again in a minute." },
+  });
+
   app.get(
     `${base}/api/papers`,
     requireAdmin,
@@ -58,6 +69,7 @@ export const registerPapersRoutes = (
   // The URL is unguessable too, but the cookie is the permission.
   app.get(
     `${base}/api/paper-images/:name`,
+    paperImageReadLimit,
     requireAdmin,
     (req: Request, res: Response) => {
       const name = String(req.params.name);

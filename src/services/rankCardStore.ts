@@ -47,6 +47,17 @@ const totalBytes = (): number => {
 };
 
 /**
+ * Drop trailing slashes from the origin before it is embedded in a URL.
+ * Hand-rolled rather than `/\/+$/` because the value comes from the request
+ * Host header, and no regex is needed for a simple trim.
+ */
+const withoutTrailingSlashes = (value: string): string => {
+  let end = value.length;
+  while (end > 0 && value.charCodeAt(end - 1) === 0x2f) end -= 1;
+  return value.slice(0, end);
+};
+
+/**
  * Store one card for a user, replacing any card they already had.
  * `baseUrl` is the request origin, e.g. `https://checker.tobioffice.online`.
  */
@@ -70,7 +81,7 @@ export const putRankCard = ({
 
   // A token, not a sequence: the URL is public and must not be enumerable.
   const id = randomBytes(24).toString("base64url");
-  const url = `${baseUrl.replace(/\/+$/, "")}/api/rank/card/${id}.jpg`;
+  const url = `${withoutTrailingSlashes(baseUrl)}/api/rank/card/${id}.jpg`;
   const card: StoredRankCard = {
     id,
     userId,
