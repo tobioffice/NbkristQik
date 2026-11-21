@@ -172,7 +172,7 @@ describe("parseMidmarksSection", () => {
     });
   });
 
-  it("keeps the average when a paper is absent, and keeps real zeros", () => {
+  it("keeps the average for absent or lone papers, and keeps real zeros", () => {
     const doc = `
 <html><body><table>
   <tr><td>Student</td><td>Report</td></tr>
@@ -182,7 +182,9 @@ describe("parseMidmarksSection", () => {
     <td><a>BDA</a></td>
     <td><a>ABS</a></td>
     <td><a>ZERO</a></td>
+    <td><a>ONE_ZERO</a></td>
     <td><a>RL</a></td>
+    <td><a>EMPS</a></td>
   </tr>
   <tr id="23KB1A3234">
     <td>23KB1A3234</td><td>Azeem Mohammed</td>
@@ -191,7 +193,9 @@ describe("parseMidmarksSection", () => {
     <td>27/0(22)</td>
     <td>A/19(21)</td>
     <td>0/0(0)</td>
+    <td>0</td>
     <td>22</td>
+    <td>24</td>
   </tr>
 </table></body></html>
 `;
@@ -206,7 +210,9 @@ describe("parseMidmarksSection", () => {
       { subject: "BDA", M1: 27, M2: 0, average: 22, type: "Subject" },
       { subject: "ABS", M1: null, M2: 19, average: 21, type: "Subject" },
       { subject: "ZERO", M1: 0, M2: 0, average: 0, type: "Subject" },
-      { subject: "RL", M1: 22, M2: null, average: null, type: "Subject" },
+      { subject: "ONE_ZERO", M1: 0, M2: null, average: 0, type: "Subject" },
+      { subject: "RL", M1: 22, M2: null, average: 22, type: "Subject" },
+      { subject: "EMPS", M1: 24, M2: null, average: 24, type: "Subject" },
     ]);
   });
 

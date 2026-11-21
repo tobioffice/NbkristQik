@@ -273,12 +273,19 @@ const buildMidmarksList = (
 
     if (isSubject) {
       const [part1, part2] = marksStr.split("/");
+      const m1 = leadingNumber(part1);
+      const m2 = leadingNumber(part2);
 
       return {
         subject,
-        M1: leadingNumber(part1),
-        M2: leadingNumber(part2),
-        average: parenthesisedNumber(marksStr),
+        M1: m1,
+        M2: m2,
+        // The portal only prints the parenthesised average once both papers
+        // are in. With one paper, that paper is the average (and the rest of
+        // the app scores a lone paper the same way).
+        average:
+          parenthesisedNumber(marksStr) ??
+          (m1 == null ? m2 : m2 == null ? m1 : null),
         type: "Subject",
       };
     }
