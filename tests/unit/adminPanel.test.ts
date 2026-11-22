@@ -47,6 +47,10 @@ describe("the admin panel document", () => {
     // the private processing list for the question-paper collection
     expect(html).toContain('data-view="papers"');
     expect(html).toContain('id="view-papers"');
+    // the read-only league boards tab
+    expect(html).toContain('data-view="league"');
+    expect(html).toContain('id="view-league"');
+    expect(html).toContain('id="league-player-rows"');
   });
 
   it("uses standard scrollbar styling with a wrapped WebKit fallback", () => {

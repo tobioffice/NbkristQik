@@ -132,7 +132,7 @@ export const panelJs = `(function () {
   var drawerIssue = null;
   var threadCache = {};
   var userCache = {};
-  var STALE_MS = { overview: 60000, students: 30000, verified: 20000, library: 30000, reports: 60000, papers: 30000, live: 0, health: 300000 };
+  var STALE_MS = { overview: 60000, students: 30000, verified: 20000, league: 30000, library: 30000, reports: 60000, papers: 30000, live: 0, health: 300000 };
   var isStale = function (name) {
     return !lastLoad[name] || Date.now() - lastLoad[name] > STALE_MS[name];
   };
@@ -153,6 +153,7 @@ export const panelJs = `(function () {
     if (name === "overview" && isStale("overview")) loadOverview();
     if (name === "students" && isStale("students")) loadUsers();
     if (name === "verified" && isStale("verified")) loadVerified();
+    if (name === "league" && isStale("league")) loadLeague();
     if (name === "library" && isStale("library")) loadLibrary();
     if (name === "live") loadFeed();
     if (name === "reports" && isStale("reports")) loadReports();
@@ -432,6 +433,67 @@ export const panelJs = `(function () {
     }, 250);
   });
   $("verifiedrefresh").addEventListener("click", function () { loadVerified(); });
+
+  /* ---------- league boards ---------- */
+  var loadLeague = function () {
+    if (inflight.league) return;
+    inflight.league = true;
+    lastLoad.league = Date.now();
+    api("league").then(function (d) {
+      var stats = d.stats || {};
+      $("league-week").textContent =
+        (d.weekLabel || "this week") + " \u00b7 " +
+        fmt(stats.playersToday) + " finished today";
+      $("league-players-count").textContent = fmt(stats.players);
+      $("league-verified-count").textContent = fmt(stats.verified);
+      $("league-sections-count").textContent = fmt(stats.sections);
+      $("league-runs-count").textContent = fmt(stats.runsToday);
+
+      var sections = "";
+      for (var i = 0; i < d.sections.length; i++) {
+        var section = d.sections[i];
+        sections += "<tr>" +
+          '<td class="dim mono">' + (i + 1) + "</td>" +
+          '<td class="who"><div class="name">' + esc(section.label) + "</div></td>" +
+          '<td class="num mono">' + fmt(section.players) + "</td>" +
+          '<td class="num mono">' + fmt(section.points) + "</td>" +
+          "</tr>";
+      }
+      $("league-section-rows").innerHTML = sections;
+      $("league-sections-empty").style.display = d.sections.length ? "none" : "block";
+
+      var hint = "showing " + fmt(d.playersShown) + " of " + fmt(d.playerTotal);
+      if (d.playersShown >= d.playerTotal) hint = fmt(d.playerTotal) + " scorers";
+      $("league-player-hint").textContent = hint;
+
+      var players = "";
+      for (var j = 0; j < d.players.length; j++) {
+        var p = d.players[j];
+        var name = p.displayName || p.firstName || (p.username ? "@" + p.username : "") || ("ID " + p.userId);
+        var handle = p.username && name !== "@" + p.username
+          ? ' <span class="handle">@' + esc(p.username) + "</span>"
+          : "";
+        var status = p.verified
+          ? '<span class="badge">Verified</span>'
+          : '<span class="dim">Unverified</span>';
+        if (p.hidden) status += ' <span class="badge">Hidden</span>';
+        players += '<tr data-uid="' + p.userId + '">' +
+          '<td class="dim mono">' + (j + 1) + "</td>" +
+          '<td class="who"><div class="name">' + esc(name) + handle + "</div></td>" +
+          '<td class="mono rolls">' + esc(p.rollNo) + "</td>" +
+          '<td class="dim">' + (p.sectionLabel ? esc(p.sectionLabel) : "&ndash;") + "</td>" +
+          "<td>" + status + "</td>" +
+          '<td class="num mono">' + fmt(p.points) + "</td>" +
+          "</tr>";
+      }
+      $("league-player-rows").innerHTML = players;
+      $("league-players-empty").style.display = d.players.length ? "none" : "block";
+      var trs = $("league-player-rows").querySelectorAll("tr");
+      for (var t = 0; t < trs.length; t++)
+        trs[t].addEventListener("click", function () { openDrawer(this.dataset.uid); });
+    }).catch(function () {}).then(function () { inflight.league = false; });
+  };
+  $("leaguerefresh").addEventListener("click", function () { loadLeague(); });
 
   var searchTimer = null;
   $("usersearch").addEventListener("input", function () {

@@ -18,30 +18,7 @@ export interface Card {
   markup?: InlineKeyboardMarkup;
 }
 
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-/** "15 Nov" from a `YYYY-MM-DD` key. */
-export const dayLabel = (dateKey: string): string => {
-  const [, month, day] = dateKey.split("-").map(Number);
-  return `${day} ${MONTHS[month - 1] ?? ""}`.trim();
-};
-
-/** "Week of 10 Nov" from the week's Monday key. */
-export const weekLabel = (mondayKey: string): string =>
-  `Week of ${dayLabel(mondayKey)}`;
+export { dayLabel, weekLabel } from "./time.js";
 
 /** The visible clock, derived from the scoring constant. */
 const QUESTION_SECONDS = Math.round(QUESTION_LIMIT_MS / 1000);

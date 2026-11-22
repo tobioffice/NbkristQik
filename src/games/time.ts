@@ -83,3 +83,28 @@ export const istClockLabel = (now: Date = new Date()): string => {
   const hour12 = hour % 12 || 12;
   return `${hour12}:${pad(minute)} ${hour < 12 ? "am" : "pm"}`;
 };
+
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+/** "15 Nov" from a `YYYY-MM-DD` key. */
+export const dayLabel = (dateKey: string): string => {
+  const [, month, day] = dateKey.split("-").map(Number);
+  return `${day} ${MONTHS[month - 1] ?? ""}`.trim();
+};
+
+/** "Week of 10 Nov" from the week's Monday key. */
+export const weekLabel = (mondayKey: string): string =>
+  `Week of ${dayLabel(mondayKey)}`;

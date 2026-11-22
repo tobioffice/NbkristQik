@@ -51,6 +51,7 @@ ${panelCss}
     <button aria-current="page" data-view="overview">Overview</button>
     <button data-view="students">Students</button>
     <button data-view="verified">Verified</button>
+    <button data-view="league">League</button>
     <button data-view="library">Library</button>
     <button data-view="reports">Reports</button>
     <button data-view="papers">Papers</button>
@@ -160,6 +161,54 @@ ${panelCss}
       </table>
     </div>
     <div class="empty" id="verifiedempty" style="display:none">No verified rolls yet.</div>
+  </section>
+
+  <section class="view" id="view-league">
+    <div class="section-head" style="margin-bottom:12px">
+      <h2>League boards</h2>
+      <span class="hint" id="league-week">this week</span>
+    </div>
+    <div class="statline">
+      <div class="stat"><div class="n" id="league-players-count">&ndash;</div><div class="l">players this week</div></div>
+      <div class="stat"><div class="n" id="league-verified-count">&ndash;</div><div class="l">verified players</div></div>
+      <div class="stat"><div class="n" id="league-sections-count">&ndash;</div><div class="l">sections counting</div></div>
+      <div class="stat"><div class="n" id="league-runs-count">&ndash;</div><div class="l">runs today</div></div>
+    </div>
+
+    <div class="section-head" style="margin:18px 0 10px">
+      <h2>Section Wars</h2>
+      <span class="hint">verified students only &middot; best ten per section</span>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Section</th><th class="num">Verified players</th><th class="num">Points</th>
+          </tr>
+        </thead>
+        <tbody id="league-section-rows"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="league-sections-empty" style="display:none">No section has scored this week.</div>
+
+    <div class="section-head" style="margin:18px 0 10px">
+      <h2>Players</h2>
+      <span class="hint" id="league-player-hint">this week</span>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Player</th><th>Roll</th><th>Section</th><th>Status</th><th class="num">Points</th>
+          </tr>
+        </thead>
+        <tbody id="league-player-rows"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="league-players-empty" style="display:none">No one has played this week.</div>
+    <div class="toolbar" style="margin-top:14px">
+      <button class="btn-ghost" id="leaguerefresh">Refresh</button>
+    </div>
   </section>
 
   <section class="view" id="view-library">
