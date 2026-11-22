@@ -17,9 +17,11 @@ const mocks = vi.hoisted(() => ({
     message_id: 101,
   })),
   editMessageText: vi.fn(async (_params: Record<string, unknown>) => true),
+  deleteMessage: vi.fn(async (_params: Record<string, unknown>) => true),
   command: vi.fn(),
   getChannelBoard: vi.fn(),
   saveChannelBoard: vi.fn(async (_state: Record<string, unknown>) => undefined),
+  clearChannelBoard: vi.fn(async (_slot: string) => undefined),
   getWeekPlayers: vi.fn(),
   getWeekSections: vi.fn(),
 }));
@@ -30,6 +32,7 @@ vi.mock("../../src/bot/bot.js", () => ({
       sendMessage: mocks.sendMessage,
       sendRichMessage: mocks.sendRichMessage,
       editMessageText: mocks.editMessageText,
+      deleteMessage: mocks.deleteMessage,
     },
     command: mocks.command,
   },
@@ -38,6 +41,7 @@ vi.mock("../../src/bot/bot.js", () => ({
 vi.mock("../../src/db/game.model.js", () => ({
   getChannelBoard: mocks.getChannelBoard,
   saveChannelBoard: mocks.saveChannelBoard,
+  clearChannelBoard: mocks.clearChannelBoard,
   getWeekPlayers: mocks.getWeekPlayers,
   getWeekSections: mocks.getWeekSections,
 }));
@@ -47,12 +51,21 @@ vi.mock("../../src/games/identity.js", () => ({
   withBoardIdentities: vi.fn(async (players: unknown[]) => players),
 }));
 
-const { isRichRefusal, liveBoardSnapshot, postCard, syncLiveBoard } =
-  await import("../../src/games/channel.js");
+const {
+  isRichRefusal,
+  liveBoardSnapshot,
+  postCard,
+  repostLiveBoard,
+  syncLiveBoard,
+} = await import("../../src/games/channel.js");
 const { weekLabel } = await import("../../src/games/cards.js");
 const { istStamp } = await import("../../src/games/time.js");
 
 const label = weekLabel(istStamp().monday);
+
+const gamepostCommand = mocks.command.mock.calls.find(
+  ([name]) => name === "gamepost",
+)?.[1] as ((ctx: unknown) => Promise<void>) | undefined;
 
 const board = {
   label,
@@ -78,7 +91,9 @@ beforeEach(() => {
   mocks.sendMessage.mockClear();
   mocks.sendRichMessage.mockClear();
   mocks.editMessageText.mockClear();
+  mocks.deleteMessage.mockClear();
   mocks.saveChannelBoard.mockClear();
+  mocks.clearChannelBoard.mockClear();
   mocks.getChannelBoard.mockReset();
   mocks.getChannelBoard.mockResolvedValue(null);
   mocks.getWeekPlayers.mockReset();
@@ -181,6 +196,79 @@ describe("syncLiveBoard", () => {
     expect(await syncLiveBoard()).toBe("created");
     expect(mocks.sendRichMessage).toHaveBeenCalledTimes(1);
     expect(mocks.editMessageText).not.toHaveBeenCalled();
+  });
+});
+
+describe("repostLiveBoard", () => {
+  it("deletes the stored message and posts a fresh one", async () => {
+    mocks.getChannelBoard.mockResolvedValueOnce(stored);
+    mocks.sendRichMessage.mockResolvedValueOnce({ message_id: 202 });
+
+    expect(await repostLiveBoard()).toBe("created");
+
+    expect(mocks.deleteMessage).toHaveBeenCalledWith({
+      chat_id: "@test_channel",
+      message_id: 101,
+    });
+    expect(mocks.clearChannelBoard).toHaveBeenCalledWith("live");
+    expect(mocks.sendRichMessage).toHaveBeenCalledTimes(1);
+    expect(mocks.saveChannelBoard.mock.calls[0][0]).toMatchObject({
+      messageId: 202,
+    });
+  });
+
+  it("posts without deleting when no board was stored", async () => {
+    expect(await repostLiveBoard()).toBe("created");
+
+    expect(mocks.deleteMessage).not.toHaveBeenCalled();
+    expect(mocks.clearChannelBoard).not.toHaveBeenCalled();
+    expect(mocks.sendRichMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it("treats an already-deleted message as fine", async () => {
+    mocks.getChannelBoard.mockResolvedValueOnce(stored);
+    mocks.deleteMessage.mockRejectedValueOnce(
+      new TelegramApiError(400, "Bad Request: message to delete not found"),
+    );
+
+    expect(await repostLiveBoard()).toBe("created");
+    expect(mocks.sendRichMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not post a duplicate when the delete is refused", async () => {
+    mocks.getChannelBoard.mockResolvedValueOnce(stored);
+    mocks.deleteMessage.mockRejectedValueOnce(
+      new TelegramApiError(403, "Forbidden: not enough rights to delete"),
+    );
+
+    await expect(repostLiveBoard()).rejects.toThrow("not enough rights");
+    expect(mocks.sendRichMessage).not.toHaveBeenCalled();
+    expect(mocks.clearChannelBoard).not.toHaveBeenCalled();
+  });
+});
+
+describe("the /gamepost command", () => {
+  it("reposts from /gamepost repost", async () => {
+    mocks.getChannelBoard.mockResolvedValueOnce(stored);
+
+    await gamepostCommand?.({
+      match: "repost",
+      message: {
+        message_id: 9,
+        chat: { id: 5, type: "private" },
+        from: { id: Number(process.env.ADMIN_ID), is_bot: false },
+        date: 0,
+        text: "/gamepost repost",
+      },
+    });
+
+    expect(mocks.deleteMessage).toHaveBeenCalledWith({
+      chat_id: "@test_channel",
+      message_id: 101,
+    });
+    expect(mocks.sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ chat_id: 5 }),
+    );
   });
 });
 

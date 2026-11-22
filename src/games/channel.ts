@@ -5,6 +5,7 @@ import { logger } from "../config/logger.js";
 import { trackMessage } from "../services/tracker.js";
 import { commandArgs } from "../bot/commands/args.js";
 import {
+  clearChannelBoard,
   getChannelBoard,
   getWeekPlayers,
   getWeekSections,
@@ -84,7 +85,7 @@ const isNotModified = (error: unknown): boolean =>
 
 const isMessageGone = (error: unknown): boolean =>
   isApiError(error, 400) &&
-  /message to edit not found|message can't be edited|message_id_invalid/i.test(
+  /message to edit not found|message to delete not found|message can't be edited|message_id_invalid/i.test(
     error.description,
   );
 
@@ -255,6 +256,34 @@ export const syncLiveBoard = async (): Promise<BoardSync> => {
   return "edited";
 };
 
+/**
+ * Delete the stored board message and post a fresh one.
+ *
+ * The new message sits at the bottom of the channel, which is what makes the
+ * board the most recent post. A message that is already gone is not an error;
+ * any other delete failure stops the repost, so the channel never ends up
+ * with the old board and a duplicate side by side.
+ */
+export const repostLiveBoard = async (): Promise<BoardSync> => {
+  const state = await getChannelBoard(BOARD_SLOT);
+
+  if (state) {
+    try {
+      await bot.api.deleteMessage({
+        chat_id: state.chatId,
+        message_id: state.messageId,
+      });
+    } catch (e) {
+      if (!isMessageGone(e)) throw e;
+    }
+    await clearChannelBoard(BOARD_SLOT);
+  }
+
+  const result = await syncLiveBoard();
+  logger.info(`[games] live board reposted (${result})`);
+  return result;
+};
+
 const tick = async (): Promise<void> => {
   if (!CHANNEL_ID || !channelPostsEnabled()) return;
   await syncLiveBoard();
@@ -294,6 +323,33 @@ bot.command("gamepost", async (ctx) => {
 
   trackMessage(msg, "command:gamepost");
   const args = commandArgs(ctx).toLowerCase();
+
+  if (args === "repost") {
+    if (!CHANNEL_ID) {
+      await bot.api.sendMessage({
+        chat_id: msg.chat.id,
+        text: "Channel isn't set up.",
+      });
+      return;
+    }
+
+    try {
+      await repostLiveBoard();
+      await bot.api.sendMessage({
+        chat_id: msg.chat.id,
+        text: "Old board deleted. A fresh one is now the latest message in the channel.",
+      });
+    } catch (e) {
+      logger.warn("[games] live board repost failed:", e);
+      await bot.api
+        .sendMessage({
+          chat_id: msg.chat.id,
+          text: "Couldn't delete the old board. Check the bot's delete permission in the channel.",
+        })
+        .catch(() => undefined);
+    }
+    return;
+  }
 
   if (args === "channel") {
     if (!CHANNEL_ID) {

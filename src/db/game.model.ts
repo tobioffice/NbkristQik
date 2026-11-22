@@ -1092,3 +1092,11 @@ export const saveChannelBoard = async (state: {
     ],
   });
 };
+
+/** Forget the board message, so the next sync posts a new one. */
+export const clearChannelBoard = async (slot: string): Promise<void> => {
+  await turso.execute({
+    sql: `DELETE FROM game_channel_board WHERE slot = ?`,
+    args: [slot],
+  });
+};

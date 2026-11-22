@@ -143,7 +143,9 @@ board page (`#/games`, a hidden Mini App route).
 
 `/gamepost` sends the current board to the admin DM as a preview, and
 `/gamepost channel` creates or refreshes the live message immediately, which
-is the launch path after a deploy or a channel clean-up.
+is the launch path after a deploy or a channel clean-up. `/gamepost repost`
+deletes the stored board message and posts a fresh one, so it becomes the
+newest message in the channel (the bot needs delete permission there).
 
 `GAME_SEASON` groups the weekly boards; change it when a new season starts.
 The question bank is seeded from `src/games/questions.ts` once, keyed by slug.
