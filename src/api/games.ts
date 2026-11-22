@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from "express";
 import { logger } from "../config/logger.js";
 import {
   getSectionTopPlayers,
+  getWeekPlayerCount,
   getWeekPlayers,
   getWeekSections,
 } from "../db/game.model.js";
@@ -25,11 +26,19 @@ import { attachedIdentity } from "./resolveUser.js";
  * straight from the weekly boards.
  */
 
-const PLAYER_LIMIT = 10;
+/** One page of the player board; the page loads the rest as it scrolls. */
+const PLAYER_PAGE_SIZE = 50;
+const MAX_PLAYER_PAGE_SIZE = 100;
 /** Section Wars has one row per section that scored; the board clamps at 100. */
 const SECTION_LIMIT = 100;
 /** Only the leading section shows its stars, so the page stays a board. */
 const LEADER_PLAYER_LIMIT = 3;
+
+/** `?page=2&limit=50`, clamped so a caller cannot ask for an unbounded read. */
+const positiveInt = (raw: unknown, fallback: number): number => {
+  const value = Number.parseInt(String(raw ?? ""), 10);
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+};
 
 interface PublicPlayer {
   /** The chosen display name, or the roll when there is none. */
@@ -53,9 +62,15 @@ gamesRouter.get("/games/board", async (req: Request, res: Response) => {
 
     const stamp = istStamp();
     const season = seasonKey();
-    const [players, sections] = await Promise.all([
-      getWeekPlayers(season, stamp.week, PLAYER_LIMIT),
+    const page = positiveInt(req.query.page, 1);
+    const pageSize = Math.min(
+      positiveInt(req.query.limit, PLAYER_PAGE_SIZE),
+      MAX_PLAYER_PAGE_SIZE,
+    );
+    const [players, sections, playerTotal] = await Promise.all([
+      getWeekPlayers(season, stamp.week, pageSize, (page - 1) * pageSize),
       getWeekSections(season, stamp.week, SECTION_LIMIT),
+      getWeekPlayerCount(season, stamp.week),
     ]);
 
     // The page shows the top section's three players as the detail on the
@@ -98,6 +113,10 @@ gamesRouter.get("/games/board", async (req: Request, res: Response) => {
       week: stamp.week,
       weekLabel: weekLabel(stamp.monday),
       players: players.map(publicPlayer),
+      playerTotal,
+      playerPage: page,
+      playerPageSize: pageSize,
+      hasMorePlayers: (page - 1) * pageSize + players.length < playerTotal,
       sections: sections.map((section, index) => ({
         label: section.label,
         points: section.points,

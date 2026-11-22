@@ -51,7 +51,7 @@ deployment that forgets to set it does not inherit the shortcut.
 |---|---|---|
 | `GET /api/leaderboard` | allowed; `name` is `null`, search matches rolls only | names; search matches rolls and names |
 | `GET /api/config` | allowed; both flags `false` | flags reflect the caller |
-| `GET /api/games/board` | allowed; chosen name with the full roll, masked when the owner hid the leaderboard | same payload |
+| `GET /api/games/board` | allowed; chosen name with the full roll, masked when the owner hid the leaderboard. `page`/`limit` page the player board (default 50, cap 100) and the payload carries the full count and `hasMorePlayers` | same payload |
 | `GET /api/me` | `401` | allowed |
 | `/api/profile`, `/api/register`, `/api/report`, `/api/thread/*`, `/api/rank/share`, `/api/rank/card`, `/api/rank/card/send`, `POST /api/papers` | `401` | allowed |
 | `GET /api/rank/card/:name` | allowed; random token, 30-minute TTL | same |

@@ -821,11 +821,12 @@ export const getFiveRank = async (input: {
   };
 };
 
-/** The week's player board. */
+/** The week's player board, one page at a time. */
 export const getWeekPlayers = async (
   season: string,
   weekKey: string,
   limit = 10,
+  offset = 0,
 ): Promise<BoardPlayer[]> => {
   const result = await turso.execute({
     sql: `SELECT s.user_id, MAX(s.roll_no) AS roll_no,
@@ -836,8 +837,13 @@ export const getWeekPlayers = async (
           WHERE s.season = ? AND s.week_key = ?
           GROUP BY s.user_id
           ORDER BY points DESC, s.user_id ASC
-          LIMIT ?`,
-    args: [season, weekKey, Math.max(1, Math.min(100, limit))],
+          LIMIT ? OFFSET ?`,
+    args: [
+      season,
+      weekKey,
+      Math.max(1, Math.min(100, limit)),
+      Math.max(0, Math.floor(offset)),
+    ],
   });
   return result.rows.map((row) => ({
     userId: num(row.user_id),
@@ -845,6 +851,22 @@ export const getWeekPlayers = async (
     displayName: nullableText(row.display_name),
     points: num(row.points),
   }));
+};
+
+/** How many players have scored this week, for a page's "of N" line. */
+export const getWeekPlayerCount = async (
+  season: string,
+  weekKey: string,
+): Promise<number> => {
+  const result = await turso.execute({
+    sql: `SELECT COUNT(*) AS n FROM (
+            SELECT user_id FROM game_scores
+            WHERE season = ? AND week_key = ?
+            GROUP BY user_id
+          )`,
+    args: [season, weekKey],
+  });
+  return num(result.rows[0]?.n);
 };
 
 /**

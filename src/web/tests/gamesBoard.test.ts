@@ -33,6 +33,10 @@ const board: BoardPayload = {
     },
     { label: "3 ECE A", points: 4_610, players: 8 },
   ],
+  playerTotal: 3,
+  playerPage: 1,
+  playerPageSize: 50,
+  hasMorePlayers: false,
 };
 
 const render = (payload: BoardPayload, tab: BoardTab = "sections"): string =>
@@ -74,9 +78,34 @@ describe("GamesBoardView", () => {
     expect(html).toContain("23KB1A0599");
     expect(html).toContain("23KB1A0600");
     expect(html).toContain("23KB1A0•••");
-    expect(html).toContain("Top 3");
+    expect(html).toContain("That’s everyone on this week’s board.");
     expect(html).not.toContain("4 CSE C");
     expect(html).not.toContain("tg-tree-node");
+  });
+
+  it("offers the next page while more players exist", () => {
+    const html = render(
+      { ...board, playerTotal: 120, hasMorePlayers: true },
+      "players",
+    );
+
+    expect(html).toContain("Load more");
+    expect(html).toContain("Showing 3 of 120.");
+    expect(html).not.toContain("That’s everyone");
+  });
+
+  it("shows the failed-page retry", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(GamesBoardView, {
+        board: { ...board, playerTotal: 120, hasMorePlayers: true },
+        tab: "players",
+        onTabChange: () => undefined,
+        moreError: true,
+      }),
+    );
+
+    expect(html).toContain("The next page didn’t load.");
+    expect(html).toContain("Try again");
   });
 
   it("does not repeat a masked roll when it is already the name", () => {
@@ -98,6 +127,10 @@ describe("GamesBoardView", () => {
       weekLabel: "Week of 16 Nov",
       players: [],
       sections: [],
+      playerTotal: 0,
+      playerPage: 1,
+      playerPageSize: 50,
+      hasMorePlayers: false,
     });
 
     expect(html).toContain("No one has played this week yet");

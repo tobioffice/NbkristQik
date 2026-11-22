@@ -12,6 +12,7 @@ import request from "supertest";
 
 const mocks = vi.hoisted(() => ({
   getWeekPlayers: vi.fn(),
+  getWeekPlayerCount: vi.fn(),
   getWeekSections: vi.fn(),
   getSectionTopPlayers: vi.fn(),
   getHiddenRolls: vi.fn(),
@@ -19,6 +20,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("../../src/db/game.model.js", () => ({
   getWeekPlayers: mocks.getWeekPlayers,
+  getWeekPlayerCount: mocks.getWeekPlayerCount,
   getWeekSections: mocks.getWeekSections,
   getSectionTopPlayers: mocks.getSectionTopPlayers,
 }));
@@ -39,6 +41,8 @@ const createApp = () => {
 
 beforeEach(() => {
   mocks.getWeekPlayers.mockReset();
+  mocks.getWeekPlayerCount.mockReset();
+  mocks.getWeekPlayerCount.mockResolvedValue(2);
   mocks.getWeekSections.mockReset();
   mocks.getSectionTopPlayers.mockReset();
   mocks.getHiddenRolls.mockReset();
@@ -102,6 +106,12 @@ describe("GET /api/games/board", () => {
         },
       ],
     });
+    expect(res.body).toMatchObject({
+      playerTotal: 2,
+      playerPage: 1,
+      playerPageSize: 50,
+      hasMorePlayers: false,
+    });
     expect(res.headers["cache-control"]).toBe("public, max-age=30");
   });
 
@@ -135,11 +145,12 @@ describe("GET /api/games/board", () => {
     ]);
   });
 
-  it("asks for the week's top ten players and every scoring section", async () => {
+  it("asks for the first page of players and every scoring section", async () => {
     await request(createApp()).get("/api/games/board");
 
     const stamp = istStamp();
-    expect(mocks.getWeekPlayers).toHaveBeenCalledWith("S1", stamp.week, 10);
+    expect(mocks.getWeekPlayers).toHaveBeenCalledWith("S1", stamp.week, 50, 0);
+    expect(mocks.getWeekPlayerCount).toHaveBeenCalledWith("S1", stamp.week);
     expect(mocks.getWeekSections).toHaveBeenCalledWith("S1", stamp.week, 100);
     expect(mocks.getSectionTopPlayers).toHaveBeenCalledWith(
       "S1",
@@ -147,6 +158,30 @@ describe("GET /api/games/board", () => {
       "4|CSE|C",
       3,
     );
+  });
+
+  it("pages the player board instead of stopping at ten", async () => {
+    mocks.getWeekPlayerCount.mockResolvedValue(120);
+
+    const res = await request(createApp()).get(
+      "/api/games/board?page=2&limit=25",
+    );
+
+    const stamp = istStamp();
+    expect(mocks.getWeekPlayers).toHaveBeenCalledWith("S1", stamp.week, 25, 25);
+    expect(res.body).toMatchObject({
+      playerPage: 2,
+      playerPageSize: 25,
+      playerTotal: 120,
+      hasMorePlayers: true,
+    });
+  });
+
+  it("clamps an oversized page request", async () => {
+    await request(createApp()).get("/api/games/board?limit=500");
+
+    const stamp = istStamp();
+    expect(mocks.getWeekPlayers).toHaveBeenCalledWith("S1", stamp.week, 100, 0);
   });
 
   it("only the leading section gets its top players", async () => {

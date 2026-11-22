@@ -15,6 +15,7 @@ import {
   getFiveRank,
   getGamePlayer,
   getOrCreateDailyRound,
+  getWeekPlayerCount,
   getPlayerWeek,
   getSectionWeek,
   getWeekPlayers,
@@ -323,6 +324,11 @@ describe("weekly boards", () => {
 
     const players = await getWeekPlayers(SEASON, WEEK, 5);
     expect(players.map((entry) => entry.points)).toEqual([300, 200, 100]);
+
+    // the board pages without a cap; the count is the full week's field
+    const secondPage = await getWeekPlayers(SEASON, WEEK, 2, 1);
+    expect(secondPage.map((entry) => entry.points)).toEqual([200, 100]);
+    expect(await getWeekPlayerCount(SEASON, WEEK)).toBe(3);
 
     expect(await getPlayerWeek(SEASON, WEEK, 301)).toEqual({
       points: 200,
