@@ -108,7 +108,7 @@ export const createRequireAdmin =
         args: [hash],
       });
       if (session.rows.length === 0) {
-        res.status(401).json({ error: "Session expired — sign in again" });
+        res.status(401).json({ error: "Session expired. Sign in again" });
         return;
       }
       next();

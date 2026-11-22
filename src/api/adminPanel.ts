@@ -64,7 +64,6 @@ ${panelCss}
 <div class="login-wrap" id="loginwrap">
   <form class="login" id="loginform">
     <div class="wordmark">Qik<span> Control</span></div>
-    <p>Private area. Sign in to see who&rsquo;s using the bot.</p>
     <input type="password" id="pw" placeholder="Password" autocomplete="current-password" autofocus>
     <button type="submit">Sign in</button>
     <div class="err" id="loginerr"></div>
@@ -78,7 +77,6 @@ ${panelCss}
       <div class="now">
         <div class="big" id="ov-active-today">&ndash;</div>
         <div class="label">students active today</div>
-        <div class="sub" id="ov-sub"></div>
       </div>
       <div class="pulse">
         <div class="pulse-head">
@@ -86,7 +84,7 @@ ${panelCss}
             <button aria-pressed="true" data-range="30d">30 days</button>
             <button aria-pressed="false" data-range="24h">Today</button>
           </div>
-          <span class="legend"><b>&mdash;</b> actions &nbsp;&nbsp; hover for students</span>
+          <span class="legend">actions</span>
         </div>
         <svg id="pulse" viewBox="0 0 640 120" width="100%" height="120" preserveAspectRatio="none" aria-label="Activity chart"></svg>
       </div>
@@ -143,7 +141,6 @@ ${panelCss}
   <section class="view" id="view-verified">
     <div class="section-head" style="margin-bottom:12px">
       <h2>Verified rolls</h2>
-      <span class="hint">college-email ownership and what each owner chose to hide</span>
     </div>
     <div class="toolbar">
       <input class="search" id="verifiedsearch" placeholder="Search roll, name, email or @username&hellip;" aria-label="Search verified rolls">
@@ -177,7 +174,7 @@ ${panelCss}
 
     <div class="section-head" style="margin:18px 0 10px">
       <h2>Section Wars</h2>
-      <span class="hint">verified students only &middot; best ten per section</span>
+      <span class="hint">best ten verified players per section</span>
     </div>
     <div class="tablewrap">
       <table>
@@ -214,7 +211,6 @@ ${panelCss}
   <section class="view" id="view-library">
     <div class="section-head" style="margin-bottom:12px">
       <h2>Library reading</h2>
-      <span class="hint">who is reading and downloading PDFs</span>
     </div>
     <div class="statline">
       <div class="stat"><div class="n" id="lib-readers">&ndash;</div><div class="l">readers</div></div>
@@ -253,7 +249,7 @@ ${panelCss}
       <div class="empty" id="libreaderempty" style="display:none">No readers match.</div>
     </div>
     <div class="section">
-      <div class="section-head"><h2>Which documents</h2><span class="hint">most to least used</span></div>
+      <div class="section-head"><h2>Which documents</h2></div>
       <div class="tablewrap">
         <table>
           <thead>
@@ -269,15 +265,14 @@ ${panelCss}
       <div class="empty" id="libdocsempty" style="display:none">No documents have been read yet.</div>
     </div>
     <div class="section">
-      <div class="section-head"><h2>Latest activity</h2><span class="hint">pages and PDF downloads</span></div>
+      <div class="section-head"><h2>Latest activity</h2></div>
       <div class="feed" id="libfeed"></div>
     </div>
   </section>
 
   <section class="view" id="view-live">
     <div class="section-head" style="margin-bottom:12px">
-      <h2><span class="live-dot"></span>Live activity</h2>
-      <span class="hint">refreshes every 10s</span>
+      <h2>Live activity</h2>
     </div>
     <div class="feed" id="feed"></div>
   </section>
@@ -285,7 +280,6 @@ ${panelCss}
   <section class="view" id="view-reports">
     <div class="section-head" style="margin-bottom:12px">
       <h2>Issue reports</h2>
-      <span class="hint">each issue is a thread — replies reach the reporter in Telegram</span>
     </div>
     <div class="toolbar">
       <div class="seg" role="group" aria-label="Report status" id="reportfilter">
@@ -302,7 +296,6 @@ ${panelCss}
   <section class="view" id="view-papers">
     <div class="section-head" style="margin-bottom:12px">
       <h2>Question papers</h2>
-      <span class="hint">student uploads — remove anything that should not be public</span>
     </div>
     <div class="toolbar">
       <input class="search" id="papersearch" placeholder="Search subject, exam, note or uploader&hellip;" aria-label="Search papers">

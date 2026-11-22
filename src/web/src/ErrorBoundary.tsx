@@ -35,15 +35,17 @@ export default class ErrorBoundary extends Component<
       return (
         <div className="page" role="alert">
           <div className="page-head">
-            <p className="eyebrow">App</p>
             <h2 className="page-title">This page didn&apos;t open</h2>
             <p className="page-note">
-              The app was updated since you opened it, or something went
-              wrong drawing the page. Reload to pick up the new version.
+              The app was updated since you opened it, or something went wrong
+              drawing the page. Reload to pick up the new version.
             </p>
           </div>
           <div className="page-body">
-            <button className="btn-ink" onClick={() => window.location.reload()}>
+            <button
+              className="btn-ink"
+              onClick={() => window.location.reload()}
+            >
               Reload
             </button>
           </div>

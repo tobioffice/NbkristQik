@@ -163,7 +163,7 @@
       <span class="banner__icon" id="banner-icon" aria-hidden="true"></span>
       <div>
         <h2 id="banner-title">Checking status...</h2>
-        <p id="banner-sub">We're not aware of any issues affecting our systems.</p>
+        <p id="banner-sub"></p>
       </div>
     </div>
 
@@ -178,7 +178,7 @@
 
   <footer class="footer">
     <div class="column">
-      <p>Updated live &middot; Last 90 days &middot; checker.tobioffice.online &middot; <a href="/stats">Usage stats</a></p>
+      <p>Last 90 days &middot; <a href="/stats">Usage stats</a></p>
     </div>
   </footer>
 
@@ -200,7 +200,7 @@
 
     // Technical component ids do not always name what the reader experiences:
     // "lookup" is the synthetic answer check, so it reads as "Answers".
-    const COMPONENT_LABELS = { lookup: "Answers" };
+    const COMPONENT_LABELS = { lookup: "Answers", api: "API" };
 
     const ICONS = {
       ok: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.4 2.4 2.4 4.6-5"/></svg>',
@@ -233,13 +233,13 @@
           sub.textContent = "The status monitor has not reported recently.";
         } else if (anyFreshDown) {
           title.textContent = "Experiencing issues";
-          sub.textContent = "Some systems are not responding. We're on it.";
+          sub.textContent = "Some systems are not responding.";
         } else if (anyStale) {
           title.textContent = "Some status data is missing";
-          sub.textContent = "One or more checks have not reported recently. The system is not marked down.";
+          sub.textContent = "The system is not marked down.";
         } else if (allUp) {
           title.textContent = "We're fully operational";
-          sub.textContent = "We're not aware of any issues affecting our systems.";
+          sub.textContent = "";
         } else {
           title.textContent = "Status unknown";
           sub.textContent = "No recent data.";
@@ -294,7 +294,7 @@
               <span class="comp-uptime"><b>${upPct}%</b> uptime &middot; last check ${fmtTime(c.lastPing)} IST</span>
             </div>
             <div class="bars" role="group" tabindex="0" aria-label="90-day uptime for ${name}. Use the left and right arrow keys to inspect a day.">${barsHtml}</div>
-            <p class="day-detail" role="status" aria-live="polite">Tap a bar or use the arrow keys for the day detail.</p>
+            <p class="day-detail" role="status" aria-live="polite"></p>
           `;
           wrap.appendChild(div);
 

@@ -171,16 +171,13 @@ export const GamesBoardView = ({
             </button>
           ))}
         </div>
-        <p className="tg-hint">{board.weekLabel} · updated as runs land.</p>
+        <p className="tg-hint">{board.weekLabel}</p>
       </div>
 
       {empty ? (
         <div className="state-block">
           <p className="title">No one has played this week yet</p>
-          <p className="sub">
-            The boards fill as students finish runs. Play today&rsquo;s run from
-            the channel.
-          </p>
+          <p className="sub">Play today&rsquo;s run from the channel.</p>
         </div>
       ) : tab === "sections" ? (
         <section className="tg-section">

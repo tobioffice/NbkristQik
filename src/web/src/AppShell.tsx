@@ -431,7 +431,6 @@ const IssuesSection = ({
     return (
       <div className="page">
         <div className="page-head">
-          <p className="eyebrow">Issues</p>
           <h2 className="page-title">Open this inside Telegram</h2>
           <p className="page-note">
             Reports are tied to your Telegram account. Open the bot and send
@@ -442,7 +441,6 @@ const IssuesSection = ({
     );
   }
 
-  const eyebrow = "Issues";
   const title =
     route.view === "history"
       ? "My reports"
@@ -453,7 +451,6 @@ const IssuesSection = ({
   return (
     <div className="page">
       <div className="page-head">
-        <p className="eyebrow">{eyebrow}</p>
         <div className="head-row">
           <h2 className="page-title">{title}</h2>
           {route.view === "history" ? (
@@ -474,12 +471,8 @@ const IssuesSection = ({
         </div>
         {route.view === "form" ? (
           <p className="page-note">
-            Describe what went wrong. You'll get an issue id to track it, and
-            the reply lands here and in your chat.
-          </p>
-        ) : route.view === "history" ? (
-          <p className="page-note">
-            Every report you've filed, with the latest activity first.
+            You'll get an issue id to track it, and the reply lands here and in
+            your chat.
           </p>
         ) : null}
       </div>

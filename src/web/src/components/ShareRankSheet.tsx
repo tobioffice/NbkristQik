@@ -526,8 +526,7 @@ export default function ShareRankSheet({
             Share your rank
           </h2>
           <p className="tg-sheet-desc" id="tg-share-desc">
-            Your card shows your rank, score and ranked count. No classmate is
-            named.
+            No classmate is named.
           </p>
         </div>
         <button

@@ -107,8 +107,10 @@ describe("status page", () => {
     expect(html).toContain('fetch("/api/status")');
   });
 
-  it("labels the synthetic lookup component as Answers", () => {
-    expect(html).toContain('COMPONENT_LABELS = { lookup: "Answers" }');
+  it("labels the synthetic lookup component as Answers and keeps API an acronym", () => {
+    expect(html).toContain(
+      'COMPONENT_LABELS = { lookup: "Answers", api: "API" }',
+    );
     expect(html).toContain("COMPONENT_LABELS[c.component]");
   });
 });

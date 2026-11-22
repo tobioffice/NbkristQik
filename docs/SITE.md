@@ -18,11 +18,11 @@ not part of the app: the shipped application is served by Express at
 
 The landing is about the bot, top to bottom: the hero transcript, the ledger
 (9 commands, one app with four sections, 1 roll number, 0 passwords), then
-chapters in order — `01 Between classes` (`/midmarks`, `/bunk`, `/register`),
-`02 The leaderboard` (the register's grammar: rings, the bracketed row, the red
-75% line), `03 The report line` (a QIK-0007 thread), `04 The library` (the
-compressed chapter: cover plate, three pages, pointers to both notes), `05
-The commands` (the full register table), `06 Notes`. Chapter anchors are
+chapters in order: `Between classes` (`/midmarks`, `/bunk`, `/register`),
+`The leaderboard` (the register's grammar: rings, the bracketed row, the red
+75% line), `The report line` (a QIK-0007 thread), `The library` (the
+compressed chapter: cover plate, three pages, pointers to both notes), `The
+commands` (the full register table), `Notes`. Chapter anchors are
 `#answers`, `#board`, `#library`, `#commands`; the blog nav and footers link
 to these. The full shelf table and the diagram specimens live only in the
 making-of post, not the landing.

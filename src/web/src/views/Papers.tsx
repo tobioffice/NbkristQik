@@ -122,12 +122,10 @@ export default function PapersPage({ identity }: PapersPageProps) {
     return (
       <div className="page">
         <div className="page-head">
-          <p className="eyebrow">Question papers</p>
           <h2 className="page-title">Open this inside Telegram</h2>
           <p className="page-note">
             Adding a paper needs your Telegram account. Open this page from the
-            link shared in the bot, inside Telegram. The collection is private;
-            students cannot browse each other&rsquo;s uploads.
+            link shared in the bot, inside Telegram.
           </p>
         </div>
       </div>
@@ -138,7 +136,6 @@ export default function PapersPage({ identity }: PapersPageProps) {
     return (
       <div className="page">
         <div className="page-head">
-          <p className="eyebrow">Question papers</p>
           <h2 className="page-title">Paper received</h2>
           <p className="page-note">
             It is in the processing list. Thank you for adding it.
@@ -154,9 +151,6 @@ export default function PapersPage({ identity }: PapersPageProps) {
                 Add another paper
               </button>
             </div>
-            <p className="form-note mt-4">
-              Tap the NbkristQik wordmark above to go back, or use a tab below.
-            </p>
           </div>
         </div>
       </div>
@@ -166,13 +160,11 @@ export default function PapersPage({ identity }: PapersPageProps) {
   return (
     <div className="page">
       <div className="page-head">
-        <p className="eyebrow">Question papers</p>
         <h2 className="page-title" id="paper-upload-title">
           Add a paper
         </h2>
         <p className="page-note">
-          Photograph the question paper, then say what subject it is and which
-          exam. The photos are private to the processing team.
+          The photos are private to the processing team.
         </p>
       </div>
 

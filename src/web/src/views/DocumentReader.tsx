@@ -225,7 +225,7 @@ export default function DocumentReader({
   );
 
   const progress = pages > 1 ? (current - 1) / (pages - 1) : 0;
-  const unitLabel = unit ? `Unit ${unit}` : "Material";
+  const unitLabel = unit ? `Unit ${unit}` : "Full subject";
   const pageLabel = `${pages} ${pages === 1 ? "page" : "pages"}`;
 
   return (
@@ -333,7 +333,7 @@ export default function DocumentReader({
         {pageList}
 
         <div className="reader__end">
-          <span>{unit ? `End of ${unitLabel}` : "End of material"}</span>
+          <span>{unit ? `End of ${unitLabel}` : "End of the subject"}</span>
           <button className="reader__end-btn" onClick={onClose}>
             Back to units
           </button>

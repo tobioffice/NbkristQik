@@ -320,27 +320,6 @@ p {
   padding-bottom: clamp(22px, 3.5vw, 40px);
 }
 
-.kicker {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 0 16px;
-  color: var(--cloth-deep);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  line-height: 1.3;
-  text-transform: uppercase;
-}
-
-.kicker::before {
-  content: "";
-  flex: 0 0 26px;
-  width: 26px;
-  height: 1px;
-  background: var(--cloth-deep);
-}
-
 .hero h1 {
   margin: 0 0 22px;
   font-family: var(--display);
@@ -385,11 +364,6 @@ p {
   border-bottom-color: var(--cloth-deep);
 }
 
-.textlink__arrow {
-  font-size: 14px;
-  line-height: 1;
-}
-
 .hero__note {
   display: flex;
   align-items: baseline;
@@ -398,15 +372,6 @@ p {
   color: var(--ink-faint);
   font-size: 12px;
   line-height: 1.45;
-}
-
-.hero__note::before {
-  content: "";
-  flex: 0 0 6px;
-  width: 6px;
-  height: 6px;
-  margin-top: 1px;
-  background: var(--amber);
 }
 
 /* ---------- Proof strip ---------- */
@@ -471,24 +436,6 @@ p {
   margin: 0;
   border: 1px solid var(--ink);
   background: var(--paper-raised);
-}
-
-.plate__head {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 9px 11px 8px;
-  border-bottom: 1px solid var(--hairline);
-  color: var(--ink-soft);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  line-height: 1.3;
-  text-transform: uppercase;
-}
-
-.plate__head span:last-child {
-  text-align: right;
 }
 
 .plate img {
@@ -582,38 +529,9 @@ p {
   top: 20px;
 }
 
-.section__label b {
-  display: inline-grid;
-  place-items: center;
-  width: 27px;
-  height: 27px;
-  margin-right: 7px;
-  border: 1px solid var(--hairline-strong);
-  color: var(--ink);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0;
-  font-variant-numeric: tabular-nums;
-  vertical-align: -8px;
-}
-
 .section__label span {
   display: inline-block;
   vertical-align: -2px;
-}
-
-.section__stamp {
-  display: inline-block;
-  margin-left: 8px;
-  padding: 2px 7px 1px;
-  border: 1px solid var(--ink);
-  color: var(--ink);
-  font-size: 9px;
-  font-style: normal;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  vertical-align: 1px;
 }
 
 .section__body {
@@ -805,25 +723,6 @@ p {
   font-weight: 700;
 }
 
-.pages-lead {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 28px 0 0;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--ink);
-  color: var(--ink-soft);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.pages-lead span:last-child {
-  text-align: right;
-}
-
 .doc-cta {
   display: flex;
   flex-wrap: wrap;
@@ -1008,32 +907,6 @@ code {
   background: var(--paper-raised);
 }
 
-.exchange__head {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 9px 11px 8px;
-  border-bottom: 1px solid var(--hairline);
-  color: var(--ink-soft);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  line-height: 1.3;
-  text-transform: uppercase;
-}
-
-.exchange__head span:first-child {
-  color: var(--ink);
-}
-
-.exchange > figcaption {
-  padding: 10px 11px 11px;
-  border-top: 1px solid var(--hairline);
-  color: var(--ink-soft);
-  font-size: 11px;
-  line-height: 1.45;
-}
-
 .form-fig__body {
   padding: 16px 14px 13px;
 }
@@ -1070,13 +943,6 @@ code {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-}
-
-.form-fig__note {
-  margin: 0;
-  color: var(--ink-faint);
-  font-size: 11.5px;
-  line-height: 1.5;
 }
 
 /* ---------- The grammar of the leaderboard ---------- */
@@ -1189,12 +1055,6 @@ code {
   padding: 12px 0 13px;
 }
 
-.issue__foot span:last-child {
-  color: var(--ink-soft);
-  font-size: 11.5px;
-  line-height: 1.45;
-}
-
 .stamp {
   display: inline-block;
   flex: 0 0 auto;
@@ -1224,7 +1084,7 @@ code {
 
 .note-row {
   display: grid;
-  grid-template-columns: 122px minmax(0, 1fr) 24px;
+  grid-template-columns: 122px minmax(0, 1fr);
   gap: 22px;
   align-items: start;
   padding: 20px 0;
@@ -1252,16 +1112,6 @@ code {
   font-variant-numeric: tabular-nums;
 }
 
-.note-row__kicker {
-  display: block;
-  margin-bottom: 5px;
-  color: var(--cloth-deep);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
 .note-row h3 {
   margin: 0 0 6px;
   font-family: var(--display);
@@ -1283,13 +1133,6 @@ code {
   color: var(--ink-soft);
   font-size: 13.5px;
   line-height: 1.55;
-}
-
-.note-row__arrow {
-  padding-top: 1px;
-  font-size: 18px;
-  line-height: 1.3;
-  text-align: right;
 }
 
 /* ---------- Footer ---------- */
@@ -1445,16 +1288,6 @@ code {
   line-height: 1.4;
 }
 
-.blog-feature__kicker {
-  display: block;
-  margin-bottom: 10px;
-  color: var(--cloth-deep);
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
 .blog-feature h2 {
   max-width: 18ch;
   margin: 0 0 14px;
@@ -1506,25 +1339,6 @@ code {
   margin: 0 auto;
   padding: clamp(40px, 6vw, 66px) var(--gutter) clamp(28px, 4vw, 40px);
   border-bottom: 1px solid var(--ink);
-}
-
-.article-head__kicker {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 0 16px;
-  color: var(--cloth-deep);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.article-head__kicker::before {
-  content: "";
-  width: 26px;
-  height: 1px;
-  background: var(--cloth-deep);
 }
 
 .article-head h1 {
@@ -1653,19 +1467,6 @@ code {
   margin-bottom: 30px;
   border: 1px solid var(--ink);
   background: var(--paper-raised);
-}
-
-.fig__head {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 9px 11px 8px;
-  border-bottom: 1px solid var(--hairline);
-  color: var(--ink-soft);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
 }
 
 .fig img {
@@ -1927,10 +1728,6 @@ code {
     padding-top: 0;
   }
 
-  .section__label b {
-    vertical-align: -8px;
-  }
-
   .split {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -2046,10 +1843,6 @@ code {
     scroll-snap-align: start;
   }
 
-  .pages-lead {
-    margin-top: 24px;
-  }
-
   .doc-cta {
     display: block;
   }
@@ -2092,7 +1885,7 @@ code {
   }
 
   .note-row {
-    grid-template-columns: minmax(0, 1fr) 20px;
+    grid-template-columns: minmax(0, 1fr);
     gap: 10px 14px;
   }
 
@@ -2100,11 +1893,6 @@ code {
     grid-column: 1 / -1;
     padding-top: 0;
     font-size: 9px;
-  }
-
-  .note-row__arrow {
-    grid-column: 2;
-    grid-row: 2 / span 3;
   }
 
   .footer__top {

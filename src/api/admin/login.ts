@@ -31,7 +31,7 @@ export const registerLoginRoutes = (
     max: 20,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { error: "Too many attempts — try again later" },
+    message: { error: "Too many attempts. Try again later" },
   });
 
   app.post(
@@ -44,9 +44,7 @@ export const registerLoginRoutes = (
         // after earlier failures must still work, and a locked address must
         // not burn a password comparison.
         if (isLoginLocked(ip)) {
-          res
-            .status(429)
-            .json({ error: "Too many attempts — try again later" });
+          res.status(429).json({ error: "Too many attempts. Try again later" });
           return;
         }
         const given =

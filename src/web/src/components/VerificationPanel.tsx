@@ -89,8 +89,7 @@ export default function VerificationPanel({
       <div className="verify-panel">
         <p className="form-title">Verified</p>
         <div className="note note--ok">
-          {state.email} is proved for this roll. Choose what the register may do
-          with it.
+          {state.email} is verified for this roll.
         </div>
 
         <div className="check-group">
@@ -184,15 +183,12 @@ export default function VerificationPanel({
       </p>
       {previousVerifiedRoll ? (
         <div className="note">
-          You verified {previousVerifiedRoll}. This form is for{" "}
-          {roll.toUpperCase()}. The verification and privacy options stay with{" "}
-          {previousVerifiedRoll}. Verify this roll too if you want them here.
+          You verified {previousVerifiedRoll}. The privacy options stay with
+          that roll.
         </div>
       ) : null}
       <p className="form-note">
-        A six-digit code goes to {roll.toLowerCase()}@nbkrist.org. Verifying
-        proves the roll is yours, ends every other registration for this roll,
-        and unlocks the privacy options.
+        Verifying ends every other registration for this roll.
       </p>
 
       {sentTo ? (

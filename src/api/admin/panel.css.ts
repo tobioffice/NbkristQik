@@ -128,11 +128,9 @@ main {
   color: var(--text);
 }
 .now .label { color: var(--text-2); margin-top: 6px; font-size: 13px; line-height: 18px; }
-.now .sub { color: var(--text-3); font-size: 12px; line-height: 16px; margin-top: 2px; }
 .pulse { flex: 1; min-width: 300px; }
 .pulse-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .pulse-head .legend { color: var(--text-2); font-size: 12px; line-height: 16px; }
-.pulse-head .legend b { color: var(--accent); font-weight: 600; }
 
 .statline {
   display: grid; grid-template-columns: repeat(4, 1fr);
@@ -367,7 +365,6 @@ td .surfn { display: inline-block; min-width: 28px; text-align: right; }
 .login { width: 380px; max-width: 100%; }
 .login .wordmark { font-size: 22px; line-height: 30px; margin-bottom: 4px; }
 .login .wordmark span { font-size: 12px; line-height: 16px; color: var(--text-2); }
-.login p { color: var(--text-2); font-size: 13px; line-height: 18px; margin-bottom: 18px; }
 .login input {
   width: 100%; height: 48px;
   background: var(--surface); border: none; border-radius: 8px;
@@ -387,9 +384,6 @@ td .surfn { display: inline-block; min-width: 28px; text-align: right; }
 
 .empty { color: var(--text-2); font-size: 13px; line-height: 18px; padding: 24px 4px; }
 .reports > .empty, .feed > .empty, #healthrows > .empty { background: var(--surface); }
-
-.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); display: inline-block; margin-right: 6px; animation: blink 2.4s ease infinite; }
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
 /* motion: one short entrance, view transitions, fresh-row cue */
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

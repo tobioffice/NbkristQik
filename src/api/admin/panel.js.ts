@@ -337,7 +337,6 @@ export const panelJs = `(function () {
   var renderOverview = function (d) {
       overviewData = d;
       countUp($("ov-active-today"), d.totals.activeToday);
-      $("ov-sub").textContent = fmt(d.totals.totalActions) + " actions recorded all time";
       countUp($("ov-users"), d.totals.users);
       countUp($("ov-active7"), d.totals.active7d);
       countUp($("ov-active30"), d.totals.active30d);
@@ -441,9 +440,7 @@ export const panelJs = `(function () {
     lastLoad.league = Date.now();
     api("league").then(function (d) {
       var stats = d.stats || {};
-      $("league-week").textContent =
-        (d.weekLabel || "this week") + " \u00b7 " +
-        fmt(stats.playersToday) + " finished today";
+      $("league-week").textContent = d.weekLabel || "this week";
       $("league-players-count").textContent = fmt(stats.players);
       $("league-verified-count").textContent = fmt(stats.verified);
       $("league-sections-count").textContent = fmt(stats.sections);
@@ -582,7 +579,7 @@ export const panelJs = `(function () {
   var renderLibraryFeed = function (d) {
     var el = $("libfeed");
     if (!d.events.length) {
-      el.innerHTML = '<div class="empty">No library activity yet. Page views and PDF downloads appear here.</div>';
+      el.innerHTML = '<div class="empty">No library activity yet.</div>';
       return;
     }
     var html = "";
@@ -712,7 +709,7 @@ export const panelJs = `(function () {
     api("recent?limit=60").then(function (d) {
       $("feed").innerHTML = d.events.length
         ? d.events.map(feedRow).join("")
-        : '<div class="empty">Nothing recorded yet. Activity appears as students use the bot.</div>';
+        : '<div class="empty">Nothing recorded yet.</div>';
     }).catch(function () {}).then(function () { inflight.live = false; });
   };
   setInterval(function () {
@@ -1095,7 +1092,7 @@ export const panelJs = `(function () {
   var renderReports = function (rows) {
     var el = $("reports");
     if (!rows.length) {
-      el.innerHTML = '<div class="empty">No reports here yet. When a student files one it shows up with an issue id.</div>';
+      el.innerHTML = '<div class="empty">No reports here yet.</div>';
       return;
     }
     var html = "";

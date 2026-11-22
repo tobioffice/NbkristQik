@@ -122,7 +122,9 @@ describe("readJson", () => {
     const error = await readJson(jsonResponse(500, {})).catch(
       (e: unknown) => e,
     );
-    expect((error as RequestError).message).toBe("request failed: 500");
+    expect((error as RequestError).message).toBe(
+      "The request failed. Try again.",
+    );
     expect((error as RequestError).status).toBe(500);
   });
 });

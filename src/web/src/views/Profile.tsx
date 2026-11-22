@@ -67,11 +67,10 @@ const PencilIcon = () => (
   </svg>
 );
 
-const ProfileHead = ({ title, note }: { title: string; note: string }) => (
+const ProfileHead = ({ title, note }: { title: string; note?: string }) => (
   <div className="page-head">
-    <p className="eyebrow">Profile</p>
     <h2 className="page-title">{title}</h2>
-    <p className="page-note">{note}</p>
+    {note ? <p className="page-note">{note}</p> : null}
   </div>
 );
 
@@ -116,18 +115,14 @@ export default function ProfileView({
   if (!tgUser) {
     return (
       <div className="page">
-        <ProfileHead
-          title="Your roll"
-          note="Optional. Save it once and /attendance, /midmarks and /bunk answer in one tap."
-        />
+        <ProfileHead title="Your roll" />
         <div className="page-body">
           <div className="form-block">
             <div className="state-block">
               <LockIcon />
               <p className="title">Open this inside Telegram</p>
               <p className="sub">
-                Your profile is tied to your Telegram account. Open the bot and
-                send /register to set it up.
+                Open the bot and send /register to set up your profile.
               </p>
             </div>
           </div>
@@ -139,10 +134,7 @@ export default function ProfileView({
   if (status.state === "loading") {
     return (
       <div className="page">
-        <ProfileHead
-          title="Your roll"
-          note="The roll /attendance, /midmarks and /bunk answer for."
-        />
+        <ProfileHead title="Your roll" />
         <div className="page-body">
           <ProfileSkeleton />
         </div>
@@ -153,10 +145,7 @@ export default function ProfileView({
   if (status.state === "error") {
     return (
       <div className="page">
-        <ProfileHead
-          title="Your roll"
-          note="The roll /attendance, /midmarks and /bunk answer for."
-        />
+        <ProfileHead title="Your roll" />
         <div className="page-body">
           <div className="form-block">
             <div className="state-block">
@@ -177,10 +166,7 @@ export default function ProfileView({
   if (prefilledFor === null) {
     return (
       <div className="page">
-        <ProfileHead
-          title="Your roll"
-          note="The roll /attendance, /midmarks and /bunk answer for."
-        />
+        <ProfileHead title="Your roll" />
         <div className="page-body">
           <ProfileSkeleton />
         </div>
@@ -210,11 +196,10 @@ export default function ProfileView({
       ? "Edit your roll"
       : "Save your roll number"
     : "Your roll";
-  const note = showForm
-    ? registered
-      ? "Change the roll or the name shown on the leaderboard."
-      : "Optional. Save it once and /attendance, /midmarks and /bunk answer in one tap."
-    : "The roll /attendance, /midmarks and /bunk answer for.";
+  const note =
+    showForm && !registered
+      ? "Optional. Save it once and /attendance, /midmarks and /bunk answer in one tap."
+      : undefined;
 
   const startEdit = () => {
     setRoll(profile.roll ?? "");
@@ -308,7 +293,7 @@ export default function ProfileView({
                     setError(null);
                   }}
                 >
-                  Last looked up: {lastLookup} — use this?
+                  Last looked up: {lastLookup}. Use it?
                 </button>
                 <button
                   type="button"
@@ -316,7 +301,7 @@ export default function ProfileView({
                   onClick={forget}
                   disabled={forgetting}
                 >
-                  {forgetting ? "Forgetting..." : "That's not me — forget it"}
+                  {forgetting ? "Forgetting..." : "That's not me, forget it"}
                 </button>
               </div>
             ) : null}
@@ -349,7 +334,6 @@ export default function ProfileView({
                     setDisplayName(event.target.value);
                     setSaved(null);
                   }}
-                  placeholder="How should we show you?"
                   maxLength={40}
                 />
               </label>

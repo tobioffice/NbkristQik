@@ -46,12 +46,6 @@ const istDay = (utc: string): string => {
   return IST_DAY.format(t);
 };
 
-const STATUS_NOTE: Record<ReportThread["status"], string> = {
-  open: "waiting on the admin",
-  answered: "the admin has written back",
-  resolved: "closed",
-};
-
 /**
  * What the reports list already knows about an issue is enough to paint its
  * thread immediately: the opening message, and the admin's latest reply if
@@ -340,14 +334,6 @@ export default function ReportThreadView({
             </span>
           )}
         </div>
-        {thread && (
-          <p className="thread-head__note">
-            Opened {istDay(thread.createdAt)} · {STATUS_NOTE[thread.status]}.
-            {thread.status === "resolved"
-              ? " The thread is closed."
-              : " Replies reach the admin in Telegram."}
-          </p>
-        )}
       </div>
 
       {loading && (
@@ -406,8 +392,8 @@ export default function ReportThreadView({
           {thread.status === "resolved" ? (
             <div className="thread-closed">
               <p className="form-note">
-                This issue is resolved, so the thread is closed. If it came
-                back, file it as a new report and mention {issueId}.
+                If the problem comes back, file a new report and mention{" "}
+                {issueId}.
               </p>
               {error ? <p className="note note--err mt-4">{error}</p> : null}
               <button onClick={onNewReport} className="btn-ink w-full mt-4">

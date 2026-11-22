@@ -170,11 +170,6 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
       ? `${coverage.ranked.toLocaleString()} of ${coverage.known.toLocaleString()} known students seen`
       : `${coverage.ranked.toLocaleString()} ranked so far`
     : null;
-  const partialCoverage =
-    coverage != null && coverage.known > 0 && coverage.ranked < coverage.known;
-  // the unfiltered empty state already carries the "register fills" sentence;
-  // printing it twice on one screen is noise
-  const showFillNote = partialCoverage && (stats.length > 0 || isFiltered);
 
   // what `scope=me` actually resolved to, for the button's tooltip and the
   // filtered board's title
@@ -550,12 +545,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
             </div>
           )}
 
-          {coverageLabel && (
-            <p className="tg-hint">
-              {coverageLabel}.
-              {showFillNote ? " This register fills as students check." : null}
-            </p>
-          )}
+          {coverageLabel && <p className="tg-hint">{coverageLabel}.</p>}
         </div>
 
         {refreshing && (
@@ -665,8 +655,7 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
               !moreError &&
               total > stats.length && (
                 <p className="load-more__note">
-                  Showing {stats.length} of {total.toLocaleString()}. Tap to
-                  keep going.
+                  Showing {stats.length} of {total.toLocaleString()}.
                 </p>
               )}
           </div>
@@ -698,12 +687,9 @@ export default function Leaderboard({ showBand = true }: LeaderboardProps) {
           >
             <div className="tg-sheet-grabber" aria-hidden="true" />
             <div className="tg-sheet-head">
-              <div>
-                <h2 className="tg-sheet-title" id="tg-filter-title">
-                  Filters
-                </h2>
-                <p className="tg-sheet-desc">Year, branch and section.</p>
-              </div>
+              <h2 className="tg-sheet-title" id="tg-filter-title">
+                Filters
+              </h2>
               <button
                 type="button"
                 className="tg-sheet-close"

@@ -1458,16 +1458,6 @@ body {
 
 /* ---------- the issue list ---------- */
 
-.sheet--tg .report-summary {
-  margin: 4px 0 8px;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 16px;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--tg-secondary);
-}
-
 .sheet--tg .report-empty {
   margin-top: 8px;
   padding: 20px 0;
@@ -1644,14 +1634,6 @@ body {
 .sheet--tg .thread-head__ids {
   align-items: center;
   margin-top: 10px;
-}
-
-.sheet--tg .thread-head__note {
-  margin: 6px 0 0;
-  max-width: 48ch;
-  font-size: 13px;
-  line-height: 18px;
-  color: var(--tg-secondary);
 }
 
 .sheet--tg .thread {

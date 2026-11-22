@@ -77,7 +77,7 @@ export const readJson = async <T>(res: Response): Promise<T> => {
   const body = (await res.json().catch(() => ({}))) as T & ErrorBody;
   if (!res.ok) {
     throw new RequestError(
-      body.error ?? `request failed: ${res.status}`,
+      body.error ?? "The request failed. Try again.",
       res.status,
       body.suggestions,
     );

@@ -30,7 +30,7 @@ export default function ReportScreenshots({
       maxBytes={MAX_SCREENSHOT_BYTES}
       addLabel="Add screenshots"
       noun="screenshot"
-      hint={`Up to ${MAX_SCREENSHOTS} · 5 MB each`}
+      hint={`Up to ${MAX_SCREENSHOTS} files, 5 MB each`}
     />
   );
 }

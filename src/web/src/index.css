@@ -1157,16 +1157,6 @@ a:focus-visible {
 }
 
 /* ---------- report entries ---------- */
-.report-summary {
-  margin: 10px 0 2px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--text-tertiary);
-  font-variant-numeric: tabular-nums;
-}
-
 .report-empty {
   margin-top: 16px;
   padding: 18px 0 20px;
@@ -1350,14 +1340,6 @@ a:focus-visible {
   justify-content: space-between;
   gap: 10px;
   margin-top: 10px;
-}
-
-.thread-head__note {
-  margin: 8px 0 0;
-  max-width: 46ch;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--text-secondary);
 }
 
 .thread {

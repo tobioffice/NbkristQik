@@ -77,7 +77,6 @@
     }
 
     main { flex: 1; padding: 16px 0 48px; }
-    .intro { max-width: 56ch; font-size: 13px; line-height: 18px; color: var(--secondary); }
 
     /* loading and error states keep the surface shape */
     .loading {
@@ -190,8 +189,6 @@
   </header>
 
   <main id="main" class="column">
-    <p class="intro">Numbers from the live service. Only aggregates, no student identifiers.</p>
-
     <div class="loading" id="loading" role="status" aria-live="polite">
       <span class="spinner" aria-hidden="true"></span>
       Loading figures...
@@ -205,7 +202,7 @@
     <section class="figures" aria-labelledby="figures-heading">
       <h2 class="section-head" id="figures-heading">Usage</h2>
       <table class="stats">
-        <caption>Live aggregate figures. Active-user windows include today, in India Standard Time.</caption>
+        <caption>Active-user windows include today.</caption>
         <tbody>
           <tr>
             <th scope="row">Users who have used the bot</th>
@@ -282,7 +279,7 @@
 
   <footer class="footer">
     <div class="column">
-      <p>Live aggregate figures &middot; Times in IST</p>
+      <p>Times in IST</p>
     </div>
   </footer>
 

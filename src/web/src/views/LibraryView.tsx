@@ -93,11 +93,10 @@ export default function LibraryView({
     return (
       <div className="page">
         <div className="page-head">
-          <p className="eyebrow">Shelf</p>
           <h2 className="page-title">Open this from Telegram</h2>
           <p className="page-note">
             The shelf is tied to your Telegram account. Open the bot and tap
-            Library. The bot can also send a link that opens the shelf on this
+            Library, or ask the bot to send a link that opens the shelf on this
             computer.
           </p>
         </div>
@@ -109,7 +108,6 @@ export default function LibraryView({
     return (
       <div className="page">
         <div className="page-head">
-          <p className="eyebrow">Shelf</p>
           <h2 className="page-title">The library stayed shut</h2>
           <p className="page-note">{status.message}</p>
         </div>
@@ -128,11 +126,7 @@ export default function LibraryView({
     return (
       <div className="page">
         <div className="page-head">
-          <p className="eyebrow">Shelf</p>
           <h2 className="page-title">The library isn&rsquo;t open yet</h2>
-          <p className="page-note">
-            The shelf isn&rsquo;t open yet. Check again in a little while.
-          </p>
         </div>
         <div className="page-body">
           <div className="form-block">
@@ -149,12 +143,9 @@ export default function LibraryView({
     return (
       <div className="page">
         <div className="page-head">
-          <p className="eyebrow">Shelf</p>
           <h2 className="page-title">Save your roll number</h2>
           <p className="page-note">
-            {initData
-              ? "The library shows the subjects of your year and branch. Save your roll number once and it opens straight away."
-              : "The library shows the subjects of your year and branch. Save your roll number in Telegram once, then reopen this computer link."}
+            The library shows the subjects of your year and branch.
           </p>
         </div>
         <div className="page-body">
@@ -241,7 +232,6 @@ function Shelf({
   return (
     <div className="page">
       <div className="page-head">
-        <p className="eyebrow">{preview ? "Admin preview" : "Shelf"}</p>
         <h2 className="page-title">
           {preview ? "Everything on the shelf" : "Your subjects"}
         </h2>
@@ -444,7 +434,9 @@ function RollForm({
       await registerLibraryRoll(initData, rollNo.trim().toUpperCase());
       onSaved();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save that");
+      setError(
+        e instanceof Error ? e.message : "Could not save the roll number",
+      );
     } finally {
       setBusy(false);
     }

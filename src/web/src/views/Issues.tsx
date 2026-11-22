@@ -81,11 +81,6 @@ export default function Issues({
     return [...reports].sort((a, b) => at(b) - at(a));
   }, [reports]);
 
-  const openCount =
-    orderedReports?.filter((report) => report.status !== "resolved").length ??
-    0;
-  const unreadCount =
-    orderedReports?.reduce((count, report) => count + report.unread, 0) ?? 0;
   const charactersToSend = Math.max(0, 10 - message.trim().length);
 
   const loadReports = () => {
@@ -138,7 +133,7 @@ export default function Issues({
     setError(null);
     const clean = message.trim();
     if (clean.length < 10 || clean.length > 1000) {
-      setError("Give me a bit more detail: between 10 and 1000 characters.");
+      setError("A report needs between 10 and 1000 characters.");
       return;
     }
     setSending(true);
@@ -204,7 +199,7 @@ export default function Issues({
 
         {loadingError && (!orderedReports || orderedReports.length === 0) && (
           <div className="report-empty" role="alert">
-            <p className="report-empty__title">That didn't load</p>
+            <p className="report-empty__title">Your reports didn't load.</p>
             <p className="form-note">
               Check your connection and try once more.
             </p>
@@ -218,8 +213,7 @@ export default function Issues({
           <div className="report-empty">
             <p className="report-empty__title">No reports yet</p>
             <p className="form-note">
-              Something wrong with your marks or the bot? File a report. You'll
-              get an issue id, and the reply lands here and in your chat.
+              The admin's reply lands here and in your chat.
             </p>
             <button
               onClick={() => {
@@ -234,74 +228,56 @@ export default function Issues({
         )}
 
         {orderedReports && orderedReports.length > 0 && (
-          <>
-            <p className="report-summary">
-              {orderedReports.length}{" "}
-              {orderedReports.length === 1 ? "report" : "reports"}
-              {openCount > 0 ? ` · ${openCount} active` : ""}
-              {unreadCount > 0
-                ? ` · ${unreadCount} new ${
-                    unreadCount === 1 ? "reply" : "replies"
-                  }`
-                : ""}
-            </p>
-            <ul className="report-list">
-              {orderedReports.map((report) => {
-                const activity = istStampFromDb(report.lastMessageAt);
-                return (
-                  <li key={report.issueId} className="report-entry">
-                    <button
-                      onClick={() =>
-                        onNavigate({ view: "thread", issue: report.issueId })
-                      }
-                      className="report-entry__open"
-                      aria-label={`Open report ${report.issueId}`}
-                    >
-                      <span className="report-entry__head">
-                        <span className="issue-id">{report.issueId}</span>
-                        <span className="report-entry__marks">
-                          {report.unread > 0 && (
-                            <span className="report-entry__new">
-                              {report.unread} new
-                            </span>
-                          )}
-                          <span
-                            className={`status-mark status-mark--${report.status}`}
-                          >
-                            <i aria-hidden="true" />
-                            {reportStatusLabel(report.status)}
+          <ul className="report-list">
+            {orderedReports.map((report) => {
+              const activity = istStampFromDb(report.lastMessageAt);
+              return (
+                <li key={report.issueId} className="report-entry">
+                  <button
+                    onClick={() =>
+                      onNavigate({ view: "thread", issue: report.issueId })
+                    }
+                    className="report-entry__open"
+                    aria-label={`Open report ${report.issueId}`}
+                  >
+                    <span className="report-entry__head">
+                      <span className="issue-id">{report.issueId}</span>
+                      <span className="report-entry__marks">
+                        {report.unread > 0 && (
+                          <span className="report-entry__new">
+                            {report.unread} new
                           </span>
+                        )}
+                        <span
+                          className={`status-mark status-mark--${report.status}`}
+                        >
+                          <i aria-hidden="true" />
+                          {reportStatusLabel(report.status)}
                         </span>
                       </span>
-                      <span className="report-entry__msg">
-                        {report.message}
+                    </span>
+                    <span className="report-entry__msg">{report.message}</span>
+                    {report.adminReply && (
+                      <span className="report-entry__reply">
+                        <b>reply from the admin</b>
+                        {report.adminReply}
                       </span>
-                      {report.adminReply && (
-                        <span className="report-entry__reply">
-                          <b>reply from the admin</b>
-                          {report.adminReply}
-                        </span>
-                      )}
-                      <span className="report-entry__foot">
-                        <span>
-                          {report.messageCount > 1
-                            ? `${report.messageCount} messages`
-                            : "1 message"}
-                          {" · "}
-                          {report.lastAuthor === "admin"
-                            ? "admin wrote last"
-                            : "you wrote last"}
-                        </span>
-                        {activity ? (
-                          <span className="report-entry__when">{activity}</span>
-                        ) : null}
+                    )}
+                    <span className="report-entry__foot">
+                      <span>
+                        {report.lastAuthor === "admin"
+                          ? "admin wrote last"
+                          : "you wrote last"}
                       </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </>
+                      {activity ? (
+                        <span className="report-entry__when">{activity}</span>
+                      ) : null}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         )}
       </div>
     );
@@ -314,10 +290,7 @@ export default function Issues({
           <div className="ticket">
             <p className="ticket__label">Report received</p>
             <p className="ticket__id">{ticket}</p>
-            <p className="ticket__note">
-              Keep this id for follow-ups. The reply lands in your Telegram chat
-              and on this thread.
-            </p>
+            <p className="ticket__note">Keep this id for follow-ups.</p>
           </div>
           <div className="btn-row">
             <button
@@ -363,13 +336,6 @@ export default function Issues({
             }}
             noValidate
           >
-            {showTitle ? (
-              <p className="form-note">
-                Describe what went wrong. You'll get an issue id to track it,
-                and the reply lands in your Telegram chat.
-              </p>
-            ) : null}
-
             <label className="field">
               <span>What happened?</span>
               <textarea
@@ -381,7 +347,7 @@ export default function Issues({
               />
               <span className="char-count">
                 {charactersToSend > 0
-                  ? `${message.length}/1000 · ${charactersToSend} more to send`
+                  ? `${message.length}/1000, ${charactersToSend} more characters`
                   : `${message.length}/1000`}
               </span>
             </label>
