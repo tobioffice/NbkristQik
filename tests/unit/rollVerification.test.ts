@@ -40,7 +40,7 @@ const {
   isRegistrationBlockedFor,
   VerificationError,
 } = await import("../../src/services/verification/otp.js");
-const { getHiddenRolls } = await import("../../src/db/rollClaim.model.js");
+const { getRollClaimStates } = await import("../../src/db/rollClaim.model.js");
 
 const ROLL = "99KB9A9999";
 const OWNER = "1000000001";
@@ -238,8 +238,8 @@ describe("college-email verification", () => {
   });
 });
 
-describe("the hidden-roll lookup behind the league board", () => {
-  it("returns only the rolls whose owner hid the leaderboard", async () => {
+describe("the roll-claim lookup behind the league boards", () => {
+  it("tells verified rolls apart and marks only the hidden ones", async () => {
     await client.batch(
       [
         `INSERT OR REPLACE INTO roll_claims
@@ -252,10 +252,15 @@ describe("the hidden-roll lookup behind the league board", () => {
       "write",
     );
 
-    // case-insensitive, and an unclaimed roll is not hidden
-    expect(
-      await getHiddenRolls(["77kb7a0001", "77KB7A0002", "77KB7A0003"]),
-    ).toEqual(new Set(["77KB7A0001"]));
-    expect(await getHiddenRolls([])).toEqual(new Set());
+    // a claim means verified; only the hidden one is masked on a board
+    const states = await getRollClaimStates([
+      "77kb7a0001",
+      "77KB7A0002",
+      "77KB7A0003",
+    ]);
+    expect(states.get("77KB7A0001")).toEqual({ hidden: true });
+    expect(states.get("77KB7A0002")).toEqual({ hidden: false });
+    expect(states.has("77KB7A0003")).toBe(false);
+    expect(await getRollClaimStates([])).toEqual(new Map());
   });
 });

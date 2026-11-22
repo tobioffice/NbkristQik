@@ -144,20 +144,30 @@ export const publicName = (
 };
 
 /**
- * The name a league board row shows: the chosen display name, else the roll
- * itself. The one exception is a row whose owner hid the leaderboard: that
- * roll stays masked, the same rule the academic register uses.
+ * The name a league board row shows.
+ *
+ * A verified student is named by their roll, because the college email proved
+ * it; a hidden owner's roll stays masked. Everyone else is named the way
+ * Telegram knows them: the display name they chose, then their Telegram first
+ * name, then their @username, and only then the fallback masked roll.
  */
 export const boardName = (player: {
   displayName: string | null;
   rollNo: string;
   hidden?: boolean;
+  verified?: boolean;
+  firstName?: string | null;
+  username?: string | null;
 }): string => {
+  const roll = player.rollNo.trim().toUpperCase();
+  if (player.verified) return player.hidden ? maskRoll(roll) : roll;
+
   const chosen = player.displayName?.trim();
   if (chosen) return chosen;
-  return player.hidden
-    ? maskRoll(player.rollNo)
-    : player.rollNo.trim().toUpperCase();
+  const firstName = player.firstName?.trim();
+  if (firstName) return firstName;
+  const username = player.username?.trim();
+  return username ? `@${username}` : maskRoll(roll);
 };
 
 /** "18s", "1m 04s". */

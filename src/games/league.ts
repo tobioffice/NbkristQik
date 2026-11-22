@@ -5,8 +5,8 @@ import {
   getWeekPlayers,
   getWeekSections,
 } from "../db/game.model.js";
-import { getHiddenRolls } from "../db/rollClaim.model.js";
 import { leagueCard, weekLabel } from "./cards.js";
+import { withBoardIdentities } from "./identity.js";
 import { seasonKey } from "./config.js";
 import { sendOrEdit } from "./play.js";
 import { loadPlayer } from "./player.js";
@@ -37,14 +37,9 @@ export const sendLeague = async ({
     getPlayerWeek(season, stamp.week, userId),
   ]);
 
-  // The card shows the roll of a player with no chosen name; only a hidden
-  // owner's roll stays masked.
-  const hidden = await getHiddenRolls(rows.map((player) => player.rollNo));
-  const players = rows.map((player) =>
-    hidden.has(player.rollNo.toUpperCase())
-      ? { ...player, hidden: true }
-      : player,
-  );
+  // Verified owners are named by their roll; everyone else by their chosen
+  // name or Telegram profile.
+  const players = await withBoardIdentities(rows);
 
   const identity =
     (await loadPlayer(userId).catch(() => null)) ??

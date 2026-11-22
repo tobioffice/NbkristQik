@@ -135,18 +135,47 @@ describe("scoring", () => {
     expect(sectionRefOf({ year: "11", branch: "2", section: "-" })).toBeNull();
   });
 
-  it("prints the full roll unless the owner hid the leaderboard", () => {
+  it("names a board row by verified roll, else by the Telegram identity", () => {
     expect(maskRoll("23KB1A0599")).toBe("23KB1A0•••");
-    expect(boardName({ displayName: null, rollNo: "23kb1a0599" })).toBe(
-      "23KB1A0599",
+
+    // verified: the roll, whatever display name they saved
+    expect(
+      boardName({ displayName: "Asha", rollNo: "23kb1a0599", verified: true }),
+    ).toBe("23KB1A0599");
+    // verified and hidden: the roll stays masked
+    expect(
+      boardName({
+        displayName: "Asha",
+        rollNo: "23KB1A0599",
+        verified: true,
+        hidden: true,
+      }),
+    ).toBe("23KB1A0•••");
+
+    // unverified: chosen display name, then Telegram name, then @username
+    expect(boardName({ displayName: "Asha", rollNo: "23KB1A0599" })).toBe(
+      "Asha",
     );
     expect(
-      boardName({ displayName: null, rollNo: "23KB1A0599", hidden: true }),
-    ).toBe("23KB1A0•••");
-    // a chosen name wins either way
+      boardName({
+        displayName: null,
+        rollNo: "23KB1A0599",
+        firstName: "Ravi",
+      }),
+    ).toBe("Ravi");
     expect(
-      boardName({ displayName: "Asha", rollNo: "23KB1A0599", hidden: true }),
-    ).toBe("Asha");
+      boardName({
+        displayName: null,
+        rollNo: "23KB1A0599",
+        firstName: null,
+        username: "ravi_k",
+      }),
+    ).toBe("@ravi_k");
+    // nothing to name them with: the masked roll is the last resort
+    expect(boardName({ displayName: null, rollNo: "23KB1A0599" })).toBe(
+      "23KB1A0•••",
+    );
+
     // the duel card keeps the old masking rule
     expect(publicName(null, "23KB1A0599")).toBe("23KB1A0•••");
     expect(publicName("Asha", "23KB1A0599")).toBe("Asha");
@@ -336,12 +365,12 @@ describe("the cards", () => {
 
     expect(card.text).toContain("Section Wars · Week of 10 Nov");
     expect(card.text).toContain("&lt;Asha&gt;");
-    expect(card.text).toContain("23KB1A0600");
+    expect(card.text).toContain("23KB1A0•••");
     expect(card.text).toContain("You: <b>#37</b> of 143");
     expect(card.rich).toContain("<table");
     expect(card.rich).toContain("4 CSE C");
     expect(card.rich).toContain("Asha");
-    expect(card.rich).toContain("23KB1A0600");
+    expect(card.rich).toContain("23KB1A0•••");
   });
 
   it("renders the live board as two tables, students then sections", () => {
@@ -373,26 +402,40 @@ describe("the cards", () => {
     expect(card.rich).toContain('<th align="left">Player</th>');
     expect(card.rich).toContain('<th align="left">Section</th>');
     expect(card.rich).toContain("&lt;Asha&gt;");
-    expect(card.rich).toContain("23KB1A0600");
+    expect(card.rich).toContain("23KB1A0•••");
     expect(card.rich).toContain("<b>2,100</b>");
     expect(card.rich).toContain("<b>4,820</b>");
     expect(card.rich).toContain("Updated 4:12 pm IST");
     expect(card.text).toContain("<b>Students</b>");
     expect(card.text).toContain("<b>Sections</b>");
-    expect(card.text).toContain("23KB1A0600");
+    expect(card.text).toContain("23KB1A0•••");
   });
 
-  it("masks only a hidden owner's roll on the live board", () => {
+  it("names verified rows by roll and unverified rows by identity", () => {
     const card = liveBoardCard({
       label: "Week of 10 Nov",
       players: [
-        { userId: 1, rollNo: "23KB1A0599", displayName: null, points: 200 },
+        {
+          userId: 1,
+          rollNo: "23KB1A0599",
+          displayName: "Asha",
+          verified: true,
+          points: 200,
+        },
         {
           userId: 2,
           rollNo: "23KB1A0600",
           displayName: null,
+          firstName: "Ravi",
           points: 100,
+        },
+        {
+          userId: 3,
+          rollNo: "23KB1A0700",
+          displayName: null,
+          verified: true,
           hidden: true,
+          points: 50,
         },
       ],
       sections: [],
@@ -400,9 +443,10 @@ describe("the cards", () => {
     });
 
     expect(card.rich).toContain("23KB1A0599");
-    expect(card.rich).not.toContain("23KB1A0600");
+    expect(card.rich).toContain("Ravi");
     expect(card.rich).toContain("23KB1A0•••");
-    expect(card.text).not.toContain("23KB1A0600");
+    expect(card.rich).not.toContain("Asha");
+    expect(card.rich).not.toContain("23KB1A0700");
   });
 
   it("shows only the top three rows of each table", () => {

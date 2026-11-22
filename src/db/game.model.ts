@@ -872,9 +872,10 @@ export const getWeekPlayerCount = async (
 /**
  * The week's section board.
  *
- * Only each section's best ten players count. A 200-person section does not
- * bury a 60-person one under raw headcount, and a section still needs ten
- * people to play, not one star.
+ * Only verified students count for a section: an unverified account may hold a
+ * roll it does not own, and its points must not carry a real section. Within
+ * that, only each section's best ten players count, so a 200-person section
+ * does not bury a 60-person one under raw headcount.
  */
 export const getWeekSections = async (
   season: string,
@@ -883,10 +884,14 @@ export const getWeekSections = async (
 ): Promise<BoardSection[]> => {
   const result = await turso.execute({
     sql: `WITH per_player AS (
-            SELECT section_key, user_id, SUM(points) AS pts
-            FROM game_scores
-            WHERE season = ? AND week_key = ? AND section_key IS NOT NULL
-            GROUP BY section_key, user_id
+            SELECT s.section_key, s.user_id, SUM(s.points) AS pts
+            FROM game_scores s
+            WHERE s.season = ? AND s.week_key = ? AND s.section_key IS NOT NULL
+              AND EXISTS (
+                SELECT 1 FROM roll_claims c
+                WHERE UPPER(c.roll_no) = UPPER(s.roll_no)
+              )
+            GROUP BY s.section_key, s.user_id
           ), ranked AS (
             SELECT section_key, user_id, pts,
                    ROW_NUMBER() OVER (
@@ -937,6 +942,10 @@ export const getSectionTopPlayers = async (
           FROM game_scores s
           LEFT JOIN game_players p ON p.user_id = s.user_id
           WHERE s.season = ? AND s.week_key = ? AND s.section_key = ?
+            AND EXISTS (
+              SELECT 1 FROM roll_claims c
+              WHERE UPPER(c.roll_no) = UPPER(s.roll_no)
+            )
           GROUP BY s.user_id
           ORDER BY points DESC, s.user_id ASC
           LIMIT ?`,

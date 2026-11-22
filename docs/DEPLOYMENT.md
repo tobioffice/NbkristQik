@@ -152,8 +152,10 @@ rows directly; `active = 0` retires a question without deleting history.
 
 League rules: one run attempt per account per IST day; each question closes
 after 10 seconds and a late tap scores nothing; duels last 48 hours; only the
-best ten players per section count on the weekly board; channel names are the
-student's chosen display name or the full roll (masked only when the owner hid the leaderboard), never the portal name.
+best ten verified players per section count on the weekly board; channel names are a
+verified student's roll (masked when the owner hid the leaderboard) or an
+unverified player's chosen display name, Telegram name or @username, never the
+portal name.
 
 ## Production deployment
 

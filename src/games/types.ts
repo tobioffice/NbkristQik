@@ -84,6 +84,11 @@ export interface BoardPlayer {
   points: number;
   /** True when the owner hid the leaderboard row; only its roll is masked. */
   hidden?: boolean;
+  /** True when the roll was proved by its college email. */
+  verified?: boolean;
+  /** The stored Telegram name/handle, for a player with no display name. */
+  firstName?: string | null;
+  username?: string | null;
 }
 
 /** A row on the weekly section board. */

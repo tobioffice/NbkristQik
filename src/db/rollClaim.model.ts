@@ -113,24 +113,36 @@ export const setClaimOptions = async (
   return Number(result.rowsAffected ?? 0) > 0;
 };
 
+/** The privacy state of a verified roll, for a public board row. */
+export interface RollClaimState {
+  hidden: boolean;
+}
+
 /**
- * The rolls whose verified owner asked to stay off the public leaderboard.
+ * Which of these rolls are verified, and which asked to stay off the public
+ * leaderboard.
  *
- * The games board shows a full roll next to a chosen name; a hidden owner's
- * roll is the one figure it must keep masked. Missing rolls are simply not in
- * the set, so a board with no hidden owners costs one small query.
+ * A row in `roll_claims` only exists once the owner proved the roll by its
+ * college email, so presence is the verification signal. The games boards
+ * show a verified owner's roll and an unverified player's chosen or Telegram
+ * name; a hidden owner's roll is the one figure kept masked on both.
  */
-export const getHiddenRolls = async (
+export const getRollClaimStates = async (
   rollNos: string[],
-): Promise<Set<string>> => {
+): Promise<Map<string, RollClaimState>> => {
   const rolls = [...new Set(rollNos.map((roll) => roll.trim().toUpperCase()))];
-  if (rolls.length === 0) return new Set();
+  if (rolls.length === 0) return new Map();
 
   const placeholders = rolls.map(() => "?").join(", ");
   const result = await turso.execute({
-    sql: `SELECT UPPER(roll_no) AS roll_no FROM roll_claims
-          WHERE UPPER(roll_no) IN (${placeholders}) AND hide_leaderboard = 1`,
+    sql: `SELECT UPPER(roll_no) AS roll_no, hide_leaderboard FROM roll_claims
+          WHERE UPPER(roll_no) IN (${placeholders})`,
     args: rolls,
   });
-  return new Set(result.rows.map((row) => String(row.roll_no)));
+  return new Map(
+    result.rows.map((row) => [
+      String(row.roll_no),
+      { hidden: Number(row.hide_leaderboard) === 1 },
+    ]),
+  );
 };

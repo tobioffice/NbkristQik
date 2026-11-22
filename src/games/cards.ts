@@ -549,7 +549,7 @@ export const liveBoardCard = ({
         richPlayers,
         "<p><b>Sections</b></p>",
         richSections,
-        `<footer>Updated ${updatedAt} IST · Top 3 shown · Top 10 players per section count.</footer>`,
+        `<footer>Updated ${updatedAt} IST · Top 3 shown · Top 10 verified players per section count.</footer>`,
       ].join("\n");
 
   const text = empty
@@ -583,7 +583,7 @@ export const liveBoardCard = ({
           ? ["No section has scored this week yet."]
           : []),
         "",
-        `Updated ${updatedAt} IST · Top 3 shown · Top 10 players per section count.`,
+        `Updated ${updatedAt} IST · Top 3 shown · Top 10 verified players per section count.`,
       ].join("\n");
 
   return {

@@ -46,6 +46,7 @@ const clear = async (): Promise<void> => {
     "game_duels",
     "game_scores",
     "game_channel_board",
+    "roll_claims",
   ]) {
     await turso.execute(`DELETE FROM ${table}`);
   }
@@ -73,8 +74,34 @@ const player = async (
   });
 };
 
+const initRollClaims = async (): Promise<void> => {
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS roll_claims (
+      roll_no TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      email TEXT NOT NULL,
+      verified_at TEXT NOT NULL DEFAULT (datetime('now')),
+      blocked INTEGER NOT NULL DEFAULT 0,
+      hide_leaderboard INTEGER NOT NULL DEFAULT 0,
+      block_lookups INTEGER NOT NULL DEFAULT 0,
+      block_registration INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+};
+
+/** A verified roll, as the college-email flow would have written it. */
+const claim = async (rollNo: string): Promise<void> => {
+  await turso.execute({
+    sql: `INSERT OR IGNORE INTO roll_claims (roll_no, user_id, email)
+          VALUES (?, ?, ?)`,
+    args: [rollNo, `u-${rollNo}`, `${rollNo.toLowerCase()}@nbkrist.org`],
+  });
+};
+
 beforeEach(async () => {
   await initGameTables();
+  await initRollClaims();
   await clear();
 });
 
@@ -257,7 +284,7 @@ describe("attempts", () => {
 });
 
 describe("weekly boards", () => {
-  it("counts only each section's best ten players", async () => {
+  it("counts only each verified section's best ten players", async () => {
     // Section A has twelve players on 100 each: only ten count, 1,000.
     for (let index = 0; index < 12; index += 1) {
       const userId = 100 + index;
@@ -294,6 +321,10 @@ describe("weekly boards", () => {
       });
     }
 
+    // Section Wars counts verified students only; verify the fixture's rows.
+    for (let index = 0; index < 10; index += 1) await claim(`23KB1A01${index}`);
+    for (let index = 0; index < 3; index += 1) await claim(`23KB1A02${index}`);
+
     const board = await getWeekSections(SEASON, WEEK, 10);
     expect(board).toEqual([
       { key: "3|ECE|A", label: "3 ECE A", points: 1500, players: 3 },
@@ -302,6 +333,42 @@ describe("weekly boards", () => {
 
     const section = await getSectionWeek(SEASON, WEEK, "4|CSE|C");
     expect(section).toEqual({ rank: 2, total: 2, points: 1000 });
+  });
+
+  it("leaves an unverified player's points off the section board", async () => {
+    await player(701);
+    await addScore({
+      season: SEASON,
+      weekKey: WEEK,
+      dayKey: DAY,
+      userId: 701,
+      rollNo: "23KB1A0701",
+      sectionKey: "4|CSE|C",
+      sectionLabel: "4 CSE C",
+      source: "five",
+      ref: "a701",
+      points: 400,
+    });
+    await player(702);
+    await addScore({
+      season: SEASON,
+      weekKey: WEEK,
+      dayKey: DAY,
+      userId: 702,
+      rollNo: "23KB1A0702",
+      sectionKey: "4|CSE|C",
+      sectionLabel: "4 CSE C",
+      source: "five",
+      ref: "a702",
+      points: 300,
+    });
+
+    // 701 proved the roll; 702 did not.
+    await claim("23KB1A0701");
+
+    expect(await getWeekSections(SEASON, WEEK, 5)).toEqual([
+      { key: "4|CSE|C", label: "4 CSE C", points: 400, players: 1 },
+    ]);
   });
 
   it("ranks players and reports how many played", async () => {

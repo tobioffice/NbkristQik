@@ -10,7 +10,6 @@ import {
   getWeekSections,
   saveChannelBoard,
 } from "../db/game.model.js";
-import { getHiddenRolls } from "../db/rollClaim.model.js";
 import {
   LIVE_BOARD_ROWS,
   liveBoardCard,
@@ -18,6 +17,7 @@ import {
   type Card,
 } from "./cards.js";
 import { channelPostsEnabled, seasonKey } from "./config.js";
+import { withBoardIdentities } from "./identity.js";
 import { boardName } from "./scoring.js";
 import { istClockLabel, istStamp } from "./time.js";
 import type { BoardPlayer, BoardSection } from "./types.js";
@@ -51,15 +51,11 @@ export const readLiveBoard = async (): Promise<LiveBoard> => {
     getWeekSections(season, stamp.week, LIVE_BOARD_ROWS),
   ]);
 
-  // A hidden owner's roll is the only one the board keeps masked.
-  const hidden = await getHiddenRolls(players.map((player) => player.rollNo));
+  // Verified owners are named by their roll; everyone else by their chosen
+  // name or Telegram profile, so the card needs those identities.
   return {
     label: weekLabel(stamp.monday),
-    players: players.map((player) =>
-      hidden.has(player.rollNo.toUpperCase())
-        ? { ...player, hidden: true }
-        : player,
-    ),
+    players: await withBoardIdentities(players),
     sections,
   };
 };

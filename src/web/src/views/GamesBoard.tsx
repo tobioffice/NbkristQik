@@ -9,20 +9,18 @@ import { haptic } from "../telegram";
  * The league board, opened from the channel's "Full leaderboard" button.
  *
  * It is a hidden page: the channel names it in a `startapp` link, so it has no
- * tab of its own. A row shows the chosen display name and the full roll; the
- * one exception is a verified owner's hide-in-the-leaderboard switch, whose
- * roll stays masked. The week's boards are public, so the page needs no
- * Telegram identity to read.
+ * tab of its own. A verified student is named by their roll (masked when they
+ * hid the leaderboard); an unverified player by the display name they chose,
+ * their Telegram name, or their @username. The week's boards are public, so
+ * the page needs no Telegram identity to read.
  *
  * The player table has no end: the API pages it and the list appends as the
  * reader scrolls, the way the register does.
  */
 
 export interface BoardPlayer {
-  /** The chosen display name, or the roll when there is none. */
+  /** Verified: the roll. Otherwise: chosen name, Telegram name, or handle. */
   name: string;
-  /** The full roll, or the masked one when its owner hid the leaderboard. */
-  roll: string;
   points: number;
 }
 
@@ -121,13 +119,10 @@ const LeaderSection = ({
       aria-label={`Top players in ${section.label}`}
     >
       {players.map((player, index) => (
-        <li key={`${player.roll}-${index}`} className="tg-row tg-row--child">
+        <li key={`${player.name}-${index}`} className="tg-row tg-row--child">
           <span className="tg-tree-rank">{index + 1}</span>
           <span className="tg-row__body">
             <span className="tg-row__title">{player.name}</span>
-            {player.name === player.roll ? null : (
-              <span className="tg-row__sub">{player.roll}</span>
-            )}
           </span>
           <span className="tg-row__score">{score(player.points)}</span>
         </li>
@@ -227,7 +222,7 @@ export const GamesBoardView = ({
             </p>
           )}
           <p className="tg-hint" style={{ margin: "8px 16px 0" }}>
-            Section Wars counts each section&rsquo;s best ten players.
+            Section Wars counts each section&rsquo;s best ten verified players.
           </p>
         </section>
       ) : (
@@ -245,12 +240,9 @@ export const GamesBoardView = ({
             >
               {board.players.map((player, index) => (
                 <BoardRow
-                  key={`${player.roll}-${index}`}
+                  key={`${player.name}-${index}`}
                   rank={index + 1}
                   title={player.name}
-                  // A chosen name gets the roll under it; a roll as the title
-                  // would otherwise repeat itself.
-                  sub={player.name === player.roll ? undefined : player.roll}
                   points={player.points}
                   rowRef={
                     index === board.players.length - 1 ? lastRowRef : undefined
@@ -358,11 +350,11 @@ export default function GamesBoard() {
         // A rank can shift between two page reads; never draw a player twice.
         const seen = new Set(
           current.board.players.map(
-            (player) => `${player.roll}|${player.name}`,
+            (player) => `${player.name}|${player.points}`,
           ),
         );
         const added = body.players.filter(
-          (player) => !seen.has(`${player.roll}|${player.name}`),
+          (player) => !seen.has(`${player.name}|${player.points}`),
         );
         return {
           state: "ready",

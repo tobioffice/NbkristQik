@@ -9,16 +9,18 @@ import {
 
 /**
  * The hidden league board's markup. Server-rendering proves the default tab,
- * the two boards and the empty week survive without a DOM.
+ * the two boards, the paged foot and the empty week survive without a DOM.
  */
 
 const board: BoardPayload = {
   weekLabel: "Week of 16 Nov",
   players: [
-    { name: "Qik player", roll: "23KB1A0599", points: 2_100 },
-    // the owner hid the leaderboard row: only the roll stays masked
-    { name: "23KB1A0•••", roll: "23KB1A0•••", points: 1_860 },
-    { name: "Asha", roll: "23KB1A0600", points: 1_740 },
+    // verified by college email: named by the roll
+    { name: "23KB1A0599", points: 2_100 },
+    // verified, but hidden: the roll stays masked
+    { name: "23KB1A0•••", points: 1_860 },
+    // unverified: Telegram first name, then @username
+    { name: "Ravi", points: 1_740 },
   ],
   sections: [
     {
@@ -27,8 +29,8 @@ const board: BoardPayload = {
       players: 9,
       // Only the leading section carries its players.
       topPlayers: [
-        { name: "Lakshmi", roll: "23KB1A0700", points: 1_240 },
-        { name: "23KB1A0•••", roll: "23KB1A0•••", points: 1_100 },
+        { name: "23KB1A0700", points: 1_240 },
+        { name: "@ghost", points: 1_100 },
       ],
     },
     { label: "3 ECE A", points: 4_610, players: 8 },
@@ -57,14 +59,14 @@ describe("GamesBoardView", () => {
     expect(html).toContain("4,820");
     expect(html).toContain("9 players");
     expect(html).toContain("2 sections");
-    expect(html).not.toContain("Qik player");
-    expect(html).not.toContain("Top 3");
+    expect(html).not.toContain("Ravi");
 
     // only the number-one section nests its top three players under it
     expect(html.match(/tg-tree-node/g)).toHaveLength(1);
     expect(html).toContain("tg-tree-children");
     expect(html).toContain("tg-row--child");
-    expect(html).toContain("Lakshmi");
+    expect(html).toContain("23KB1A0700");
+    expect(html).toContain("@ghost");
     expect(html).toContain("1,240");
   });
 
@@ -72,12 +74,13 @@ describe("GamesBoardView", () => {
     const html = render(board, "players");
 
     expect(html).toContain('aria-pressed="true">Players</button>');
-    expect(html).toContain("Qik player");
-    expect(html).toContain("2,100");
-    // full rolls, with the hidden owner's one masked
+    // verified roll, masked hidden roll, and a Telegram name
     expect(html).toContain("23KB1A0599");
-    expect(html).toContain("23KB1A0600");
     expect(html).toContain("23KB1A0•••");
+    expect(html).toContain("Ravi");
+    expect(html).toContain("2,100");
+    // one identity per row, no second line
+    expect(html).not.toContain("tg-row__sub");
     expect(html).toContain("That’s everyone on this week’s board.");
     expect(html).not.toContain("4 CSE C");
     expect(html).not.toContain("tg-tree-node");
@@ -106,20 +109,6 @@ describe("GamesBoardView", () => {
 
     expect(html).toContain("The next page didn’t load.");
     expect(html).toContain("Try again");
-  });
-
-  it("does not repeat a masked roll when it is already the name", () => {
-    const html = render(
-      {
-        ...board,
-        players: [{ name: "23KB1A0•••", roll: "23KB1A0•••", points: 2_100 }],
-        sections: [],
-      },
-      "players",
-    );
-
-    // one title, no sub line repeating the same masked roll
-    expect(html).not.toContain("tg-row__sub");
   });
 
   it("writes the empty week as one line, with the switch still there", () => {

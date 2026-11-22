@@ -6,10 +6,10 @@ import {
   getWeekPlayers,
   getWeekSections,
 } from "../db/game.model.js";
-import { getHiddenRolls } from "../db/rollClaim.model.js";
 import { weekLabel } from "../games/cards.js";
 import { seasonKey } from "../games/config.js";
-import { maskRoll } from "../games/scoring.js";
+import { withBoardIdentities } from "../games/identity.js";
+import { boardName } from "../games/scoring.js";
 import type { BoardPlayer } from "../games/types.js";
 import { istStamp } from "../games/time.js";
 import { attachedIdentity } from "./resolveUser.js";
@@ -41,10 +41,8 @@ const positiveInt = (raw: unknown, fallback: number): number => {
 };
 
 interface PublicPlayer {
-  /** The chosen display name, or the roll when there is none. */
+  /** Verified: the roll. Otherwise: chosen name, Telegram name, or handle. */
   name: string;
-  /** The full roll, or the masked one when its owner hid the leaderboard. */
-  roll: string;
   points: number;
 }
 
@@ -85,24 +83,16 @@ gamesRouter.get("/games/board", async (req: Request, res: Response) => {
         )
       : [];
 
-    // A verified owner can hide their row; only that roll stays masked.
-    const hidden = await getHiddenRolls([
-      ...players.map((player) => player.rollNo),
-      ...leadingPlayers.map((player) => player.rollNo),
-    ]);
+    // Verified owner -> roll (masked when hidden); unverified -> chosen name,
+    // Telegram name, or @username.
+    const rows = await withBoardIdentities([...players, ...leadingPlayers]);
+    const resolvedPlayers = rows.slice(0, players.length);
+    const resolvedLeading = rows.slice(players.length);
 
-    const publicPlayer = (player: BoardPlayer): PublicPlayer => {
-      // The owner asked to stay off the public leaderboard: mask the roll,
-      // and fall back to it for the name as before.
-      const roll = hidden.has(player.rollNo.toUpperCase())
-        ? maskRoll(player.rollNo)
-        : player.rollNo.toUpperCase();
-      return {
-        name: player.displayName?.trim() || roll,
-        roll,
-        points: player.points,
-      };
-    };
+    const publicPlayer = (player: BoardPlayer): PublicPlayer => ({
+      name: boardName(player),
+      points: player.points,
+    });
 
     // Anonymous callers share one payload, so it may sit in a cache briefly;
     // the boards only move when a run or a duel finishes.
@@ -112,7 +102,7 @@ gamesRouter.get("/games/board", async (req: Request, res: Response) => {
       season,
       week: stamp.week,
       weekLabel: weekLabel(stamp.monday),
-      players: players.map(publicPlayer),
+      players: resolvedPlayers.map(publicPlayer),
       playerTotal,
       playerPage: page,
       playerPageSize: pageSize,
@@ -123,7 +113,7 @@ gamesRouter.get("/games/board", async (req: Request, res: Response) => {
         players: section.players,
         // Only the number-one section carries its top three players.
         ...(index === 0
-          ? { topPlayers: leadingPlayers.map(publicPlayer) }
+          ? { topPlayers: resolvedLeading.map(publicPlayer) }
           : {}),
       })),
     });

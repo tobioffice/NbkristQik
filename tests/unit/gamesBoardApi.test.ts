@@ -5,9 +5,9 @@ import request from "supertest";
 /**
  * The public league board behind the channel's full-leaderboard button.
  *
- * The rows are the channel's public names: a chosen display name, or the roll
- * with its last three characters masked. The page needs no identity, so the
- * payload is cacheable for a few seconds.
+ * A verified student is named by their roll (masked when they hid the
+ * leaderboard); an unverified player by their chosen name, Telegram name, or
+ * @username. The page needs no identity, so the payload is cacheable.
  */
 
 const mocks = vi.hoisted(() => ({
@@ -15,7 +15,8 @@ const mocks = vi.hoisted(() => ({
   getWeekPlayerCount: vi.fn(),
   getWeekSections: vi.fn(),
   getSectionTopPlayers: vi.fn(),
-  getHiddenRolls: vi.fn(),
+  getRollClaimStates: vi.fn(),
+  getBotUserNames: vi.fn(),
 }));
 
 vi.mock("../../src/db/game.model.js", () => ({
@@ -26,7 +27,11 @@ vi.mock("../../src/db/game.model.js", () => ({
 }));
 
 vi.mock("../../src/db/rollClaim.model.js", () => ({
-  getHiddenRolls: mocks.getHiddenRolls,
+  getRollClaimStates: mocks.getRollClaimStates,
+}));
+
+vi.mock("../../src/db/botUsers.model.js", () => ({
+  getBotUserNames: mocks.getBotUserNames,
 }));
 
 const { gamesRouter } = await import("../../src/api/games.js");
@@ -45,8 +50,20 @@ beforeEach(() => {
   mocks.getWeekPlayerCount.mockResolvedValue(2);
   mocks.getWeekSections.mockReset();
   mocks.getSectionTopPlayers.mockReset();
-  mocks.getHiddenRolls.mockReset();
-  mocks.getHiddenRolls.mockResolvedValue(new Set());
+  mocks.getRollClaimStates.mockReset();
+  mocks.getRollClaimStates.mockResolvedValue(
+    new Map([
+      ["23KB1A0599", { hidden: false }],
+      ["23KB1A0700", { hidden: true }],
+    ]),
+  );
+  mocks.getBotUserNames.mockReset();
+  mocks.getBotUserNames.mockResolvedValue(
+    new Map([
+      [2, { firstName: "Ravi", username: "ravi_k" }],
+      [4, { firstName: null, username: "ghost" }],
+    ]),
+  );
   mocks.getSectionTopPlayers.mockResolvedValue([
     {
       userId: 3,
@@ -81,7 +98,7 @@ beforeEach(() => {
 });
 
 describe("GET /api/games/board", () => {
-  it("returns the chosen name with the full roll", async () => {
+  it("names verified rows by roll and unverified rows by identity", async () => {
     const res = await request(createApp()).get("/api/games/board");
 
     expect(res.status).toBe(200);
@@ -89,9 +106,10 @@ describe("GET /api/games/board", () => {
       success: true,
       weekLabel: weekLabel(istStamp().monday),
       players: [
-        { name: "Asha", roll: "23KB1A0599", points: 2_100 },
-        // no display name: the roll is the name
-        { name: "23KB1A0600", roll: "23KB1A0600", points: 1_800 },
+        // verified: the roll, even though a display name is saved
+        { name: "23KB1A0599", points: 2_100 },
+        // unverified: the Telegram first name
+        { name: "Ravi", points: 1_800 },
       ],
       sections: [
         {
@@ -100,8 +118,10 @@ describe("GET /api/games/board", () => {
           players: 9,
           // Only the number-one section carries its players.
           topPlayers: [
-            { name: "Lakshmi", roll: "23KB1A0700", points: 1_240 },
-            { name: "23KB1A0701", roll: "23KB1A0701", points: 1_100 },
+            // verified but hidden: the roll stays masked
+            { name: "23KB1A0•••", points: 1_240 },
+            // unverified with only a handle
+            { name: "@ghost", points: 1_100 },
           ],
         },
       ],
@@ -115,34 +135,16 @@ describe("GET /api/games/board", () => {
     expect(res.headers["cache-control"]).toBe("public, max-age=30");
   });
 
-  it("masks only the rolls whose owner hid the leaderboard", async () => {
-    mocks.getHiddenRolls.mockResolvedValue(new Set(["23KB1A0599"]));
-
-    const res = await request(createApp()).get("/api/games/board");
-
-    // the hidden owner keeps the chosen name, but the roll is masked
-    expect(res.body.players[0]).toEqual({
-      name: "Asha",
-      roll: "23KB1A0•••",
-      points: 2_100,
-    });
-    // everyone else shows the full roll
-    expect(res.body.players[1]).toEqual({
-      name: "23KB1A0600",
-      roll: "23KB1A0600",
-      points: 1_800,
-    });
-  });
-
-  it("asks which of the board's rolls are hidden", async () => {
+  it("asks for the verification and Telegram identity of every row", async () => {
     await request(createApp()).get("/api/games/board");
 
-    expect(mocks.getHiddenRolls).toHaveBeenCalledWith([
+    expect(mocks.getRollClaimStates).toHaveBeenCalledWith([
       "23KB1A0599",
       "23KB1A0600",
       "23KB1A0700",
       "23KB1A0701",
     ]);
+    expect(mocks.getBotUserNames).toHaveBeenCalledWith([1, 2, 3, 4]);
   });
 
   it("asks for the first page of players and every scoring section", async () => {

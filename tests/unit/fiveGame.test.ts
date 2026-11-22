@@ -93,6 +93,7 @@ const clear = async (): Promise<void> => {
     "game_attempts",
     "game_duels",
     "game_scores",
+    "roll_claims",
   ]) {
     await turso.execute(`DELETE FROM ${table}`);
   }
@@ -176,6 +177,20 @@ const answerAll = async (
 
 beforeEach(async () => {
   await initGameTables();
+  // Section boards join the claims table; this suite has no verified players.
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS roll_claims (
+      roll_no TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      email TEXT NOT NULL,
+      verified_at TEXT NOT NULL DEFAULT (datetime('now')),
+      blocked INTEGER NOT NULL DEFAULT 0,
+      hide_leaderboard INTEGER NOT NULL DEFAULT 0,
+      block_lookups INTEGER NOT NULL DEFAULT 0,
+      block_registration INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
   await clear();
   await seedQuestions();
 
