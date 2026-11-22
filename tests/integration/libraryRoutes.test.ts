@@ -350,7 +350,10 @@ describe("opening the library", () => {
 
     expect(second.status).toBe(200);
     expect(second.body.student.rollNo).toBe("23CS1042");
-    expect(second.headers["set-cookie"]?.[0]).toBe(setCookie);
+    // The token pair must be the same one; the Expires second is recomputed
+    // on every response, so a request pair that straddles a second boundary
+    // would otherwise make this assertion a coin flip.
+    expect(second.headers["set-cookie"]?.[0]?.split(";")[0]).toBe(cookie);
 
     const sessionKeys = [...sessions.keys()].filter((key) =>
       key.startsWith("lib:sess:"),
