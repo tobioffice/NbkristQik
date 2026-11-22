@@ -5,228 +5,289 @@ import { logger } from "../config/logger.js";
 import { trackMessage } from "../services/tracker.js";
 import { commandArgs } from "../bot/commands/args.js";
 import {
-  claimGamePost,
-  getDaySections,
-  getTodayAttempts,
+  getChannelBoard,
   getWeekPlayers,
   getWeekSections,
-  releaseGamePost,
+  saveChannelBoard,
 } from "../db/game.model.js";
 import {
-  fastestCorrect,
-  dayLabel,
-  morningPost,
-  resultsPost,
+  LIVE_BOARD_ROWS,
+  liveBoardCard,
   weekLabel,
-  weeklyPost,
   type Card,
 } from "./cards.js";
 import { channelPostsEnabled, seasonKey } from "./config.js";
-import { istStamp } from "./time.js";
+import { publicName } from "./scoring.js";
+import { istClockLabel, istStamp } from "./time.js";
 import type { BoardPlayer, BoardSection } from "./types.js";
 
 /**
- * The channel ritual.
+ * The channel's single live board.
  *
- * Two posts a day at most: the 8:30am prompt and the 1:15pm result. Sunday
- * adds the weekly board at 7pm. Each post is claimed in `game_posts` before
- * it is sent, so a restart cannot duplicate it; a failed send releases the
- * claim and the next tick retries inside the window.
+ * One message, edited in place: this week's student and section tables. The
+ * minute tick recomputes the rows and edits only when the data fingerprint
+ * changed, so a quiet week leaves the channel quiet. The message id and the
+ * last fingerprint live in `game_channel_board`, so a restart edits the same
+ * message instead of posting a second one.
  */
 
-const MORNING_START = 8 * 60 + 30;
-const MORNING_END = 10 * 60 + 30;
-const RESULT_START = 13 * 60 + 15;
-const RESULT_END = 16 * 60 + 15;
-const WEEKLY_START = 19 * 60;
-const WEEKLY_END = 21 * 60;
+const BOARD_SLOT = "live";
+/** Bumped when the card's markup changes, so a deploy refreshes the message. */
+const BOARD_FORMAT = 1;
+
+export interface LiveBoard {
+  label: string;
+  players: BoardPlayer[];
+  sections: BoardSection[];
+}
+
+/** This week's rows, already ordered by the database. */
+export const readLiveBoard = async (): Promise<LiveBoard> => {
+  const stamp = istStamp();
+  const season = seasonKey();
+  const [players, sections] = await Promise.all([
+    getWeekPlayers(season, stamp.week, LIVE_BOARD_ROWS),
+    getWeekSections(season, stamp.week, LIVE_BOARD_ROWS),
+  ]);
+  return { label: weekLabel(stamp.monday), players, sections };
+};
 
 /**
- * Telegram refused the rich form itself. A 400 means nothing was posted, so a
- * text retry cannot put the same card in the channel twice. Any other failure
- * may already have delivered the message, so it must not be retried here.
+ * The fingerprint of what the card shows. The updated clock is not part of
+ * it: a minute that changes no number must not edit the message.
  */
+export const liveBoardSnapshot = (board: LiveBoard): string =>
+  JSON.stringify({
+    version: BOARD_FORMAT,
+    label: board.label,
+    players: board.players.map((player) => [
+      publicName(player.displayName, player.rollNo),
+      player.points,
+    ]),
+    sections: board.sections.map((section) => [section.label, section.points]),
+  });
+
+const isApiError = (error: unknown, code: number): error is TelegramApiError =>
+  error instanceof TelegramApiError && error.errorCode === code;
+
+/** Telegram refused the rich form itself, so nothing was delivered. */
 export const isRichRefusal = (error: unknown): boolean =>
-  error instanceof TelegramApiError && error.errorCode === 400;
+  isApiError(error, 400);
+
+const isNotModified = (error: unknown): boolean =>
+  isApiError(error, 400) && /message is not modified/i.test(error.description);
+
+const isMessageGone = (error: unknown): boolean =>
+  isApiError(error, 400) &&
+  /message to edit not found|message can't be edited|message_id_invalid/i.test(
+    error.description,
+  );
+
+const errorText = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
 
 /**
- * Post one card, rich form first.
+ * Post one card, rich form first, and return the message id.
  *
- * The channel and the admin preview both use this path, so what the admin
- * checks with `/gamepost` is exactly what the channel receives.
+ * A 400 means the rich form was refused before delivery, so the text retry
+ * cannot duplicate anything. Any other failure may already have posted, so it
+ * is rethrown and the next tick decides again.
  */
 export const postCard = async (
   chatId: number | string,
   card: Card,
-): Promise<void> => {
+): Promise<number> => {
   if (card.rich) {
     try {
-      await bot.api.sendRichMessage({
+      const sent = await bot.api.sendRichMessage({
         chat_id: chatId,
         rich_message: { html: card.rich },
         ...(card.markup ? { reply_markup: card.markup } : {}),
       });
-      return;
+      return sent.message_id;
     } catch (e) {
       if (!isRichRefusal(e)) throw e;
       logger.warn(
         "[games] rich card refused, posting the text card:",
-        e instanceof Error ? e.message : e,
+        errorText(e),
       );
     }
   }
 
-  await bot.api.sendMessage({
+  const sent = await bot.api.sendMessage({
     chat_id: chatId,
     text: card.text,
     parse_mode: "HTML",
     ...(card.markup ? { reply_markup: card.markup } : {}),
     link_preview_options: { is_disabled: true },
   });
+  return sent.message_id;
 };
 
-const sendCard = async (card: Card): Promise<void> => {
-  await postCard(CHANNEL_ID, card);
-};
-
-const postMorning = async (dateKey: string): Promise<void> => {
-  const key = `morning-${dateKey}`;
-  if (!(await claimGamePost(key))) return;
-  try {
-    await sendCard(morningPost(dayLabel(dateKey)));
-    logger.info(`[games] morning post sent for ${dateKey}`);
-  } catch (e) {
-    await releaseGamePost(key).catch(() => undefined);
-    logger.warn("[games] morning post failed:", e);
-  }
-};
-
-const postResults = async (dateKey: string): Promise<void> => {
-  const attempts = await getTodayAttempts(dateKey);
-  if (attempts.length === 0) return;
-
-  const key = `results-${dateKey}`;
-  if (!(await claimGamePost(key))) return;
-
-  try {
-    const top: BoardPlayer[] = attempts.slice(0, 3).map((attempt) => ({
-      userId: attempt.userId,
-      rollNo: attempt.rollNo,
-      displayName: attempt.displayName,
-      points: attempt.points,
-    }));
-    const sections = await getDaySections(seasonKey(), dateKey, 1);
-
-    await sendCard(
-      resultsPost({
-        label: dayLabel(dateKey),
-        top,
-        played: attempts.length,
-        fastestMs: fastestCorrect(attempts.map((attempt) => attempt.answers)),
-        section: sections[0] ?? null,
-      }),
-    );
-    logger.info(
-      `[games] results post sent for ${dateKey} (${attempts.length} runs)`,
-    );
-  } catch (e) {
-    await releaseGamePost(key).catch(() => undefined);
-    logger.warn("[games] results post failed:", e);
-  }
-};
-
-const postWeekly = async (
-  weekKey: string,
-  mondayKey: string,
+/** Edit the live message: rich first, the text card when rich is refused. */
+const editCard = async (
+  chatId: number | string,
+  messageId: number,
+  card: Card,
 ): Promise<void> => {
-  const [sections, players] = await Promise.all([
-    getWeekSections(seasonKey(), weekKey, 3),
-    getWeekPlayers(seasonKey(), weekKey, 1),
-  ]);
-  if (sections.length === 0) return;
+  const markup = card.markup ? { reply_markup: card.markup } : {};
 
-  const key = `weekly-${weekKey}`;
-  if (!(await claimGamePost(key))) return;
-
-  try {
-    await sendCard(
-      weeklyPost({
-        label: weekLabel(mondayKey),
-        sections,
-        players,
-      }),
-    );
-    logger.info(`[games] weekly post sent for ${weekKey}`);
-  } catch (e) {
-    await releaseGamePost(key).catch(() => undefined);
-    logger.warn("[games] weekly post failed:", e);
+  if (card.rich) {
+    try {
+      await bot.api.editMessageText({
+        chat_id: chatId,
+        message_id: messageId,
+        rich_message: { html: card.rich },
+        ...markup,
+      });
+      return;
+    } catch (e) {
+      if (isNotModified(e) || isMessageGone(e) || !isApiError(e, 400)) throw e;
+      logger.warn(
+        "[games] rich board edit refused, editing the text card:",
+        errorText(e),
+      );
+    }
   }
+
+  await bot.api.editMessageText({
+    chat_id: chatId,
+    message_id: messageId,
+    text: card.text,
+    parse_mode: "HTML",
+    ...markup,
+  });
+};
+
+const boardCard = (board: LiveBoard, updatedAt: string): Card =>
+  liveBoardCard({ ...board, updatedAt });
+
+const saveState = async ({
+  messageId,
+  snapshot,
+  updatedAt,
+}: {
+  messageId: number;
+  snapshot: string;
+  updatedAt: string;
+}): Promise<void> => {
+  await saveChannelBoard({
+    slot: BOARD_SLOT,
+    chatId: String(CHANNEL_ID),
+    messageId,
+    snapshot,
+    updatedAt,
+  });
+};
+
+const postBoard = async (
+  board: LiveBoard,
+  snapshot: string,
+  now: Date,
+): Promise<"created"> => {
+  const messageId = await postCard(
+    CHANNEL_ID,
+    boardCard(board, istClockLabel(now)),
+  );
+  await saveState({ messageId, snapshot, updatedAt: now.toISOString() });
+  logger.info(`[games] live board posted for ${board.label}`);
+  return "created";
+};
+
+export type BoardSync = "created" | "edited" | "unchanged";
+
+/**
+ * Bring the channel's single message up to date.
+ *
+ * Returns what happened so the tick and the admin command can report it. An
+ * unchanged fingerprint is the common case and does no Telegram call at all.
+ */
+export const syncLiveBoard = async (): Promise<BoardSync> => {
+  const [board, state] = await Promise.all([
+    readLiveBoard(),
+    getChannelBoard(BOARD_SLOT),
+  ]);
+  const snapshot = liveBoardSnapshot(board);
+
+  // No message yet, or the configured channel changed: post the first one.
+  if (!state || state.chatId !== String(CHANNEL_ID)) {
+    return postBoard(board, snapshot, new Date());
+  }
+
+  if (state.snapshot === snapshot) return "unchanged";
+
+  const now = new Date();
+  try {
+    await editCard(
+      CHANNEL_ID,
+      state.messageId,
+      boardCard(board, istClockLabel(now)),
+    );
+  } catch (e) {
+    if (isMessageGone(e)) {
+      logger.warn("[games] live board message is gone, posting a new one");
+      return postBoard(board, snapshot, new Date());
+    }
+    if (isNotModified(e)) {
+      // The data moved but renders the same. Remember the fingerprint so the
+      // next tick does not try this edit again.
+      await saveState({
+        messageId: state.messageId,
+        snapshot,
+        updatedAt: state.updatedAt,
+      });
+      return "unchanged";
+    }
+    throw e;
+  }
+
+  await saveState({
+    messageId: state.messageId,
+    snapshot,
+    updatedAt: now.toISOString(),
+  });
+  logger.info(`[games] live board edited for ${board.label}`);
+  return "edited";
 };
 
 const tick = async (): Promise<void> => {
   if (!CHANNEL_ID || !channelPostsEnabled()) return;
-
-  const stamp = istStamp();
-  const minutes = stamp.hour * 60 + stamp.minute;
-
-  if (minutes >= MORNING_START && minutes < MORNING_END) {
-    await postMorning(stamp.date);
-  }
-  if (minutes >= RESULT_START && minutes < RESULT_END) {
-    await postResults(stamp.date);
-  }
-  if (stamp.weekday === 7 && minutes >= WEEKLY_START && minutes < WEEKLY_END) {
-    await postWeekly(stamp.week, stamp.monday);
-  }
+  await syncLiveBoard();
 };
 
-/** Start the once-a-minute check. Safe to call once per process. */
+/** Start the once-a-minute sync. Safe to call once per process. */
 export const startGameScheduler = (): void => {
   let running = false;
-  const timer = setInterval(() => {
+  const run = (): void => {
     if (running) return;
     running = true;
     void tick()
-      .catch((e) => logger.warn("[games] scheduler tick failed:", e))
+      .catch((e) => logger.warn("[games] live board tick failed:", e))
       .finally(() => {
         running = false;
       });
-  }, 60_000);
+  };
+
+  // Sync now, so a deploy does not leave the board stale for a minute.
+  run();
+  const timer = setInterval(run, 60_000);
   timer.unref();
   logger.info(
-    `[games] scheduler started (channel posts ${
+    `[games] live board syncing every minute (channel posts ${
       channelPostsEnabled() ? "on" : "off"
     })`,
   );
 };
 
 /* ------------------------------------------------------------------ */
-/* Admin preview: the exact cards, sent to the admin's private chat.    */
+/* Admin preview and a manual refresh.                                 */
 /* ------------------------------------------------------------------ */
-
-const SAMPLE_SECTIONS: BoardSection[] = [
-  { key: "4|CSE|C", label: "4 CSE C", points: 4820, players: 9 },
-  { key: "3|ECE|A", label: "3 ECE A", points: 4610, players: 8 },
-  { key: "4|CSE|A", label: "4 CSE A", points: 4390, players: 10 },
-];
-
-const SAMPLE_PLAYERS: BoardPlayer[] = [
-  {
-    userId: 1,
-    rollNo: "23KB1A0599",
-    displayName: "Qik player",
-    points: 2100,
-  },
-  { userId: 2, rollNo: "23KB1A0601", displayName: null, points: 1860 },
-  { userId: 3, rollNo: "23KB1A0602", displayName: null, points: 1740 },
-];
 
 bot.command("gamepost", async (ctx) => {
   const msg: Message | undefined = ctx.message;
   if (!msg || msg.from?.id !== ADMIN_ID) return;
 
   trackMessage(msg, "command:gamepost");
-  const stamp = istStamp();
   const args = commandArgs(ctx).toLowerCase();
 
   if (args === "channel") {
@@ -237,14 +298,18 @@ bot.command("gamepost", async (ctx) => {
       });
       return;
     }
+
     try {
-      await sendCard(morningPost(dayLabel(stamp.date)));
-      await bot.api.sendMessage({
-        chat_id: msg.chat.id,
-        text: "Posted today's run to the channel.",
-      });
+      const result = await syncLiveBoard();
+      const text =
+        result === "created"
+          ? "Live board posted to the channel."
+          : result === "edited"
+            ? "Live board refreshed."
+            : "Live board is already up to date.";
+      await bot.api.sendMessage({ chat_id: msg.chat.id, text });
     } catch (e) {
-      logger.warn("[games] channel launch post failed:", e);
+      logger.warn("[games] live board refresh failed:", e);
       await bot.api
         .sendMessage({
           chat_id: msg.chat.id,
@@ -255,43 +320,10 @@ bot.command("gamepost", async (ctx) => {
     return;
   }
 
+  // Preview the real board, so the admin sees exactly what the channel holds.
   try {
-    await bot.api.sendMessage({
-      chat_id: msg.chat.id,
-      text: "<i>Morning post</i>",
-      parse_mode: "HTML",
-    });
-    await postCard(msg.chat.id, morningPost(dayLabel(stamp.date)));
-
-    await bot.api.sendMessage({
-      chat_id: msg.chat.id,
-      text: "<i>Lunchtime result</i>",
-      parse_mode: "HTML",
-    });
-    await postCard(
-      msg.chat.id,
-      resultsPost({
-        label: dayLabel(stamp.date),
-        top: SAMPLE_PLAYERS,
-        played: 128,
-        fastestMs: 4200,
-        section: SAMPLE_SECTIONS[0],
-      }),
-    );
-
-    await bot.api.sendMessage({
-      chat_id: msg.chat.id,
-      text: "<i>Sunday board</i>",
-      parse_mode: "HTML",
-    });
-    await postCard(
-      msg.chat.id,
-      weeklyPost({
-        label: weekLabel(stamp.monday),
-        sections: SAMPLE_SECTIONS,
-        players: SAMPLE_PLAYERS.slice(0, 1),
-      }),
-    );
+    const board = await readLiveBoard();
+    await postCard(msg.chat.id, boardCard(board, istClockLabel()));
   } catch (e) {
     logger.warn("[games] preview failed:", e);
     await bot.api

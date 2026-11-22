@@ -93,7 +93,6 @@ const clear = async (): Promise<void> => {
     "game_attempts",
     "game_duels",
     "game_scores",
-    "game_posts",
   ]) {
     await turso.execute(`DELETE FROM ${table}`);
   }

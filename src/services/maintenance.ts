@@ -73,10 +73,6 @@ export const prune = async (): Promise<void> => {
     "game_rounds",
     `DELETE FROM game_rounds WHERE day_key < date('now', '-${GAME_RETENTION_DAYS} days')`,
   );
-  await pruneTable(
-    "game_posts",
-    `DELETE FROM game_posts WHERE posted_at < datetime('now', '-30 days')`,
-  );
 
   // Stamped PDFs expire on their own seven-day clock and a disk budget; this
   // is housekeeping, not retention evidence, so a failure stays a warning.

@@ -19,7 +19,7 @@
 | `UPTIME_INGEST_SECRET` | `src/api/internal.ts` | Shared secret for `/internal/*`; unset disables both routes |
 | `MONITOR_*` | `src/monitor/index.ts` | Only read by the monitor-host monitor, not the bot |
 | `ATTENDANCE_WIDGET` | `src/bot/academics/widgetCard.ts` | `off` (default) while Telegram rejects widgets; `admin` tests it on `ADMIN_ID`; `all` opens it to every private chat |
-| `GAME_CHANNEL_POSTS` | `src/games/channel.ts` | `on` enables the 8:30am prompt, 1:15pm result and Sunday board; default off |
+| `GAME_CHANNEL_POSTS` | `src/games/channel.ts` | `on` keeps the channel's live weekly board (students and sections) in sync; default off |
 | `GAME_SEASON` | `src/games/config.ts` | Season key for the weekly boards; default `S1` |
 | `PDFSTAMP_BIN` | `src/services/library/pdfstamp.ts` | Optional override for the native PDF stamp; default `bin/pdfstamp` at the repository root |
 
@@ -132,17 +132,18 @@ GAME_CHANNEL_POSTS=on
 ```
 
 With `GAME_CHANNEL_POSTS=on` and the bot an admin in `PROD_CHANNEL`, the bot
-posts:
+keeps exactly one message in the channel: the live board. It holds the
+week's top three students and top three sections; the minute tick edits it in
+place only when a number or a name actually changed, and an unchanged board
+is never touched. The message id and the last data fingerprint are stored in
+`game_channel_board`, so a restart edits the same message instead of posting
+a second one. If the stored message was deleted by hand, the next change
+posts a fresh one. The board's two buttons open today's run and the full
+leaderboard page.
 
-- **08:30 IST**: today's run, with a Play button.
-- **13:15 IST**: the day's top three, fastest answer and section of the day.
-- **Sunday 19:00 IST**: the Section Wars board and player of the week.
-
-Each post is claimed in `game_posts` before sending, so a restart cannot
-duplicate it. A failed send releases the claim and retries inside the window.
-`/gamepost` sends all three cards to the admin DM as a preview;
-`/gamepost channel` posts today's prompt to the channel immediately, which is
-the launch path outside the 8:30 window.
+`/gamepost` sends the current board to the admin DM as a preview, and
+`/gamepost channel` creates or refreshes the live message immediately, which
+is the launch path after a deploy or a channel clean-up.
 
 `GAME_SEASON` groups the weekly boards; change it when a new season starts.
 The question bank is seeded from `src/games/questions.ts` once, keyed by slug.

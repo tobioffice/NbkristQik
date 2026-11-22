@@ -3,7 +3,7 @@ import { previousDateKey } from "./time.js";
 import { BRANCHES } from "../constants/index.js";
 
 /**
- * Scoring rules in one place, so the card, the tests and the channel post
+ * Scoring rules in one place, so the card, the tests and the channel board
  * cannot drift.
  *
  * A correct answer is worth 100. Speed adds up to 50 more, fading to zero at

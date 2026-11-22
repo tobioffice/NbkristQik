@@ -1,20 +1,15 @@
 import type { InlineKeyboardMarkup } from "node-telegram-bot-api";
 import { botLink } from "../constants/telegram.js";
+import { appPageUrl } from "../constants/webapp.js";
 import { escapeHtml } from "../services/text.js";
 import type {
-  AttemptAnswer,
   BoardPlayer,
   BoardSection,
   GameAttempt,
   GameDuel,
   GameQuestion,
 } from "./types.js";
-import {
-  formatDuration,
-  publicName,
-  QUESTION_LIMIT_MS,
-  QUESTIONS_PER_RUN,
-} from "./scoring.js";
+import { publicName, QUESTION_LIMIT_MS } from "./scoring.js";
 
 export interface Card {
   text: string;
@@ -484,190 +479,126 @@ export const privateLinkCard = ({
   },
 });
 
+/** How many rows each live-board table shows. The channel is a podium; the
+ * full list lives on the leaderboard page the button opens. */
+export const LIVE_BOARD_ROWS = 3;
+
 /**
- * The channel cards are rich messages with a real table, like the private
- * cards. `text` stays the fallback a client that refuses rich can still read,
- * so a channel post never dies on a formatting rejection.
+ * The channel's one live board: this week's students and sections.
+ *
+ * Rendered as a rich message with two real tables, with the text card as the
+ * fallback for a client that refuses rich. `updatedAt` is the IST clock of
+ * the last data change, not the clock now, so an unchanged board can sit
+ * untouched and still say when it last moved.
  */
-
-/** The 8:30am channel prompt. URL button only: channels take no callbacks. */
-export const morningPost = (label: string): Card => ({
-  text:
-    "<b>10 questions. About two minutes.</b>\n" +
-    `${label} · today's set is live.`,
-  rich: [
-    "<p><b>Today's run is live</b></p>",
-    `<p>${escapeHtml(label)} · ${QUESTIONS_PER_RUN} questions, ` +
-      `${QUESTION_SECONDS} seconds each.</p>`,
-    richPairs([
-      ["Questions", `<b>${QUESTIONS_PER_RUN}</b>`],
-      ["Time each", `<b>${QUESTION_SECONDS}s</b>`],
-      ["Run length", "<b>about 2 min</b>"],
-    ]),
-    "<footer>One run a day. A new set drops tomorrow at 8:30am.</footer>",
-  ].join("\n"),
-  markup: {
-    inline_keyboard: [[{ text: "Play today's run", url: botLink("quiz") }]],
-  },
-});
-
-/** The lunchtime channel result. */
-export const resultsPost = ({
+export const liveBoardCard = ({
   label,
-  top,
-  played,
-  fastestMs,
-  section,
+  players,
+  sections,
+  updatedAt,
 }: {
   label: string;
-  top: BoardPlayer[];
-  played: number;
-  fastestMs: number | null;
-  section: BoardSection | null;
+  players: BoardPlayer[];
+  sections: BoardSection[];
+  updatedAt: string;
 }): Card => {
-  const lines = [`<b>Today's run · ${label}</b>`, `${played} played`];
+  const playerRows = players.slice(0, LIVE_BOARD_ROWS);
+  const sectionRows = sections.slice(0, LIVE_BOARD_ROWS);
+  const empty = playerRows.length === 0 && sectionRows.length === 0;
 
-  top.slice(0, 3).forEach((player, index) => {
-    lines.push(`${index + 1}. ${nameCell(player)} — <b>${player.points}</b>`);
-  });
-
-  if (fastestMs != null) {
-    lines.push("", `Fastest answer: <b>${formatDuration(fastestMs)}</b>`);
-  }
-  if (section) {
-    lines.push(`Section of the day: <b>${escapeHtml(section.label)}</b>`);
-  }
-  lines.push("", "Tomorrow's set drops at 8:30am.");
-
-  const notes: string[] = [];
-  if (fastestMs != null) {
-    notes.push(`Fastest answer <b>${formatDuration(fastestMs)}</b>`);
-  }
-  if (section) {
-    notes.push(`Section of the day <b>${escapeHtml(section.label)}</b>`);
-  }
-
-  const rich = [
-    `<p><b>Today's run · ${escapeHtml(label)}</b></p>`,
-    `<p><b>${formatNumber(played)}</b> played</p>`,
-    top.length > 0
+  const richPlayers =
+    playerRows.length > 0
       ? richTable(
           [
             { label: "#", align: "left" },
             { label: "Player", align: "left" },
             { label: "Points", align: "right" },
           ],
-          top
-            .slice(0, 3)
-            .map((player, index) => [
-              String(index + 1),
-              nameCell(player),
-              `<b>${formatNumber(player.points)}</b>`,
-            ]),
+          playerRows.map((player, index) => [
+            String(index + 1),
+            nameCell(player),
+            `<b>${formatNumber(player.points)}</b>`,
+          ]),
         )
-      : "",
-    notes.length > 0 ? `<p>${notes.join(" · ")}</p>` : "",
-    "<footer>Tomorrow's set drops at 8:30am.</footer>",
-  ]
-    .filter(Boolean)
-    .join("\n");
+      : "<p>No one has scored this week yet.</p>";
 
-  return {
-    text: lines.join("\n"),
-    rich,
-    markup: {
-      inline_keyboard: [
-        [
-          { text: "See the board", url: botLink("league") },
-          { text: "Play today's run", url: botLink("quiz") },
-        ],
-      ],
-    },
-  };
-};
-
-/** The Sunday channel result. */
-export const weeklyPost = ({
-  label,
-  sections,
-  players,
-}: {
-  label: string;
-  sections: BoardSection[];
-  players: BoardPlayer[];
-}): Card => {
-  const lines = [`<b>Section Wars · ${label}</b>`];
-
-  sections.slice(0, 3).forEach((section, index) => {
-    lines.push(
-      `${index + 1}. ${escapeHtml(section.label)} — <b>${formatNumber(
-        section.points,
-      )}</b>`,
-    );
-  });
-
-  const champion = players[0];
-  if (champion) {
-    lines.push(
-      "",
-      `Player of the week: <b>${nameCell(champion)}</b> — ${formatNumber(
-        champion.points,
-      )} points`,
-    );
-  }
-  lines.push("", "A new week starts Monday. Top 10 players per section count.");
-
-  const rich = [
-    `<p><b>Section Wars · ${escapeHtml(label)}</b></p>`,
-    sections.length > 0
+  const richSections =
+    sectionRows.length > 0
       ? richTable(
           [
             { label: "#", align: "left" },
             { label: "Section", align: "left" },
             { label: "Points", align: "right" },
           ],
-          sections
-            .slice(0, 3)
-            .map((section, index) => [
-              String(index + 1),
-              escapeHtml(section.label),
-              `<b>${formatNumber(section.points)}</b>`,
-            ]),
+          sectionRows.map((section, index) => [
+            String(index + 1),
+            escapeHtml(section.label),
+            `<b>${formatNumber(section.points)}</b>`,
+          ]),
         )
-      : "<p>No one has played this week. Be the first.</p>",
-    champion
-      ? `<p>Player of the week: <b>${nameCell(champion)}</b> · ` +
-        `${formatNumber(champion.points)} points</p>`
-      : "",
-    "<footer>A new week starts Monday. Top 10 players per section count.</footer>",
-  ]
-    .filter(Boolean)
-    .join("\n");
+      : "<p>No section has scored this week yet.</p>";
+
+  const title = `<p><b>Weekly board · ${escapeHtml(label)}</b></p>`;
+
+  const rich = empty
+    ? [title, "<p>No one has played this week yet. Be the first.</p>"].join(
+        "\n",
+      )
+    : [
+        title,
+        "<p><b>Students</b></p>",
+        richPlayers,
+        "<p><b>Sections</b></p>",
+        richSections,
+        `<footer>Updated ${updatedAt} IST · Top 3 shown · Top 10 players per section count.</footer>`,
+      ].join("\n");
+
+  const text = empty
+    ? [
+        `<b>Weekly board · ${escapeHtml(label)}</b>`,
+        "",
+        "No one has played this week yet. Be the first.",
+      ].join("\n")
+    : [
+        `<b>Weekly board · ${escapeHtml(label)}</b>`,
+        "",
+        "<b>Students</b>",
+        ...playerRows.map(
+          (player, index) =>
+            `${index + 1}. ${nameCell(player)} — <b>${formatNumber(
+              player.points,
+            )}</b>`,
+        ),
+        ...(playerRows.length === 0
+          ? ["No one has scored this week yet."]
+          : []),
+        "",
+        "<b>Sections</b>",
+        ...sectionRows.map(
+          (section, index) =>
+            `${index + 1}. ${escapeHtml(section.label)} — <b>${formatNumber(
+              section.points,
+            )}</b>`,
+        ),
+        ...(sectionRows.length === 0
+          ? ["No section has scored this week yet."]
+          : []),
+        "",
+        `Updated ${updatedAt} IST · Top 3 shown · Top 10 players per section count.`,
+      ].join("\n");
 
   return {
-    text: lines.join("\n"),
+    text,
     rich,
     markup: {
       inline_keyboard: [
         [
-          { text: "See the board", url: botLink("league") },
           { text: "Play today's run", url: botLink("quiz") },
+          // A channel takes no web_app buttons, so this is the direct link
+          // that opens the Main Mini App's leaderboard page.
+          { text: "Full leaderboard", url: appPageUrl("rank", "direct") },
         ],
       ],
     },
   };
-};
-
-/** The fastest correct answer in a set of finished runs. */
-export const fastestCorrect = (
-  answersByRun: AttemptAnswer[][],
-): number | null => {
-  let fastest: number | null = null;
-  for (const answers of answersByRun) {
-    for (const answer of answers) {
-      if (!answer.correct) continue;
-      if (fastest == null || answer.ms < fastest) fastest = answer.ms;
-    }
-  }
-  return fastest;
 };

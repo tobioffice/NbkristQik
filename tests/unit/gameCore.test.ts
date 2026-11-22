@@ -11,26 +11,35 @@ import {
   streakMultiplier,
 } from "../../src/games/scoring.js";
 import {
-  fastestCorrect,
   duelInviteCard,
   duelRecordCard,
   duelResultCard,
   fiveResultCard,
   leagueCard,
-  morningPost,
+  liveBoardCard,
   questionCard,
-  resultsPost,
-  weeklyPost,
 } from "../../src/games/cards.js";
-import { istStamp, isoWeekKey, previousDateKey } from "../../src/games/time.js";
+import {
+  istClockLabel,
+  istStamp,
+  isoWeekKey,
+  previousDateKey,
+} from "../../src/games/time.js";
 import type {
-  AttemptAnswer,
   GameAttempt,
   GameDuel,
   GameQuestion,
 } from "../../src/games/types.js";
 
 describe("the IST clock", () => {
+  it("writes the board's clock in the 12-hour form", () => {
+    expect(istClockLabel(new Date("2026-11-15T03:00:00.000Z"))).toBe("8:30 am");
+    expect(istClockLabel(new Date("2026-11-15T10:45:00.000Z"))).toBe("4:15 pm");
+    expect(istClockLabel(new Date("2026-11-15T18:31:00.000Z"))).toBe(
+      "12:01 am",
+    );
+  });
+
   it("puts 03:00 UTC at 08:30 in India", () => {
     const stamp = istStamp(new Date("2026-11-15T03:00:00.000Z"));
     expect(stamp).toMatchObject({
@@ -323,52 +332,112 @@ describe("the cards", () => {
     expect(card.rich).toContain("23KB1A0•••");
   });
 
-  it("keeps the channel posts on URL buttons only", () => {
-    const morning = morningPost("15 Nov");
-    expect(morning.text).toContain("10 questions");
-    expect(morning.markup?.inline_keyboard[0][0].url).toContain("quiz");
-    expect(morning.rich).toContain("<table bordered striped compact>");
-    expect(morning.rich).toContain("Today's run is live");
-    expect(morning.rich).toContain("10 questions, 10 seconds each");
-
-    const results = resultsPost({
-      label: "15 Nov",
-      top: [
+  it("renders the live board as two tables, students then sections", () => {
+    const card = liveBoardCard({
+      label: "Week of 10 Nov",
+      players: [
         {
           userId: 1,
           rollNo: "23KB1A0599",
+          displayName: "<Asha>",
+          points: 2_100,
+        },
+        {
+          userId: 2,
+          rollNo: "23KB1A0600",
           displayName: null,
-          points: 700,
+          points: 1_800,
         },
       ],
-      played: 42,
-      fastestMs: 4_200,
-      section: { key: "4|CSE|C", label: "4 CSE C", points: 900, players: 3 },
+      sections: [
+        { key: "4|CSE|C", label: "4 CSE C", points: 4_820, players: 9 },
+      ],
+      updatedAt: "4:12 pm",
     });
-    expect(results.text).toContain("42 played");
-    expect(results.text).toContain("23KB1A0•••");
-    expect(results.text).toContain("Fastest answer: <b>4s</b>");
-    expect(results.text).toContain("Section of the day: <b>4 CSE C</b>");
-    expect(results.rich).toContain("<table bordered striped compact>");
-    expect(results.rich).toContain('<th align="left">Player</th>');
-    expect(results.rich).toContain("23KB1A0•••");
-    expect(results.rich).toContain("Fastest answer <b>4s</b>");
-    expect(results.rich).toContain("Section of the day <b>4 CSE C</b>");
-    expect(results.rich).toContain("<footer>Tomorrow's set drops at 8:30am.");
-    for (const row of results.markup?.inline_keyboard ?? []) {
+
+    expect(card.rich).toContain("<b>Weekly board · Week of 10 Nov</b>");
+    expect(card.rich).toContain("<b>Students</b>");
+    expect(card.rich).toContain("<b>Sections</b>");
+    expect(card.rich).toContain('<th align="left">Player</th>');
+    expect(card.rich).toContain('<th align="left">Section</th>');
+    expect(card.rich).toContain("&lt;Asha&gt;");
+    expect(card.rich).toContain("23KB1A0•••");
+    expect(card.rich).toContain("<b>2,100</b>");
+    expect(card.rich).toContain("<b>4,820</b>");
+    expect(card.rich).toContain("Updated 4:12 pm IST");
+    expect(card.text).toContain("<b>Students</b>");
+    expect(card.text).toContain("<b>Sections</b>");
+    expect(card.text).toContain("23KB1A0•••");
+  });
+
+  it("shows only the top three rows of each table", () => {
+    const card = liveBoardCard({
+      label: "Week of 10 Nov",
+      players: [1, 2, 3, 4, 5].map((index) => ({
+        userId: index,
+        rollNo: `23KB1A05${index}0`,
+        displayName: `Player ${index}`,
+        points: 3_000 - index * 100,
+      })),
+      sections: [1, 2, 3, 4, 5].map((index) => ({
+        key: `4|CSE|${index}`,
+        label: `Section ${index}`,
+        points: 5_000 - index * 100,
+        players: 10,
+      })),
+      updatedAt: "4:12 pm",
+    });
+
+    expect(card.rich).toContain("Player 3");
+    expect(card.rich).not.toContain("Player 4");
+    expect(card.rich).toContain("Section 3");
+    expect(card.rich).not.toContain("Section 4");
+    expect(card.text).toContain("Player 3");
+    expect(card.text).not.toContain("Player 4");
+  });
+
+  it("writes the empty live board as one line", () => {
+    const card = liveBoardCard({
+      label: "Week of 10 Nov",
+      players: [],
+      sections: [],
+      updatedAt: "4:12 pm",
+    });
+
+    expect(card.rich).toContain(
+      "No one has played this week yet. Be the first.",
+    );
+    expect(card.rich).not.toContain("<table");
+    expect(card.text).toContain(
+      "No one has played this week yet. Be the first.",
+    );
+  });
+
+  it("keeps the live board on URL buttons only", () => {
+    const card = liveBoardCard({
+      label: "Week of 10 Nov",
+      players: [],
+      sections: [],
+      updatedAt: "4:12 pm",
+    });
+
+    for (const row of card.markup?.inline_keyboard ?? []) {
       for (const button of row) {
         expect(button.callback_data).toBeUndefined();
         expect(button.url).toBeTruthy();
       }
     }
+    expect(card.markup?.inline_keyboard[0][0].url).toContain("quiz");
+
+    const urls = (card.markup?.inline_keyboard.flat() ?? []).map(
+      (button) => button.url ?? "",
+    );
+    expect(urls.some((url) => url.includes("startapp=rank"))).toBe(true);
   });
 
-  it("renders the weekly channel post as a table", () => {
-    const card = weeklyPost({
+  it("says when one side of the board has no rows yet", () => {
+    const card = liveBoardCard({
       label: "Week of 10 Nov",
-      sections: [
-        { key: "4|CSE|C", label: "4 CSE C", points: 4_820, players: 9 },
-      ],
       players: [
         {
           userId: 1,
@@ -377,26 +446,13 @@ describe("the cards", () => {
           points: 2_100,
         },
       ],
+      sections: [],
+      updatedAt: "4:12 pm",
     });
 
-    expect(card.rich).toContain("<table bordered striped compact>");
-    expect(card.rich).toContain('<th align="left">Section</th>');
-    expect(card.rich).toContain("4 CSE C");
-    expect(card.rich).toContain("<b>4,820</b>");
-    expect(card.rich).toContain("Player of the week: <b>Asha</b>");
-    expect(card.rich).toContain("Top 10 players per section count");
-  });
-
-  it("finds the fastest correct answer", () => {
-    const answers: AttemptAnswer[][] = [
-      [
-        { option: 0, correct: false, ms: 100, points: 0 },
-        { option: 1, correct: true, ms: 4_200, points: 140 },
-      ],
-      [{ option: 2, correct: true, ms: 2_800, points: 143 }],
-    ];
-    expect(fastestCorrect(answers)).toBe(2_800);
-    expect(fastestCorrect([[]])).toBeNull();
+    expect(card.rich).toContain("<b>Students</b>");
+    expect(card.rich).toContain("No section has scored this week yet.");
+    expect(card.text).toContain("No section has scored this week yet.");
   });
 });
 
@@ -469,45 +525,5 @@ describe("the empty and edge cards", () => {
 
     expect(card.text).toContain("Finish today's run first");
     expect(card.markup?.inline_keyboard).toHaveLength(1);
-  });
-
-  it("skips the fastest and section lines when they are missing", () => {
-    const card = resultsPost({
-      label: "15 Nov",
-      top: [],
-      played: 0,
-      fastestMs: null,
-      section: null,
-    });
-
-    expect(card.text).toContain("0 played");
-    expect(card.text).not.toContain("Fastest answer");
-    expect(card.text).not.toContain("Section of the day");
-  });
-
-  it("writes the weekly board with no champion", () => {
-    const card = weeklyPost({
-      label: "Week of 10 Nov",
-      sections: [
-        { key: "4|CSE|C", label: "4 CSE C", points: 4_820, players: 9 },
-      ],
-      players: [],
-    });
-
-    expect(card.text).toContain("4 CSE C");
-    expect(card.text).not.toContain("Player of the week");
-    expect(card.rich).toContain("<table bordered striped compact>");
-    expect(card.rich).not.toContain("Player of the week");
-  });
-
-  it("writes the empty weekly channel post", () => {
-    const card = weeklyPost({
-      label: "Week of 10 Nov",
-      sections: [],
-      players: [],
-    });
-
-    expect(card.rich).toContain("No one has played this week. Be the first.");
-    expect(card.rich).not.toContain("<table");
   });
 });

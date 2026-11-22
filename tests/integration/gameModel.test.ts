@@ -3,13 +3,12 @@ import { turso } from "../../src/db/db.js";
 import {
   addScore,
   claimDuelOpponent,
-  claimGamePost,
   createAttempt,
   createDuel,
   finishAttempt,
   finishDuel,
   getAttempt,
-  getDaySections,
+  getChannelBoard,
   getDuel,
   getDuelByAttempt,
   getDuelRecord,
@@ -22,6 +21,7 @@ import {
   getWeekSections,
   initGameTables,
   saveAnswer,
+  saveChannelBoard,
   setPlayerStreak,
   syncGameDisplayName,
   upsertGamePlayer,
@@ -44,7 +44,7 @@ const clear = async (): Promise<void> => {
     "game_attempts",
     "game_duels",
     "game_scores",
-    "game_posts",
+    "game_channel_board",
   ]) {
     await turso.execute(`DELETE FROM ${table}`);
   }
@@ -335,32 +335,6 @@ describe("weekly boards", () => {
       players: 3,
     });
   });
-
-  it("builds the day's section board", async () => {
-    for (const userId of [401, 402]) {
-      await player(userId);
-      await addScore({
-        season: SEASON,
-        weekKey: WEEK,
-        dayKey: DAY,
-        userId,
-        rollNo: `23KB1A04${userId % 10}`,
-        sectionKey: "4|CSE|C",
-        sectionLabel: "4 CSE C",
-        source: "five",
-        ref: `a${userId}`,
-        points: 150,
-      });
-    }
-
-    const board = await getDaySections(SEASON, DAY, 5);
-    expect(board[0]).toEqual({
-      key: "4|CSE|C",
-      label: "4 CSE C",
-      points: 300,
-      players: 2,
-    });
-  });
 });
 
 describe("players", () => {
@@ -519,9 +493,46 @@ describe("duels", () => {
   });
 });
 
-describe("channel claims", () => {
-  it("lets one tick claim a post", async () => {
-    expect(await claimGamePost("morning-2026-11-15")).toBe(true);
-    expect(await claimGamePost("morning-2026-11-15")).toBe(false);
+describe("the channel live board", () => {
+  it("remembers the message and the fingerprint", async () => {
+    await saveChannelBoard({
+      slot: "live",
+      chatId: "@test_channel",
+      messageId: 77,
+      snapshot: "first",
+      updatedAt: "2026-11-15T10:00:00.000Z",
+    });
+    expect(await getChannelBoard("live")).toEqual({
+      chatId: "@test_channel",
+      messageId: 77,
+      snapshot: "first",
+      updatedAt: "2026-11-15T10:00:00.000Z",
+    });
+  });
+
+  it("overwrites the same slot on the next change", async () => {
+    await saveChannelBoard({
+      slot: "live",
+      chatId: "@test_channel",
+      messageId: 77,
+      snapshot: "first",
+      updatedAt: "2026-11-15T10:00:00.000Z",
+    });
+    await saveChannelBoard({
+      slot: "live",
+      chatId: "@test_channel",
+      messageId: 78,
+      snapshot: "second",
+      updatedAt: "2026-11-15T10:05:00.000Z",
+    });
+
+    expect(await getChannelBoard("live")).toMatchObject({
+      messageId: 78,
+      snapshot: "second",
+    });
+  });
+
+  it("has no row before the first post", async () => {
+    expect(await getChannelBoard("missing")).toBeNull();
   });
 });

@@ -76,3 +76,10 @@ export const previousDateKey = (dateKey: string): string => {
   date.setUTCDate(date.getUTCDate() - 1);
   return dateKeyOf(date);
 };
+
+/** "4:12 pm": the IST clock in the 12-hour form every card uses. */
+export const istClockLabel = (now: Date = new Date()): string => {
+  const { hour, minute } = istStamp(now);
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${pad(minute)} ${hour < 12 ? "am" : "pm"}`;
+};

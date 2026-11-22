@@ -173,9 +173,12 @@ export const initGameTables = async (): Promise<void> => {
       ON game_scores (season, week_key, user_id);
   `);
   await turso.execute(`
-    CREATE TABLE IF NOT EXISTS game_posts (
-      key TEXT PRIMARY KEY,
-      posted_at TEXT NOT NULL DEFAULT (datetime('now'))
+    CREATE TABLE IF NOT EXISTS game_channel_board (
+      slot TEXT PRIMARY KEY,
+      chat_id TEXT NOT NULL,
+      message_id INTEGER NOT NULL,
+      snapshot TEXT NOT NULL,
+      updated_at TEXT NOT NULL
     );
   `);
 };
@@ -818,40 +821,6 @@ export const getFiveRank = async (input: {
   };
 };
 
-export interface TodayAttempt {
-  userId: number;
-  rollNo: string;
-  displayName: string | null;
-  score: number;
-  points: number;
-  answers: AttemptAnswer[];
-  finishedAt: string;
-}
-
-/** Every finished Five run today, best first. */
-export const getTodayAttempts = async (
-  dayKey: string,
-): Promise<TodayAttempt[]> => {
-  const result = await turso.execute({
-    sql: `SELECT a.user_id, a.roll_no, a.score, a.points, a.answers,
-                 a.finished_at, p.display_name
-          FROM game_attempts a
-          LEFT JOIN game_players p ON p.user_id = a.user_id
-          WHERE a.game = 'five' AND a.day_key = ? AND a.status = 'done'
-          ORDER BY a.points DESC, a.finished_at ASC`,
-    args: [dayKey],
-  });
-  return result.rows.map((row) => ({
-    userId: num(row.user_id),
-    rollNo: text(row.roll_no),
-    displayName: nullableText(row.display_name),
-    score: num(row.score),
-    points: num(row.points),
-    answers: jsonArray<AttemptAnswer>(row.answers, []),
-    finishedAt: text(row.finished_at),
-  }));
-};
-
 /** The week's player board. */
 export const getWeekPlayers = async (
   season: string,
@@ -919,32 +888,6 @@ export const getWeekSections = async (
           ORDER BY points DESC, r.section_key ASC
           LIMIT ?`,
     args: [season, weekKey, season, weekKey, Math.max(1, Math.min(100, limit))],
-  });
-  return result.rows.map((row) => ({
-    key: text(row.section_key),
-    label: text(row.section_label),
-    points: num(row.points),
-    players: num(row.players),
-  }));
-};
-
-/** The day's section board, for the lunchtime result post. */
-export const getDaySections = async (
-  season: string,
-  dayKey: string,
-  limit = 5,
-): Promise<BoardSection[]> => {
-  const result = await turso.execute({
-    sql: `SELECT section_key,
-                 COALESCE(MAX(section_label), section_key) AS section_label,
-                 SUM(points) AS points,
-                 COUNT(DISTINCT user_id) AS players
-          FROM game_scores
-          WHERE season = ? AND day_key = ? AND section_key IS NOT NULL
-          GROUP BY section_key
-          ORDER BY points DESC, section_key ASC
-          LIMIT ?`,
-    args: [season, dayKey, Math.max(1, Math.min(50, limit))],
   });
   return result.rows.map((row) => ({
     key: text(row.section_key),
@@ -1028,22 +971,62 @@ export const getDuelRecord = async (
   };
 };
 
+export interface ChannelBoardState {
+  chatId: string;
+  messageId: number;
+  /** The fingerprint of the rows the message last showed. */
+  snapshot: string;
+  /** When the snapshot last changed, ISO. */
+  updatedAt: string;
+}
+
 /**
- * Claim a scheduled channel post. A restart must not post the same board
- * twice; if the send fails, the caller releases the claim so the next tick
- * can retry.
+ * Where the channel's single live board message lives.
+ *
+ * One row: the message id, the chat it belongs to and the fingerprint of the
+ * data it last showed. The scheduler compares the fingerprint before editing,
+ * so an unchanged board is not touched.
  */
-export const claimGamePost = async (key: string): Promise<boolean> => {
+export const getChannelBoard = async (
+  slot: string,
+): Promise<ChannelBoardState | null> => {
   const result = await turso.execute({
-    sql: `INSERT OR IGNORE INTO game_posts (key) VALUES (?)`,
-    args: [key],
+    sql: `SELECT chat_id, message_id, snapshot, updated_at
+          FROM game_channel_board WHERE slot = ?`,
+    args: [slot],
   });
-  return Number(result.rowsAffected) === 1;
+  const row = result.rows[0];
+  if (!row) return null;
+  return {
+    chatId: text(row.chat_id),
+    messageId: num(row.message_id),
+    snapshot: text(row.snapshot),
+    updatedAt: text(row.updated_at),
+  };
 };
 
-export const releaseGamePost = async (key: string): Promise<void> => {
+export const saveChannelBoard = async (state: {
+  slot: string;
+  chatId: string;
+  messageId: number;
+  snapshot: string;
+  updatedAt: string;
+}): Promise<void> => {
   await turso.execute({
-    sql: `DELETE FROM game_posts WHERE key = ?`,
-    args: [key],
+    sql: `INSERT INTO game_channel_board
+            (slot, chat_id, message_id, snapshot, updated_at)
+          VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT(slot) DO UPDATE SET
+            chat_id = excluded.chat_id,
+            message_id = excluded.message_id,
+            snapshot = excluded.snapshot,
+            updated_at = excluded.updated_at`,
+    args: [
+      state.slot,
+      state.chatId,
+      state.messageId,
+      state.snapshot,
+      state.updatedAt,
+    ],
   });
 };
