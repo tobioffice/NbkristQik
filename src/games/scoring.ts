@@ -124,9 +124,9 @@ export const sectionRefOf = (student: {
 /**
  * A roll number with its last three characters hidden.
  *
- * The channel is public and a full roll is enough to find a student; the
- * league shows the display name a student chose, or this. The portal name is
- * never printed outside a private chat.
+ * The league boards print the full roll; this is for the rows its owner asked
+ * to hide from the leaderboard, and for the opponent line on a duel card. The
+ * portal name is never printed outside a private chat.
  */
 export const maskRoll = (roll: string): string => {
   const clean = roll.trim().toUpperCase();
@@ -134,13 +134,30 @@ export const maskRoll = (roll: string): string => {
   return `${clean.slice(0, -3)}•••`;
 };
 
-/** What a public board calls a player. */
+/** What a duel card calls the other player. */
 export const publicName = (
   displayName: string | null | undefined,
   roll: string,
 ): string => {
   const chosen = displayName?.trim();
   return chosen ? chosen : maskRoll(roll);
+};
+
+/**
+ * The name a league board row shows: the chosen display name, else the roll
+ * itself. The one exception is a row whose owner hid the leaderboard: that
+ * roll stays masked, the same rule the academic register uses.
+ */
+export const boardName = (player: {
+  displayName: string | null;
+  rollNo: string;
+  hidden?: boolean;
+}): string => {
+  const chosen = player.displayName?.trim();
+  if (chosen) return chosen;
+  return player.hidden
+    ? maskRoll(player.rollNo)
+    : player.rollNo.trim().toUpperCase();
 };
 
 /** "18s", "1m 04s". */

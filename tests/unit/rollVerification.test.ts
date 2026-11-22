@@ -40,6 +40,7 @@ const {
   isRegistrationBlockedFor,
   VerificationError,
 } = await import("../../src/services/verification/otp.js");
+const { getHiddenRolls } = await import("../../src/db/rollClaim.model.js");
 
 const ROLL = "99KB9A9999";
 const OWNER = "1000000001";
@@ -234,5 +235,27 @@ describe("college-email verification", () => {
       { roll: ROLL, hide: 0, lookups: 1, registration: 0, any: 1 },
       { roll: "98KB9A0000", hide: 0, lookups: 0, registration: 0, any: 0 },
     ]);
+  });
+});
+
+describe("the hidden-roll lookup behind the league board", () => {
+  it("returns only the rolls whose owner hid the leaderboard", async () => {
+    await client.batch(
+      [
+        `INSERT OR REPLACE INTO roll_claims
+           (roll_no, user_id, email, hide_leaderboard, blocked)
+         VALUES ('77KB7A0001', 'u1', 'u1@nbkrist.org', 1, 1)`,
+        `INSERT OR REPLACE INTO roll_claims
+           (roll_no, user_id, email, hide_leaderboard, blocked)
+         VALUES ('77KB7A0002', 'u2', 'u2@nbkrist.org', 0, 0)`,
+      ],
+      "write",
+    );
+
+    // case-insensitive, and an unclaimed roll is not hidden
+    expect(
+      await getHiddenRolls(["77kb7a0001", "77KB7A0002", "77KB7A0003"]),
+    ).toEqual(new Set(["77KB7A0001"]));
+    expect(await getHiddenRolls([])).toEqual(new Set());
   });
 });

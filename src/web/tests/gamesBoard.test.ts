@@ -15,9 +15,10 @@ import {
 const board: BoardPayload = {
   weekLabel: "Week of 16 Nov",
   players: [
-    { name: "Qik player", roll: "23KB1A0•••", points: 2_100 },
+    { name: "Qik player", roll: "23KB1A0599", points: 2_100 },
+    // the owner hid the leaderboard row: only the roll stays masked
     { name: "23KB1A0•••", roll: "23KB1A0•••", points: 1_860 },
-    { name: "Asha", roll: "23KB1A0•••", points: 1_740 },
+    { name: "Asha", roll: "23KB1A0600", points: 1_740 },
   ],
   sections: [
     {
@@ -26,7 +27,7 @@ const board: BoardPayload = {
       players: 9,
       // Only the leading section carries its players.
       topPlayers: [
-        { name: "Lakshmi", roll: "23KB1A0•••", points: 1_240 },
+        { name: "Lakshmi", roll: "23KB1A0700", points: 1_240 },
         { name: "23KB1A0•••", roll: "23KB1A0•••", points: 1_100 },
       ],
     },
@@ -69,6 +70,10 @@ describe("GamesBoardView", () => {
     expect(html).toContain('aria-pressed="true">Players</button>');
     expect(html).toContain("Qik player");
     expect(html).toContain("2,100");
+    // full rolls, with the hidden owner's one masked
+    expect(html).toContain("23KB1A0599");
+    expect(html).toContain("23KB1A0600");
+    expect(html).toContain("23KB1A0•••");
     expect(html).toContain("Top 3");
     expect(html).not.toContain("4 CSE C");
     expect(html).not.toContain("tg-tree-node");

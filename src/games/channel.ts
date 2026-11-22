@@ -10,6 +10,7 @@ import {
   getWeekSections,
   saveChannelBoard,
 } from "../db/game.model.js";
+import { getHiddenRolls } from "../db/rollClaim.model.js";
 import {
   LIVE_BOARD_ROWS,
   liveBoardCard,
@@ -17,7 +18,7 @@ import {
   type Card,
 } from "./cards.js";
 import { channelPostsEnabled, seasonKey } from "./config.js";
-import { publicName } from "./scoring.js";
+import { boardName } from "./scoring.js";
 import { istClockLabel, istStamp } from "./time.js";
 import type { BoardPlayer, BoardSection } from "./types.js";
 
@@ -49,7 +50,18 @@ export const readLiveBoard = async (): Promise<LiveBoard> => {
     getWeekPlayers(season, stamp.week, LIVE_BOARD_ROWS),
     getWeekSections(season, stamp.week, LIVE_BOARD_ROWS),
   ]);
-  return { label: weekLabel(stamp.monday), players, sections };
+
+  // A hidden owner's roll is the only one the board keeps masked.
+  const hidden = await getHiddenRolls(players.map((player) => player.rollNo));
+  return {
+    label: weekLabel(stamp.monday),
+    players: players.map((player) =>
+      hidden.has(player.rollNo.toUpperCase())
+        ? { ...player, hidden: true }
+        : player,
+    ),
+    sections,
+  };
 };
 
 /**
@@ -60,10 +72,7 @@ export const liveBoardSnapshot = (board: LiveBoard): string =>
   JSON.stringify({
     version: BOARD_FORMAT,
     label: board.label,
-    players: board.players.map((player) => [
-      publicName(player.displayName, player.rollNo),
-      player.points,
-    ]),
+    players: board.players.map((player) => [boardName(player), player.points]),
     sections: board.sections.map((section) => [section.label, section.points]),
   });
 

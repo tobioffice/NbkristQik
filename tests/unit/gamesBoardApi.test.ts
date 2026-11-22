@@ -14,12 +14,17 @@ const mocks = vi.hoisted(() => ({
   getWeekPlayers: vi.fn(),
   getWeekSections: vi.fn(),
   getSectionTopPlayers: vi.fn(),
+  getHiddenRolls: vi.fn(),
 }));
 
 vi.mock("../../src/db/game.model.js", () => ({
   getWeekPlayers: mocks.getWeekPlayers,
   getWeekSections: mocks.getWeekSections,
   getSectionTopPlayers: mocks.getSectionTopPlayers,
+}));
+
+vi.mock("../../src/db/rollClaim.model.js", () => ({
+  getHiddenRolls: mocks.getHiddenRolls,
 }));
 
 const { gamesRouter } = await import("../../src/api/games.js");
@@ -36,6 +41,8 @@ beforeEach(() => {
   mocks.getWeekPlayers.mockReset();
   mocks.getWeekSections.mockReset();
   mocks.getSectionTopPlayers.mockReset();
+  mocks.getHiddenRolls.mockReset();
+  mocks.getHiddenRolls.mockResolvedValue(new Set());
   mocks.getSectionTopPlayers.mockResolvedValue([
     {
       userId: 3,
@@ -70,7 +77,7 @@ beforeEach(() => {
 });
 
 describe("GET /api/games/board", () => {
-  it("returns the week boards with public names only", async () => {
+  it("returns the chosen name with the full roll", async () => {
     const res = await request(createApp()).get("/api/games/board");
 
     expect(res.status).toBe(200);
@@ -78,8 +85,9 @@ describe("GET /api/games/board", () => {
       success: true,
       weekLabel: weekLabel(istStamp().monday),
       players: [
-        { name: "Asha", roll: "23KB1A0•••", points: 2_100 },
-        { name: "23KB1A0•••", roll: "23KB1A0•••", points: 1_800 },
+        { name: "Asha", roll: "23KB1A0599", points: 2_100 },
+        // no display name: the roll is the name
+        { name: "23KB1A0600", roll: "23KB1A0600", points: 1_800 },
       ],
       sections: [
         {
@@ -88,13 +96,43 @@ describe("GET /api/games/board", () => {
           players: 9,
           // Only the number-one section carries its players.
           topPlayers: [
-            { name: "Lakshmi", roll: "23KB1A0•••", points: 1_240 },
-            { name: "23KB1A0•••", roll: "23KB1A0•••", points: 1_100 },
+            { name: "Lakshmi", roll: "23KB1A0700", points: 1_240 },
+            { name: "23KB1A0701", roll: "23KB1A0701", points: 1_100 },
           ],
         },
       ],
     });
     expect(res.headers["cache-control"]).toBe("public, max-age=30");
+  });
+
+  it("masks only the rolls whose owner hid the leaderboard", async () => {
+    mocks.getHiddenRolls.mockResolvedValue(new Set(["23KB1A0599"]));
+
+    const res = await request(createApp()).get("/api/games/board");
+
+    // the hidden owner keeps the chosen name, but the roll is masked
+    expect(res.body.players[0]).toEqual({
+      name: "Asha",
+      roll: "23KB1A0•••",
+      points: 2_100,
+    });
+    // everyone else shows the full roll
+    expect(res.body.players[1]).toEqual({
+      name: "23KB1A0600",
+      roll: "23KB1A0600",
+      points: 1_800,
+    });
+  });
+
+  it("asks which of the board's rolls are hidden", async () => {
+    await request(createApp()).get("/api/games/board");
+
+    expect(mocks.getHiddenRolls).toHaveBeenCalledWith([
+      "23KB1A0599",
+      "23KB1A0600",
+      "23KB1A0700",
+      "23KB1A0701",
+    ]);
   });
 
   it("asks for the week's top ten players and every scoring section", async () => {

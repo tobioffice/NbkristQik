@@ -82,6 +82,8 @@ export interface BoardPlayer {
   rollNo: string;
   displayName: string | null;
   points: number;
+  /** True when the owner hid the leaderboard row; only its roll is masked. */
+  hidden?: boolean;
 }
 
 /** A row on the weekly section board. */

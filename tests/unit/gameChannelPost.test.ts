@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   saveChannelBoard: vi.fn(async (_state: Record<string, unknown>) => undefined),
   getWeekPlayers: vi.fn(),
   getWeekSections: vi.fn(),
+  getHiddenRolls: vi.fn(),
 }));
 
 vi.mock("../../src/bot/bot.js", () => ({
@@ -40,6 +41,10 @@ vi.mock("../../src/db/game.model.js", () => ({
   saveChannelBoard: mocks.saveChannelBoard,
   getWeekPlayers: mocks.getWeekPlayers,
   getWeekSections: mocks.getWeekSections,
+}));
+
+vi.mock("../../src/db/rollClaim.model.js", () => ({
+  getHiddenRolls: mocks.getHiddenRolls,
 }));
 
 const { isRichRefusal, liveBoardSnapshot, postCard, syncLiveBoard } =
@@ -80,6 +85,8 @@ beforeEach(() => {
   mocks.getWeekPlayers.mockResolvedValue(board.players);
   mocks.getWeekSections.mockReset();
   mocks.getWeekSections.mockResolvedValue(board.sections);
+  mocks.getHiddenRolls.mockReset();
+  mocks.getHiddenRolls.mockResolvedValue(new Set());
 });
 
 describe("syncLiveBoard", () => {

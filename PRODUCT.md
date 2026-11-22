@@ -41,7 +41,7 @@ The product lives entirely inside Telegram â€” no install, no separate account â
   - The app runs inside the Telegram WebApp SDK; identity comes from signed `initData`, sent in the `X-Telegram-Init-Data` header by the shipped client. Query/body `initData` is accepted for compatibility. The unsigned `userId` development shortcut requires `ALLOW_DEV_IDENTITY=1` or `ENV=test`.
   - The admin panel is served as server-rendered vanilla HTML/CSS/JS from the Express backend; the app is React 19 + Vite + Tailwind; the status page is a single static HTML file. The redesign must fit each surface's existing delivery mechanism.
   - The college portal is plain HTTP and unreliable; data can be missing or stale.
-  - League play is one run attempt per registered account per IST day; duels expire in 48 hours; channel names are the chosen display name or a masked roll, never the portal name.
+  - League play is one run attempt per registered account per IST day; duels expire in 48 hours; boards show the chosen display name or the full roll, masked only when its owner hid the leaderboard, never the portal name.
   - The admin panel path and password come from env vars; if unset, or if the password is shorter than 16 characters in production, the panel is disabled.
 - **Undecided / open:** none recorded.
 

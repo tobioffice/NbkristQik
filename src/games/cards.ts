@@ -9,7 +9,7 @@ import type {
   GameDuel,
   GameQuestion,
 } from "./types.js";
-import { publicName, QUESTION_LIMIT_MS } from "./scoring.js";
+import { boardName, publicName, QUESTION_LIMIT_MS } from "./scoring.js";
 
 export interface Card {
   text: string;
@@ -49,8 +49,7 @@ const QUESTION_SECONDS = Math.round(QUESTION_LIMIT_MS / 1000);
 const formatNumber = (value: number): string =>
   new Intl.NumberFormat("en-IN").format(value);
 
-const nameCell = (player: BoardPlayer): string =>
-  escapeHtml(publicName(player.displayName, player.rollNo));
+const nameCell = (player: BoardPlayer): string => escapeHtml(boardName(player));
 
 /** A bordered table for the rich renderer. */
 const richTable = (

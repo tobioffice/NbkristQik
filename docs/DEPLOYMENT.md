@@ -2,26 +2,26 @@
 
 ## Environment variables
 
-| Variable | Consumer | Notes |
-|---|---|---|
-| `ENV` | `src/config/environmentals.ts` | `production` (default) or `development`; switches token/channel selection. The dev `userId` shortcut also needs `ALLOW_DEV_IDENTITY=1` |
-| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_BOT_TOKEN_DEV` | bot, initData HMAC | Production vs dev token |
-| `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` | `src/db/db.ts` | Turso connection |
-| `REDIS_URL` | Redis client | Cache |
-| `N_USERNAME` / `N_PASSWORD` | portal session + `/syncdb` | College portal credentials |
-| `ADMIN_ID` | command handlers | Telegram id for admin commands and report forwarding |
-| `PROD_CHANNEL` / `TEST_CHANNEL` | config | Channel selected by `ENV` |
-| `ADMIN_PANEL_PATH` / `ADMIN_PANEL_PASSWORD` | admin panel | Panel disabled unless both are set; production also refuses a password shorter than 16 characters |
-| `CORS_ORIGINS` | API | Comma-separated allowlist; default `https://checker.tobioffice.online` |
-| `PORTAL_BASE_URL` | constants | Optional; default `http://103.203.175.91` |
-| `HOST` / `PORT` | API | Bind address and port; defaults `127.0.0.1:3000` |
-| `STATUS_PAGE_PATH` | `src/api/server.ts` | Optional override for the `/status` file; defaults to `public/status/index.html` |
-| `UPTIME_INGEST_SECRET` | `src/api/internal.ts` | Shared secret for `/internal/*`; unset disables both routes |
-| `MONITOR_*` | `src/monitor/index.ts` | Only read by the monitor-host monitor, not the bot |
-| `ATTENDANCE_WIDGET` | `src/bot/academics/widgetCard.ts` | `off` (default) while Telegram rejects widgets; `admin` tests it on `ADMIN_ID`; `all` opens it to every private chat |
-| `GAME_CHANNEL_POSTS` | `src/games/channel.ts` | `on` keeps the channel's live weekly board (students and sections) in sync; default off |
-| `GAME_SEASON` | `src/games/config.ts` | Season key for the weekly boards; default `S1` |
-| `PDFSTAMP_BIN` | `src/services/library/pdfstamp.ts` | Optional override for the native PDF stamp; default `bin/pdfstamp` at the repository root |
+| Variable                                        | Consumer                           | Notes                                                                                                                                  |
+| ----------------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `ENV`                                           | `src/config/environmentals.ts`     | `production` (default) or `development`; switches token/channel selection. The dev `userId` shortcut also needs `ALLOW_DEV_IDENTITY=1` |
+| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_BOT_TOKEN_DEV` | bot, initData HMAC                 | Production vs dev token                                                                                                                |
+| `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN`       | `src/db/db.ts`                     | Turso connection                                                                                                                       |
+| `REDIS_URL`                                     | Redis client                       | Cache                                                                                                                                  |
+| `N_USERNAME` / `N_PASSWORD`                     | portal session + `/syncdb`         | College portal credentials                                                                                                             |
+| `ADMIN_ID`                                      | command handlers                   | Telegram id for admin commands and report forwarding                                                                                   |
+| `PROD_CHANNEL` / `TEST_CHANNEL`                 | config                             | Channel selected by `ENV`                                                                                                              |
+| `ADMIN_PANEL_PATH` / `ADMIN_PANEL_PASSWORD`     | admin panel                        | Panel disabled unless both are set; production also refuses a password shorter than 16 characters                                      |
+| `CORS_ORIGINS`                                  | API                                | Comma-separated allowlist; default `https://checker.tobioffice.online`                                                                 |
+| `PORTAL_BASE_URL`                               | constants                          | Optional; default `http://103.203.175.91`                                                                                              |
+| `HOST` / `PORT`                                 | API                                | Bind address and port; defaults `127.0.0.1:3000`                                                                                       |
+| `STATUS_PAGE_PATH`                              | `src/api/server.ts`                | Optional override for the `/status` file; defaults to `public/status/index.html`                                                       |
+| `UPTIME_INGEST_SECRET`                          | `src/api/internal.ts`              | Shared secret for `/internal/*`; unset disables both routes                                                                            |
+| `MONITOR_*`                                     | `src/monitor/index.ts`             | Only read by the monitor-host monitor, not the bot                                                                                     |
+| `ATTENDANCE_WIDGET`                             | `src/bot/academics/widgetCard.ts`  | `off` (default) while Telegram rejects widgets; `admin` tests it on `ADMIN_ID`; `all` opens it to every private chat                   |
+| `GAME_CHANNEL_POSTS`                            | `src/games/channel.ts`             | `on` keeps the channel's live weekly board (students and sections) in sync; default off                                                |
+| `GAME_SEASON`                                   | `src/games/config.ts`              | Season key for the weekly boards; default `S1`                                                                                         |
+| `PDFSTAMP_BIN`                                  | `src/services/library/pdfstamp.ts` | Optional override for the native PDF stamp; default `bin/pdfstamp` at the repository root                                              |
 
 Start from [`.env.example`](../.env.example).
 
@@ -153,7 +153,7 @@ rows directly; `active = 0` retires a question without deleting history.
 League rules: one run attempt per account per IST day; each question closes
 after 10 seconds and a late tap scores nothing; duels last 48 hours; only the
 best ten players per section count on the weekly board; channel names are the
-student's chosen display name or a masked roll, never the portal name.
+student's chosen display name or the full roll (masked only when the owner hid the leaderboard), never the portal name.
 
 ## Production deployment
 
@@ -181,19 +181,19 @@ values fall back to the existing `SERVER_SSH_KEY`, `SERVER_HOST` and
 both exist. Check that the older values still point at the current production
 host before relying on them.
 
-| Secret | Required | Purpose |
-|---|---|---|
-| `DEPLOY_SSH_KEY` | yes | Private OpenSSH key for the deploy user, without a passphrase (`SERVER_SSH_KEY` fallback) |
-| `DEPLOY_SSH_HOST` | yes | Hostname or IP of the production host, not an ssh alias (`SERVER_HOST` fallback) |
-| `DEPLOY_SSH_USER` | yes | Unix user that owns the checkout and may restart the unit (`SERVER_USER` fallback) |
-| `DEPLOY_SSH_PORT` | no | SSH port, default `22` |
-| `DEPLOY_KNOWN_HOSTS` | no | Pinned `known_hosts` line(s); when unset the job does `ssh-keyscan` for that run |
-| `DEPLOY_DIR` | no | Defaults to `/home/ubuntu/nbkristqik`; do not reuse the old `SERVER_PATH`, which pointed at its parent |
-| `DEPLOY_SERVICE` | no | Defaults to `nbkristqik` |
-| `DEPLOY_BASE_URL` | no | Defaults to `http://127.0.0.1:3000` |
-| `DEPLOY_DB_URL` | recommended | Server-side `file:` URL for the pre-restart `VACUUM INTO` backup |
-| `DEPLOY_DB_BACKUP_DIR` | no | Defaults to `$DEPLOY_DIR/backups` |
-| `DEPLOY_INTERNAL_SECRET` | no | Same value as the server's `UPTIME_INGEST_SECRET`; enables the authenticated smoke check |
+| Secret                   | Required    | Purpose                                                                                                |
+| ------------------------ | ----------- | ------------------------------------------------------------------------------------------------------ |
+| `DEPLOY_SSH_KEY`         | yes         | Private OpenSSH key for the deploy user, without a passphrase (`SERVER_SSH_KEY` fallback)              |
+| `DEPLOY_SSH_HOST`        | yes         | Hostname or IP of the production host, not an ssh alias (`SERVER_HOST` fallback)                       |
+| `DEPLOY_SSH_USER`        | yes         | Unix user that owns the checkout and may restart the unit (`SERVER_USER` fallback)                     |
+| `DEPLOY_SSH_PORT`        | no          | SSH port, default `22`                                                                                 |
+| `DEPLOY_KNOWN_HOSTS`     | no          | Pinned `known_hosts` line(s); when unset the job does `ssh-keyscan` for that run                       |
+| `DEPLOY_DIR`             | no          | Defaults to `/home/ubuntu/nbkristqik`; do not reuse the old `SERVER_PATH`, which pointed at its parent |
+| `DEPLOY_SERVICE`         | no          | Defaults to `nbkristqik`                                                                               |
+| `DEPLOY_BASE_URL`        | no          | Defaults to `http://127.0.0.1:3000`                                                                    |
+| `DEPLOY_DB_URL`          | recommended | Server-side `file:` URL for the pre-restart `VACUUM INTO` backup                                       |
+| `DEPLOY_DB_BACKUP_DIR`   | no          | Defaults to `$DEPLOY_DIR/backups`                                                                      |
+| `DEPLOY_INTERNAL_SECRET` | no          | Same value as the server's `UPTIME_INGEST_SECRET`; enables the authenticated smoke check               |
 
 One-time setup:
 
@@ -220,6 +220,7 @@ One-time setup:
 
    Put the line in `/etc/sudoers.d/nbkristqik-deploy` with mode `0440`. The
    script runs `systemctl is-active` without sudo.
+
 4. Optionally pin the host key. For a non-default port the entry must include
    `[host]:port`:
 
@@ -340,16 +341,16 @@ prunes the dev dependencies again.
 
 ### Deploy overrides
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `DEPLOY_HOST` | required | SSH alias of the production host |
-| `DEPLOY_DIR` | `/home/ubuntu/nbkristqik` | Application directory on the server |
-| `DEPLOY_SERVICE` | `nbkristqik` | systemd unit to restart |
-| `DEPLOY_BASE_URL` | `http://127.0.0.1:3000` | Base URL the smoke checks call from the server |
-| `DEPLOY_DB_URL` | unset | Server-side SQLite URL for the pre-restart backup |
-| `DEPLOY_DB_BACKUP_DIR` | `$DEPLOY_DIR/backups` | Where pre-deploy backups are written |
-| `DEPLOY_INTERNAL_SECRET` | unset | Adds the authenticated `/internal/health` smoke check |
-| `ALLOW_DIRTY_DEPLOY` | unset | `1` bypasses the clean-tree guard (hotfix only) |
+| Variable                 | Default                   | Purpose                                               |
+| ------------------------ | ------------------------- | ----------------------------------------------------- |
+| `DEPLOY_HOST`            | required                  | SSH alias of the production host                      |
+| `DEPLOY_DIR`             | `/home/ubuntu/nbkristqik` | Application directory on the server                   |
+| `DEPLOY_SERVICE`         | `nbkristqik`              | systemd unit to restart                               |
+| `DEPLOY_BASE_URL`        | `http://127.0.0.1:3000`   | Base URL the smoke checks call from the server        |
+| `DEPLOY_DB_URL`          | unset                     | Server-side SQLite URL for the pre-restart backup     |
+| `DEPLOY_DB_BACKUP_DIR`   | `$DEPLOY_DIR/backups`     | Where pre-deploy backups are written                  |
+| `DEPLOY_INTERNAL_SECRET` | unset                     | Adds the authenticated `/internal/health` smoke check |
+| `ALLOW_DIRTY_DEPLOY`     | unset                     | `1` bypasses the clean-tree guard (hotfix only)       |
 
 `DEPLOY_INTERNAL_SECRET` must match the server's `UPTIME_INGEST_SECRET`.
 Otherwise `/internal/health` answers 401 (or 404 when the route is disabled)
@@ -453,11 +454,11 @@ dependency-free Node program that runs on a second host, so a dead or paused
 production VM still records a down transition and still sends the Telegram
 alert. It probes:
 
-| Probe | What it proves |
-|---|---|
-| `GET /health` on `MONITOR_BASE_URL` | the public API and nginx path are reachable |
+| Probe                                         | What it proves                                  |
+| --------------------------------------------- | ----------------------------------------------- |
+| `GET /health` on `MONITOR_BASE_URL`           | the public API and nginx path are reachable     |
 | `GET /internal/health` with the ingest secret | the database and Redis are alive inside the app |
-| `GET` on `MONITOR_PORTAL_URL` | the college portal host answers |
+| `GET` on `MONITOR_PORTAL_URL`                 | the college portal host answers                 |
 
 The monitor writes the heartbeats back to `/internal/uptime`; when the API is
 down the rows go into a local JSONL spool and replay when it returns. The
@@ -541,6 +542,7 @@ were stored.
 
   Run `nginx -t` and reload after adding it. If the monitor host moves, update
   the address here as well as its DNS.
+
 - The unit runs as `qik-uptime` with `ProtectHome=true`, `ProtectSystem=strict`,
   an empty capability set, `NoNewPrivileges` and a state directory it owns.
   The monitor does not listen on any port.

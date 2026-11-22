@@ -9,15 +9,16 @@ import { haptic } from "../telegram";
  * The league board, opened from the channel's "Full leaderboard" button.
  *
  * It is a hidden page: the channel names it in a `startapp` link, so it has no
- * tab of its own. The rows are the same public names the channel shows (a
- * chosen display name or a masked roll) and the week's boards, so the page
- * needs no Telegram identity to read.
+ * tab of its own. A row shows the chosen display name and the full roll; the
+ * one exception is a verified owner's hide-in-the-leaderboard switch, whose
+ * roll stays masked. The week's boards are public, so the page needs no
+ * Telegram identity to read.
  */
 
 export interface BoardPlayer {
-  /** The chosen display name, or the masked roll when there is none. */
+  /** The chosen display name, or the roll when there is none. */
   name: string;
-  /** The masked roll, for the quiet line under a chosen name. */
+  /** The full roll, or the masked one when its owner hid the leaderboard. */
   roll: string;
   points: number;
 }

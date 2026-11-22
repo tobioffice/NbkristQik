@@ -5,6 +5,7 @@ import {
   getWeekPlayers,
   getWeekSections,
 } from "../db/game.model.js";
+import { getHiddenRolls } from "../db/rollClaim.model.js";
 import { leagueCard, weekLabel } from "./cards.js";
 import { seasonKey } from "./config.js";
 import { sendOrEdit } from "./play.js";
@@ -30,11 +31,20 @@ export const sendLeague = async ({
   const stamp = istStamp();
   const season = seasonKey();
 
-  const [players, sections, me] = await Promise.all([
+  const [rows, sections, me] = await Promise.all([
     getWeekPlayers(season, stamp.week, 5),
     getWeekSections(season, stamp.week, 5),
     getPlayerWeek(season, stamp.week, userId),
   ]);
+
+  // The card shows the roll of a player with no chosen name; only a hidden
+  // owner's roll stays masked.
+  const hidden = await getHiddenRolls(rows.map((player) => player.rollNo));
+  const players = rows.map((player) =>
+    hidden.has(player.rollNo.toUpperCase())
+      ? { ...player, hidden: true }
+      : player,
+  );
 
   const identity =
     (await loadPlayer(userId).catch(() => null)) ??

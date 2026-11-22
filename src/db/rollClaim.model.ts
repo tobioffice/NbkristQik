@@ -112,3 +112,25 @@ export const setClaimOptions = async (
   });
   return Number(result.rowsAffected ?? 0) > 0;
 };
+
+/**
+ * The rolls whose verified owner asked to stay off the public leaderboard.
+ *
+ * The games board shows a full roll next to a chosen name; a hidden owner's
+ * roll is the one figure it must keep masked. Missing rolls are simply not in
+ * the set, so a board with no hidden owners costs one small query.
+ */
+export const getHiddenRolls = async (
+  rollNos: string[],
+): Promise<Set<string>> => {
+  const rolls = [...new Set(rollNos.map((roll) => roll.trim().toUpperCase()))];
+  if (rolls.length === 0) return new Set();
+
+  const placeholders = rolls.map(() => "?").join(", ");
+  const result = await turso.execute({
+    sql: `SELECT UPPER(roll_no) AS roll_no FROM roll_claims
+          WHERE UPPER(roll_no) IN (${placeholders}) AND hide_leaderboard = 1`,
+    args: rolls,
+  });
+  return new Set(result.rows.map((row) => String(row.roll_no)));
+};

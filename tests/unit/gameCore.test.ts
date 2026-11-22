@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   answerPoints,
+  boardName,
   duelOutcome,
   fivePoints,
   formatDuration,
@@ -134,8 +135,19 @@ describe("scoring", () => {
     expect(sectionRefOf({ year: "11", branch: "2", section: "-" })).toBeNull();
   });
 
-  it("never prints a full roll on a public board", () => {
+  it("prints the full roll unless the owner hid the leaderboard", () => {
     expect(maskRoll("23KB1A0599")).toBe("23KB1A0•••");
+    expect(boardName({ displayName: null, rollNo: "23kb1a0599" })).toBe(
+      "23KB1A0599",
+    );
+    expect(
+      boardName({ displayName: null, rollNo: "23KB1A0599", hidden: true }),
+    ).toBe("23KB1A0•••");
+    // a chosen name wins either way
+    expect(
+      boardName({ displayName: "Asha", rollNo: "23KB1A0599", hidden: true }),
+    ).toBe("Asha");
+    // the duel card keeps the old masking rule
     expect(publicName(null, "23KB1A0599")).toBe("23KB1A0•••");
     expect(publicName("Asha", "23KB1A0599")).toBe("Asha");
     expect(publicName("  ", "23KB1A0599")).toBe("23KB1A0•••");
@@ -324,12 +336,12 @@ describe("the cards", () => {
 
     expect(card.text).toContain("Section Wars · Week of 10 Nov");
     expect(card.text).toContain("&lt;Asha&gt;");
-    expect(card.text).toContain("23KB1A0•••");
+    expect(card.text).toContain("23KB1A0600");
     expect(card.text).toContain("You: <b>#37</b> of 143");
     expect(card.rich).toContain("<table");
     expect(card.rich).toContain("4 CSE C");
     expect(card.rich).toContain("Asha");
-    expect(card.rich).toContain("23KB1A0•••");
+    expect(card.rich).toContain("23KB1A0600");
   });
 
   it("renders the live board as two tables, students then sections", () => {
@@ -361,13 +373,36 @@ describe("the cards", () => {
     expect(card.rich).toContain('<th align="left">Player</th>');
     expect(card.rich).toContain('<th align="left">Section</th>');
     expect(card.rich).toContain("&lt;Asha&gt;");
-    expect(card.rich).toContain("23KB1A0•••");
+    expect(card.rich).toContain("23KB1A0600");
     expect(card.rich).toContain("<b>2,100</b>");
     expect(card.rich).toContain("<b>4,820</b>");
     expect(card.rich).toContain("Updated 4:12 pm IST");
     expect(card.text).toContain("<b>Students</b>");
     expect(card.text).toContain("<b>Sections</b>");
-    expect(card.text).toContain("23KB1A0•••");
+    expect(card.text).toContain("23KB1A0600");
+  });
+
+  it("masks only a hidden owner's roll on the live board", () => {
+    const card = liveBoardCard({
+      label: "Week of 10 Nov",
+      players: [
+        { userId: 1, rollNo: "23KB1A0599", displayName: null, points: 200 },
+        {
+          userId: 2,
+          rollNo: "23KB1A0600",
+          displayName: null,
+          points: 100,
+          hidden: true,
+        },
+      ],
+      sections: [],
+      updatedAt: "4:12 pm",
+    });
+
+    expect(card.rich).toContain("23KB1A0599");
+    expect(card.rich).not.toContain("23KB1A0600");
+    expect(card.rich).toContain("23KB1A0•••");
+    expect(card.text).not.toContain("23KB1A0600");
   });
 
   it("shows only the top three rows of each table", () => {
