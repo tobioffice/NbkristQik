@@ -595,8 +595,8 @@ export const liveBoardCard = ({
         [
           { text: "Play today's run", url: botLink("quiz") },
           // A channel takes no web_app buttons, so this is the direct link
-          // that opens the Main Mini App's leaderboard page.
-          { text: "Full leaderboard", url: appPageUrl("rank", "direct") },
+          // that opens the league board page in the Main Mini App.
+          { text: "Full leaderboard", url: appPageUrl("games", "direct") },
         ],
       ],
     },

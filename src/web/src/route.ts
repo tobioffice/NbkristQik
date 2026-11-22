@@ -13,7 +13,13 @@
  * were already sent still open the right section.
  */
 
-export type Section = "profile" | "rank" | "papers" | "issues" | "library";
+export type Section =
+  | "profile"
+  | "rank"
+  | "games"
+  | "papers"
+  | "issues"
+  | "library";
 
 export interface Route {
   section: Section;
@@ -31,10 +37,18 @@ export const HOME_ROUTE: Route = {
 };
 
 /**
- * The hidden `papers` page is routable by direct link but is not in the
- * shell's tab rail: it is an intake form, not a section students browse.
+ * The hidden `papers` page and the league board (`games`) are routable by
+ * direct link but are not in the shell's tab rail: one is an intake form, the
+ * other is opened from the channel's full-leaderboard button.
  */
-const SECTIONS: Section[] = ["profile", "rank", "papers", "issues", "library"];
+const SECTIONS: Section[] = [
+  "profile",
+  "rank",
+  "games",
+  "papers",
+  "issues",
+  "library",
+];
 
 const isSection = (value: string): value is Section =>
   (SECTIONS as string[]).includes(value);

@@ -897,6 +897,37 @@ export const getWeekSections = async (
   }));
 };
 
+/**
+ * The leading players of one section, for the board that shows only the
+ * number-one section's top three. The same public-name source as the week's
+ * player board.
+ */
+export const getSectionTopPlayers = async (
+  season: string,
+  weekKey: string,
+  sectionKey: string,
+  limit = 3,
+): Promise<BoardPlayer[]> => {
+  const result = await turso.execute({
+    sql: `SELECT s.user_id, MAX(s.roll_no) AS roll_no,
+                 MAX(p.display_name) AS display_name,
+                 SUM(s.points) AS points
+          FROM game_scores s
+          LEFT JOIN game_players p ON p.user_id = s.user_id
+          WHERE s.season = ? AND s.week_key = ? AND s.section_key = ?
+          GROUP BY s.user_id
+          ORDER BY points DESC, s.user_id ASC
+          LIMIT ?`,
+    args: [season, weekKey, sectionKey, Math.max(1, Math.min(10, limit))],
+  });
+  return result.rows.map((row) => ({
+    userId: num(row.user_id),
+    rollNo: text(row.roll_no),
+    displayName: nullableText(row.display_name),
+    points: num(row.points),
+  }));
+};
+
 /** One player's week: points, rank and how many played. */
 export const getPlayerWeek = async (
   season: string,

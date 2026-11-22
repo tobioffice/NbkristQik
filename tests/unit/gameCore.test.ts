@@ -432,7 +432,7 @@ describe("the cards", () => {
     const urls = (card.markup?.inline_keyboard.flat() ?? []).map(
       (button) => button.url ?? "",
     );
-    expect(urls.some((url) => url.includes("startapp=rank"))).toBe(true);
+    expect(urls.some((url) => url.includes("startapp=games"))).toBe(true);
   });
 
   it("says when one side of the board has no rows yet", () => {

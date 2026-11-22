@@ -272,6 +272,59 @@ body {
   background: var(--tg-surface-active);
 }
 
+/* ---------- a section row that nests its players (a tree) ---------- */
+
+/* The number-one section carries its players under it, indented like a file
+   tree, so the detail sits with the row it belongs to no matter how long the
+   sections list grows. */
+.sheet--tg .tg-tree-node {
+  margin: 0 0 1px;
+}
+
+.sheet--tg .tg-tree-node:last-child {
+  margin-bottom: 0;
+}
+
+.sheet--tg .tg-tree-node > .tg-row {
+  margin: 0 0 1px;
+}
+
+.sheet--tg .tg-tree-children {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sheet--tg .tg-row--child {
+  min-height: 44px;
+  /* line up under the parent's badge: 14px padding + 32px badge + 10px gap */
+  padding-left: 56px;
+  margin: 0 0 1px;
+}
+
+.sheet--tg .tg-tree-children .tg-row--child:last-child {
+  margin-bottom: 0;
+}
+
+.sheet--tg .tg-tree-rank {
+  width: 20px;
+  flex: none;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  color: var(--tg-secondary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.sheet--tg .tg-row--child .tg-row__title {
+  font-weight: 500;
+}
+
+.sheet--tg .tg-row--child .tg-row__sub {
+  font-size: 11px;
+}
+
 .sheet--tg .tg-your-rank {
   width: calc(100% - 32px);
   margin: 0 16px;

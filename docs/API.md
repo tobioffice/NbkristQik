@@ -51,6 +51,7 @@ deployment that forgets to set it does not inherit the shortcut.
 |---|---|---|
 | `GET /api/leaderboard` | allowed; `name` is `null`, search matches rolls only | names; search matches rolls and names |
 | `GET /api/config` | allowed; both flags `false` | flags reflect the caller |
+| `GET /api/games/board` | allowed; public names only (display name or masked roll) | same payload |
 | `GET /api/me` | `401` | allowed |
 | `/api/profile`, `/api/register`, `/api/report`, `/api/thread/*`, `/api/rank/share`, `/api/rank/card`, `/api/rank/card/send`, `POST /api/papers` | `401` | allowed |
 | `GET /api/rank/card/:name` | allowed; random token, 30-minute TTL | same |

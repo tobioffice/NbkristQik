@@ -47,6 +47,7 @@ import {
 } from "../services/reportFiles.js";
 import { paperRouter } from "./papers.js";
 import { getRankCard } from "../services/rankCardStore.js";
+import { gamesRouter } from "./games.js";
 import { rankRouter } from "./rank.js";
 import { verificationRouter } from "./verification.js";
 import { libraryRouter } from "./library.js";
@@ -355,6 +356,10 @@ app.use("/api/register", profileWriteLimit);
 app.use("/api", profileRouter);
 app.use("/api", themeRouter);
 app.use("/api", verificationRouter);
+
+// The public league board behind the channel's full-leaderboard button. It
+// needs no identity: the rows are the same public names the channel shows.
+app.use("/api", gamesRouter);
 
 // Report endpoints: identity-authenticated; submits rate-limited per account
 // and further throttled per user in the service (60 s gate, fail-open).

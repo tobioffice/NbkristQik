@@ -33,7 +33,7 @@ import type { BoardPlayer, BoardSection } from "./types.js";
 
 const BOARD_SLOT = "live";
 /** Bumped when the card's markup changes, so a deploy refreshes the message. */
-const BOARD_FORMAT = 1;
+const BOARD_FORMAT = 2;
 
 export interface LiveBoard {
   label: string;

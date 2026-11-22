@@ -28,6 +28,8 @@ describe("the hash router", () => {
   it("reads every section", () => {
     expect(parseRouteHash("#/profile").section).toBe("profile");
     expect(parseRouteHash("#/rank").section).toBe("rank");
+    // the hidden league board, opened by the channel's full-board button
+    expect(parseRouteHash("#/games").section).toBe("games");
     expect(parseRouteHash("#/papers").section).toBe("papers");
     expect(parseRouteHash("#/library").section).toBe("library");
     expect(parseRouteHash("#/issues")).toEqual({
@@ -66,6 +68,7 @@ describe("the hash router", () => {
     const routes = [
       HOME_ROUTE,
       { section: "rank", issue: null, mine: false },
+      { section: "games", issue: null, mine: false },
       { section: "papers", issue: null, mine: false },
       { section: "library", issue: null, mine: false },
       { section: "issues", issue: null, mine: false },

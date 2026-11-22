@@ -138,8 +138,8 @@ place only when a number or a name actually changed, and an unchanged board
 is never touched. The message id and the last data fingerprint are stored in
 `game_channel_board`, so a restart edits the same message instead of posting
 a second one. If the stored message was deleted by hand, the next change
-posts a fresh one. The board's two buttons open today's run and the full
-leaderboard page.
+posts a fresh one. The board's two buttons open today's run and the full league
+board page (`#/games`, a hidden Mini App route).
 
 `/gamepost` sends the current board to the admin DM as a preview, and
 `/gamepost channel` creates or refreshes the live message immediately, which

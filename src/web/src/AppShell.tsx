@@ -34,8 +34,10 @@ import ProfileView from "./views/Profile";
 const LibraryView = lazy(() => import("./views/LibraryView"));
 const Issues = lazy(() => import("./views/Issues"));
 const Leaderboard = lazy(() => import("./Leaderboard"));
-// The intake page is reachable by direct link but has no tab of its own.
+// The intake page and the league board are reachable by direct link but have
+// no tab of their own.
 const PapersPage = lazy(() => import("./views/Papers"));
+const GamesBoard = lazy(() => import("./views/GamesBoard"));
 
 /**
  * The app: every surface the bot has, on one sheet.
@@ -52,6 +54,7 @@ const PapersPage = lazy(() => import("./views/Papers"));
  *   #/                    the roll form (the first screen)
  *   #/profile             the same form, by name
  *   #/rank                the attendance register
+ *   #/games              the league board (hidden, from the channel button)
  *   #/library             the shelf
  *   #/issues              the reporter's own list
  *   #/issues/new          a new report
@@ -128,6 +131,7 @@ const routeAtStartup = (): Route => {
 /** The band's context line, by section. */
 const BAND_SUB: Record<Section, string> = {
   rank: "Leaderboard",
+  games: "Section Wars",
   library: "Library",
   profile: "Student profile",
   papers: "Question papers",
@@ -264,6 +268,7 @@ export default function AppShell() {
               <ErrorBoundary key={route.section}>
                 <Suspense fallback={<PageLoading />}>
                   {route.section === "rank" && <Leaderboard showBand={false} />}
+                  {route.section === "games" && <GamesBoard />}
                   {route.section === "papers" && <PapersSection />}
                   {route.section === "library" && libraryAllowed && (
                     <LibraryView
