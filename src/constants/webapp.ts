@@ -53,7 +53,14 @@ export const appDirectLink = (route: string): string =>
 
 /** The sections the bot links to. */
 export type AppPage =
-  "profile" | "rank" | "games" | "library" | "issues" | "issues/new" | "papers";
+  | "profile"
+  | "rank"
+  | "games"
+  | "verify"
+  | "library"
+  | "issues"
+  | "issues/new"
+  | "papers";
 
 /** The same section as a Mini App button target or a direct link. */
 export const appPageUrl = (

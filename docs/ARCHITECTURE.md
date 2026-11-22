@@ -46,9 +46,11 @@ Monitor (monitor-host) ──> /health, /internal/health, portal
   non-admin students; there is no daily check-in.
 - **Web shell:** one shipped app at `/library/` with hash routes `#/rank`,
   `#/profile`, `#/library`, `#/issues` (reports) and `#/issues/new` (form).
-  Two routes are hidden from the tab rail: `#/papers`, a question-paper intake
-  page, and `#/games`, the league board the channel's full-leaderboard button
-  opens (`?startapp=games`). Both are reachable by direct link only. Bot buttons in private chats name the section in
+  Three routes are hidden from the tab rail: `#/papers`, a question-paper
+  intake page; `#/games`, the league board the channel's full-leaderboard
+  button opens (`?startapp=games`); and `#/verify`, the roll-verification
+  screen its Verify button opens (`?startapp=verify`). All are reachable by
+  direct link only. Bot buttons in private chats name the section in
   `?page=`, because Telegram replaces the fragment with its own launch data;
   group buttons use the Main Mini App direct link (`?startapp=`). The shell
   folds either into the hash at startup (`takePageLink` / `takeStartParam`).

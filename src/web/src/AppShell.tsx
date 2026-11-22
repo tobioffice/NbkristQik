@@ -38,6 +38,7 @@ const Leaderboard = lazy(() => import("./Leaderboard"));
 // no tab of their own.
 const PapersPage = lazy(() => import("./views/Papers"));
 const GamesBoard = lazy(() => import("./views/GamesBoard"));
+const VerifyRoll = lazy(() => import("./views/VerifyRoll"));
 
 /**
  * The app: every surface the bot has, on one sheet.
@@ -55,6 +56,7 @@ const GamesBoard = lazy(() => import("./views/GamesBoard"));
  *   #/profile             the same form, by name
  *   #/rank                the attendance register
  *   #/games              the league board (hidden, from the channel button)
+ *   #/verify             roll verification (hidden, from the channel button)
  *   #/library             the shelf
  *   #/issues              the reporter's own list
  *   #/issues/new          a new report
@@ -132,6 +134,7 @@ const routeAtStartup = (): Route => {
 const BAND_SUB: Record<Section, string> = {
   rank: "Leaderboard",
   games: "Section Wars",
+  verify: "Verification",
   library: "Library",
   profile: "Student profile",
   papers: "Question papers",
@@ -269,6 +272,7 @@ export default function AppShell() {
                 <Suspense fallback={<PageLoading />}>
                   {route.section === "rank" && <Leaderboard showBand={false} />}
                   {route.section === "games" && <GamesBoard />}
+                  {route.section === "verify" && <VerifyRoll />}
                   {route.section === "papers" && <PapersSection />}
                   {route.section === "library" && libraryAllowed && (
                     <LibraryView

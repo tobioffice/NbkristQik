@@ -112,8 +112,8 @@ The old paper register is retired. The Mini App, the admin panel and the public
 status and stats pages all use the native surface described here.
 
 **Status:** shipped. The Ranks, Profile, Issues, Library and Reader screens in
-`src/web` follow this document, and so do the two hidden pages: the
-question-paper intake and the league board (neither has a tab of its own). The server-rendered admin panel
+`src/web` follow this document, and so do the hidden pages: the question-paper
+intake, the league board and roll verification (none has a tab of its own). The server-rendered admin panel
 (`src/api/admin/panel.css.ts`) follows the same ground, surfaces, type and two
 blues; its data tables take a wider column and a top nav because it is a desktop
 operator console. The public status and stats pages (`src/status/index.html`,

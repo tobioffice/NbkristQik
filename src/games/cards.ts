@@ -568,11 +568,12 @@ export const liveBoardCard = ({
     rich,
     markup: {
       inline_keyboard: [
+        [{ text: "Play today's run", url: botLink("quiz") }],
         [
-          { text: "Play today's run", url: botLink("quiz") },
-          // A channel takes no web_app buttons, so this is the direct link
-          // that opens the league board page in the Main Mini App.
+          // A channel takes no web_app buttons, so these are the direct links
+          // that open the Mini App pages.
           { text: "Full leaderboard", url: appPageUrl("games", "direct") },
+          { text: "Verify roll", url: appPageUrl("verify", "direct") },
         ],
       ],
     },

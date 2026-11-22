@@ -14,12 +14,7 @@
  */
 
 export type Section =
-  | "profile"
-  | "rank"
-  | "games"
-  | "papers"
-  | "issues"
-  | "library";
+  "profile" | "rank" | "games" | "verify" | "papers" | "issues" | "library";
 
 export interface Route {
   section: Section;
@@ -37,14 +32,15 @@ export const HOME_ROUTE: Route = {
 };
 
 /**
- * The hidden `papers` page and the league board (`games`) are routable by
- * direct link but are not in the shell's tab rail: one is an intake form, the
- * other is opened from the channel's full-leaderboard button.
+ * The hidden `papers`, `games` and `verify` pages are routable by direct link
+ * but are not in the shell's tab rail: an intake form, the league board opened
+ * from the channel, and the roll-verification screen its Verify button opens.
  */
 const SECTIONS: Section[] = [
   "profile",
   "rank",
   "games",
+  "verify",
   "papers",
   "issues",
   "library",

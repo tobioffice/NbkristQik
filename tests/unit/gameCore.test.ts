@@ -512,6 +512,7 @@ describe("the cards", () => {
       (button) => button.url ?? "",
     );
     expect(urls.some((url) => url.includes("startapp=games"))).toBe(true);
+    expect(urls.some((url) => url.includes("startapp=verify"))).toBe(true);
   });
 
   it("says when one side of the board has no rows yet", () => {
