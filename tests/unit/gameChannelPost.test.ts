@@ -113,7 +113,7 @@ describe("syncLiveBoard", () => {
     };
     expect(sent.chat_id).toBe("@test_channel");
     expect(sent.rich_message.html).toContain("<b>Students</b>");
-    expect(sent.rich_message.html).toContain("<b>Sections</b>");
+    expect(sent.rich_message.html).toContain("<b>Section Wars</b>");
     expect(sent.rich_message.html).toContain("2,100");
     expect(sent.rich_message.html).toContain("4,820");
 

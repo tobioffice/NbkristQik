@@ -524,7 +524,7 @@ export const liveBoardCard = ({
         title,
         "<p><b>Students</b></p>",
         richPlayers,
-        "<p><b>Sections</b></p>",
+        "<p><b>Section Wars</b></p>",
         richSections,
         `<footer>Updated ${updatedAt} IST · Top 3 shown · Top 10 verified players per section count.</footer>`,
       ].join("\n");
@@ -549,7 +549,7 @@ export const liveBoardCard = ({
           ? ["No one has scored this week yet."]
           : []),
         "",
-        "<b>Sections</b>",
+        "<b>Section Wars</b>",
         ...sectionRows.map(
           (section, index) =>
             `${index + 1}. ${escapeHtml(section.label)} — <b>${formatNumber(

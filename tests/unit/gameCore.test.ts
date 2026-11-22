@@ -398,7 +398,7 @@ describe("the cards", () => {
 
     expect(card.rich).toContain("<b>Weekly board · Week of 10 Nov</b>");
     expect(card.rich).toContain("<b>Students</b>");
-    expect(card.rich).toContain("<b>Sections</b>");
+    expect(card.rich).toContain("<b>Section Wars</b>");
     expect(card.rich).toContain('<th align="left">Player</th>');
     expect(card.rich).toContain('<th align="left">Section</th>');
     expect(card.rich).toContain("&lt;Asha&gt;");
@@ -407,7 +407,7 @@ describe("the cards", () => {
     expect(card.rich).toContain("<b>4,820</b>");
     expect(card.rich).toContain("Updated 4:12 pm IST");
     expect(card.text).toContain("<b>Students</b>");
-    expect(card.text).toContain("<b>Sections</b>");
+    expect(card.text).toContain("<b>Section Wars</b>");
     expect(card.text).toContain("23KB1A0•••");
   });
 
