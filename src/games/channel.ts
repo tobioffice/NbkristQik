@@ -1,5 +1,5 @@
 import { bot } from "../bot/bot.js";
-import type { Message } from "node-telegram-bot-api";
+import { TelegramApiError, type Message } from "node-telegram-bot-api";
 import { ADMIN_ID, CHANNEL_ID } from "../config/environmentals.js";
 import { logger } from "../config/logger.js";
 import { trackMessage } from "../services/tracker.js";
@@ -41,14 +41,52 @@ const RESULT_END = 16 * 60 + 15;
 const WEEKLY_START = 19 * 60;
 const WEEKLY_END = 21 * 60;
 
-const sendCard = async (card: Card): Promise<void> => {
+/**
+ * Telegram refused the rich form itself. A 400 means nothing was posted, so a
+ * text retry cannot put the same card in the channel twice. Any other failure
+ * may already have delivered the message, so it must not be retried here.
+ */
+export const isRichRefusal = (error: unknown): boolean =>
+  error instanceof TelegramApiError && error.errorCode === 400;
+
+/**
+ * Post one card, rich form first.
+ *
+ * The channel and the admin preview both use this path, so what the admin
+ * checks with `/gamepost` is exactly what the channel receives.
+ */
+export const postCard = async (
+  chatId: number | string,
+  card: Card,
+): Promise<void> => {
+  if (card.rich) {
+    try {
+      await bot.api.sendRichMessage({
+        chat_id: chatId,
+        rich_message: { html: card.rich },
+        ...(card.markup ? { reply_markup: card.markup } : {}),
+      });
+      return;
+    } catch (e) {
+      if (!isRichRefusal(e)) throw e;
+      logger.warn(
+        "[games] rich card refused, posting the text card:",
+        e instanceof Error ? e.message : e,
+      );
+    }
+  }
+
   await bot.api.sendMessage({
-    chat_id: CHANNEL_ID,
+    chat_id: chatId,
     text: card.text,
     parse_mode: "HTML",
     ...(card.markup ? { reply_markup: card.markup } : {}),
     link_preview_options: { is_disabled: true },
   });
+};
+
+const sendCard = async (card: Card): Promise<void> => {
+  await postCard(CHANNEL_ID, card);
 };
 
 const postMorning = async (dateKey: string): Promise<void> => {
@@ -166,16 +204,6 @@ export const startGameScheduler = (): void => {
 /* Admin preview: the exact cards, sent to the admin's private chat.    */
 /* ------------------------------------------------------------------ */
 
-const sendCardTo = async (chatId: number, card: Card): Promise<void> => {
-  await bot.api.sendMessage({
-    chat_id: chatId,
-    text: card.text,
-    parse_mode: "HTML",
-    ...(card.markup ? { reply_markup: card.markup } : {}),
-    link_preview_options: { is_disabled: true },
-  });
-};
-
 const SAMPLE_SECTIONS: BoardSection[] = [
   { key: "4|CSE|C", label: "4 CSE C", points: 4820, players: 9 },
   { key: "3|ECE|A", label: "3 ECE A", points: 4610, players: 8 },
@@ -233,14 +261,14 @@ bot.command("gamepost", async (ctx) => {
       text: "<i>Morning post</i>",
       parse_mode: "HTML",
     });
-    await sendCardTo(msg.chat.id, morningPost(dayLabel(stamp.date)));
+    await postCard(msg.chat.id, morningPost(dayLabel(stamp.date)));
 
     await bot.api.sendMessage({
       chat_id: msg.chat.id,
       text: "<i>Lunchtime result</i>",
       parse_mode: "HTML",
     });
-    await sendCardTo(
+    await postCard(
       msg.chat.id,
       resultsPost({
         label: dayLabel(stamp.date),
@@ -256,7 +284,7 @@ bot.command("gamepost", async (ctx) => {
       text: "<i>Sunday board</i>",
       parse_mode: "HTML",
     });
-    await sendCardTo(
+    await postCard(
       msg.chat.id,
       weeklyPost({
         label: weekLabel(stamp.monday),

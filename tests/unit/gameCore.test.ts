@@ -327,6 +327,9 @@ describe("the cards", () => {
     const morning = morningPost("15 Nov");
     expect(morning.text).toContain("10 questions");
     expect(morning.markup?.inline_keyboard[0][0].url).toContain("quiz");
+    expect(morning.rich).toContain("<table bordered striped compact>");
+    expect(morning.rich).toContain("Today's run is live");
+    expect(morning.rich).toContain("10 questions, 10 seconds each");
 
     const results = resultsPost({
       label: "15 Nov",
@@ -346,12 +349,42 @@ describe("the cards", () => {
     expect(results.text).toContain("23KB1A0•••");
     expect(results.text).toContain("Fastest answer: <b>4s</b>");
     expect(results.text).toContain("Section of the day: <b>4 CSE C</b>");
+    expect(results.rich).toContain("<table bordered striped compact>");
+    expect(results.rich).toContain('<th align="left">Player</th>');
+    expect(results.rich).toContain("23KB1A0•••");
+    expect(results.rich).toContain("Fastest answer <b>4s</b>");
+    expect(results.rich).toContain("Section of the day <b>4 CSE C</b>");
+    expect(results.rich).toContain("<footer>Tomorrow's set drops at 8:30am.");
     for (const row of results.markup?.inline_keyboard ?? []) {
       for (const button of row) {
         expect(button.callback_data).toBeUndefined();
         expect(button.url).toBeTruthy();
       }
     }
+  });
+
+  it("renders the weekly channel post as a table", () => {
+    const card = weeklyPost({
+      label: "Week of 10 Nov",
+      sections: [
+        { key: "4|CSE|C", label: "4 CSE C", points: 4_820, players: 9 },
+      ],
+      players: [
+        {
+          userId: 1,
+          rollNo: "23KB1A0599",
+          displayName: "Asha",
+          points: 2_100,
+        },
+      ],
+    });
+
+    expect(card.rich).toContain("<table bordered striped compact>");
+    expect(card.rich).toContain('<th align="left">Section</th>');
+    expect(card.rich).toContain("4 CSE C");
+    expect(card.rich).toContain("<b>4,820</b>");
+    expect(card.rich).toContain("Player of the week: <b>Asha</b>");
+    expect(card.rich).toContain("Top 10 players per section count");
   });
 
   it("finds the fastest correct answer", () => {
@@ -463,5 +496,18 @@ describe("the empty and edge cards", () => {
 
     expect(card.text).toContain("4 CSE C");
     expect(card.text).not.toContain("Player of the week");
+    expect(card.rich).toContain("<table bordered striped compact>");
+    expect(card.rich).not.toContain("Player of the week");
+  });
+
+  it("writes the empty weekly channel post", () => {
+    const card = weeklyPost({
+      label: "Week of 10 Nov",
+      sections: [],
+      players: [],
+    });
+
+    expect(card.rich).toContain("No one has played this week. Be the first.");
+    expect(card.rich).not.toContain("<table");
   });
 });

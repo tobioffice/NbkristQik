@@ -9,7 +9,12 @@ import type {
   GameDuel,
   GameQuestion,
 } from "./types.js";
-import { formatDuration, publicName, QUESTION_LIMIT_MS } from "./scoring.js";
+import {
+  formatDuration,
+  publicName,
+  QUESTION_LIMIT_MS,
+  QUESTIONS_PER_RUN,
+} from "./scoring.js";
 
 export interface Card {
   text: string;
@@ -479,11 +484,28 @@ export const privateLinkCard = ({
   },
 });
 
+/**
+ * The channel cards are rich messages with a real table, like the private
+ * cards. `text` stays the fallback a client that refuses rich can still read,
+ * so a channel post never dies on a formatting rejection.
+ */
+
 /** The 8:30am channel prompt. URL button only: channels take no callbacks. */
 export const morningPost = (label: string): Card => ({
   text:
     "<b>10 questions. About two minutes.</b>\n" +
     `${label} · today's set is live.`,
+  rich: [
+    "<p><b>Today's run is live</b></p>",
+    `<p>${escapeHtml(label)} · ${QUESTIONS_PER_RUN} questions, ` +
+      `${QUESTION_SECONDS} seconds each.</p>`,
+    richPairs([
+      ["Questions", `<b>${QUESTIONS_PER_RUN}</b>`],
+      ["Time each", `<b>${QUESTION_SECONDS}s</b>`],
+      ["Run length", "<b>about 2 min</b>"],
+    ]),
+    "<footer>One run a day. A new set drops tomorrow at 8:30am.</footer>",
+  ].join("\n"),
   markup: {
     inline_keyboard: [[{ text: "Play today's run", url: botLink("quiz") }]],
   },
@@ -517,8 +539,42 @@ export const resultsPost = ({
   }
   lines.push("", "Tomorrow's set drops at 8:30am.");
 
+  const notes: string[] = [];
+  if (fastestMs != null) {
+    notes.push(`Fastest answer <b>${formatDuration(fastestMs)}</b>`);
+  }
+  if (section) {
+    notes.push(`Section of the day <b>${escapeHtml(section.label)}</b>`);
+  }
+
+  const rich = [
+    `<p><b>Today's run · ${escapeHtml(label)}</b></p>`,
+    `<p><b>${formatNumber(played)}</b> played</p>`,
+    top.length > 0
+      ? richTable(
+          [
+            { label: "#", align: "left" },
+            { label: "Player", align: "left" },
+            { label: "Points", align: "right" },
+          ],
+          top
+            .slice(0, 3)
+            .map((player, index) => [
+              String(index + 1),
+              nameCell(player),
+              `<b>${formatNumber(player.points)}</b>`,
+            ]),
+        )
+      : "",
+    notes.length > 0 ? `<p>${notes.join(" · ")}</p>` : "",
+    "<footer>Tomorrow's set drops at 8:30am.</footer>",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   return {
     text: lines.join("\n"),
+    rich,
     markup: {
       inline_keyboard: [
         [
@@ -561,8 +617,36 @@ export const weeklyPost = ({
   }
   lines.push("", "A new week starts Monday. Top 10 players per section count.");
 
+  const rich = [
+    `<p><b>Section Wars · ${escapeHtml(label)}</b></p>`,
+    sections.length > 0
+      ? richTable(
+          [
+            { label: "#", align: "left" },
+            { label: "Section", align: "left" },
+            { label: "Points", align: "right" },
+          ],
+          sections
+            .slice(0, 3)
+            .map((section, index) => [
+              String(index + 1),
+              escapeHtml(section.label),
+              `<b>${formatNumber(section.points)}</b>`,
+            ]),
+        )
+      : "<p>No one has played this week. Be the first.</p>",
+    champion
+      ? `<p>Player of the week: <b>${nameCell(champion)}</b> · ` +
+        `${formatNumber(champion.points)} points</p>`
+      : "",
+    "<footer>A new week starts Monday. Top 10 players per section count.</footer>",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   return {
     text: lines.join("\n"),
+    rich,
     markup: {
       inline_keyboard: [
         [
