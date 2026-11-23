@@ -11,41 +11,53 @@ not part of the app: the shipped application is served by Express at
 
 | Page | File | What it is |
 | --- | --- | --- |
-| Landing | `index.html` | the bot as a whole; the library is one chapter of six |
+| Landing | `index.html` + `home.css` + `home.js` | the bot as a live chat, then the library, the report line and the leaderboard |
 | Notes | `blog/index.html` | the index of every published note |
 | Launch note | `blog/library-launch.html` | "The library is opening." |
 | Making-of | `blog/the-page-is-the-product.html` | how the 51 documents were set |
 
-The landing is about the bot, top to bottom: the hero transcript, the ledger
-(9 commands, one app with four sections, 1 roll number, 0 passwords), then
-chapters in order: `Between classes` (`/midmarks`, `/bunk`, `/register`),
-`The leaderboard` (the register's grammar: rings, the bracketed row, the red
-75% line), `The report line` (a QIK-0007 thread), `The library` (the
-compressed chapter: cover plate, three pages, pointers to both notes), `The
-commands` (the full register table), `Notes`. Chapter anchors are
-`#answers`, `#board`, `#library`, `#commands`; the blog nav and footers link
-to these. The full shelf table and the diagram specimens live only in the
-making-of post, not the landing.
+The landing is a flipboard, not a brochure. A live split-flap board opens one
+conversation at a time (the library, mid marks, a report, the leaderboard,
+attendance), and the page continues as a scroll-driven board: the library cover
+assembles across the flap wall, the QIK-0007 thread answers, and the 75% line
+cuts the leaderboard. Then the full command table, the notes, and the yellow
+`OPEN THE BOT` door. Anchors: `#answers` (hero), `#board` / `#library` (the
+flipboard), `#commands` (the table), `#notes`.
+
+The hero chat is sample data for roll `23CS1042` and is labelled as such in the
+page; the leaderboard and thread readouts are marked `SAMPLE`. The footer facts
+are a dated real snapshot.
 
 ## How it is built
 
-No framework and no JavaScript. Plain HTML, one stylesheet, and images. Every
-page is under `src/web/public/site/`; it is not imported by the Vite entry and
-there is no site build step. Edit the files directly.
+No framework and no build step. The landing is one HTML file, one stylesheet
+(`home.css`), and one script (`home.js`). GSAP and ScrollTrigger are vendored
+under `assets/vendor/`; the fonts and page render are local, so the site makes no
+third-party requests.
 
 ```
 src/web/public/site/
   index.html          landing page
-  site.css            the whole stylesheet
-  blog/               the notes
-  assets/             fonts, page renders, diagrams, screenshots, social cards
+  home.css            landing stylesheet
+  home.js             flipboard, scroll states, cursor response, motion control
+  blog/               the notes (still on the retired paper system)
+  site.css            the notes' stylesheet
+  assets/
+    fonts/            Anton, Space Mono (landing); Zilla Slab, Public Sans (notes)
+    vendor/           gsap.min.js, ScrollTrigger.min.js
+    pages/            page renders, including the CN cover used by the mosaic
+    diagrams/         the diagram sources
+    og-*.png          social cards (still the old paper design; regenerate)
+    mark.svg          the wordmark plate and favicon
 ```
 
-The marketing site has its own paper/editorial identity: paper, ink, cloth and
-red pen; Zilla Slab for display, Public Sans for text; square corners, hairline
-rules, and tabular numerals on every figure. That identity belongs to the site,
-not the app. The app, admin panel, status page and stats page follow the separate
-Telegram-native system in [`DESIGN.md`](../DESIGN.md).
+The landing's identity is its own: black ground, bone type, safety yellow for
+action, signal red for the 75% rule, Anton for display and Space Mono for data,
+with a physical split-flap board and scroll-driven states. It is not the app's
+Telegram-native system in [`DESIGN.md`](../DESIGN.md), and it is not the old
+paper system. The notes pages still use `site.css` and the paper/editorial
+identity until they are rebuilt in the flipboard language; do not add landing
+styles to `site.css`.
 
 ## Publishing
 
@@ -70,11 +82,13 @@ drops a top-level directory named `site`, the deploy reports success, and every
 
 | Asset | Where it comes from |
 | --- | --- |
-| `assets/pages/*.jpg` | `pdftoppm -r 150` on the final retypeset PDFs in `NbkristQik-docs` |
-| `assets/diagrams/*.svg` | the diagram sources, recoloured to the site palette (paper background, ink strokes) |
+| `assets/pages/*.jpg` | `pdftoppm -r 150` on the final retypeset PDFs in `NbkristQik-docs`; `cn-cover.jpg` is the mosaic |
+| `assets/diagrams/*.svg` | the diagram sources, recoloured to the site palette |
 | `assets/app-reader-*.png` | 390x844 screenshots of the reader, taken from the local preview harness |
-| `assets/og-*.png` | 1200x630 social cards, generated by [`src/web/scripts/og-card.html`](../src/web/scripts/og-card.html) |
-| `assets/fonts/*.woff2` | copies of the app fonts, so the site needs no third-party request |
+| `assets/og-*.png` | 1200x630 social cards, generated by [`src/web/scripts/og-card.html`](../src/web/scripts/og-card.html); still the old paper design |
+| `assets/fonts/anton-*.woff2`, `space-mono-*.woff2` | the landing fonts, copied from Google Fonts (SIL Open Font License), no third-party request |
+| `assets/fonts/zilla-slab-*.woff2`, `public-sans.woff2` | the notes pages' fonts |
+| `assets/vendor/gsap.min.js`, `ScrollTrigger.min.js` | GSAP 3.13, vendored; the standard GSAP license is free for this site |
 | `assets/mark.svg` | the wordmark plate, also the favicon |
 
 The social card generator is a local tool, not part of the site:
@@ -87,23 +101,33 @@ cd src/web/public && python3 -m http.server 8101 --bind 127.0.0.1
 rm src/web/public/site/og-card.html
 ```
 
+The generator still draws the old paper card. Regenerate `og-site.png` in the
+flipboard style before the next launch post.
+
 ## Checking a change
 
 The site has no test suite. Check it by hand:
 
 1. Serve `src/web/public` and open `/site/` at 1440x1000 and 390x844.
-2. Follow every internal link; a broken path must not 404.
-3. `document.fonts` should report `Public Sans: loaded, Zilla Slab: loaded`.
-4. The browser console must stay empty.
+2. The console must stay empty; `document.fonts` should report `Anton: loaded`
+   and `Space Mono: loaded`.
+3. The hero chat advances; `PAUSE LOOP` stops it and `PLAY LOOP` resumes it.
+   With `prefers-reduced-motion: reduce` the page opens static and the button
+   offers `PLAY LOOP`.
+4. Scroll the whole page: library cover assembles, the report thread shows, the
+   75% line and rank readout appear only in the last state; the commands flip
+   in; the page has no horizontal overflow at 390px.
+5. Follow every internal link: `./blog/`, the two notes, the bot link, and the
+   footer's live-numbers link. The notes pages still use their old styling.
 
 ## Numbers on the site
 
-The landing carries a proof strip under the hero: 3,534 users, 1,131 daily
-actives on 17 November 2026, and 99.6% uptime over 90 days. It links once to
-<https://checker.tobioffice.online/stats>, which serves the live numbers and the
-JSON at `/api/stats`. The figures come from that page and are a dated snapshot,
-not live values. Update them only from a dated snapshot; never estimate, round
-up, or mix snapshot and live counts.
+The footer carries a dated snapshot: 3,534 users, 1,131 daily actives on
+17 November 2026, 99.6% uptime, then 1,248 pages, 51 documents and 362 diagrams.
+It links once to <https://checker.tobioffice.online/stats>, which serves the live
+numbers and the JSON at `/api/stats`. The figures come from that page and are a
+dated snapshot, not live values. Update them only from a dated snapshot; never
+estimate, round up, or mix snapshot and live counts.
 
 The site quotes real counts, so they must match the source:
 
@@ -115,13 +139,18 @@ The site quotes real counts, so they must match the source:
 | Documents | 51 (Software Engineering is Unit I only) |
 | Pages | 1,248 |
 | Diagrams | 362 SVG sources |
-| PDFs served to a student | 0 |
+| PDF | a per-reader watermarked download; the clean source stays on the server |
 
 Command list and reply formats are quoted from `src/bot/setup.ts` and
-`src/services/student.utils/formatters.ts`; the demo transcripts use the
-preview roll `23CS1042`, chosen so the arithmetic is internally consistent
-(139/182 = 76.37%, so `/bunk` answers "3 more").
+`src/services/student.utils/formatters.ts`; the demo chat, leaderboard rows and
+thread use the preview roll `23CS1042`, chosen so the arithmetic is internally
+consistent (139/182 = 76.37%, so `/bunk` answers "3 more"). Those blocks are
+labelled sample in the page; do not present them as live rows.
 
 Page counts come from the rasters under `data/pages` on the serving host, not
 from a spreadsheet. If the corpus changes, the counters in `index.html` and
 both blog posts have to change with it.
+
+The notes pages still carry the old "no PDF" lines from before the 8 Nov 2026
+watermarked-PDF update. Reconcile them with `PRODUCT.md` before the Notes
+redesign.
