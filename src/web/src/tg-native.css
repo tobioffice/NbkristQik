@@ -2195,9 +2195,14 @@ body {
   text-align: left;
 }
 
-.sheet--tg .lib-row--open:hover,
 .sheet--tg .lib-row--open:active {
   background: var(--tg-surface-hover);
+}
+
+@media (hover: hover) {
+  .sheet--tg .lib-row--open:hover {
+    background: var(--tg-surface-hover);
+  }
 }
 
 .sheet--tg .lib-row__code {
@@ -2260,9 +2265,14 @@ body {
   padding: 0;
 }
 
-.sheet--tg .lib-row--pdf:hover,
+@media (hover: hover) {
+  .sheet--tg .lib-row--pdf:hover {
+    background: var(--tg-surface-hover);
+  }
+}
+
 .sheet--tg .lib-row--pdf:active {
-  background: var(--tg-surface);
+  background: var(--tg-surface-hover);
 }
 
 .sheet--tg .lib-row__open {
@@ -2282,9 +2292,14 @@ body {
   cursor: pointer;
 }
 
-.sheet--tg .lib-row__open:hover,
 .sheet--tg .lib-row__open:active {
   background: var(--tg-surface-hover);
+}
+
+@media (hover: hover) {
+  .sheet--tg .lib-row__open:hover {
+    background: transparent;
+  }
 }
 
 .sheet--tg .lib-row__open .lib-row__name {
@@ -2297,25 +2312,27 @@ body {
 
 .sheet--tg .lib-pdf {
   flex: none;
+  display: grid;
+  place-items: center;
   align-self: stretch;
   min-width: 58px;
   min-height: 0;
-  padding: 0 14px;
+  padding: 0;
   border: 0;
   border-left: 1px solid var(--tg-bg);
   border-radius: 0;
   background: transparent;
   color: var(--tg-accent);
-  font-family: var(--tg-font);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0;
-  text-transform: none;
 }
 
-.sheet--tg .lib-pdf:hover,
 .sheet--tg .lib-pdf:active {
   background: var(--tg-surface-hover);
+}
+
+@media (hover: hover) {
+  .sheet--tg .lib-pdf:hover {
+    background: transparent;
+  }
 }
 
 .sheet--tg .lib-pdf:disabled {
@@ -2437,19 +2454,16 @@ body {
 }
 
 .sheet--tg .reader__pdf {
+  display: grid;
+  place-items: center;
   margin-left: auto;
   min-width: 42px;
   min-height: 34px;
-  padding: 0 8px;
+  padding: 0;
   border: 0;
   border-radius: var(--tg-radius);
   background: transparent;
   color: var(--tg-accent);
-  font-family: var(--tg-font);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0;
-  text-transform: none;
 }
 
 .sheet--tg .reader__pdf:active {

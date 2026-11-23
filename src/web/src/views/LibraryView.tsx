@@ -11,6 +11,7 @@ import { useLibrary } from "../useLibrary";
 import { useDocumentPdf } from "../useDocumentPdf";
 import DocumentReader from "./DocumentReader";
 import { SkeletonRows } from "../components/FeedbackStates";
+import DownloadIcon from "../components/DownloadIcon";
 
 /**
  * The shelf: the subjects of the reader's own semester, and what we hold.
@@ -391,7 +392,11 @@ function UnitList({
                       : "Open the full subject PDF in the viewer"
                   }
                 >
-                  {busyId === unit.id ? "…" : "PDF"}
+                  {busyId === unit.id ? (
+                    <span className="spinner" aria-hidden="true" />
+                  ) : (
+                    <DownloadIcon />
+                  )}
                 </button>
               </div>
             );

@@ -393,14 +393,14 @@ The saved profile is a read-only group, not a permanently open form:
   trailing state is 13/400 secondary with a small chevron. Held subjects open;
   "not yet" subjects are quiet and not buttons.
 - Unit row: the whole left side opens the reader; a separated right column is the
-  accent "PDF" action, divided by the 1px ground gap.
+  accent download icon, divided by the 1px ground gap.
 - The reader owns the screen: the band and tab rail step away.
 
 ### Reader
 
 - Head: surface `#212a33`, full width, padding-top includes the safe area.
 - Row one: 40px accent back chevron, title 15/600 white with a 12/16 secondary
-  "Unit 1 · 42 pages" line, accent "PDF" action at the right.
+  "Unit 1 · 42 pages" line, accent download icon at the right.
 - Row two: page count `n / total` 12/16 tabular (current page white), zoom controls
   as 32px surface-hover targets.
 - Progress: 2px accent rule along the head's bottom edge.

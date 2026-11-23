@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useReaderViewport } from "../reader/useReaderViewport";
 import { useReaderGestures } from "../reader/useReaderGestures";
 import { useBackHandler } from "../backButton";
+import DownloadIcon from "../components/DownloadIcon";
 import { useDocumentPdf } from "../useDocumentPdf";
 import ReaderPage from "../reader/ReaderPage";
 import { usePageWindow } from "../usePageWindow";
@@ -264,7 +265,11 @@ export default function DocumentReader({
             disabled={busyId === docId}
             aria-label={`Open ${title}, ${unitLabel}, PDF in the viewer`}
           >
-            {busyId === docId ? "…" : "PDF"}
+            {busyId === docId ? (
+              <span className="spinner" aria-hidden="true" />
+            ) : (
+              <DownloadIcon />
+            )}
           </button>
         </div>
         <div className="reader__tools">
