@@ -1,8 +1,15 @@
 import type { LeaderboardCoverage, SortBy } from "../api";
 
-export const SkeletonRows = () => (
+/**
+ * The app's default loading shape: one inset group of surface rows.
+ *
+ * Every screen that loads paints this instead of its own bars, so a route
+ * change never flashes a different-looking page. `rows` matches the screen's
+ * own height: a two-field panel asks for two, the register asks for six.
+ */
+export const SkeletonRows = ({ rows = 6 }: { rows?: number }) => (
   <div className="tg-skeleton" aria-hidden="true">
-    {[...Array(6)].map((_, i) => (
+    {[...Array(rows)].map((_, i) => (
       <div key={i} className="skeleton-row">
         <span className="sk sk--rank" />
         <span className="sk sk--roll" />

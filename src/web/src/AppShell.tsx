@@ -8,6 +8,7 @@ import {
 } from "react";
 import Band from "./components/Band";
 import BandStampProvider from "./BandStampProvider";
+import { SkeletonRows } from "./components/FeedbackStates";
 import GameBanner from "./components/GameBanner";
 import type { BandStamp } from "./bandStamp";
 import ErrorBoundary from "./ErrorBoundary";
@@ -394,9 +395,10 @@ const Tab = ({
 const PageLoading = () => (
   <div className="page" role="status" aria-busy="true" aria-label="Loading">
     <div className="page-body" aria-hidden="true">
-      <div className="sk" style={{ height: 44, marginTop: 22 }} />
-      <div className="sk" style={{ height: 44, marginTop: 12 }} />
-      <div className="sk" style={{ height: 48, marginTop: 16 }} />
+      {/* The same grouped rows the register paints once its chunk lands, so
+          the first shape is already inset from the edges and does not look
+          like a different screen. */}
+      <SkeletonRows />
     </div>
   </div>
 );

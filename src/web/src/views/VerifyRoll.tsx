@@ -1,4 +1,5 @@
 import VerificationPanel from "../components/VerificationPanel";
+import { SkeletonRows } from "../components/FeedbackStates";
 import { useProfile } from "../useProfile";
 import { useTelegramIdentity } from "../useTelegramIdentity";
 
@@ -34,10 +35,7 @@ export default function VerifyRoll() {
             </p>
           </div>
         ) : status.state === "loading" ? (
-          <div className="form-block" aria-hidden="true">
-            <div className="sk" style={{ height: 48 }} />
-            <div className="sk" style={{ height: 44, marginTop: 12 }} />
-          </div>
+          <SkeletonRows rows={2} />
         ) : status.state === "error" ? (
           <div className="state-block">
             <p className="title">Couldn&rsquo;t read your profile</p>

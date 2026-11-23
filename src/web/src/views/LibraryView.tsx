@@ -10,6 +10,7 @@ import { useBandStamp } from "../bandStamp";
 import { useLibrary } from "../useLibrary";
 import { useDocumentPdf } from "../useDocumentPdf";
 import DocumentReader from "./DocumentReader";
+import { SkeletonRows } from "../components/FeedbackStates";
 
 /**
  * The shelf: the subjects of the reader's own semester, and what we hold.
@@ -193,11 +194,7 @@ export default function LibraryView({
 const ShelfLoading = () => (
   <div className="page" aria-hidden="true">
     <div className="page-body">
-      <div className="form-block">
-        <div className="sk" style={{ height: 52, marginTop: 6 }} />
-        <div className="sk" style={{ height: 52, marginTop: 10 }} />
-        <div className="sk" style={{ height: 52, marginTop: 10 }} />
-      </div>
+      <SkeletonRows rows={3} />
     </div>
   </div>
 );

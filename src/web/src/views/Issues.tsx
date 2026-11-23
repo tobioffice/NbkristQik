@@ -7,6 +7,7 @@ import { useClosingConfirmation } from "../telegram";
 import { FORM_ROUTE, HISTORY_ROUTE, type IssuesRoute } from "../issuesRoute";
 import ReportThreadView from "./ReportThread";
 import ReportScreenshots from "../components/ReportScreenshots";
+import { SkeletonRows } from "../components/FeedbackStates";
 
 /**
  * The issue desk: file a report, then keep the conversation going.
@@ -187,13 +188,7 @@ export default function Issues({
 
         {loadingReports && !orderedReports && (
           <div role="status" aria-busy="true" aria-label="Loading your reports">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="sk"
-                style={{ height: 72, marginTop: 12 }}
-              />
-            ))}
+            <SkeletonRows rows={3} />
           </div>
         )}
 

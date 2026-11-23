@@ -691,6 +691,12 @@ body {
   background: var(--tg-bg);
 }
 
+/* A form block already carries the 16px inset; the group keeps the same edge
+   there instead of doubling the margin. */
+.sheet--tg .form-block .tg-skeleton {
+  margin-inline: 0;
+}
+
 .sheet--tg .skeleton-row {
   display: grid;
   grid-template-columns: 30px 72px 1fr 54px;

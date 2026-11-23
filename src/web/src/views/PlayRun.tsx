@@ -6,6 +6,7 @@ import {
   type FiveQuestion,
   type FiveResult,
 } from "../api";
+import { SkeletonRows } from "../components/FeedbackStates";
 import { RequestError } from "../http";
 import { haptic, useClosingConfirmation } from "../telegram";
 import { useTelegramIdentity } from "../useTelegramIdentity";
@@ -84,13 +85,7 @@ export const PlayRunView = ({
       <div className="page">
         <Head title="Today's run" />
         <div className="page-body">
-          <div className="form-block" aria-hidden="true">
-            <div className="sk" style={{ height: 30, width: "58%" }} />
-            <div className="sk" style={{ height: 56, marginTop: 18 }} />
-            <div className="sk" style={{ height: 56, marginTop: 1 }} />
-            <div className="sk" style={{ height: 56, marginTop: 1 }} />
-            <div className="sk" style={{ height: 56, marginTop: 1 }} />
-          </div>
+          <SkeletonRows rows={4} />
         </div>
       </div>
     );

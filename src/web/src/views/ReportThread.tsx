@@ -10,6 +10,7 @@ import { clearDraft, readDraft, threadDraftKey, writeDraft } from "../drafts";
 import { reportStatusLabel } from "../reportStatus";
 import { useClosingConfirmation } from "../telegram";
 import ReportScreenshots from "../components/ReportScreenshots";
+import { SkeletonRows } from "../components/FeedbackStates";
 
 interface ReportThreadViewProps {
   identity: { initData?: string; userId?: string };
@@ -336,13 +337,7 @@ export default function ReportThreadView({
         </div>
       </div>
 
-      {loading && (
-        <div aria-hidden="true">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="sk" style={{ height: 58, marginTop: 10 }} />
-          ))}
-        </div>
-      )}
+      {loading && <SkeletonRows rows={3} />}
 
       {!loading && error && !thread && (
         <p className="form-note">

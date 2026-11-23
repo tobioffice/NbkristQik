@@ -3,6 +3,7 @@ import { ROLL_REGEX } from "../api";
 import { useIdentity } from "../identity";
 import { useProfile } from "../useProfile";
 import VerificationPanel from "../components/VerificationPanel";
+import { SkeletonRows } from "../components/FeedbackStates";
 
 interface ProfileViewProps {
   tgUser: string | null;
@@ -74,14 +75,7 @@ const ProfileHead = ({ title, note }: { title: string; note?: string }) => (
   </div>
 );
 
-const ProfileSkeleton = () => (
-  <div className="form-block" aria-hidden="true">
-    <div className="sk" style={{ height: 48 }} />
-    <div className="sk" style={{ height: 48, marginTop: 1 }} />
-    <div className="sk" style={{ height: 48, marginTop: 1 }} />
-    <div className="sk" style={{ height: 44, marginTop: 16 }} />
-  </div>
-);
+const ProfileSkeleton = () => <SkeletonRows rows={4} />;
 
 export default function ProfileView({
   tgUser,
