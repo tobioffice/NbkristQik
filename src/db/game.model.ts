@@ -526,6 +526,26 @@ export const getAttemptForRound = async (
 };
 
 /**
+ * The caller's Five attempt for one IST day, without creating the day's round.
+ *
+ * The home banner runs on every visit, so it must not pay the daily round's
+ * random pool build just to learn that nobody has played yet. An absent row is
+ * the honest "today is still open" answer.
+ */
+export const getFiveAttemptForDay = async (
+  userId: number,
+  dayKey: string,
+): Promise<GameAttempt | null> => {
+  const result = await turso.execute({
+    sql: `SELECT ${ATTEMPT_COLUMNS} FROM game_attempts
+          WHERE game = 'five' AND day_key = ? AND user_id = ?
+          LIMIT 1`,
+    args: [dayKey, userId],
+  });
+  return result.rows[0] ? attemptFromRow(result.rows[0]) : null;
+};
+
+/**
  * Record one answer, but only if the attempt is still on the same question.
  * The conditional update is the double-tap guard; the caller treats a false
  * return as "that question already moved on".

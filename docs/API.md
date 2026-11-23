@@ -52,6 +52,8 @@ deployment that forgets to set it does not inherit the shortcut.
 | `GET /api/leaderboard` | allowed; `name` is `null`, search matches rolls only | names; search matches rolls and names |
 | `GET /api/config` | allowed; both flags `false` | flags reflect the caller |
 | `GET /api/games/board` | allowed; a verified student's roll (masked when they hid the leaderboard), else chosen display name, Telegram name or @username. `page`/`limit` page the player board (default 50, cap 100) and the payload carries the full count and `hasMorePlayers` | same payload |
+| `GET /api/games/live` | allowed; `me` is `null` | `me` carries whether a roll is saved and today's run state (`open`, `playing`, `done`) |
+| `POST /api/games/five/start`, `POST /api/games/five/answer` | `401` | the daily run; `start` may create today's attempt and `answer` is checked against the question on screen |
 | `GET /api/me` | `401` | allowed |
 | `/api/profile`, `/api/register`, `/api/report`, `/api/thread/*`, `/api/rank/share`, `/api/rank/card`, `/api/rank/card/send`, `POST /api/papers` | `401` | allowed |
 | `GET /api/rank/card/:name` | allowed; random token, 30-minute TTL | same |
@@ -198,6 +200,92 @@ anonymous.
 The response is `Cache-Control: no-store` because it depends on the caller.
 The web shell treats the library as closed until this route answers, and hides
 the library tab and route when `libraryOpen` is `false`.
+
+### `GET /api/games/live`
+
+The home screen's league banner: the IST week's label and, for a signed-in
+caller, where today's run stands. No identity is required; a presented but
+invalid one is `401`, like `/api/games/board`.
+
+```json
+{
+  "success": true,
+  "weekLabel": "Week of 17 Nov",
+  "me": {
+    "registered": true,
+    "run": { "state": "playing", "questions": 10, "question": 4 }
+  }
+}
+```
+
+- `me` is `null` for an anonymous caller.
+- `me.registered` is `false` when the account has not saved a roll; `run` is
+  then `null` and the banner opens the play screen, which asks for the roll.
+- `run.state` is `open` (no attempt today), `playing` (`question` is the
+  1-based question to resume) or `done` (with the season `points` the run
+  earned). The route reads the attempt the bot already wrote; it never builds
+  the day's question round, so it stays cheap on every home visit.
+- Anonymous answers are `Cache-Control: public, max-age=30`; signed-in answers
+  are `private, no-store`.
+
+### `POST /api/games/five/start`
+
+Opens today's run in the Mini App. A Telegram identity is required; an anonymous
+request or an invalid one is `401`. This is a write: it may create today's
+attempt and it starts the first question's clock.
+
+```json
+{
+  "success": true,
+  "state": "playing",
+  "attemptId": 41,
+  "score": 0,
+  "question": {
+    "index": 0,
+    "total": 10,
+    "prompt": "Which memory is volatile?",
+    "options": ["RAM", "ROM", "SSD", "HDD"],
+    "limitMs": 10000
+  }
+}
+```
+
+- `state` is `playing`, `done`, `needs-roll` (no saved roll, the bot asks for
+  one) or `not-ready` (the day's set could not be built).
+- `done` carries `alreadyPlayed: true` and the same `result` object the answer
+  endpoint returns.
+- `index` is 0-based; the screen prints it + 1. The correct option is never in
+  the payload.
+- The answer endpoint, and the clock it starts for each question, treats the
+  attempt as one run per account per IST day, shared with the bot's `/quiz`.
+
+### `POST /api/games/five/answer`
+
+Records one pick on the displayed question and returns the next question, or
+the finished result. A Telegram identity is required; the attempt must belong
+to the caller and be the daily five run.
+
+```json
+{
+  "success": true,
+  "state": "playing",
+  "attemptId": 41,
+  "score": 300,
+  "question": { "index": 3, "total": 10, "prompt": "…", "options": ["…"], "limitMs": 10000 },
+  "feedback": { "correct": true, "timedOut": false, "earned": 150 }
+}
+```
+
+Body: `{ "attemptId": 41, "index": 2, "option": 1 }`. `index` must be the
+question the browser showed; a stale browser (or a second tab) gets
+`409 { "success": false, "state": "stale" }` instead of answering the next
+question by accident. A malformed body is `400`, another account's attempt is
+`404`.
+
+The last answer finishes the run on the server (streak and season points
+included) and returns `state: "done"` with the result; a duplicate tap after
+the finish answers the same result with `alreadyPlayed: true`. `feedback`
+reports the previous answer only, never the correct option.
 
 ### `GET /api/me`
 

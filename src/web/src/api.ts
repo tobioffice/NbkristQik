@@ -498,6 +498,151 @@ export const registerRoll = async (req: RegisterRequest): Promise<void> => {
   await readJson(res);
 };
 
+// ---------- the home league banner ----------
+
+/** Where the caller's run stands today, as the banner reads it. */
+export interface LiveRun {
+  state: "open" | "playing" | "done";
+  questions: number;
+  /** The question to resume, 1-based, while a run is active. */
+  question?: number;
+  /** Season points a finished run earned. */
+  points?: number;
+}
+
+export interface GameLive {
+  success: true;
+  weekLabel: string;
+  me: null | {
+    registered: boolean;
+    run: LiveRun | null;
+  };
+}
+
+export const buildGameLiveUrl = (identity: ApiIdentity): string =>
+  withQuery("/api/games/live", devIdentityParams(identity));
+
+/** The week's label and the caller's run today, for the home banner. */
+export const getGameLive = async (
+  identity: ApiIdentity,
+  signal?: AbortSignal,
+): Promise<GameLive> => {
+  const res = await fetchWithTimeout(buildGameLiveUrl(identity), {
+    headers: authHeaders(identity.initData),
+    signal,
+  });
+  return readJson<GameLive>(res);
+};
+
+// ---------- the daily run ----------
+
+/** The current question as the play screen shows it. */
+export interface FiveQuestion {
+  /** 0-based; the screen prints index + 1. */
+  index: number;
+  total: number;
+  prompt: string;
+  options: string[];
+  /** How long this question is worth points, from the moment it was shown. */
+  limitMs: number;
+}
+
+/** The numbers a finished run shows. */
+export interface FiveResult {
+  correct: number;
+  total: number;
+  score: number;
+  points: number;
+  streak: number;
+  rank: number;
+  players: number;
+  section: { label: string; rank: number; total: number } | null;
+}
+
+export type FiveStartResponse =
+  | { success: true; state: "needs-roll" }
+  | { success: true; state: "not-ready" }
+  | {
+      success: true;
+      state: "done";
+      alreadyPlayed: boolean;
+      result: FiveResult;
+    }
+  | {
+      success: true;
+      state: "playing";
+      attemptId: number;
+      score: number;
+      question: FiveQuestion;
+    };
+
+export type FiveFeedback = {
+  correct: boolean;
+  timedOut: boolean;
+  /** Points this answer earned. */
+  earned: number;
+};
+
+export type FiveAnswerResponse =
+  | {
+      success: true;
+      state: "playing";
+      attemptId: number;
+      score: number;
+      question: FiveQuestion;
+      /** How the previous answer landed; the bot's toast, in the page line. */
+      feedback: FiveFeedback;
+    }
+  | {
+      success: true;
+      state: "done";
+      alreadyPlayed: boolean;
+      result: FiveResult;
+    };
+
+const postGame = async <T>(
+  path: string,
+  identity: ApiIdentity,
+  body: Record<string, unknown> = {},
+  signal?: AbortSignal,
+): Promise<T> => {
+  const res = await fetchWithTimeout(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(identity.initData),
+    },
+    body: JSON.stringify({ ...identityBody(identity), ...body }),
+    signal,
+  });
+  return readJson<T>(res);
+};
+
+/** Start or resume today's run, and get the question on screen. */
+export const startDailyRun = (
+  identity: ApiIdentity,
+  signal?: AbortSignal,
+): Promise<FiveStartResponse> =>
+  postGame<FiveStartResponse>("/api/games/five/start", identity, {}, signal);
+
+/**
+ * Answer the question at `index` (0-based). A 409 means the run moved on
+ * somewhere else; read the current question again instead of retrying.
+ */
+export const answerDailyRun = (
+  identity: ApiIdentity,
+  attemptId: number,
+  index: number,
+  option: number,
+  signal?: AbortSignal,
+): Promise<FiveAnswerResponse> =>
+  postGame<FiveAnswerResponse>(
+    "/api/games/five/answer",
+    identity,
+    { attemptId, index, option },
+    signal,
+  );
+
 // ---------- college-email verification ----------
 
 export interface VerificationState {

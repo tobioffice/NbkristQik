@@ -263,6 +263,54 @@ A 2px `#f88277` rule drawn inside the ranked group after the last confirmed row.
 Left label "75% minimum" 12/600 danger; right label "Below this line" 12/400
 secondary. It is the only line in the list, and it is never decorative.
 
+### League banner (home)
+
+The first screen carries one banner for the week's Section Wars. It is a single
+link, not a group: 8px radius, `#212a33`, 12px 14px padding, 16px side margins,
+sitting between the band and the page title. The whole banner is the tap target.
+
+- **Badge:** 40px circle `#2d3a47` with a 20px accent flag icon.
+- **Text:** "Section Wars" 17/600 white over one 12/16 secondary line of state:
+  "Today's run is open. 10 questions, 10 seconds each.", "Question 4 of 10 is
+  waiting.", "Run done: 814 points.", or "Save your roll to play today's run."
+- **Trailing:** the week label 11/14 secondary tabular over the accent action
+  "Play", "Resume" or "Board" with a 14px chevron.
+- **Destination:** a running or unstarted run opens the play screen at
+  `#/play`; a finished run goes to the league board at `#/games`. The banner
+  paints its fallback copy before the personal answer lands, and reserves its
+  height, so the profile below never jumps.
+- Hover `#293440`, press `#2d3a47`, the standard 2px accent focus ring. No shadow,
+  no gradient, no dismiss chrome.
+
+### Today's run (hidden play screen)
+
+The banner opens `#/play`, a hidden route with no tab. The bot keeps its own chat
+copy of the run; both surfaces read and write the same attempt. The screen is a
+single question, one pick, then the next question.
+
+- **Head:** page title "Question 3 of 10" 22/700; the countdown 13/600 tabular in
+  accent at the right ("9s", then "Time's up" in `#f88277`). Under it the score
+  line 13/18 secondary tabular, with the last answer on the right: "Correct
+  +150" in `#7ed176`, "Too slow" in `#ff9953`, "Missed" secondary.
+- **Clock:** a 2px accent rule under the head, draining with a 140ms linear
+  transition. At zero it is empty; the picks stay available and still move the
+  run on (the server scores them zero), exactly as a late tap behaves in the bot.
+- **Question:** 17/24 600 white, 16px side margins.
+- **Picks:** one grouped surface of four rows (minimum 56px), each a full-row
+  button with a 28px `#2d3a47` letter badge (A to D) and the option 15/400
+  white, wrapping. Disabled at 55% while an answer is on the way. Options are
+  never colour-coded before the answer; the server holds the correct one.
+- **Result:** page title "Run done" with "8 of 10 correct."; a profile-style
+  group of rows (Run score, Season points, Today, Streak, Section) with tabular
+  values, the no-section and already-played hints under it, then the filled
+  "See the board" action and a surface "Home" beside it.
+- **States:** no roll gets "Save your roll to play" with a filled "Open
+  profile"; a missing set or a failed read gets the standard state block with a
+  "Try again" action; no Telegram gets "Open this inside Telegram"; the first
+  paint is a skeleton of the head and four rows.
+- No option feedback colours, no confetti, no emoji. One rule of progress, one
+  countdown, sentence case throughout.
+
 ### Controls
 
 - **Search:** 48px field, 12px radius, `#212a33`; 20px search icon at the left;

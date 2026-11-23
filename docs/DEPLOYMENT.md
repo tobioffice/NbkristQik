@@ -123,6 +123,12 @@ The league adds three private commands: `/quiz` (today's 10 questions),
 `/duel` (the duel record and today's challenge) and `/league` (the weekly
 board). A group gets a private deep link instead of a card.
 
+The daily run is also playable inside the Mini App at `/library/#/play` (opened
+by the home banner). The bot and the app share the same attempt row, so a run
+started in the chat resumes in the app and the other way round; the correct
+option never reaches the browser, and every answer and the ten-second window
+are scored on the server.
+
 The channel posts are opt-in:
 
 ```bash

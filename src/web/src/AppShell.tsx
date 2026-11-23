@@ -8,6 +8,7 @@ import {
 } from "react";
 import Band from "./components/Band";
 import BandStampProvider from "./BandStampProvider";
+import GameBanner from "./components/GameBanner";
 import type { BandStamp } from "./bandStamp";
 import ErrorBoundary from "./ErrorBoundary";
 import { useBackHandler } from "./backButton";
@@ -38,6 +39,7 @@ const Leaderboard = lazy(() => import("./Leaderboard"));
 // no tab of their own.
 const PapersPage = lazy(() => import("./views/Papers"));
 const GamesBoard = lazy(() => import("./views/GamesBoard"));
+const PlayRun = lazy(() => import("./views/PlayRun"));
 const VerifyRoll = lazy(() => import("./views/VerifyRoll"));
 
 /**
@@ -56,6 +58,7 @@ const VerifyRoll = lazy(() => import("./views/VerifyRoll"));
  *   #/profile             the same form, by name
  *   #/rank                the attendance register
  *   #/games              the league board (hidden, from the channel button)
+ *   #/play               today's run (hidden, from the home banner)
  *   #/verify             roll verification (hidden, from the channel button)
  *   #/library             the shelf
  *   #/issues              the reporter's own list
@@ -134,6 +137,7 @@ const routeAtStartup = (): Route => {
 const BAND_SUB: Record<Section, string> = {
   rank: "Leaderboard",
   games: "Section Wars",
+  play: "Today's run",
   verify: "Verification",
   library: "Library",
   profile: "Student profile",
@@ -272,6 +276,7 @@ export default function AppShell() {
                 <Suspense fallback={<PageLoading />}>
                   {route.section === "rank" && <Leaderboard showBand={false} />}
                   {route.section === "games" && <GamesBoard />}
+                  {route.section === "play" && <PlayRun />}
                   {route.section === "verify" && <VerifyRoll />}
                   {route.section === "papers" && <PapersSection />}
                   {route.section === "library" && libraryAllowed && (
@@ -291,11 +296,14 @@ export default function AppShell() {
                     !libraryAllowed &&
                     appConfig.loading && <PageLoading />}
                   {route.section === "profile" && (
-                    <ProfileSection
-                      onReportIssue={() =>
-                        go({ section: "issues", issue: null, mine: false })
-                      }
-                    />
+                    <>
+                      <GameBanner tgUser={tgUser} initData={initData} />
+                      <ProfileSection
+                        onReportIssue={() =>
+                          go({ section: "issues", issue: null, mine: false })
+                        }
+                      />
+                    </>
                   )}
                   {route.section === "issues" && (
                     <IssuesSection

@@ -88,6 +88,41 @@ export const istStamp = (ms: number): string =>
     hour12: true,
   }).format(new Date(ms));
 
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+/**
+ * "Week of 17 Nov": the IST Monday the league's week starts on.
+ *
+ * The home banner paints before its league answer lands, so it computes the
+ * label itself; India has no daylight saving, so the fixed shift is exact and
+ * matches the server's label. The API's answer replaces it when it arrives.
+ */
+export const istWeekLabel = (now: Date = new Date()): string => {
+  const shifted = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+  const weekday = shifted.getUTCDay() || 7; // 1 = Monday ... 7 = Sunday
+  const monday = new Date(
+    Date.UTC(
+      shifted.getUTCFullYear(),
+      shifted.getUTCMonth(),
+      shifted.getUTCDate() - (weekday - 1),
+    ),
+  );
+  return `Week of ${monday.getUTCDate()} ${MONTHS[monday.getUTCMonth()]}`;
+};
+
 /** An absolute IST stamp from a database timestamp; null when unreadable. */
 export const istStampFromDb = (
   value: string | null | undefined,

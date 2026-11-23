@@ -8,6 +8,7 @@ import {
   getFiveRank,
   getGamePlayer,
   getOrCreateDailyRound,
+  getQuestionsByIds,
   getSectionWeek,
   setPlayerStreak,
 } from "../db/game.model.js";
@@ -35,59 +36,35 @@ const say = async (
   });
 };
 
+/** What today's run looks like before a question is on screen. */
+export type FiveStart =
+  | { state: "needs-roll" }
+  | { state: "not-ready" }
+  | { state: "done"; attempt: GameAttempt }
+  | { state: "playing"; attempt: GameAttempt; created: boolean };
+
 /**
- * Start or resume today's run.
+ * Start or resume today's run, without sending anything.
  *
  * The attempt is the source of truth: a second tap, a restart or a stale
  * result card all land on the same run, and the daily row makes tomorrow a
- * different game.
+ * different game. Both surfaces use this, so the bot and the Mini App can
+ * never disagree about which run exists.
  */
-export const startDailyFive = async ({
-  chatId,
-  userId,
-  replyTo,
-}: {
-  chatId: number;
-  userId: number;
-  replyTo?: number;
-}): Promise<void> => {
+export const startFiveRun = async (userId: number): Promise<FiveStart> => {
   const player = await loadPlayer(userId);
-  if (!player) {
-    await sendRegistrationPrompt({ chatId, replyTo });
-    return;
-  }
+  if (!player) return { state: "needs-roll" };
 
   const stamp = istStamp();
   const round = await getOrCreateDailyRound(stamp.date);
-  if (!round) {
-    await say(
-      chatId,
-      "Today's set isn't ready yet. Try again in a few minutes.",
-      replyTo,
-    );
-    return;
-  }
+  if (!round) return { state: "not-ready" };
 
   const existing = await getAttemptForRound("five", round.id, userId);
   if (existing?.status === "done") {
-    await showFiveResult({
-      attempt: existing,
-      chatId,
-      replyTo,
-      alreadyPlayed: true,
-    });
-    return;
+    return { state: "done", attempt: existing };
   }
-
   if (existing) {
-    trackActivity({
-      userId,
-      chatType: "private",
-      action: "game:five_resume",
-      detail: stamp.date,
-    });
-    await showQuestion({ chatId, attempt: existing, replyTo });
-    return;
+    return { state: "playing", attempt: existing, created: false };
   }
 
   const attemptId = await createAttempt({
@@ -105,23 +82,112 @@ export const startDailyFive = async ({
   });
   const attempt = await getAttempt(attemptId);
   if (!attempt) throw new Error("the daily attempt was not created");
+  return { state: "playing", attempt, created: true };
+};
+
+/**
+ * Start or resume today's run in the chat.
+ *
+ * The messaging and the activity row stay here; the run itself comes from
+ * `startFiveRun` so the web app follows the same rules.
+ */
+export const startDailyFive = async ({
+  chatId,
+  userId,
+  replyTo,
+}: {
+  chatId: number;
+  userId: number;
+  replyTo?: number;
+}): Promise<void> => {
+  const started = await startFiveRun(userId);
+
+  if (started.state === "needs-roll") {
+    await sendRegistrationPrompt({ chatId, replyTo });
+    return;
+  }
+  if (started.state === "not-ready") {
+    await say(
+      chatId,
+      "Today's set isn't ready yet. Try again in a few minutes.",
+      replyTo,
+    );
+    return;
+  }
+  if (started.state === "done") {
+    await showFiveResult({
+      attempt: started.attempt,
+      chatId,
+      replyTo,
+      alreadyPlayed: true,
+    });
+    return;
+  }
 
   trackActivity({
     userId,
     chatType: "private",
-    action: "game:five_start",
-    detail: stamp.date,
+    action: started.created ? "game:five_start" : "game:five_resume",
+    detail: started.attempt.dayKey,
   });
-  await showQuestion({ chatId, attempt, replyTo });
+  await showQuestion({ chatId, attempt: started.attempt, replyTo });
 };
 
+export interface FiveFinish {
+  /** Null only when the finished row could not be read back. */
+  attempt: GameAttempt | null;
+  /** True only when this call moved the attempt to done. */
+  finished: boolean;
+}
+
 /**
- * Close a finished run.
+ * Close a finished run, without sending anything.
  *
  * The streak belongs to the attempt's own day, not to the clock at the moment
  * the last answer lands: a run that starts before midnight and ends after it
  * must still count for the day it began.
  */
+export const finishFiveRun = async (
+  attempt: GameAttempt,
+): Promise<FiveFinish> => {
+  if (attempt.status !== "active") return { attempt, finished: false };
+
+  const player = await getGamePlayer(attempt.userId);
+  const streak = nextStreak(
+    player?.lastFive ?? null,
+    attempt.dayKey,
+    player?.streak ?? 0,
+  );
+  const points = fivePoints(attempt.score, streak);
+  const finishedAt = new Date().toISOString();
+
+  const finished = await finishAttempt({
+    id: attempt.id,
+    score: attempt.score,
+    points,
+    streak,
+    questionCount: attempt.questionIds.length,
+    finishedAt,
+  });
+
+  if (finished) {
+    await setPlayerStreak({
+      userId: attempt.userId,
+      streak,
+      bestStreak: Math.max(player?.bestStreak ?? 0, streak),
+      lastFive: attempt.dayKey,
+    });
+  }
+
+  const fresh = await getAttempt(attempt.id);
+  if (!fresh) {
+    logger.warn("[games] a finished attempt could not be read back");
+    return { attempt: null, finished };
+  }
+  return { attempt: fresh, finished };
+};
+
+/** Close a finished run and put the result card in the chat. */
 export const finishFive = async ({
   attempt,
   chatId,
@@ -131,74 +197,77 @@ export const finishFive = async ({
   chatId: number;
   messageId?: number;
 }): Promise<void> => {
-  let current = attempt;
+  const finalized = await finishFiveRun(attempt);
+  if (!finalized.attempt) return;
 
-  if (current.status === "active") {
-    const player = await getGamePlayer(current.userId);
-    const streak = nextStreak(
-      player?.lastFive ?? null,
-      current.dayKey,
-      player?.streak ?? 0,
-    );
-    const points = fivePoints(current.score, streak);
-    const finishedAt = new Date().toISOString();
-
-    const finished = await finishAttempt({
-      id: current.id,
-      score: current.score,
-      points,
-      streak,
-      questionCount: current.questionIds.length,
-      finishedAt,
+  if (finalized.finished) {
+    trackActivity({
+      userId: finalized.attempt.userId,
+      chatType: "private",
+      action: "game:five_finish",
+      detail: `${finalized.attempt.dayKey}:${finalized.attempt.score}`,
     });
-
-    if (finished) {
-      await setPlayerStreak({
-        userId: current.userId,
-        streak,
-        bestStreak: Math.max(player?.bestStreak ?? 0, streak),
-        lastFive: current.dayKey,
-      });
-      trackActivity({
-        userId: current.userId,
-        chatType: "private",
-        action: "game:five_finish",
-        detail: `${current.dayKey}:${current.score}`,
-      });
-    }
-
-    const fresh = await getAttempt(current.id);
-    if (!fresh) {
-      logger.warn("[games] a finished attempt could not be read back");
-      return;
-    }
-    current = fresh;
   }
 
   await showFiveResult({
-    attempt: current,
+    attempt: finalized.attempt,
     chatId,
     messageId,
     alreadyPlayed: false,
   });
 };
 
-/** The result card, safe to call more than once for the same attempt. */
-export const showFiveResult = async ({
-  attempt,
-  chatId,
-  messageId,
-  replyTo,
-  alreadyPlayed,
-}: {
-  attempt: GameAttempt;
-  chatId: number;
-  messageId?: number;
-  replyTo?: number;
-  alreadyPlayed: boolean;
-}): Promise<void> => {
-  // Repair an award lost between the finish and the score write. The insert
-  // is unique on (source, ref, user_id), so every later view is a no-op.
+/** One question as the reader sees it. The correct option stays on the server. */
+export interface FiveQuestionView {
+  /** 0-based question position; the screen prints it + 1. */
+  index: number;
+  total: number;
+  prompt: string;
+  options: string[];
+}
+
+/** The attempt's current question, or null when it has run past its set. */
+export const fiveQuestionView = async (
+  attempt: GameAttempt,
+): Promise<FiveQuestionView | null> => {
+  const questionId = attempt.questionIds[attempt.idx];
+  if (!questionId) return null;
+
+  const questions = await getQuestionsByIds([questionId]);
+  const question = questions[0];
+  if (!question) throw new Error("the attempt points at a missing question");
+
+  return {
+    index: attempt.idx,
+    total: attempt.questionIds.length,
+    prompt: question.prompt,
+    options: question.options,
+  };
+};
+
+/** Everything a result screen prints, read once. */
+export interface FiveResultView {
+  correct: number;
+  total: number;
+  score: number;
+  points: number;
+  streak: number;
+  /** The day's rank and field size. */
+  rank: number;
+  players: number;
+  section: { label: string; rank: number; total: number } | null;
+}
+
+/**
+ * The finished run's numbers, safe to read more than once.
+ *
+ * The award repair is idempotent (the insert is unique on source/ref/user), so
+ * a result read after a crash between the finish and the score write still
+ * lands the points.
+ */
+export const fiveResultView = async (
+  attempt: GameAttempt,
+): Promise<FiveResultView> => {
   if (attempt.status === "done" && attempt.points > 0) {
     await addScore({
       season: attempt.season,
@@ -228,22 +297,50 @@ export const showFiveResult = async ({
         )
       : null;
 
+  return {
+    correct: attempt.answers.filter((answer) => answer.correct).length,
+    total: attempt.answers.length || attempt.questionIds.length,
+    score: attempt.score,
+    points: attempt.points,
+    streak: attempt.streak,
+    rank: rank.rank,
+    players: rank.total,
+    section:
+      section && attempt.sectionLabel
+        ? {
+            label: attempt.sectionLabel,
+            rank: section.rank,
+            total: section.total,
+          }
+        : null,
+  };
+};
+
+/** The result card, safe to call more than once for the same attempt. */
+export const showFiveResult = async ({
+  attempt,
+  chatId,
+  messageId,
+  replyTo,
+  alreadyPlayed,
+}: {
+  attempt: GameAttempt;
+  chatId: number;
+  messageId?: number;
+  replyTo?: number;
+  alreadyPlayed: boolean;
+}): Promise<void> => {
+  const view = await fiveResultView(attempt);
+
   await sendOrEdit({
     chatId,
     messageId,
     replyTo,
     card: fiveResultCard({
       attempt,
-      rank: rank.rank,
-      total: rank.total,
-      section:
-        section && attempt.sectionLabel
-          ? {
-              label: attempt.sectionLabel,
-              rank: section.rank,
-              total: section.total,
-            }
-          : null,
+      rank: view.rank,
+      total: view.players,
+      section: view.section,
       alreadyPlayed,
     }),
   });

@@ -48,6 +48,8 @@ import {
 import { paperRouter } from "./papers.js";
 import { getRankCard } from "../services/rankCardStore.js";
 import { gamesRouter } from "./games.js";
+import { gameLiveRouter } from "./gameLive.js";
+import { gamesPlayRouter } from "./gamesPlay.js";
 import { rankRouter } from "./rank.js";
 import { verificationRouter } from "./verification.js";
 import { libraryRouter } from "./library.js";
@@ -360,6 +362,14 @@ app.use("/api", verificationRouter);
 // The public league board behind the channel's full-leaderboard button. It
 // needs no identity: the rows are the same public names the channel shows.
 app.use("/api", gamesRouter);
+
+// The home banner's view of the league: today's run for the signed-in caller.
+// Mounted beside the board so both answer under /api/games/*.
+app.use("/api", gameLiveRouter);
+
+// The daily run itself, played inside the Mini App. The bot keeps its own
+// chat copy; both surfaces read and write the same attempt row.
+app.use("/api", gamesPlayRouter);
 
 // Report endpoints: identity-authenticated; submits rate-limited per account
 // and further throttled per user in the service (60 s gate, fail-open).

@@ -69,7 +69,8 @@ vi.mock("../../src/bot/authorization.js", () => ({
   rememberStudent: vi.fn(async () => undefined),
 }));
 
-const { startDailyFive } = await import("../../src/games/five.js");
+const { fiveQuestionView, startDailyFive } =
+  await import("../../src/games/five.js");
 const { createDuelFromAttempt, finishDuelAttempt, startDuel, sendDuelRecord } =
   await import("../../src/games/duel.js");
 const { handleGameCallback, isGameCallback } =
@@ -748,5 +749,22 @@ describe("game edge paths", () => {
     await duelCommand!(commandContext("private"));
 
     expect(lastSent()?.text).toContain("Your duels");
+  });
+});
+
+describe("the shared run view", () => {
+  it("gives the browser the prompt and options, never the answer", async () => {
+    await startDailyFive({ chatId: 900, userId: 42 });
+    const attempt = await getAttemptForRound(
+      "five",
+      `five-${istStamp().date}`,
+      42,
+    );
+
+    const view = await fiveQuestionView(attempt!);
+
+    expect(view).toMatchObject({ index: 0, total: QUESTIONS_PER_RUN });
+    expect(view?.options).toHaveLength(4);
+    expect(view).not.toHaveProperty("correct");
   });
 });

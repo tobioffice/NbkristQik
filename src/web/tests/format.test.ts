@@ -6,6 +6,7 @@ import {
   formatScore,
   formatSyncedAt,
   istStampFromDb,
+  istWeekLabel,
 } from "../src/format";
 
 describe("formatScore", () => {
@@ -34,6 +35,29 @@ describe("formatScore", () => {
         "midmarks",
       ),
     ).toBe("-");
+  });
+});
+
+describe("istWeekLabel", () => {
+  it("prints the league's Monday in IST", () => {
+    // Monday 16 Nov 2026, 12:00 IST
+    expect(istWeekLabel(new Date("2026-11-16T06:30:00Z"))).toBe(
+      "Week of 16 Nov",
+    );
+  });
+
+  it("keeps Sunday night in the week that is ending", () => {
+    // Sunday 22 Nov 2026, 23:59 IST
+    expect(istWeekLabel(new Date("2026-11-22T18:29:00Z"))).toBe(
+      "Week of 16 Nov",
+    );
+  });
+
+  it("rolls over at Monday midnight IST, not UTC", () => {
+    // Monday 23 Nov 2026, 00:00 IST (still Sunday 22 Nov in UTC)
+    expect(istWeekLabel(new Date("2026-11-22T18:30:00Z"))).toBe(
+      "Week of 23 Nov",
+    );
   });
 });
 
@@ -104,28 +128,20 @@ describe("formatFreshnessRange", () => {
 
   it("keeps the single sync line when the range is under an hour", () => {
     expect(
-      formatFreshnessRange(
-        "2026-10-25 11:58:00",
-        "2026-10-25 11:20:00",
-        now,
-      ),
+      formatFreshnessRange("2026-10-25 11:58:00", "2026-10-25 11:20:00", now),
     ).toBe("Synced 2 min ago");
   });
 
   it("prints both ends when one fresh row would mask an old register", () => {
     expect(
-      formatFreshnessRange(
-        "2026-10-25 11:58:00",
-        "2026-10-19 12:00:00",
-        now,
-      ),
+      formatFreshnessRange("2026-10-25 11:58:00", "2026-10-19 12:00:00", now),
     ).toBe("Updated 2 min to 6 days ago");
   });
 
   it("falls back to the newest stamp when the oldest is missing", () => {
-    expect(
-      formatFreshnessRange("2026-10-25 09:00:00", null, now),
-    ).toBe("Synced 3 hours ago");
+    expect(formatFreshnessRange("2026-10-25 09:00:00", null, now)).toBe(
+      "Synced 3 hours ago",
+    );
   });
 
   it("has nothing to say without a newest timestamp", () => {
