@@ -853,6 +853,39 @@ export const addScore = async (award: ScoreAward): Promise<boolean> => {
   return Number(result.rowsAffected) === 1;
 };
 
+/**
+ * Close the duel runs the old finish path left `"active"`.
+ *
+ * `finishDuelAttempt` used to close the duel row and pay both sides without
+ * marking the opponent's attempt done, so a finished duel run could sit
+ * active forever: it never counted as a play, and reopening the challenge
+ * pointed at a question that no longer existed. Every boot repairs what it
+ * finds; the finish is conditional on `active`, so a second run is a no-op.
+ */
+export const repairDuelAttempts = async (): Promise<number> => {
+  const result = await turso.execute({
+    sql: `SELECT a.id, a.score, a.points, a.streak, a.question_ids,
+                 d.finished_at
+          FROM game_attempts a
+          JOIN game_duels d ON d.id = a.duel_id
+          WHERE a.game = 'duel' AND a.status = 'active' AND d.status = 'done'`,
+  });
+
+  let repaired = 0;
+  for (const row of result.rows) {
+    const finished = await finishAttempt({
+      id: num(row.id),
+      score: num(row.score),
+      points: num(row.points),
+      streak: num(row.streak),
+      questionCount: jsonArray<number>(row.question_ids, []).length,
+      finishedAt: nullableText(row.finished_at) ?? new Date().toISOString(),
+    });
+    if (finished) repaired += 1;
+  }
+  return repaired;
+};
+
 /** The player's rank for one day's Five, with ties going to the earlier run. */
 export const getFiveRank = async (input: {
   dayKey: string;

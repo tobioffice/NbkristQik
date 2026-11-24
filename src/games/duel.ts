@@ -5,6 +5,7 @@ import {
   createAttempt,
   createDuel,
   expireDuel,
+  finishAttempt,
   finishDuel,
   getAttempt,
   getAttemptForRound,
@@ -285,6 +286,28 @@ export const finishDuelAttempt = async ({
     return;
   }
 
+  if (duel.status === "expired") {
+    await say(chatId, "That challenge expired. Start today's run.", replyTo);
+    return;
+  }
+  if (attempt.userId === duel.challengerId) {
+    await say(chatId, "That's your own challenge.", replyTo);
+    return;
+  }
+
+  // The last answer ended the run whichever way the duel is going. Close the
+  // attempt before the duel row: a run left "active" here never counts as a
+  // play, and a later tap on the challenge would resume into a question that
+  // no longer exists.
+  await finishAttempt({
+    id: attempt.id,
+    score: attempt.score,
+    points: attempt.points,
+    streak: attempt.streak,
+    questionCount: attempt.questionIds.length,
+    finishedAt: duel.finishedAt ?? new Date().toISOString(),
+  });
+
   if (duel.status === "done") {
     await showDuelResult({
       duel,
@@ -293,14 +316,6 @@ export const finishDuelAttempt = async ({
       messageId,
       replyTo,
     });
-    return;
-  }
-  if (duel.status === "expired") {
-    await say(chatId, "That challenge expired. Start today's run.", replyTo);
-    return;
-  }
-  if (attempt.userId === duel.challengerId) {
-    await say(chatId, "That's your own challenge.", replyTo);
     return;
   }
 

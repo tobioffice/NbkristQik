@@ -538,6 +538,19 @@ describe("game edge paths", () => {
     expect(lastSent()?.text).toContain("already finished");
   });
 
+  it("marks the opponent's run done when the duel closes", async () => {
+    const { duel } = await makeDuel();
+    await startDuel({ chatId: 901, userId: 43, duelId: duel.id });
+    const opponent = await getAttemptForRound("duel", `d${duel.id}`, 43);
+
+    await answerAll(opponent!.id, 43, 901, 0);
+
+    const finished = await getAttempt(opponent!.id);
+    expect(finished?.status).toBe("done");
+    expect(finished?.finishedAt).toBeTruthy();
+    expect(finished?.idx).toBe(QUESTIONS_PER_RUN);
+  });
+
   it("requires a finished run before a challenge", async () => {
     await startDailyFive({ chatId: 900, userId: 42 });
     const attempt = await getAttemptForRound(

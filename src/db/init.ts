@@ -7,7 +7,11 @@ import {
 import { initLibraryTables } from "./library.model.js";
 import { initPaperTables } from "./paper.model.js";
 import { initUserSettingsTable } from "./userSettings.model.js";
-import { initGameTables, seedGameQuestions } from "./game.model.js";
+import {
+  initGameTables,
+  repairDuelAttempts,
+  seedGameQuestions,
+} from "./game.model.js";
 import { logger } from "../config/logger.js";
 
 /**
@@ -288,6 +292,12 @@ export const initDatabase = async () => {
   await initUserSettingsTable();
   await initGameTables();
   await seedGameQuestions();
+  const repairedDuelRuns = await repairDuelAttempts();
+  if (repairedDuelRuns > 0) {
+    logger.warn(
+      `[db] repaired ${repairedDuelRuns} finished duel run(s) left active`,
+    );
+  }
   await backfillReportThreads();
 
   // Additive v2 columns. Guarded by the version and by PRAGMA table_info, so

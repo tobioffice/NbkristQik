@@ -24,6 +24,7 @@ import {
   getWeekPlayers,
   getWeekSections,
   initGameTables,
+  repairDuelAttempts,
   saveAnswer,
   saveChannelBoard,
   seedGameQuestions,
@@ -837,5 +838,54 @@ describe("the seeded bank", () => {
       expect(question.correct).toBeGreaterThanOrEqual(0);
       expect(question.correct).toBeLessThan(4);
     }
+  });
+});
+
+describe("the duel attempt repair", () => {
+  it("closes a finished duel's run that was left active", async () => {
+    const finishedAt = "2026-11-15T04:00:00.000Z";
+    const duelId = await createDuel({
+      challengerId: 903,
+      challengerRoll: "23KB1A0903",
+      challengerName: null,
+      challengerSectionKey: "4|CSE|C",
+      challengerSectionLabel: "4 CSE C",
+      challengerScore: 600,
+      challengerAttemptId: 9999,
+      questionIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      dayKey: DAY,
+      weekKey: WEEK,
+      season: SEASON,
+      expiresAt: "2026-11-17T03:00:00.000Z",
+    });
+    const attemptId = await createAttempt({
+      game: "duel",
+      roundKey: "d-repair",
+      dayKey: DAY,
+      weekKey: WEEK,
+      season: SEASON,
+      userId: 902,
+      rollNo: "23KB1A0902",
+      sectionKey: "4|CSE|C",
+      sectionLabel: "4 CSE C",
+      questionIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      duelId,
+      startedAt: "2026-11-15T03:00:00.000Z",
+    });
+    await finishDuel({
+      id: duelId,
+      opponentId: 902,
+      opponentRoll: "23KB1A0902",
+      opponentName: null,
+      opponentScore: 300,
+      winnerId: 903,
+      finishedAt,
+    });
+
+    expect(await repairDuelAttempts()).toBe(1);
+    const repaired = await getAttempt(attemptId);
+    expect(repaired).toMatchObject({ status: "done", finishedAt, idx: 10 });
+    // a second boot finds nothing left to repair
+    expect(await repairDuelAttempts()).toBe(0);
   });
 });
