@@ -133,18 +133,23 @@ export const persistMidmarksSection = async (
 ) => {
   const writes: SectionWrite<Midmarks>[] = [];
   for (const [roll, studentMidmarks] of students) {
-    const zeroMarkSubjects = studentMidmarks.subjects.filter(
-      (sub) => (sub.M1 || 0) === 0 && (sub.M2 || 0) === 0,
-    ).length;
+    // A paper counts once the college has entered an average or a mark; a
+    // row with neither is "Not Entered" and must not pull the mean down.
+    const scoredSubjects = studentMidmarks.subjects.filter(
+      (sub) =>
+        sub.average != null || (sub.M1 || 0) !== 0 || (sub.M2 || 0) !== 0,
+    );
 
     let average =
-      studentMidmarks.subjects.reduce((acc, sub) => {
+      scoredSubjects.reduce((acc, sub) => {
         const m1 = sub.M1 || 0;
         const m2 = sub.M2 || 0;
-        // If M2 is present, take average of M1 and M2. Otherwise, just use M1.
-        const subjectScore = m2 > 0 ? (m1 + m2) / 2 : m1;
+        // The college's own average is the number the student sees on the
+        // card, so it wins whenever the report carries one. Only a paper
+        // without an average falls back to the marks (one mid entered).
+        const subjectScore = sub.average ?? (m2 > 0 ? (m1 + m2) / 2 : m1);
         return acc + subjectScore;
-      }, 0) / (studentMidmarks.subjects.length - zeroMarkSubjects || 1);
+      }, 0) / (scoredSubjects.length || 1);
 
     // Year 41 is marked out of 40 while the others are out of 30. The year
     // comes from the request context now, not a per-row student lookup.
