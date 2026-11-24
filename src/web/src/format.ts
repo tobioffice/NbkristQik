@@ -103,6 +103,13 @@ const MONTHS = [
   "Dec",
 ];
 
+/** The IST clock, so date maths never depends on the phone's zone. */
+const istShifted = (now: Date): Date =>
+  new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+
+/** 1 = Monday ... 7 = Sunday on the IST calendar. */
+const istWeekday = (now: Date): number => istShifted(now).getUTCDay() || 7;
+
 /**
  * "Week of 17 Nov": the IST Monday the league's week starts on.
  *
@@ -111,17 +118,20 @@ const MONTHS = [
  * matches the server's label. The API's answer replaces it when it arrives.
  */
 export const istWeekLabel = (now: Date = new Date()): string => {
-  const shifted = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
-  const weekday = shifted.getUTCDay() || 7; // 1 = Monday ... 7 = Sunday
+  const shifted = istShifted(now);
   const monday = new Date(
     Date.UTC(
       shifted.getUTCFullYear(),
       shifted.getUTCMonth(),
-      shifted.getUTCDate() - (weekday - 1),
+      shifted.getUTCDate() - (istWeekday(now) - 1),
     ),
   );
   return `Week of ${monday.getUTCDate()} ${MONTHS[monday.getUTCMonth()]}`;
 };
+
+/** "Day 2 of 7": how far the running league week has come. */
+export const istWeekDayLabel = (now: Date = new Date()): string =>
+  `Day ${istWeekday(now)} of 7`;
 
 /** An absolute IST stamp from a database timestamp; null when unreadable. */
 export const istStampFromDb = (

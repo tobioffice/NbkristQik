@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { API_BASE } from "../api";
 import { ErrorState, SkeletonRows } from "../components/FeedbackStates";
-import { plural } from "../format";
+import { plural, istWeekDayLabel } from "../format";
 import { fetchWithTimeout, readJson, RequestError } from "../http";
 import { haptic } from "../telegram";
 
@@ -176,7 +176,9 @@ export const GamesBoardView = ({
             </button>
           ))}
         </div>
-        <p className="tg-hint">{board.weekLabel}</p>
+        <p className="tg-hint">
+          {board.weekLabel} · {istWeekDayLabel()}
+        </p>
       </div>
 
       {empty ? (

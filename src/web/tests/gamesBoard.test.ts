@@ -55,6 +55,9 @@ describe("GamesBoardView", () => {
     const html = render(board);
 
     expect(html).toContain('aria-pressed="true">Sections</button>');
+    expect(html).toContain("Week of 16 Nov");
+    // the running week also says which day it is on
+    expect(html).toMatch(/Day \d of 7/);
     expect(html).toContain("4 CSE C");
     expect(html).toContain("4,820");
     expect(html).toContain("9 players");

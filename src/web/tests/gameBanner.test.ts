@@ -31,6 +31,7 @@ describe("GameBannerView", () => {
     expect(html).toContain("Section Wars");
     expect(html).toContain("run is open. 10 questions, 10 seconds each.");
     expect(html).toContain("Week of 17 Nov");
+    expect(html).toMatch(/Day \d of 7/);
     expect(html).toContain(">Play<");
     expect(html).toContain(`href="${PLAY_LINK}"`);
     expect(html).not.toContain("target=");

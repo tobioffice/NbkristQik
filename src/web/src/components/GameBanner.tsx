@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getGameLive, type GameLive } from "../api";
-import { istWeekLabel } from "../format";
+import { istWeekDayLabel, istWeekLabel } from "../format";
 import { bannerContent } from "../gameBanner";
 import { haptic } from "../telegram";
 
@@ -71,6 +71,7 @@ export const GameBannerView = ({ live }: { live: GameLive | null }) => {
         </span>
         <span className="game-banner__end">
           <span className="game-banner__week">{week}</span>
+          <span className="game-banner__day">{istWeekDayLabel()}</span>
           <span className="game-banner__action">
             {content.action}
             <ChevronIcon />

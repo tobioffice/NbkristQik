@@ -6,6 +6,7 @@ import {
   formatScore,
   formatSyncedAt,
   istStampFromDb,
+  istWeekDayLabel,
   istWeekLabel,
 } from "../src/format";
 
@@ -57,6 +58,30 @@ describe("istWeekLabel", () => {
     // Monday 23 Nov 2026, 00:00 IST (still Sunday 22 Nov in UTC)
     expect(istWeekLabel(new Date("2026-11-22T18:30:00Z"))).toBe(
       "Week of 23 Nov",
+    );
+  });
+});
+
+describe("istWeekDayLabel", () => {
+  it("counts the running week from Monday", () => {
+    // Monday 16 Nov 2026, 12:00 IST
+    expect(istWeekDayLabel(new Date("2026-11-16T06:30:00Z"))).toBe(
+      "Day 1 of 7",
+    );
+    // Tuesday 24 Nov 2026, 12:00 IST
+    expect(istWeekDayLabel(new Date("2026-11-24T06:30:00Z"))).toBe(
+      "Day 2 of 7",
+    );
+  });
+
+  it("ends on Sunday and rolls over at Monday midnight IST", () => {
+    // Sunday 22 Nov 2026, 23:59 IST
+    expect(istWeekDayLabel(new Date("2026-11-22T18:29:00Z"))).toBe(
+      "Day 7 of 7",
+    );
+    // Monday 23 Nov 2026, 00:00 IST (still Sunday in UTC)
+    expect(istWeekDayLabel(new Date("2026-11-22T18:30:00Z"))).toBe(
+      "Day 1 of 7",
     );
   });
 });
