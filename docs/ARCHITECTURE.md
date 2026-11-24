@@ -40,7 +40,8 @@ Monitor (monitor-host) ──> /health, /internal/health, portal
   every Telegram call goes through `bot.api`. Group lookups send a private
   deep link into the bot, never the card; `/attendance`, `/midmarks` and
   `/bunk` are ephemeral commands, so even that link is visible only to the
-  sender. Cards are rich messages with a real table, with the HTML card as the
+  sender. A public prompt is cleared when its button is used and swept up with
+  the roll message two minutes later if it is not. Cards are rich messages with a real table, with the HTML card as the
   fallback. See `src/bot/` for commands, the academic menu flow, the
   channel-membership gate, and `/syncdb`. Channel membership is the gate for
   non-admin students; there is no daily check-in.

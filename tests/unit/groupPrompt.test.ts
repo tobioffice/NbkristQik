@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  forgetGroupPrompt,
   rememberGroupPrompt,
   takeGroupPrompts,
 } from "../../src/bot/academics/groupPrompt.js";
@@ -91,5 +92,41 @@ describe("group prompt bookkeeping", () => {
     );
 
     expect(takeGroupPrompts(880007, "25KB1A05AR", now + 49 * HOUR)).toEqual([]);
+  });
+});
+
+describe("forgetting one prompt", () => {
+  it("removes only the named prompt and leaves the rest for the deep link", () => {
+    rememberGroupPrompt(880010, "25KB1A05AR", {
+      chatId: -1010,
+      messageId: 41,
+      sourceMessageId: 40,
+    });
+    rememberGroupPrompt(880010, "25KB1A05AR", {
+      chatId: -1010,
+      messageId: 42,
+      sourceMessageId: 41,
+    });
+
+    expect(forgetGroupPrompt(880010, "25KB1A05AR", 41)).toEqual({
+      chatId: -1010,
+      messageId: 41,
+      sourceMessageId: 40,
+    });
+    expect(takeGroupPrompts(880010, "25KB1A05AR")).toEqual([
+      { chatId: -1010, messageId: 42, sourceMessageId: 41 },
+    ]);
+  });
+
+  it("returns null for a prompt the tap already took", () => {
+    rememberGroupPrompt(880011, "25KB1A05AR", {
+      chatId: -1011,
+      messageId: 43,
+      sourceMessageId: 42,
+    });
+    takeGroupPrompts(880011, "25KB1A05AR");
+
+    expect(forgetGroupPrompt(880011, "25KB1A05AR", 43)).toBeNull();
+    expect(forgetGroupPrompt(880011, "25KB1A05AA", 43)).toBeNull();
   });
 });

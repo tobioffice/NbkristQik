@@ -10,6 +10,7 @@ import {
   sendBunkPlan,
 } from "../academics/studentActions.js";
 import { takeGroupPrompts } from "../academics/groupPrompt.js";
+import { clearGroupPrompt } from "../academics/groupLink.js";
 import { isAuthorizedUser, rememberStudent } from "../authorization.js";
 import {
   botSecurityHandler,
@@ -53,20 +54,8 @@ const sendWelcome = async (msg: Message): Promise<void> => {
  * delete must never hold the card back.
  */
 const clearGroupPrompts = (userId: number, rollNumber: string): void => {
-  for (const { chatId, messageId, sourceMessageId } of takeGroupPrompts(
-    userId,
-    rollNumber,
-  )) {
-    for (const id of [messageId, sourceMessageId]) {
-      void bot.api
-        .deleteMessage({ chat_id: chatId, message_id: id })
-        .catch((e: unknown) => {
-          logger.debug(
-            "[start] group message could not be deleted:",
-            e instanceof Error ? e.message : e,
-          );
-        });
-    }
+  for (const prompt of takeGroupPrompts(userId, rollNumber)) {
+    clearGroupPrompt(prompt);
   }
 };
 

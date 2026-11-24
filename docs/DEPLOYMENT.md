@@ -103,6 +103,13 @@ student who sent it, and the card itself is rendered in the DM. If the client
 cannot do ephemeral commands, the same link is posted publicly; either way the
 bot never puts the card in the room. No BotFather setting is required.
 
+A public "open it in the bot" prompt is not left behind. When the student
+follows its button, the bot deletes the prompt and the roll message that asked
+for it. When the student never taps, the same pair is swept up after two
+minutes (`GROUP_PROMPT_LIFETIME_MS` in `src/bot/academics/groupLink.ts`).
+Deleting a member's message needs the bot to be a group admin with delete
+rights; a refusal is logged at debug and nothing else happens.
+
 ### Attendance widget
 
 `ATTENDANCE_WIDGET` controls the HTML widget card. The default is `off`

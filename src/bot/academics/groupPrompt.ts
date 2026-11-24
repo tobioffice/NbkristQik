@@ -67,6 +67,32 @@ export const rememberGroupPrompt = (
   }
 };
 
+/**
+ * Take one parked prompt back out by its message id.
+ *
+ * A prompt with no tap behind it is swept away on a timer, so the timer and
+ * the deep link can race for the same message: whichever gets it first
+ * deletes it, and the other finds nothing.
+ */
+export const forgetGroupPrompt = (
+  userId: number,
+  rollNumber: string,
+  messageId: number,
+  now = Date.now(),
+): GroupPrompt | null => {
+  sweep(now);
+  const key = keyOf(userId, rollNumber);
+  const bucket = buckets.get(key);
+  if (!bucket) return null;
+  const index = bucket.prompts.findIndex(
+    (prompt) => prompt.messageId === messageId,
+  );
+  if (index < 0) return null;
+  const [prompt] = bucket.prompts.splice(index, 1);
+  if (bucket.prompts.length === 0) buckets.delete(key);
+  return prompt ?? null;
+};
+
 /** Take (and forget) the prompts this student is now clearing. */
 export const takeGroupPrompts = (
   userId: number,
