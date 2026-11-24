@@ -27,11 +27,12 @@ reports `journal_mode = memory` instead of `wal`, which is expected.
 
 ## Schema versioning
 
-The schema version lives in `PRAGMA user_version` and is currently **10**
+The schema version lives in `PRAGMA user_version` and is currently **11**
 (`SCHEMA_VERSION` in `src/db/init.ts`). Version 5 added `roll_claims` and
 `email_verifications` for college-email verification; version 6 split the
 single hide switch into three independent options; version 9 added
-`report_attachments`; version 10 added the question-paper collection.
+`report_attachments`; version 10 added the question-paper collection; version
+11 added the chat regulation tables and the seeded blocked-word list.
 
 - `0` means a fresh or pre-versioning database. Every table is created first,
   then the version is stamped, so a crash mid-init leaves version 0 and the
@@ -188,6 +189,46 @@ One row per ingestable document (a subject unit, or a whole subject):
 per page served; it is what `resolveWatermark` reads. The live burst counter is
 kept in Redis, not in this table.
 
+### `chat_keywords` — the blocked-word list
+
+`id` INTEGER PRIMARY KEY AUTOINCREMENT, `phrase` TEXT NOT NULL UNIQUE COLLATE
+NOCASE, `created_at`. Seeded once from `src/constants/chatModeration.ts`;
+`keywords_seeded` in `chat_moderation_settings` is the marker, so a word the
+admin removed never returns after a restart. Matching folds case, leetspeak,
+punctuation and stretched letters; entries are exact words, not stems (see
+`src/services/moderation/matcher.ts`).
+
+### `chat_moderation_settings` — the rule switches
+
+`key` TEXT PRIMARY KEY, `value` TEXT, `updated_at`. Keys: `enabled`,
+`auto_delete`, `auto_mute`, `mute_seconds`, `notice_in_chat`, `notify_user`,
+and the one-time `keywords_seeded` marker. Values are read through
+`src/services/moderation/settings.ts`, which merges them over the defaults and
+clamps the mute length to 60 seconds–30 days.
+
+### `chat_moderation_users` — who is muted or banned
+
+`(chat_id, user_id)` composite primary key, `state` (`muted`/`banned`),
+`until_date` (UTC; null for a ban or an indefinite mute), `reason`, `actor`
+(`admin`/`auto`/`panel`), `username`, `first_name` (captured at action time,
+so the panel can name someone who never used the bot), `created_at`,
+`updated_at`. An expired mute is deleted by `pruneExpiredModeratedUsers()` and
+the daily prune; Telegram has already lifted it.
+
+### `chat_messages` — the message ids the bot delivered
+
+`id` INTEGER PRIMARY KEY AUTOINCREMENT, `chat_id`, `user_id`, `message_id`,
+`created_at`. One row per message in a regulated chat, kept only for 48 hours
+because Telegram refuses to delete older messages. `/purge` and the ban's
+history wipe read this table.
+
+### `chat_moderation_log` — the audit trail
+
+`id` INTEGER PRIMARY KEY AUTOINCREMENT, `chat_id`, `user_id`, `username`,
+`first_name`, `action` (`ban`/`mute`/`kick`/`purge`/`unban`/`unmute`/
+`auto_mute`/`auto_delete`), `reason`, `actor`, `deleted_count`, `created_at`.
+Retained 95 days and shown newest-first in the panel's Chat view.
+
 ### `admin_sessions` — panel sessions
 
 `token_hash` TEXT PRIMARY KEY (HMAC of the token keyed with the admin
@@ -206,6 +247,10 @@ not skew the history.
 
 | Index | Table | Columns |
 |---|---|---|
+| `idx_chat_messages_created` | `chat_messages` | `created_at` |
+| `idx_chat_messages_user` | `chat_messages` | `chat_id, user_id, id` |
+| `idx_chat_moderation_log_created` | `chat_moderation_log` | `created_at` |
+| `idx_chat_moderation_log_user` | `chat_moderation_log` | `chat_id, user_id, created_at` |
 | `idx_activity_created` | `activity_log` | `created_at` |
 | `idx_activity_user` | `activity_log` | `user_id, created_at` |
 | `idx_library_documents_code` | `library_documents` | `code` |
@@ -229,8 +274,11 @@ not skew the history.
 startup run matters because a deploy cadence shorter than 24 hours would
 otherwise restart the timer before it ever fires.
 
-- `uptime_log`, `activity_log` and `library_reads`: rows older than **95
-  days** are deleted.
+- `uptime_log`, `activity_log`, `chat_moderation_log` and `library_reads`:
+  rows older than **95 days** are deleted.
+- `chat_messages`: rows older than **48 hours** are deleted (Telegram will not
+  delete a message past that window anyway).
+- `chat_moderation_users`: mutes whose `until_date` has passed are deleted.
 - `admin_sessions`: rows whose `expires_at` has passed are deleted.
 
 Each table is pruned independently; a missing or locked table is logged and

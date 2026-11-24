@@ -132,7 +132,7 @@ export const panelJs = `(function () {
   var drawerIssue = null;
   var threadCache = {};
   var userCache = {};
-  var STALE_MS = { overview: 60000, students: 30000, verified: 20000, league: 30000, library: 30000, reports: 60000, papers: 30000, live: 0, health: 300000 };
+  var STALE_MS = { overview: 60000, students: 30000, verified: 20000, league: 30000, library: 30000, reports: 60000, chat: 15000, papers: 30000, live: 0, health: 300000 };
   var isStale = function (name) {
     return !lastLoad[name] || Date.now() - lastLoad[name] > STALE_MS[name];
   };
@@ -157,6 +157,7 @@ export const panelJs = `(function () {
     if (name === "library" && isStale("library")) loadLibrary();
     if (name === "live") loadFeed();
     if (name === "reports" && isStale("reports")) loadReports();
+    if (name === "chat" && isStale("chat")) loadChat();
     if (name === "papers" && isStale("papers")) loadPapers();
     if (name === "health" && isStale("health")) loadHealth();
   };
@@ -1309,6 +1310,378 @@ export const panelJs = `(function () {
   });
   setInterval(function () {
     if (current === "papers" && document.visibilityState === "visible" && isStale("papers")) loadPapers();
+  }, 30000);
+
+  /* ---------- chat regulation ---------- */
+  var chatData = null;
+
+  // JSON in, JSON out for the write endpoints; api() above is GET-only.
+  var requestJson = function (method, path, body) {
+    var opts = { method: method, headers: { "Content-Type": "application/json" } };
+    if (body !== undefined) opts.body = JSON.stringify(body);
+    return fetch(BASE + "/api/" + path, opts).then(function (r) {
+      if (r.status === 401) { showLogin(); throw new Error("Sign in again."); }
+      return r.json().catch(function () { return {}; }).then(function (b) {
+        if (!r.ok) throw new Error(b.error || ("Server error " + r.status));
+        return b;
+      });
+    });
+  };
+
+  var setChatNote = function (id, text, kind) {
+    var el = $(id);
+    if (!el) return;
+    el.className = "chatnote" + (kind ? " " + kind : "");
+    el.textContent = text || "";
+    el.style.display = text ? "block" : "none";
+  };
+
+  var CHAT_FLAGS = [
+    ["enabled", "Automatic moderation", "Look at every message in the chat for blocked words."],
+    ["autoDelete", "Delete the message", "Remove the message that matched."],
+    ["autoMute", "Mute the sender", "Restrict them for the length below."],
+    ["noticeInChat", "Note in the chat", "Leave a short line that deletes itself."],
+    ["notifyUser", "Tell the student", "Try to DM them the reason."]
+  ];
+
+  var chatToggleRow = function (key, title, desc, on) {
+    return '<div class="setrow"><div class="setbody"><div class="settitle">' + esc(title) +
+      '</div><div class="setdesc">' + esc(desc) + "</div></div>" +
+      '<div class="seg seg-sm" data-setflag="' + key + '" role="group" aria-label="' + esc(title) + '">' +
+      '<button type="button" data-val="0" aria-pressed="' + (on ? "false" : "true") + '">Off</button>' +
+      '<button type="button" data-val="1" aria-pressed="' + (on ? "true" : "false") + '">On</button>' +
+      "</div></div>";
+  };
+
+  var renderChatStatus = function (d) {
+    var el = $("chatstatus");
+    if (!el) return;
+    var chats = d.chats || [];
+    if (!chats.length) {
+      el.innerHTML = '<div class="chatnote bad">No regulated chat is configured. Set MODERATION_CHAT_IDS on the server.</div>';
+      return;
+    }
+    var html = '<div class="group">';
+    var missing = false;
+    for (var i = 0; i < chats.length; i++) {
+      var c = chats[i];
+      var title = esc(c.title || String(c.id));
+      if (c.memberCount != null) title += ' <span class="dim">· ' + fmt(c.memberCount) + " members</span>";
+      var rights = "Admin, can delete and restrict";
+      var cls = "good";
+      if (!c.bot || !c.bot.isAdmin) {
+        rights = (c.bot && c.bot.error) || "Not an admin";
+        cls = "bad";
+        missing = true;
+      } else if (!c.bot.canDelete || !c.bot.canRestrict) {
+        rights = "Admin, but missing delete or restrict rights";
+        cls = "warn";
+        missing = true;
+      }
+      html += '<div class="chatrow"><span class="l">' + title +
+        '</span><span class="v ' + cls + '">' + esc(rights) + "</span></div>";
+    }
+    html += "</div>";
+    if (missing) {
+      html += '<div class="chatnote warn" style="margin-top:10px">Promote the bot to admin in the group with delete and restrict rights. An admin bot also sees every message, which the word list needs.</div>';
+    }
+    el.innerHTML = html;
+  };
+
+  var renderChatSettings = function (s) {
+    var html = "";
+    for (var i = 0; i < CHAT_FLAGS.length; i++) {
+      var flag = CHAT_FLAGS[i];
+      html += chatToggleRow(flag[0], flag[1], flag[2], Boolean(s[flag[0]]));
+    }
+    var minutes = Math.round(Number(s.muteSeconds || 900) / 60);
+    html += '<div class="setrow"><div class="setbody"><div class="settitle">Mute length</div>' +
+      '<div class="setdesc">Minutes. A bare /mute uses this length too.</div></div>' +
+      '<input class="search chatnum" id="chatmuteinput" type="number" inputmode="numeric" min="1" max="43200" step="1" value="' +
+      minutes + '" aria-label="Mute length in minutes"></div>';
+    $("chatsettings").innerHTML = html;
+  };
+
+  var readChatFlag = function (key) {
+    var seg = $("chatsettings").querySelector('[data-setflag="' + key + '"]');
+    if (!seg) return null;
+    var on = seg.querySelector('button[data-val="1"]');
+    return Boolean(on && on.getAttribute("aria-pressed") === "true");
+  };
+
+  var renderChatKeywords = function (rows) {
+    var wrap = $("chatkeywords"), empty = $("chatkwempty"), hint = $("chatkwhint");
+    if (hint) hint.textContent = rows.length + (rows.length === 1 ? " word" : " words");
+    if (empty) empty.style.display = rows.length ? "none" : "block";
+    var html = "";
+    for (var i = 0; i < rows.length; i++) {
+      html += '<div class="kwrow"><span class="kw">' + esc(rows[i].phrase) + "</span>" +
+        '<button type="button" class="kwdel" data-kwdel="' + esc(String(rows[i].id)) + '">Remove</button></div>';
+    }
+    wrap.innerHTML = html;
+  };
+
+  var chatActionLabel = {
+    ban: "Banned", mute: "Muted", kick: "Kicked", purge: "Removed messages",
+    unban: "Unbanned", unmute: "Unmuted",
+    auto_mute: "Auto muted", auto_delete: "Auto removed"
+  };
+
+  var chatUntil = function (utc) {
+    if (!utc) return "—";
+    var t = parseUtc(utc);
+    if (isNaN(t)) return String(utc);
+    if (t <= Date.now()) return "Lifting now";
+    var today = istDate(Date.now()) === istDate(t);
+    return (today ? "today " : istDate(t).slice(5) + " ") + istTime(t);
+  };
+
+  var renderChatUsers = function (rows) {
+    var body = $("chatmoderated"), empty = $("chatusersempty"), hint = $("chatusershint");
+    if (hint) hint.textContent = rows.length + (rows.length === 1 ? " user" : " users");
+    if (empty) empty.style.display = rows.length ? "none" : "block";
+    var html = "";
+    for (var i = 0; i < rows.length; i++) {
+      var u = rows[i];
+      var name = u.firstName || u.username || ("ID " + u.userId);
+      var handle = [];
+      if (u.username) handle.push("@" + u.username);
+      handle.push("ID " + u.userId);
+      var stateCls = u.state === "banned" ? "bad" : "warn";
+      var nextAction = u.state === "banned" ? "unban" : "unmute";
+      var nextLabel = u.state === "banned" ? "Unban" : "Unmute";
+      html += "<tr><td>" + '<div class="who"><span class="name">' + esc(name) +
+        '</span><span class="handle">' + esc(handle.join(" · ")) + "</span></div></td>" +
+        '<td><span class="chatstate ' + stateCls + '">' + esc(u.state) + "</span></td>" +
+        '<td style="font-variant-numeric:tabular-nums">' + esc(u.state === "banned" ? "Permanent" : chatUntil(u.until)) + "</td>" +
+        "<td>" + esc(u.reason || "—") + "</td>" +
+        "<td>" + esc(u.actor) + "</td>" +
+        '<td><div class="rowactions">' +
+        '<button type="button" class="btn-ghost" data-moduser="' + esc(String(u.userId)) +
+        '" data-modaction="' + nextAction + '">' + nextLabel + "</button>" +
+        '<button type="button" class="btn-ghost" data-moduser="' + esc(String(u.userId)) +
+        '" data-modaction="purge">Remove messages</button>' +
+        "</div></td></tr>";
+    }
+    body.innerHTML = html;
+    var btns = body.querySelectorAll("[data-moduser]");
+    for (var b = 0; b < btns.length; b++) {
+      btns[b].addEventListener("click", function () {
+        var action = this.dataset.modaction;
+        var id = this.dataset.moduser;
+        if (action === "purge" && !window.confirm("Remove every message this user sent in the chat? Telegram only allows it for recent messages.")) return;
+        submitChatUserAction(id, action);
+      });
+    }
+  };
+
+  var renderChatActions = function (rows) {
+    var el = $("chatactions"), hint = $("chatactionshint");
+    if (hint) hint.textContent = rows.length ? "last " + rows.length : "";
+    if (!rows.length) {
+      el.innerHTML = '<div class="empty">No actions yet.</div>';
+      return;
+    }
+    var html = "";
+    for (var i = 0; i < rows.length; i++) {
+      var a = rows[i];
+      var name = a.firstName || (a.username ? "@" + a.username : "ID " + a.userId);
+      var extra = [];
+      if (a.reason) extra.push(esc(a.reason));
+      if (a.deleted > 0) extra.push(fmt(a.deleted) + " removed");
+      extra.push("by " + esc(a.actor));
+      html += '<div class="feedrow"><span class="when">' + esc(clockOrAgo(a.at)) + "</span>" +
+        '<span class="what"><span class="badge">' + esc(chatActionLabel[a.action] || a.action) + "</span>" +
+        esc(name) + ' <span class="detail">' + extra.join(" · ") + "</span></span>" +
+        '<span class="surf"></span></div>';
+    }
+    el.innerHTML = html;
+  };
+
+  var renderChat = function (d) {
+    chatData = d;
+    var counts = d.counts || {};
+    $("chat-muted").textContent = fmt(counts.muted);
+    $("chat-banned").textContent = fmt(counts.banned);
+    $("chat-actions").textContent = fmt(counts.actionsToday);
+    $("chat-deleted").textContent = fmt(counts.deletedToday);
+    renderChatStatus(d);
+    renderChatSettings(d.settings || {});
+    renderChatKeywords(d.keywords || []);
+    renderChatUsers(d.users || []);
+    renderChatActions(d.actions || []);
+  };
+
+  var loadChat = function () {
+    if (inflight.chat) return;
+    inflight.chat = true;
+    lastLoad.chat = Date.now();
+    api("moderation").then(function (d) {
+      renderChat(d);
+    }).catch(function (e) {
+      if (chatData == null) setChatNote("chatkwresult", "Couldn't load the chat rules.", "bad");
+    }).then(function () { inflight.chat = false; });
+  };
+
+  var submitChatKeyword = function () {
+    var input = $("chatkw");
+    var phrase = input.value.trim();
+    if (!phrase) return;
+    var addBtn = $("chatkwadd");
+    addBtn.disabled = true;
+    requestJson("POST", "moderation/keywords", { phrase: phrase }).then(function (r) {
+      addBtn.disabled = false;
+      input.value = "";
+      renderChatKeywords(r.keywords || []);
+      setChatNote("chatkwresult", r.created ? "Added." : "That word is already listed.", r.created ? "good" : "");
+    }).catch(function (err) {
+      addBtn.disabled = false;
+      setChatNote("chatkwresult", err.message, "bad");
+    });
+  };
+
+  var removeChatKeyword = function (id, btn) {
+    btn.disabled = true;
+    requestJson("DELETE", "moderation/keywords/" + encodeURIComponent(id)).then(function (r) {
+      renderChatKeywords(r.keywords || []);
+      setChatNote("chatkwresult", "", "");
+    }).catch(function (err) {
+      btn.disabled = false;
+      setChatNote("chatkwresult", err.message, "bad");
+    });
+  };
+
+  var saveChatSettings = function () {
+    var input = $("chatmuteinput");
+    var minutes = Math.round(Number(input ? input.value : 15));
+    if (!isFinite(minutes) || minutes < 1) {
+      setChatNote("chatsaveresult", "Give the mute length in minutes, at least 1.", "bad");
+      return;
+    }
+    var body = { muteSeconds: minutes * 60 };
+    for (var i = 0; i < CHAT_FLAGS.length; i++) {
+      var key = CHAT_FLAGS[i][0];
+      var value = readChatFlag(key);
+      if (value !== null) body[key] = value;
+    }
+    var btn = $("chatsave");
+    btn.disabled = true;
+    requestJson("POST", "moderation/settings", body).then(function (r) {
+      btn.disabled = false;
+      if (r.settings) renderChatSettings(r.settings);
+      setChatNote("chatsaveresult", "Saved.", "good");
+      setTimeout(function () { setChatNote("chatsaveresult", "", ""); }, 4000);
+    }).catch(function (err) {
+      btn.disabled = false;
+      setChatNote("chatsaveresult", err.message, "bad");
+    });
+  };
+
+  var checkChatMessage = function () {
+    var input = $("chatchecktext");
+    var text = input.value.trim();
+    if (!text) {
+      setChatNote("chatcheckresult", "Paste a message first.", "bad");
+      return;
+    }
+    requestJson("POST", "moderation/check", { text: text }).then(function (r) {
+      var el = $("chatcheckresult");
+      if (!r.hits || !r.hits.length) {
+        setChatNote("chatcheckresult", "No blocked word matches.", "good");
+        return;
+      }
+      var words = [];
+      for (var i = 0; i < r.hits.length; i++) words.push(esc(r.hits[i]));
+      var note = "Would catch: " + words.join(", ") + ".";
+      if (!r.wouldAct) note += " Automatic moderation is off, so nothing would be removed.";
+      el.className = "chatnote " + (r.wouldAct ? "warn" : "");
+      el.innerHTML = note;
+      el.style.display = "block";
+    }).catch(function (err) {
+      setChatNote("chatcheckresult", err.message, "bad");
+    });
+  };
+
+  var submitChatUserAction = function (id, action) {
+    requestJson("POST", "moderation/users/" + encodeURIComponent(id) + "/" + action, {}).then(function (r) {
+      var who = r.label || ("user " + id);
+      var removed = r.deleted > 0 ? " " + fmt(r.deleted) + " message" + (r.deleted === 1 ? "" : "s") + " removed." : "";
+      var note;
+      if (action === "purge") {
+        note = r.deleted > 0
+          ? "Removed " + fmt(r.deleted) + " message" + (r.deleted === 1 ? "" : "s") + " from " + who + "."
+          : "Nothing left to remove from " + who + ".";
+      } else if (action === "mute") {
+        note = "Muted " + who + " for the saved length." + removed;
+      } else if (action === "kick") {
+        note = "Removed " + who + " from the group." + removed;
+      } else {
+        note = (chatActionLabel[action] || action) + " " + who + "." + removed;
+      }
+      setChatNote("chatuserresult", note, "good");
+      loadChat();
+    }).catch(function (err) {
+      setChatNote("chatuserresult", err.message, "bad");
+    });
+  };
+
+  var submitChatActionFromInput = function (action) {
+    var input = $("chatuserid");
+    var id = String(input.value || "").trim();
+    if (!/^[0-9]+$/.test(id)) {
+      setChatNote("chatuserresult", "Enter the numeric Telegram user ID.", "bad");
+      return;
+    }
+    if (action === "ban" || action === "kick") {
+      if (!window.confirm(chatActionLabel[action] + " user " + id + "? Their messages in the chat are removed too.")) return;
+    }
+    if (action === "purge" && !window.confirm("Remove every message this user sent in the chat? Telegram only allows it for recent messages.")) return;
+    submitChatUserAction(id, action);
+  };
+
+  var chatSettingsEl = $("chatsettings");
+  if (chatSettingsEl) chatSettingsEl.addEventListener("click", function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest("button[data-val]") : null;
+    if (!btn) return;
+    var buttons = btn.parentNode.querySelectorAll("button");
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].setAttribute("aria-pressed", buttons[i] === btn ? "true" : "false");
+    }
+  });
+
+  var chatKeywordsEl = $("chatkeywords");
+  if (chatKeywordsEl) chatKeywordsEl.addEventListener("click", function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest("[data-kwdel]") : null;
+    if (!btn) return;
+    removeChatKeyword(btn.dataset.kwdel, btn);
+  });
+
+  var chatRefreshEl = $("chatrefresh");
+  if (chatRefreshEl) chatRefreshEl.addEventListener("click", function () { loadChat(); });
+  var chatKwAddEl = $("chatkwadd");
+  if (chatKwAddEl) chatKwAddEl.addEventListener("click", submitChatKeyword);
+  var chatKwEl = $("chatkw");
+  if (chatKwEl) chatKwEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); submitChatKeyword(); }
+  });
+  var chatSaveEl = $("chatsave");
+  if (chatSaveEl) chatSaveEl.addEventListener("click", saveChatSettings);
+  var chatCheckEl = $("chatcheck");
+  if (chatCheckEl) chatCheckEl.addEventListener("click", checkChatMessage);
+  var chatCheckTextEl = $("chatchecktext");
+  if (chatCheckTextEl) chatCheckTextEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); checkChatMessage(); }
+  });
+  var chatBanEl = $("chatban");
+  if (chatBanEl) chatBanEl.addEventListener("click", function () { submitChatActionFromInput("ban"); });
+  var chatMuteEl = $("chatmute");
+  if (chatMuteEl) chatMuteEl.addEventListener("click", function () { submitChatActionFromInput("mute"); });
+  var chatKickEl = $("chatkick");
+  if (chatKickEl) chatKickEl.addEventListener("click", function () { submitChatActionFromInput("kick"); });
+  var chatPurgeEl = $("chatpurge");
+  if (chatPurgeEl) chatPurgeEl.addEventListener("click", function () { submitChatActionFromInput("purge"); });
+  setInterval(function () {
+    if (current === "chat" && document.visibilityState === "visible" && isStale("chat")) loadChat();
   }, 30000);
 
   /* ---------- health ---------- */

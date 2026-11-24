@@ -94,7 +94,7 @@ describe("initDatabase", () => {
 
   it("stamps user_version on a previously unversioned database", async () => {
     expect(await pragmaNumber("PRAGMA user_version")).toBe(SCHEMA_VERSION);
-    expect(SCHEMA_VERSION).toBe(10);
+    expect(SCHEMA_VERSION).toBe(11);
 
     // the screenshots table ships with v9, even on an older database
     const attachments = await turso.execute(
@@ -109,6 +109,15 @@ describe("initDatabase", () => {
        WHERE type = 'table' AND name IN ('question_papers', 'question_paper_images')`,
     );
     expect(papers.rows).toHaveLength(2);
+
+    // chat regulation ships with v11
+    const moderation = await turso.execute(
+      `SELECT name FROM sqlite_master
+       WHERE type = 'table' AND name IN
+         ('chat_moderation_settings', 'chat_keywords', 'chat_moderation_users',
+          'chat_moderation_log', 'chat_messages')`,
+    );
+    expect(moderation.rows).toHaveLength(5);
 
     // a second boot is idempotent and does not move the stamp
     await initDatabase();

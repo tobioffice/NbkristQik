@@ -552,4 +552,60 @@ td .surfn { display: inline-block; min-width: 28px; text-align: right; }
   text-decoration: none; padding: 0;
 }
 .linkbtn:hover { text-decoration: underline; }
+
+/* ---------- chat regulation ---------- */
+.group {
+  display: flex; flex-direction: column; gap: 1px;
+  background: var(--ground); border-radius: 8px; overflow: hidden;
+}
+.chatrow {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  padding: 12px 14px; background: var(--surface);
+}
+.chatrow .l { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--text); }
+.chatrow .v { font-size: 13px; line-height: 18px; color: var(--text-2); }
+.chatrow .v.good { color: var(--good); }
+.chatrow .v.warn { color: var(--warning); }
+.chatrow .v.bad { color: var(--danger); }
+.chatnote {
+  padding: 12px 14px; background: var(--surface); border-radius: 8px;
+  font-size: 13px; line-height: 18px; color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+.chatnote.good { color: var(--good); }
+.chatnote.warn { color: var(--warning); }
+.chatnote.bad { color: var(--danger); }
+.setrow {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 12px 14px; background: var(--surface);
+}
+.setrow .setbody { min-width: 0; }
+.setrow .settitle { font-size: 15px; line-height: 20px; font-weight: 600; color: var(--text); }
+.setrow .setdesc { font-size: 12px; line-height: 16px; color: var(--text-2); margin-top: 1px; }
+.setrow .seg { flex: none; }
+.chatnum {
+  flex: none; width: 96px; max-width: 96px; height: 40px;
+  text-align: right; font-variant-numeric: tabular-nums;
+}
+.kwlist {
+  display: flex; flex-direction: column; gap: 1px;
+  background: var(--ground); border-radius: 8px; overflow: hidden;
+}
+.kwrow {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 8px 14px; background: var(--surface);
+}
+.kwrow .kw { font-size: 14px; line-height: 20px; color: var(--text); overflow-wrap: anywhere; }
+.kwrow .kwdel {
+  flex: none; font-size: 13px; line-height: 18px; font-weight: 600;
+  color: var(--danger); padding: 6px 10px; border-radius: 8px;
+}
+.kwrow .kwdel:hover { background: var(--surface-hover); }
+.chatstate { font-size: 13px; line-height: 18px; font-weight: 600; }
+.chatstate.good { color: var(--good); }
+.chatstate.warn { color: var(--warning); }
+.chatstate.bad { color: var(--danger); }
+.btn-ghost:disabled { color: var(--text-3); cursor: default; }
+.btn-ghost:disabled:hover { background: var(--surface); }
 `;

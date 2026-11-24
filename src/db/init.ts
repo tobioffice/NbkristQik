@@ -7,6 +7,7 @@ import {
 import { initLibraryTables } from "./library.model.js";
 import { initPaperTables } from "./paper.model.js";
 import { initUserSettingsTable } from "./userSettings.model.js";
+import { initChatModerationTables } from "./chatModeration.model.js";
 import {
   initGameTables,
   repairDuelAttempts,
@@ -55,10 +56,11 @@ import { logger } from "../config/logger.js";
  * theme the Mini App syncs for the attendance bar image. Version 9 adds
  * report_attachments, the screenshots filed with a report message. Version 10
  * adds the question-paper collection: one paper row plus one row per page.
- * Every table is CREATE IF NOT EXISTS, so an older database only needs the
- * stamp.
+ * Version 11 adds chat regulation: the settings, the blocked-word list, the
+ * muted/banned users, the message-id trail and the action log. Every table is
+ * CREATE IF NOT EXISTS, so an older database only needs the stamp.
  */
-export const SCHEMA_VERSION = 10;
+export const SCHEMA_VERSION = 11;
 
 /** Reads the database's user_version, treating a missing row as 0. */
 const readSchemaVersion = async (): Promise<number> => {
@@ -290,6 +292,7 @@ export const initDatabase = async () => {
   await initLibraryTables();
   await initPaperTables();
   await initUserSettingsTable();
+  await initChatModerationTables();
   await initGameTables();
   await seedGameQuestions();
   const repairedDuelRuns = await repairDuelAttempts();

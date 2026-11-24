@@ -92,8 +92,12 @@ describe("the production admin password gate", () => {
 
   const mountInProduction = async (password: string): Promise<string[]> => {
     vi.resetModules();
+    // The route registry now also pulls in the chat-regulation layer, which
+    // imports the bot's token; the stub must look like the real module.
     vi.doMock("../../src/config/environmentals.js", () => ({
       ENV: "production",
+      TELEGRAM_BOT_TOKEN: "test_bot_token",
+      MODERATION_CHAT_IDS: [-100123],
     }));
 
     process.env.ADMIN_PANEL_PATH = "prod-panel";

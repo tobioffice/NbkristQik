@@ -577,8 +577,35 @@ checking the lock is read-only, and a successful login clears the counter.
 | `GET` | `{base}/api/paper-images/:name` | One stored paper page; admin session only |
 | `DELETE` | `{base}/api/papers/:id` | Remove a paper and every page file |
 | `GET` | `{base}/api/health` | Uptime health (same data as `/api/status`) |
+| `GET` | `{base}/api/moderation` | Chat rule, blocked words, muted/banned users, counts and recent actions |
+| `POST` | `{base}/api/moderation/settings` | Save the rule switches and mute length |
+| `POST` | `{base}/api/moderation/keywords` | Add one blocked word or phrase |
+| `DELETE` | `{base}/api/moderation/keywords/:id` | Remove one blocked word |
+| `POST` | `{base}/api/moderation/check` | Dry-run a message against the word list (nothing is removed) |
+| `POST` | `{base}/api/moderation/users/:id/:action` | Ban, mute, kick, purge, unban or unmute one user in the regulated chat |
 
 Day and hour groupings use IST (`+330 minutes`); storage stays UTC.
+
+### Chat regulation
+
+`GET {base}/api/moderation` returns the persisted `settings`
+(`enabled`, `autoDelete`, `autoMute`, `muteSeconds`, `noticeInChat`,
+`notifyUser`), one `chats` entry per `MODERATION_CHAT_IDS` id (title, member
+count, and the bot's own delete/restrict rights), the `keywords` list, the
+`users` currently muted or banned, the last 80 `actions`, and `counts` for the
+view's four figures. The panel document and the moderation reads send
+`Cache-Control: no-store`.
+
+`POST .../settings` accepts any subset of the six setting fields; the mute
+length is clamped to 60 seconds–30 days. `POST .../check` takes `{ "text" }`
+and answers `{ hits, wouldAct }` without touching Telegram or the database.
+A user action is one of `ban`, `mute`, `kick`, `purge`, `unban`, `unmute`; the
+body may carry `reason`, `seconds` (mute, default the saved length) and
+`chatId` (must be one of the configured chats). Ban, mute and kick also clear
+the messages the bot remembers from that user; the bot and the panel call the
+same service, so a reply command and a panel click mean the same thing. When
+Telegram refuses an action, the endpoint answers `400` with a sentence the
+admin can act on.
 
 ## Profile / registration endpoints
 

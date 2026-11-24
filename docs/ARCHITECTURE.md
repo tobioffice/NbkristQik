@@ -45,6 +45,17 @@ Monitor (monitor-host) ──> /health, /internal/health, portal
   fallback. See `src/bot/` for commands, the academic menu flow, the
   channel-membership gate, and `/syncdb`. Channel membership is the gate for
   non-admin students; there is no daily check-in.
+- **Chat regulation:** `src/bot/moderation.ts` registers cooperative
+  middleware before every other handler, so it observes all messages and then
+  hands the update on. In `MODERATION_CHAT_IDS` (the chit-chat group by
+  default) it records message ids for later removal, deletes messages that
+  match the blocked-word list and mutes the sender, and accepts `/ban`,
+  `/mute`, `/kick`, `/purge`, `/unban` and `/unmute` as replies to a member's
+  message from `ADMIN_ID` or a group admin. The policy lives in
+  `src/services/moderation/` (matcher, settings, Telegram actions, command
+  parser); the admin panel's Chat view edits the same rows. The bot must be a
+  group admin with delete and restrict rights, and an admin bot receives every
+  message even with BotFather group privacy on.
 - **Web shell:** one shipped app at `/library/` with hash routes `#/rank`,
   `#/profile`, `#/library`, `#/issues` (reports) and `#/issues/new` (form).
   Three routes are hidden from the tab rail: `#/papers`, a question-paper
@@ -148,15 +159,18 @@ entitlement.
 - **Schema:** `studentsnew`, `tgusers`, `registrations`, `student_stats`,
   `fallbackResponses`, `botusers`, `activity_log`, `reports`,
   `report_messages`, `report_reads`, `library_documents`, `library_reads`,
-  `admin_sessions`, `uptime_log`.
+  `admin_sessions`, `uptime_log`, `chat_keywords`,
+  `chat_moderation_settings`, `chat_moderation_users`, `chat_moderation_log`,
+  `chat_messages`.
 - **Redis** — caches student records (7d), attendance (1h), midmarks (2h) per
   roll, leaderboard responses (60s), membership (1d), the tracker's per-user
   write throttle, and library sessions. Leaderboard stats are written to the
   database independently of Redis, so a cache outage cannot stop ranking data
   from landing.
 - **Retention:** a startup prune plus a daily job removes
-  `uptime_log`, `activity_log` and `library_reads` rows older than 95 days, and
-  expired `admin_sessions`.
+  `uptime_log`, `activity_log`, `chat_moderation_log` and `library_reads` rows
+  older than 95 days, `game_*` history on its own clocks, `chat_messages` older
+  than 48 hours, expired mutes, and expired `admin_sessions`.
 
 ## Scraping
 

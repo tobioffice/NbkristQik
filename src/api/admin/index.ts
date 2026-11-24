@@ -12,6 +12,7 @@ import { registerPapersRoutes } from "./papers.js";
 import { registerLibraryRoutes } from "./library.js";
 import { registerVerifiedRoutes } from "./verified.js";
 import { registerLeagueRoutes } from "./league.js";
+import { registerModerationRoutes } from "./moderation.js";
 
 /**
  * Admin panel route registry. Disabled (no routes) unless both
@@ -25,6 +26,7 @@ import { registerLeagueRoutes } from "./league.js";
  *  - users.ts     GET /api/users, GET /api/users/:id
  *  - feed.ts      GET /api/recent, GET /api/health
  *  - league.ts    GET /api/league — the week's boards, read-only
+ *  - moderation.ts chat regulation settings, words, users and actions
  */
 export const registerAdminRoutes = (app: Express): void => {
   const secretPath = process.env.ADMIN_PANEL_PATH?.replace(/^\/+|\/+$/g, "");
@@ -77,6 +79,7 @@ export const registerAdminRoutes = (app: Express): void => {
   registerLibraryRoutes(app, base, requireAdmin);
   registerVerifiedRoutes(app, base, requireAdmin);
   registerLeagueRoutes(app, base, requireAdmin);
+  registerModerationRoutes(app, base, requireAdmin);
 
   logger.info(`[admin] panel mounted at ${base}`);
 };

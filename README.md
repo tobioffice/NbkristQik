@@ -117,8 +117,12 @@ public status page for service health.
 **For the maintainer**
 
 - **Admin panel** — overview, student search, live activity feed, report
-  threads, question-paper processing and 90-day health, behind a secret path
-  and a password.
+  threads, question-paper processing, chat regulation and 90-day health, behind
+  a secret path and a password.
+- **Chat regulation** — in the chit-chat group the bot removes explicit or
+  18+ messages and mutes the sender. The blocked-word list, mute length and
+  switches live in the panel's Chat view, and replying to a member's message
+  with `/ban`, `/mute`, `/kick` or `/purge` removes their messages too.
 - **Uptime monitoring** — five-minute probes from a second host (monitor-host) for
   the API, database, Redis and college portal, with Telegram alerts on state
   changes and a replay spool for outages.
@@ -143,8 +147,8 @@ flowchart LR
     monitor -->|probes| portal
 ```
 
-A single Node process serves the bot (long polling), the REST API, the admin
-panel and the status data. The Mini App is a static React build served
+A single Node process serves the bot (long polling, including the group
+regulation layer), the REST API, the admin panel and the status data. The Mini App is a static React build served
 alongside it at `/library/`; the status page is a single static file that
 Express serves at `/status`. Uptime probes are moving to a second host, so a
 dead or overloaded production VM still produces an alert; the in-process probe
@@ -242,6 +246,7 @@ The full list, with defaults, lives in [`.env.example`](.env.example) and
 | `LOCAL_DB_URL`                                  | Embedded SQLite file; takes precedence over Turso                            |
 | `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN`       | Turso connection when `LOCAL_DB_URL` is unset                                |
 | `ADMIN_PANEL_PATH` / `ADMIN_PANEL_PASSWORD`     | Admin panel location and password; the panel is disabled unless both are set |
+| `MODERATION_CHAT_IDS`                           | Chats watched by the chat regulation layer; defaults to the chit-chat group    |
 | `UPTIME_INGEST_SECRET`                          | Shared secret for the external monitor's private `/internal/*` routes        |
 | `CORS_ORIGINS`                                  | Comma-separated allowlist for the API                                        |
 | `PORTAL_BASE_URL`                               | Optional portal override; plain HTTP by default                              |
@@ -280,13 +285,32 @@ not.
 Admin commands are accepted only from `ADMIN_ID` and are not listed in the
 public command menu.
 
+### Chat regulation (reply commands)
+
+Reply to the member's message in the regulated group with one of these. They
+are accepted from `ADMIN_ID` and from anyone the group itself made an admin;
+they are not listed in the public command menu.
+
+| Command                     | What it does                                                  |
+| --------------------------- | ------------------------------------------------------------- |
+| `/ban [reason]`             | Ban the member and remove their messages                      |
+| `/mute [duration] [reason]` | Mute for 15 minutes by default; `30m`, `2h` and `1d` work too |
+| `/kick [reason]`            | Remove the member without a lasting ban                      |
+| `/purge`                    | Remove their messages only                                   |
+| `/unban`, `/unmute`         | Lift a restriction                                           |
+
+The bot must be a group admin with the delete and restrict rights, and it must
+receive all messages; an admin bot does even with group privacy on. Explicit
+or 18+ messages are removed and the sender muted automatically, using the word
+list, mute length and switches in the admin panel's Chat view.
+
 ## Web surfaces
 
 | Surface        | Location                                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------------------------------- |
 | Mini App       | [`/library/`](https://checker.tobioffice.online/library/) — hash routes `#/` (my attendance), `#/rank`, `#/profile`, `#/library`, `#/issues` (reports), `#/issues/new` (the report form), and the hidden `#/papers` intake |
 | Status page    | [`/status`](https://checker.tobioffice.online/status) — Express-served, live health and 90-day bars per component     |
-| Admin panel    | `/<ADMIN_PANEL_PATH>` — Overview, Students, Verified, Library, Reports, Papers, Live, Health                       |
+| Admin panel    | `/<ADMIN_PANEL_PATH>` — Overview, Students, Verified, League, Library, Reports, Chat, Papers, Live, Health         |
 | Marketing site | [NbkristQik site](https://tobioffice.github.io/NbkristQik/site/)                                                    |
 
 API routes and their validation rules are documented in

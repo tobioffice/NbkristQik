@@ -1,4 +1,5 @@
 import { config } from "dotenv";
+import { CHIT_CHAT_ID } from "../constants/index.js";
 
 config();
 
@@ -21,6 +22,20 @@ const CHANNEL_ID =
     : process.env.TEST_CHANNEL) || "";
 
 const REDIS_URL = process.env.REDIS_URL || "";
+
+// The chats the regulation layer watches. Defaults to the chit-chat group, the
+// room students actually talk in; set a comma-separated list (negative chat
+// ids) to watch another group instead. The bot must be an admin there with the
+// delete and restrict rights, and must receive all messages (an admin bot does,
+// even with BotFather's group privacy on).
+const MODERATION_CHAT_IDS: number[] = (() => {
+  const raw = (process.env.MODERATION_CHAT_IDS || "").trim();
+  const parsed = raw
+    .split(",")
+    .map((part) => Number(part.trim()))
+    .filter((id) => Number.isFinite(id) && id !== 0);
+  return parsed.length > 0 ? parsed : [CHIT_CHAT_ID];
+})();
 
 // Gmail SMTP for the college-email verification codes. SMTP_PASS is an app
 // password, never the account password. With SMTP_USER/SMTP_PASS unset the
@@ -95,6 +110,7 @@ export {
   ADMIN_ID,
   CHANNEL_ID,
   REDIS_URL,
+  MODERATION_CHAT_IDS,
   SMTP_HOST,
   SMTP_PORT,
   SMTP_SECURE,

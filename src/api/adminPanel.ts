@@ -54,6 +54,7 @@ ${panelCss}
     <button data-view="league">League</button>
     <button data-view="library">Library</button>
     <button data-view="reports">Reports</button>
+    <button data-view="chat">Chat</button>
     <button data-view="papers">Papers</button>
     <button data-view="live">Live</button>
     <button data-view="health">Health</button>
@@ -291,6 +292,104 @@ ${panelCss}
       <button class="btn-ghost" id="reportsrefresh">Refresh</button>
     </div>
     <div class="reports" id="reports"></div>
+  </section>
+
+  <section class="view" id="view-chat">
+    <div class="section-head" style="margin-bottom:12px">
+      <h2>Chat regulation</h2>
+      <span class="hint">the bot's own rules for the group</span>
+    </div>
+    <div class="toolbar">
+      <button class="btn-ghost" id="chatrefresh">Refresh</button>
+    </div>
+    <div id="chatstatus"></div>
+    <div class="chatnote" style="margin-top:10px">In the group, reply to a member's message with /ban, /mute, /kick or /purge. Ban, mute and kick remove their messages too.</div>
+
+    <div class="statline">
+      <div class="stat"><div class="n" id="chat-muted">&ndash;</div><div class="l">muted now</div></div>
+      <div class="stat"><div class="n" id="chat-banned">&ndash;</div><div class="l">banned</div></div>
+      <div class="stat"><div class="n" id="chat-actions">&ndash;</div><div class="l">actions today</div></div>
+      <div class="stat"><div class="n" id="chat-deleted">&ndash;</div><div class="l">messages removed today</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Rule</h2>
+        <span class="hint">automatic moderation only, reply commands work regardless</span>
+      </div>
+      <div class="group" id="chatsettings"></div>
+      <div class="toolbar" style="margin-top:10px">
+        <button class="btn-ghost" id="chatsave">Save rule</button>
+        <span class="chatnote" id="chatsaveresult" style="display:none"></span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Blocked words</h2>
+        <span class="hint" id="chatkwhint"></span>
+      </div>
+      <div class="toolbar">
+        <input class="search" id="chatkw" placeholder="Add a word or phrase&hellip;" aria-label="Add a blocked word">
+        <button class="btn-ghost" id="chatkwadd">Add word</button>
+      </div>
+      <div class="kwlist" id="chatkeywords"></div>
+      <div class="chatnote" id="chatkwresult" style="display:none"></div>
+      <div class="empty" id="chatkwempty" style="display:none">No blocked words, so nothing is removed automatically.</div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Test a message</h2>
+        <span class="hint">nothing is removed</span>
+      </div>
+      <div class="toolbar">
+        <input class="search" id="chatchecktext" placeholder="Paste a message&hellip;" aria-label="Test a message against the blocked words">
+        <button class="btn-ghost" id="chatcheck">Check</button>
+      </div>
+      <div class="chatnote" id="chatcheckresult" style="display:none"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Act on a user</h2>
+        <span class="hint">Telegram user ID; mute uses the saved length</span>
+      </div>
+      <div class="toolbar">
+        <input class="search" id="chatuserid" inputmode="numeric" placeholder="User ID" aria-label="Telegram user ID">
+        <button class="btn-ghost danger" id="chatban">Ban</button>
+        <button class="btn-ghost" id="chatmute">Mute</button>
+        <button class="btn-ghost danger" id="chatkick">Kick</button>
+        <button class="btn-ghost danger" id="chatpurge">Remove messages</button>
+      </div>
+      <div class="chatnote" id="chatuserresult" style="display:none"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Muted and banned</h2>
+        <span class="hint" id="chatusershint"></span>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th><th>State</th><th>Until</th><th>Reason</th><th>By</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="chatmoderated"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="chatusersempty" style="display:none">No one is muted or banned.</div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Recent actions</h2>
+        <span class="hint" id="chatactionshint"></span>
+      </div>
+      <div class="feed" id="chatactions"></div>
+    </div>
   </section>
 
   <section class="view" id="view-papers">

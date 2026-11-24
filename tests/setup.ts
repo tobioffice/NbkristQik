@@ -42,6 +42,11 @@ process.env.MONITOR_TELEGRAM_BOT_TOKEN = "123456789:test_monitor_token";
 process.env.ADMIN_PANEL_PATH = "";
 process.env.ADMIN_PANEL_PASSWORD = "";
 
+// The regulation layer defaults to the chit-chat group. A developer's .env
+// must not point tests at a live chat, so blank it here; the modules fall back
+// to the built-in chat id.
+process.env.MODERATION_CHAT_IDS = "";
+
 // Global test setup
 beforeEach(() => {
   vi.clearAllMocks();

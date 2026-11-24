@@ -53,6 +53,10 @@ async function startBot() {
     // Setup bot commands
     await setupBot(bot.api);
 
+    // The chat regulation layer registers first and hands every update on, so
+    // it sees all messages while the commands below keep their own handlers.
+    await import("./moderation.js");
+
     // Import handler modules — each registers its commands and handlers on import
     await Promise.all([
       import("./commands/help.js"),

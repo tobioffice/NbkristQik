@@ -1,6 +1,10 @@
 import { turso } from "../db/db.js";
 import { logger } from "../config/logger.js";
 import { pruneDownloadCache } from "./library/pdf.js";
+import {
+  pruneChatMessages,
+  pruneExpiredModeratedUsers,
+} from "../db/chatModeration.model.js";
 
 /**
  * Daily housekeeping for the local database. The probes themselves now run
@@ -51,6 +55,26 @@ export const prune = async (): Promise<void> => {
   await pruneTable(
     "library_reads",
     `DELETE FROM library_reads WHERE at < datetime('now', '-${LIBRARY_RETENTION_DAYS} days')`,
+  );
+
+  // Chat regulation keeps two clocks: the message-id trail only matters while
+  // Telegram will still delete the message (48 hours), while the action log is
+  // audit history and follows the standard 95 days. A mute whose clock ran out
+  // is already lifted on Telegram's side, so its row is just noise. The two
+  // model helpers own those rules; this job only schedules them.
+  try {
+    await pruneChatMessages(48);
+  } catch (e) {
+    logger.warn("[maintenance] prune chat_messages failed:", e);
+  }
+  try {
+    await pruneExpiredModeratedUsers();
+  } catch (e) {
+    logger.warn("[maintenance] prune chat_moderation_users failed:", e);
+  }
+  await pruneTable(
+    "chat_moderation_log",
+    `DELETE FROM chat_moderation_log WHERE created_at < datetime('now', '-${RETENTION_DAYS} days')`,
   );
 
   // League history is useful for a full season and the weekly boards, not
