@@ -3,6 +3,7 @@ import { turso } from "../../src/db/db.js";
 import {
   addScore,
   claimDuelOpponent,
+  getActiveQuestionIds,
   createAttempt,
   createDuel,
   finishAttempt,
@@ -19,11 +20,13 @@ import {
   getPlayerWeek,
   getSectionTopPlayers,
   getSectionWeek,
+  getSeenQuestionIds,
   getWeekPlayers,
   getWeekSections,
   initGameTables,
   saveAnswer,
   saveChannelBoard,
+  seedGameQuestions,
   setPlayerStreak,
   syncGameDisplayName,
   upsertGamePlayer,
@@ -33,6 +36,8 @@ import {
   fivePoints,
   QUESTIONS_PER_RUN,
 } from "../../src/games/scoring.js";
+import { pickFreshQuestionIds } from "../../src/games/selection.js";
+import { STARTER_QUESTIONS } from "../../src/games/questions.js";
 
 const SEASON = "test-S1";
 const WEEK = "2026-W46";
@@ -715,5 +720,122 @@ describe("the channel live board", () => {
 
   it("has no row before the first post", async () => {
     expect(await getChannelBoard("missing")).toBeNull();
+  });
+});
+
+describe("question history", () => {
+  const seedQuestion = async (id: number, active = 1): Promise<void> => {
+    await turso.execute({
+      sql: `INSERT INTO game_questions
+              (id, slug, prompt, options, correct, topic, active)
+            VALUES (?, ?, ?, ?, 0, 'test', ?)`,
+      args: [id, `hist-${id}`, `Prompt ${id}`, '["A","B","C","D"]', active],
+    });
+  };
+
+  const seedAttempt = async (
+    userId: number,
+    game: string,
+    roundKey: string,
+    questionIds: number[],
+    startedAt: string,
+    status = "done",
+  ): Promise<void> => {
+    await turso.execute({
+      sql: `INSERT INTO game_attempts
+              (game, round_key, day_key, week_key, season, user_id, roll_no,
+               question_ids, status, started_at, finished_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        game,
+        roundKey,
+        DAY,
+        WEEK,
+        SEASON,
+        userId,
+        "23KB1A0999",
+        JSON.stringify(questionIds),
+        status,
+        startedAt,
+        status === "done" ? startedAt : null,
+      ],
+    });
+  };
+
+  it("lists the player's questions newest first, duel runs included", async () => {
+    for (const id of [1, 2, 3, 4, 5]) await seedQuestion(id);
+
+    await seedAttempt(900, "five", "r1", [1, 2], "2026-11-22T03:00:00.000Z");
+    await seedAttempt(900, "duel", "d1", [3], "2026-11-22T04:00:00.000Z");
+    await seedAttempt(900, "five", "r2", [4, 5], "2026-11-23T03:00:00.000Z");
+    await seedAttempt(
+      900,
+      "five",
+      "r3",
+      [1],
+      "2026-11-24T03:00:00.000Z",
+      "active",
+    );
+
+    // newest run first, first sighting only; the duel run counts too
+    expect(await getSeenQuestionIds(900)).toEqual([1, 4, 5, 3, 2]);
+    expect(await getSeenQuestionIds(901)).toEqual([]);
+  });
+
+  it("offers only active questions to the bank fill", async () => {
+    await seedQuestion(1);
+    await seedQuestion(2, 0);
+    await seedQuestion(3);
+
+    expect(await getActiveQuestionIds()).toEqual([1, 3]);
+  });
+
+  it("keeps a second run's set clear of the first run's questions", async () => {
+    const bankIds = Array.from({ length: 60 }, (_, index) => index + 1);
+    for (const id of bankIds) await seedQuestion(id);
+    await seedAttempt(
+      901,
+      "five",
+      "first",
+      [1, 2, 3],
+      "2026-11-22T03:00:00.000Z",
+    );
+
+    const history = await getSeenQuestionIds(901);
+    const fresh = pickFreshQuestionIds({
+      pool: Array.from({ length: 30 }, (_, index) => index + 1),
+      bank: await getActiveQuestionIds(),
+      seen: history,
+      count: 10,
+    });
+
+    expect(fresh.repeated).toEqual([]);
+    expect(fresh.ids).toHaveLength(10);
+    expect(fresh.ids.some((id) => history.includes(id))).toBe(false);
+  });
+});
+
+describe("the seeded bank", () => {
+  it("seeds every starter question once with four distinct options", async () => {
+    await seedGameQuestions();
+
+    const count = await turso.execute(
+      "SELECT COUNT(*) AS n FROM game_questions",
+    );
+    expect(Number(count.rows[0]?.n)).toBe(STARTER_QUESTIONS.length);
+    // a player's daily run needs ten fresh questions a day; keep the bank deep
+    expect(STARTER_QUESTIONS.length).toBeGreaterThanOrEqual(200);
+
+    const slugs = STARTER_QUESTIONS.map((question) => question.slug);
+    const prompts = STARTER_QUESTIONS.map((question) => question.prompt);
+    expect(new Set(slugs).size).toBe(slugs.length);
+    expect(new Set(prompts).size).toBe(prompts.length);
+
+    for (const question of STARTER_QUESTIONS) {
+      expect(question.options).toHaveLength(4);
+      expect(new Set(question.options).size).toBe(4);
+      expect(question.correct).toBeGreaterThanOrEqual(0);
+      expect(question.correct).toBeLessThan(4);
+    }
   });
 });

@@ -155,13 +155,19 @@ deletes the stored board message and posts a fresh one, so it becomes the
 newest message in the channel (the bot needs delete permission there).
 
 `GAME_SEASON` groups the weekly boards; change it when a new season starts.
-The question bank is seeded from `src/games/questions.ts` once, keyed by slug.
-Add questions by appending new slugs (a restart seeds them) or by inserting
-rows directly; `active = 0` retires a question without deleting history.
+The question bank is seeded from `src/games/questions.ts` once, keyed by slug;
+it holds 200 questions. Add questions by appending new slugs (a restart seeds
+them) or by inserting rows directly; `active = 0` retires a question without
+deleting history. Grow the bank rather than letting a daily run repeat: a
+player's run draws ten questions they have never been shown, and only an
+exhausted bank falls back to the questions seen longest ago (the bot logs a
+warning when that happens).
 
 League rules: one run attempt per account per IST day; each question closes
-after 10 seconds and a late tap scores nothing; duels last 48 hours; only the
-best ten verified players per section count on the weekly board; channel names are a
+after 10 seconds and a late tap scores nothing; a player's run never repeats a
+question they have already seen while the bank can afford it; duels last 48
+hours and replay the challenger's paper in a different order; only the best ten
+verified players per section count on the weekly board; channel names are a
 verified student's roll (masked when the owner hid the leaderboard) or an
 unverified player's chosen display name, Telegram name or @username, never the
 portal name.

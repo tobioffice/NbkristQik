@@ -3,6 +3,7 @@ import {
   addScore,
   createAttempt,
   finishAttempt,
+  getActiveQuestionIds,
   getAttempt,
   getAttemptForRound,
   getFiveRank,
@@ -10,6 +11,7 @@ import {
   getOrCreateDailyRound,
   getQuestionsByIds,
   getSectionWeek,
+  getSeenQuestionIds,
   setPlayerStreak,
 } from "../db/game.model.js";
 import { logger } from "../config/logger.js";
@@ -19,7 +21,7 @@ import { seasonKey } from "./config.js";
 import { sendOrEdit, showQuestion } from "./play.js";
 import { loadPlayer, sendRegistrationPrompt } from "./player.js";
 import { fivePoints, nextStreak, QUESTIONS_PER_RUN } from "./scoring.js";
-import { pickQuestionIds } from "./selection.js";
+import { pickFreshQuestionIds } from "./selection.js";
 import { istStamp } from "./time.js";
 import type { GameAttempt } from "./types.js";
 
@@ -67,6 +69,27 @@ export const startFiveRun = async (userId: number): Promise<FiveStart> => {
     return { state: "playing", attempt: existing, created: false };
   }
 
+  // A run never repeats a question the player has already been shown. The
+  // day's pool is the first source; the rest of the bank fills the gap when
+  // the player has seen too much of today's thirty.
+  const [history, bank] = await Promise.all([
+    getSeenQuestionIds(userId),
+    getActiveQuestionIds(),
+  ]);
+  const fresh = pickFreshQuestionIds({
+    pool: round.questionIds,
+    bank,
+    seen: history,
+    count: QUESTIONS_PER_RUN,
+  });
+  if (fresh.repeated.length > 0) {
+    // The bank has no unseen question left for this player. The run is still
+    // playable, with the questions seen longest ago; grow the bank to stop it.
+    logger.warn(
+      `[games] question bank exhausted: ${fresh.repeated.length} repeated question(s) in a daily run`,
+    );
+  }
+
   const attemptId = await createAttempt({
     game: "five",
     roundKey: round.id,
@@ -77,7 +100,7 @@ export const startFiveRun = async (userId: number): Promise<FiveStart> => {
     rollNo: player.rollNo,
     sectionKey: player.sectionKey,
     sectionLabel: player.sectionLabel,
-    questionIds: pickQuestionIds(round.questionIds, QUESTIONS_PER_RUN),
+    questionIds: fresh.ids,
     startedAt: new Date().toISOString(),
   });
   const attempt = await getAttempt(attemptId);

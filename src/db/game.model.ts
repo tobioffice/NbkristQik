@@ -202,8 +202,8 @@ export const seedGameQuestions = async (): Promise<void> => {
     ] as (string | number)[],
   }));
 
-  // One batch instead of 65 round trips: a remote Turso boot should not pay a
-  // network hop per starter question.
+  // One batch instead of a round trip per question: a remote Turso boot should
+  // not pay a network hop per starter row.
   await turso.batch(statements, "write");
   logger.info(
     `[games] question bank ready (${STARTER_QUESTIONS.length} starter rows)`,
@@ -232,6 +232,41 @@ export const getRandomQuestions = async (
     args: [limit],
   });
   return result.rows.map((row) => questionFromRow(row));
+};
+
+/** Every active question id, for a fresh run's unseen-question fill. */
+export const getActiveQuestionIds = async (): Promise<number[]> => {
+  const result = await turso.execute({
+    sql: `SELECT id FROM game_questions WHERE active = 1`,
+  });
+  return result.rows.map((row) => num(row.id));
+};
+
+/**
+ * The questions this player has already been shown, most recently seen first.
+ *
+ * Every attempt is history: a daily run stores its ten whether it finished or
+ * not, and a duel replays the challenger's paper, so the opponent has seen
+ * those questions too. The order lets an exhausted bank reuse the questions
+ * seen longest ago.
+ */
+export const getSeenQuestionIds = async (userId: number): Promise<number[]> => {
+  const result = await turso.execute({
+    sql: `SELECT question_ids FROM game_attempts
+          WHERE user_id = ?
+          ORDER BY started_at DESC, id DESC`,
+    args: [userId],
+  });
+  const newestFirst: number[] = [];
+  const seen = new Set<number>();
+  for (const row of result.rows) {
+    for (const id of jsonArray<number>(row.question_ids, [])) {
+      if (seen.has(id)) continue;
+      seen.add(id);
+      newestFirst.push(id);
+    }
+  }
+  return newestFirst;
 };
 
 /** Questions by id, returned in the order of `ids`. */

@@ -256,6 +256,11 @@ attempt and it starts the first question's clock.
   endpoint returns.
 - `index` is 0-based; the screen prints it + 1. The correct option is never in
   the payload.
+- The run's ten questions are ones the caller has never been shown. The day's
+  shared pool is the first source; the rest of the active bank fills the gap
+  when the player has already seen too much of the pool. Only an exhausted
+  bank can repeat a question, and then the questions seen longest ago come
+  back first.
 - The answer endpoint, and the clock it starts for each question, treats the
   attempt as one run per account per IST day, shared with the bot's `/quiz`.
 
