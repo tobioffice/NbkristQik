@@ -196,7 +196,7 @@ ${panelCss}
       <table>
         <thead>
           <tr>
-            <th>#</th><th>Player</th><th>Roll</th><th>Section</th><th>Status</th><th class="num">Points</th>
+            <th>#</th><th>Player</th><th>Roll</th><th>Section</th><th>Status</th><th class="num">Runs</th><th class="num">Points</th>
           </tr>
         </thead>
         <tbody id="league-player-rows"></tbody>

@@ -166,6 +166,10 @@ verified student's roll (masked when the owner hid the leaderboard) or an
 unverified player's chosen display name, Telegram name or @username, never the
 portal name.
 
+Every player table — the channel board, the `/league` card, the Mini App board
+and the admin League tab — prints the player's runs this week next to their
+points. A run is one finished attempt: today's quiz or a duel.
+
 ## Production deployment
 
 The bot runs as the `nbkristqik` **systemd** service on the production server.

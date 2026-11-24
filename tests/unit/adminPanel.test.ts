@@ -51,6 +51,8 @@ describe("the admin panel document", () => {
     expect(html).toContain('data-view="league"');
     expect(html).toContain('id="view-league"');
     expect(html).toContain('id="league-player-rows"');
+    // the players table carries each player's week's run count
+    expect(html).toContain('<th class="num">Runs</th>');
   });
 
   it("uses standard scrollbar styling with a wrapped WebKit fallback", () => {

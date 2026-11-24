@@ -44,6 +44,8 @@ interface PublicPlayer {
   /** Verified: the roll. Otherwise: chosen name, Telegram name, or handle. */
   name: string;
   points: number;
+  /** Finished runs this week, including duels. */
+  plays: number;
 }
 
 export const gamesRouter = Router();
@@ -92,6 +94,7 @@ gamesRouter.get("/games/board", async (req: Request, res: Response) => {
     const publicPlayer = (player: BoardPlayer): PublicPlayer => ({
       name: boardName(player),
       points: player.points,
+      plays: player.plays,
     });
 
     // Anonymous callers share one payload, so it may sit in a cache briefly;

@@ -28,6 +28,10 @@ const formatNumber = (value: number): string =>
 
 const nameCell = (player: BoardPlayer): string => escapeHtml(boardName(player));
 
+/** The week's play count, written the way the board says it: "1 run". */
+const runCell = (plays: number): string =>
+  `${formatNumber(plays)} ${plays === 1 ? "run" : "runs"}`;
+
 /** A bordered table for the rich renderer. */
 const richTable = (
   headers: { label: string; align: "left" | "right" }[],
@@ -315,7 +319,9 @@ export const leagueCard = ({
     lines.push("", "<b>Players</b>");
     players.slice(0, 5).forEach((player, index) => {
       lines.push(
-        `${index + 1}. ${nameCell(player)} — ${formatNumber(player.points)}`,
+        `${index + 1}. ${nameCell(player)} — ${formatNumber(
+          player.points,
+        )} · ${runCell(player.plays)}`,
       );
     });
   }
@@ -351,6 +357,7 @@ export const leagueCard = ({
     .map((player, index) => [
       String(index + 1),
       nameCell(player),
+      runCell(player.plays),
       `<b>${formatNumber(player.points)}</b>`,
     ]);
 
@@ -388,6 +395,7 @@ export const leagueCard = ({
           [
             { label: "#", align: "left" },
             { label: "Player", align: "left" },
+            { label: "Runs", align: "right" },
             { label: "Points", align: "right" },
           ],
           playerRows,
@@ -488,11 +496,13 @@ export const liveBoardCard = ({
           [
             { label: "#", align: "left" },
             { label: "Player", align: "left" },
+            { label: "Runs", align: "right" },
             { label: "Points", align: "right" },
           ],
           playerRows.map((player, index) => [
             String(index + 1),
             nameCell(player),
+            runCell(player.plays),
             `<b>${formatNumber(player.points)}</b>`,
           ]),
         )
@@ -543,7 +553,7 @@ export const liveBoardCard = ({
           (player, index) =>
             `${index + 1}. ${nameCell(player)} — <b>${formatNumber(
               player.points,
-            )}</b>`,
+            )}</b> · ${runCell(player.plays)}`,
         ),
         ...(playerRows.length === 0
           ? ["No one has scored this week yet."]

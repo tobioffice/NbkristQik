@@ -70,12 +70,14 @@ beforeEach(() => {
       rollNo: "23KB1A0700",
       displayName: "Lakshmi",
       points: 1_240,
+      plays: 5,
     },
     {
       userId: 4,
       rollNo: "23KB1A0701",
       displayName: null,
       points: 1_100,
+      plays: 2,
     },
   ]);
   mocks.getWeekPlayers.mockResolvedValue([
@@ -84,12 +86,14 @@ beforeEach(() => {
       rollNo: "23KB1A0599",
       displayName: "Asha",
       points: 2_100,
+      plays: 6,
     },
     {
       userId: 2,
       rollNo: "23KB1A0600",
       displayName: null,
       points: 1_800,
+      plays: 3,
     },
   ]);
   mocks.getWeekSections.mockResolvedValue([
@@ -107,9 +111,9 @@ describe("GET /api/games/board", () => {
       weekLabel: weekLabel(istStamp().monday),
       players: [
         // verified: the roll, even though a display name is saved
-        { name: "23KB1A0599", points: 2_100 },
+        { name: "23KB1A0599", points: 2_100, plays: 6 },
         // unverified: the Telegram first name
-        { name: "Ravi", points: 1_800 },
+        { name: "Ravi", points: 1_800, plays: 3 },
       ],
       sections: [
         {
@@ -119,9 +123,9 @@ describe("GET /api/games/board", () => {
           // Only the number-one section carries its players.
           topPlayers: [
             // verified but hidden: the roll stays masked
-            { name: "23KB1A0•••", points: 1_240 },
+            { name: "23KB1A0•••", points: 1_240, plays: 5 },
             // unverified with only a handle
-            { name: "@ghost", points: 1_100 },
+            { name: "@ghost", points: 1_100, plays: 2 },
           ],
         },
       ],

@@ -24,6 +24,8 @@ interface LeaguePlayer {
   username: string | null;
   sectionLabel: string | null;
   points: number;
+  /** Finished runs this week, including duels. */
+  plays: number;
   verified: boolean;
   hidden: boolean;
 }
@@ -54,6 +56,9 @@ const queryLeague = async (dayKey: string) => {
                      MAX(p.display_name) AS display_name,
                      MAX(p.section_label) AS section_label,
                      SUM(s.points) AS points,
+                     (SELECT COUNT(*) FROM game_attempts a
+                       WHERE a.user_id = s.user_id AND a.season = ?
+                         AND a.week_key = ? AND a.status = 'done') AS plays,
                      MAX(CASE WHEN c.roll_no IS NULL THEN 0 ELSE 1 END) AS verified,
                      MAX(CASE WHEN c.roll_no IS NULL THEN 0
                               ELSE COALESCE(c.hide_leaderboard, 0) END) AS hidden,
@@ -67,7 +72,7 @@ const queryLeague = async (dayKey: string) => {
               GROUP BY s.user_id
               ORDER BY points DESC, s.user_id ASC
               LIMIT ?`,
-        args: [season, stamp.week, PLAYER_LIMIT],
+        args: [season, stamp.week, season, stamp.week, PLAYER_LIMIT],
       }),
       getWeekSections(season, stamp.week, 100),
       turso.execute({
@@ -85,7 +90,7 @@ const queryLeague = async (dayKey: string) => {
       turso.execute({
         sql: `SELECT COUNT(*) AS runs, COUNT(DISTINCT user_id) AS users
               FROM game_attempts
-              WHERE game = 'five' AND day_key = ? AND status = 'done'`,
+              WHERE day_key = ? AND status = 'done'`,
         args: [dayKey],
       }),
     ]);
@@ -98,6 +103,7 @@ const queryLeague = async (dayKey: string) => {
     username: nullableText(row.username),
     sectionLabel: nullableText(row.section_label),
     points: num(row.points),
+    plays: num(row.plays),
     verified: num(row.verified) === 1,
     hidden: num(row.hidden) === 1,
   }));

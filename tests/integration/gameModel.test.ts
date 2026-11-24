@@ -17,6 +17,7 @@ import {
   getOrCreateDailyRound,
   getWeekPlayerCount,
   getPlayerWeek,
+  getSectionTopPlayers,
   getSectionWeek,
   getWeekPlayers,
   getWeekSections,
@@ -389,12 +390,69 @@ describe("weekly boards", () => {
       });
     }
 
+    // every finished run in the week counts as a play, including duels;
+    // an active run and a run from another week do not.
+    const attempt = async (userId: number, roundKey: string, done = true) =>
+      turso.execute({
+        sql: `INSERT INTO game_attempts
+                (game, round_key, day_key, week_key, season, user_id, roll_no,
+                 question_ids, status, started_at, finished_at)
+              VALUES ('five', ?, ?, ?, ?, ?, ?, '[]', ?, ?, ?)`,
+        args: [
+          roundKey,
+          DAY,
+          WEEK,
+          SEASON,
+          userId,
+          `23KB1A03${userId - 300}`,
+          done ? "done" : "active",
+          "2026-11-15T03:00:00.000Z",
+          done ? "2026-11-15T03:05:00.000Z" : null,
+        ],
+      });
+    await attempt(300, "five-300-a");
+    await attempt(300, "five-300-b");
+    await attempt(300, "five-300-c", false);
+    await turso.execute({
+      sql: `INSERT INTO game_attempts
+              (game, round_key, day_key, week_key, season, user_id, roll_no,
+               question_ids, status, started_at, finished_at)
+            VALUES ('five', 'five-300-old', ?, '2026-W45', ?, ?, ?, '[]',
+                    'done', ?, ?)`,
+      args: [
+        "2026-11-08",
+        SEASON,
+        300,
+        "23KB1A0300",
+        "2026-11-08T03:00:00.000Z",
+        "2026-11-08T03:05:00.000Z",
+      ],
+    });
+    await attempt(301, "five-301-a");
+    await turso.execute({
+      sql: `INSERT INTO game_attempts
+              (game, round_key, day_key, week_key, season, user_id, roll_no,
+               question_ids, status, started_at, finished_at)
+            VALUES ('duel', 'duel-301', ?, ?, ?, ?, ?, '[]', 'done', ?, ?)`,
+      args: [
+        DAY,
+        WEEK,
+        SEASON,
+        301,
+        "23KB1A0301",
+        "2026-11-15T03:00:00.000Z",
+        "2026-11-15T03:05:00.000Z",
+      ],
+    });
+
     const players = await getWeekPlayers(SEASON, WEEK, 5);
     expect(players.map((entry) => entry.points)).toEqual([300, 200, 100]);
+    expect(players.map((entry) => entry.plays)).toEqual([2, 2, 0]);
 
     // the board pages without a cap; the count is the full week's field
     const secondPage = await getWeekPlayers(SEASON, WEEK, 2, 1);
     expect(secondPage.map((entry) => entry.points)).toEqual([200, 100]);
+    expect(secondPage.map((entry) => entry.plays)).toEqual([2, 0]);
     expect(await getWeekPlayerCount(SEASON, WEEK)).toBe(3);
 
     expect(await getPlayerWeek(SEASON, WEEK, 301)).toEqual({
@@ -407,6 +465,56 @@ describe("weekly boards", () => {
       rank: null,
       players: 3,
     });
+  });
+
+  it("gives the leading section's top players their week's run count", async () => {
+    for (const userId of [700, 701]) {
+      const rollNo = `23KB1A070${userId - 700}`;
+      await player(userId);
+      await addScore({
+        season: SEASON,
+        weekKey: WEEK,
+        dayKey: DAY,
+        userId,
+        rollNo,
+        sectionKey: "4|CSE|C",
+        sectionLabel: "4 CSE C",
+        source: "five",
+        ref: `a${userId}`,
+        points: userId === 700 ? 240 : 120,
+      });
+      await claim(rollNo);
+    }
+
+    const attempt = async (userId: number, roundKey: string, game = "five") =>
+      turso.execute({
+        sql: `INSERT INTO game_attempts
+                (game, round_key, day_key, week_key, season, user_id, roll_no,
+                 question_ids, status, started_at, finished_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, '[]', 'done', ?, ?)`,
+        args: [
+          game,
+          roundKey,
+          DAY,
+          WEEK,
+          SEASON,
+          userId,
+          `23KB1A070${userId - 700}`,
+          "2026-11-15T03:00:00.000Z",
+          "2026-11-15T03:05:00.000Z",
+        ],
+      });
+    await attempt(700, "five-700-a");
+    await attempt(700, "duel-700", "duel");
+    await attempt(701, "five-701-a");
+
+    const top = await getSectionTopPlayers(SEASON, WEEK, "4|CSE|C", 3);
+    expect(
+      top.map((entry) => [entry.rollNo, entry.points, entry.plays]),
+    ).toEqual([
+      ["23KB1A0700", 240, 2],
+      ["23KB1A0701", 120, 1],
+    ]);
   });
 });
 

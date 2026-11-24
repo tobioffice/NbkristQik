@@ -35,7 +35,7 @@ import type { BoardPlayer, BoardSection } from "./types.js";
 
 const BOARD_SLOT = "live";
 /** Bumped when the card's markup changes, so a deploy refreshes the message. */
-const BOARD_FORMAT = 4;
+const BOARD_FORMAT = 5;
 
 export interface LiveBoard {
   label: string;
@@ -69,7 +69,11 @@ export const liveBoardSnapshot = (board: LiveBoard): string =>
   JSON.stringify({
     version: BOARD_FORMAT,
     label: board.label,
-    players: board.players.map((player) => [boardName(player), player.points]),
+    players: board.players.map((player) => [
+      boardName(player),
+      player.points,
+      player.plays,
+    ]),
     sections: board.sections.map((section) => [section.label, section.points]),
   });
 

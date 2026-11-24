@@ -22,6 +22,8 @@ export interface BoardPlayer {
   /** Verified: the roll. Otherwise: chosen name, Telegram name, or handle. */
   name: string;
   points: number;
+  /** Finished runs this week, including duels. */
+  plays: number;
 }
 
 export interface BoardSection {
@@ -123,6 +125,9 @@ const LeaderSection = ({
           <span className="tg-tree-rank">{index + 1}</span>
           <span className="tg-row__body">
             <span className="tg-row__title">{player.name}</span>
+            <span className="tg-row__sub">
+              {plural(player.plays, "run")}
+            </span>
           </span>
           <span className="tg-row__score">{score(player.points)}</span>
         </li>
@@ -240,6 +245,7 @@ export const GamesBoardView = ({
                   key={`${player.name}-${index}`}
                   rank={index + 1}
                   title={player.name}
+                  sub={plural(player.plays, "run")}
                   points={player.points}
                   rowRef={
                     index === board.players.length - 1 ? lastRowRef : undefined

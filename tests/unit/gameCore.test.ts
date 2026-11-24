@@ -351,12 +351,14 @@ describe("the cards", () => {
           rollNo: "23KB1A0599",
           displayName: "<Asha>",
           points: 2_100,
+          plays: 5,
         },
         {
           userId: 2,
           rollNo: "23KB1A0600",
           displayName: null,
           points: 1_800,
+          plays: 3,
         },
       ],
       me: { points: 628, rank: 37, players: 143 },
@@ -366,11 +368,14 @@ describe("the cards", () => {
     expect(card.text).toContain("Section Wars · Week of 10 Nov");
     expect(card.text).toContain("&lt;Asha&gt;");
     expect(card.text).toContain("23KB1A0•••");
+    expect(card.text).toContain("2,100 · 5 runs");
     expect(card.text).toContain("You: <b>#37</b> of 143");
     expect(card.rich).toContain("<table");
     expect(card.rich).toContain("4 CSE C");
     expect(card.rich).toContain("Asha");
     expect(card.rich).toContain("23KB1A0•••");
+    expect(card.rich).toContain('<th align="right">Runs</th>');
+    expect(card.rich).toContain('<td align="right">5 runs</td>');
   });
 
   it("renders the live board as two tables, students then sections", () => {
@@ -382,12 +387,14 @@ describe("the cards", () => {
           rollNo: "23KB1A0599",
           displayName: "<Asha>",
           points: 2_100,
+          plays: 4,
         },
         {
           userId: 2,
           rollNo: "23KB1A0600",
           displayName: null,
           points: 1_800,
+          plays: 2,
         },
       ],
       sections: [
@@ -400,15 +407,18 @@ describe("the cards", () => {
     expect(card.rich).toContain("<b>Students</b>");
     expect(card.rich).toContain("<b>Section Wars</b>");
     expect(card.rich).toContain('<th align="left">Player</th>');
+    expect(card.rich).toContain('<th align="right">Runs</th>');
     expect(card.rich).toContain('<th align="left">Section</th>');
     expect(card.rich).toContain("&lt;Asha&gt;");
     expect(card.rich).toContain("23KB1A0•••");
     expect(card.rich).toContain("<b>2,100</b>");
+    expect(card.rich).toContain("4 runs");
     expect(card.rich).toContain("<b>4,820</b>");
     expect(card.rich).toContain("Updated 4:12 pm IST");
     expect(card.text).toContain("<b>Students</b>");
     expect(card.text).toContain("<b>Section Wars</b>");
     expect(card.text).toContain("23KB1A0•••");
+    expect(card.text).toContain("<b>2,100</b> · 4 runs");
   });
 
   it("names verified rows by roll and unverified rows by identity", () => {
@@ -421,6 +431,7 @@ describe("the cards", () => {
           displayName: "Asha",
           verified: true,
           points: 200,
+          plays: 3,
         },
         {
           userId: 2,
@@ -428,6 +439,7 @@ describe("the cards", () => {
           displayName: null,
           firstName: "Ravi",
           points: 100,
+          plays: 2,
         },
         {
           userId: 3,
@@ -436,6 +448,7 @@ describe("the cards", () => {
           verified: true,
           hidden: true,
           points: 50,
+          plays: 1,
         },
       ],
       sections: [],
@@ -457,6 +470,7 @@ describe("the cards", () => {
         rollNo: `23KB1A05${index}0`,
         displayName: `Player ${index}`,
         points: 3_000 - index * 100,
+        plays: 3,
       })),
       sections: [1, 2, 3, 4, 5].map((index) => ({
         key: `4|CSE|${index}`,
@@ -524,6 +538,7 @@ describe("the cards", () => {
           rollNo: "23KB1A0599",
           displayName: "Asha",
           points: 2_100,
+          plays: 4,
         },
       ],
       sections: [],

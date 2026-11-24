@@ -16,11 +16,11 @@ const board: BoardPayload = {
   weekLabel: "Week of 16 Nov",
   players: [
     // verified by college email: named by the roll
-    { name: "23KB1A0599", points: 2_100 },
+    { name: "23KB1A0599", points: 2_100, plays: 5 },
     // verified, but hidden: the roll stays masked
-    { name: "23KB1A0•••", points: 1_860 },
+    { name: "23KB1A0•••", points: 1_860, plays: 3 },
     // unverified: Telegram first name, then @username
-    { name: "Ravi", points: 1_740 },
+    { name: "Ravi", points: 1_740, plays: 1 },
   ],
   sections: [
     {
@@ -29,8 +29,8 @@ const board: BoardPayload = {
       players: 9,
       // Only the leading section carries its players.
       topPlayers: [
-        { name: "23KB1A0700", points: 1_240 },
-        { name: "@ghost", points: 1_100 },
+        { name: "23KB1A0700", points: 1_240, plays: 4 },
+        { name: "@ghost", points: 1_100, plays: 2 },
       ],
     },
     { label: "3 ECE A", points: 4_610, players: 8 },
@@ -68,6 +68,9 @@ describe("GamesBoardView", () => {
     expect(html).toContain("23KB1A0700");
     expect(html).toContain("@ghost");
     expect(html).toContain("1,240");
+    // the leading section's players carry their week's run count
+    expect(html).toContain("4 runs");
+    expect(html).toContain("2 runs");
   });
 
   it("switches to the players board", () => {
@@ -79,8 +82,11 @@ describe("GamesBoardView", () => {
     expect(html).toContain("23KB1A0•••");
     expect(html).toContain("Ravi");
     expect(html).toContain("2,100");
-    // one identity per row, no second line
-    expect(html).not.toContain("tg-row__sub");
+    // each row carries its week's run count under the name
+    expect(html).toContain("tg-row__sub");
+    expect(html).toContain("5 runs");
+    expect(html).toContain("3 runs");
+    expect(html).toContain("1 run");
     expect(html).toContain("That’s everyone on this week’s board.");
     expect(html).not.toContain("4 CSE C");
     expect(html).not.toContain("tg-tree-node");

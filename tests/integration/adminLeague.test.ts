@@ -172,6 +172,7 @@ describe("GET admin /api/league", () => {
       displayName: "Reddy",
       sectionLabel: "3 CSE F",
       points: 840,
+      plays: 1,
       verified: true,
       hidden: true,
     });
@@ -180,6 +181,7 @@ describe("GET admin /api/league", () => {
       displayName: "Jasmitha",
       username: "jasmin",
       points: 895,
+      plays: 1,
       verified: false,
       hidden: false,
     });
@@ -189,6 +191,7 @@ describe("GET admin /api/league", () => {
       firstName: "Vishnu",
       sectionLabel: "2 CSE F",
       points: 848,
+      plays: 0,
       verified: false,
     });
   });

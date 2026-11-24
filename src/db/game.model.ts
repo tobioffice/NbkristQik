@@ -851,7 +851,10 @@ export const getWeekPlayers = async (
   const result = await turso.execute({
     sql: `SELECT s.user_id, MAX(s.roll_no) AS roll_no,
                  MAX(p.display_name) AS display_name,
-                 SUM(s.points) AS points
+                 SUM(s.points) AS points,
+                 (SELECT COUNT(*) FROM game_attempts a
+                   WHERE a.user_id = s.user_id AND a.season = ?
+                     AND a.week_key = ? AND a.status = 'done') AS plays
           FROM game_scores s
           LEFT JOIN game_players p ON p.user_id = s.user_id
           WHERE s.season = ? AND s.week_key = ?
@@ -859,6 +862,8 @@ export const getWeekPlayers = async (
           ORDER BY points DESC, s.user_id ASC
           LIMIT ? OFFSET ?`,
     args: [
+      season,
+      weekKey,
       season,
       weekKey,
       Math.max(1, Math.min(100, limit)),
@@ -870,6 +875,7 @@ export const getWeekPlayers = async (
     rollNo: text(row.roll_no),
     displayName: nullableText(row.display_name),
     points: num(row.points),
+    plays: num(row.plays),
   }));
 };
 
@@ -958,7 +964,10 @@ export const getSectionTopPlayers = async (
   const result = await turso.execute({
     sql: `SELECT s.user_id, MAX(s.roll_no) AS roll_no,
                  MAX(p.display_name) AS display_name,
-                 SUM(s.points) AS points
+                 SUM(s.points) AS points,
+                 (SELECT COUNT(*) FROM game_attempts a
+                   WHERE a.user_id = s.user_id AND a.season = ?
+                     AND a.week_key = ? AND a.status = 'done') AS plays
           FROM game_scores s
           LEFT JOIN game_players p ON p.user_id = s.user_id
           WHERE s.season = ? AND s.week_key = ? AND s.section_key = ?
@@ -969,13 +978,21 @@ export const getSectionTopPlayers = async (
           GROUP BY s.user_id
           ORDER BY points DESC, s.user_id ASC
           LIMIT ?`,
-    args: [season, weekKey, sectionKey, Math.max(1, Math.min(10, limit))],
+    args: [
+      season,
+      weekKey,
+      season,
+      weekKey,
+      sectionKey,
+      Math.max(1, Math.min(10, limit)),
+    ],
   });
   return result.rows.map((row) => ({
     userId: num(row.user_id),
     rollNo: text(row.roll_no),
     displayName: nullableText(row.display_name),
     points: num(row.points),
+    plays: num(row.plays),
   }));
 };
 

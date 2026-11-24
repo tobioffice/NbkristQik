@@ -75,6 +75,7 @@ const board = {
       rollNo: "23KB1A0599",
       displayName: "Asha",
       points: 2_100,
+      plays: 4,
     },
   ],
   sections: [{ key: "4|CSE|C", label: "4 CSE C", points: 4_820, players: 9 }],
@@ -115,6 +116,7 @@ describe("syncLiveBoard", () => {
     expect(sent.rich_message.html).toContain("<b>Students</b>");
     expect(sent.rich_message.html).toContain("<b>Section Wars</b>");
     expect(sent.rich_message.html).toContain("2,100");
+    expect(sent.rich_message.html).toContain("4 runs");
     expect(sent.rich_message.html).toContain("4,820");
 
     expect(mocks.saveChannelBoard).toHaveBeenCalledTimes(1);

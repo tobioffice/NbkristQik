@@ -480,6 +480,7 @@ export const panelJs = `(function () {
           '<td class="mono rolls">' + esc(p.rollNo) + "</td>" +
           '<td class="dim">' + (p.sectionLabel ? esc(p.sectionLabel) : "&ndash;") + "</td>" +
           "<td>" + status + "</td>" +
+          '<td class="num mono">' + fmt(p.plays) + "</td>" +
           '<td class="num mono">' + fmt(p.points) + "</td>" +
           "</tr>";
       }
