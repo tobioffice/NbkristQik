@@ -141,6 +141,7 @@ describe("profile endpoints", () => {
       found: false,
       lastLookup: "26KB5A0219",
       suggestion: "26KB5A0219",
+      runs: [],
     });
     expect(res.headers["cache-control"]).toBe("private, no-store");
   });
@@ -188,6 +189,97 @@ describe("profile endpoints", () => {
       display_name: "Test Student", // trimmed; no angle brackets to strip
     });
     expect(get.body.student).toMatchObject({ section: "-", branch: "2" });
+  });
+
+  it("includes the caller's recent daily runs, newest first", async () => {
+    // The profile endpoint reads the league tables best-effort; this fixture
+    // creates just the attempt shape the query needs.
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS game_attempts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        game TEXT NOT NULL,
+        round_key TEXT NOT NULL,
+        day_key TEXT NOT NULL,
+        week_key TEXT NOT NULL,
+        season TEXT NOT NULL,
+        user_id INTEGER NOT NULL,
+        roll_no TEXT NOT NULL,
+        section_key TEXT,
+        section_label TEXT,
+        question_ids TEXT NOT NULL,
+        answers TEXT NOT NULL DEFAULT '[]',
+        idx INTEGER NOT NULL DEFAULT 0,
+        score INTEGER NOT NULL DEFAULT 0,
+        points INTEGER NOT NULL DEFAULT 0,
+        streak INTEGER NOT NULL DEFAULT 0,
+        duel_id INTEGER,
+        status TEXT NOT NULL DEFAULT 'active',
+        started_at TEXT NOT NULL,
+        shown_at TEXT,
+        finished_at TEXT,
+        UNIQUE(game, round_key, user_id)
+      )
+    `);
+
+    const attempt = (
+      userId: number,
+      dayKey: string,
+      score: number,
+      points: number,
+      game = "five",
+      status = "done",
+    ) =>
+      client.execute({
+        sql: `INSERT INTO game_attempts
+                (game, round_key, day_key, week_key, season, user_id, roll_no,
+                 question_ids, answers, idx, score, points, streak, status,
+                 started_at, finished_at)
+              VALUES (?, ?, ?, '2026-W48', 'S1', ?, '99KB9A9998', '[1,2]',
+                      ?, 2, ?, ?, 2, ?, ?, ?)`,
+        args: [
+          game,
+          `${game}-${dayKey}-${userId}`,
+          dayKey,
+          userId,
+          JSON.stringify([
+            { option: 0, correct: true, ms: 1200, points: 100 },
+            { option: 1, correct: false, ms: 2200, points: 0 },
+          ]),
+          score,
+          points,
+          status,
+          `${dayKey}T03:00:00.000Z`,
+          status === "done" ? `${dayKey}T03:10:00.000Z` : null,
+        ],
+      });
+
+    await attempt(Number(ME), "2026-11-24", 800, 800);
+    await attempt(Number(ME), "2026-11-25", 1000, 1100);
+    // not a run: a duel and an unfinished attempt
+    await attempt(Number(ME), "2026-11-25", 5000, 5000, "duel");
+    await attempt(Number(ME), "2026-11-26", 900, 900, "five", "active");
+    // another account's run is not this caller's history
+    await attempt(999000111, "2026-11-25", 1500, 1500);
+
+    const res = await request(app).get(`/api/profile?userId=${ME}`);
+
+    expect(res.status).toBe(200);
+    const runs = res.body.runs as {
+      dayKey: string;
+      score: number;
+      points: number;
+      correct: number;
+      total: number;
+      finishedAt: string | null;
+    }[];
+    expect(runs.map((run) => run.dayKey)).toEqual(["2026-11-25", "2026-11-24"]);
+    expect(runs[0]).toMatchObject({
+      score: 1000,
+      points: 1100,
+      correct: 1,
+      total: 2,
+      finishedAt: "2026-11-25T03:10:00.000Z",
+    });
   });
 
   it("POST /api/register lets a second account save a taken roll", async () => {
@@ -266,6 +358,7 @@ describe("forgetting the last lookup", () => {
       found: false,
       lastLookup: null,
       suggestion: null,
+      runs: [],
     });
   });
 });

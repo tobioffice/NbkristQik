@@ -366,6 +366,21 @@ The saved profile is a read-only group, not a permanently open form:
 - A stale roll keeps the summary but adds the warning note and still offers
   Edit.
 
+### Run history
+
+- Sits under the saved profile group: a 17/600 "Your runs" head with a 12/16
+  secondary count at the right, then one grouped surface (8px radius, 1px gaps,
+  `#111417`) of 56px rows.
+- Row: the IST day 15/600 white over "8 of 10 correct · 814 score" 12/16
+  secondary, with the season points 15/600 tabular at the right edge and a
+  11/500 secondary "pts" unit. No avatar, no rank badge, no colour coding.
+- Newest first, ten at most. With none, one 12/16 secondary line ("No runs yet.")
+  and the accent "Play today's run" link, never an empty group.
+- The home banner's finished state says "Run done: N points." and its trailing
+  action is "Your runs"; it opens the profile and scrolls to this group. The
+  action never says "Board" — the league board is one tap away in the result
+  screen and the channel.
+
 ### Issue reports
 
 - List: one grouped surface, 1px gaps, 8px outer radius. Each tile is a full-row

@@ -3,6 +3,7 @@ import { ROLL_REGEX } from "../api";
 import { useIdentity } from "../identity";
 import { useProfile } from "../useProfile";
 import VerificationPanel from "../components/VerificationPanel";
+import { RunHistory } from "../components/RunHistory";
 import { SkeletonRows } from "../components/FeedbackStates";
 
 interface ProfileViewProps {
@@ -464,6 +465,8 @@ export default function ProfileView({
                 Edit profile
               </button>
             </div>
+
+            <RunHistory runs={profile.runs} />
 
             {profile.roll && (
               <div className="form-block">

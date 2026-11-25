@@ -648,8 +648,15 @@ requests / 15 min per account.
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/api/profile` | `{found:true, registration:{roll_no, display_name,...}, student}`; `{found:true, stale:true, registration, student:null}` when the saved roll left the college master table; or `{found:false, lastLookup, suggestion}` (the same roll for one release; a suggestion, never a prefill) |
+| `GET` | `/api/profile` | `{found:true, registration:{roll_no, display_name,...}, student, runs}`; `{found:true, stale:true, registration, student:null, runs}` when the saved roll left the college master table; or `{found:false, lastLookup, suggestion, runs}` (the same roll for one release; a suggestion, never a prefill) |
 | `POST` | `/api/register` | Validate + upsert `{rollNo, displayName?}`; 400 on bad format, 404 + `suggestions` on a roll missing from college records, 403 when the roll's verified owner has turned on the registration lock |
+
+`runs` is the caller's recent finished daily runs, newest first, ten at most:
+`{ id, dayKey, score, points, correct, total, streak, finishedAt }`. Only
+completed daily runs appear; a duel is a match, not a run, and an active
+attempt has no final figure. The profile prints this as "Your runs"; the query
+is best effort, so a database without the league tables still answers the
+profile.
 
 A successful registration answers
 `{ "ok": true, "registered": { "roll_no": "21B81A05E9", "name": "..." } }`.

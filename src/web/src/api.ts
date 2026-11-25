@@ -443,15 +443,40 @@ export interface StudentInfo {
   year: string;
 }
 
+/** One finished daily run, as the profile's run history prints it. */
+export interface GameRun {
+  id: number;
+  /** IST day the run belongs to, `YYYY-MM-DD`. */
+  dayKey: string;
+  score: number;
+  points: number;
+  correct: number;
+  total: number;
+  streak: number;
+  finishedAt: string | null;
+}
+
 export type ProfileResponse =
-  | { found: true; registration: Registration; student: StudentInfo }
+  | {
+      found: true;
+      registration: Registration;
+      student: StudentInfo;
+      runs?: GameRun[];
+    }
   // registered roll vanished from the college master table (semester sync)
-  | { found: true; stale: true; registration: Registration; student: null }
+  | {
+      found: true;
+      stale: true;
+      registration: Registration;
+      student: null;
+      runs?: GameRun[];
+    }
   // `lastLookup` is a suggestion for the empty form, not the caller's roll
   | {
       found: false;
       lastLookup: string | null;
       suggestion: string | null;
+      runs?: GameRun[];
     }
   | { found: false; error: string };
 

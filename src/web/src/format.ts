@@ -129,6 +129,12 @@ export const istWeekLabel = (now: Date = new Date()): string => {
   return `Week of ${monday.getUTCDate()} ${MONTHS[monday.getUTCMonth()]}`;
 };
 
+/** "25 Nov" from a `YYYY-MM-DD` league day key. */
+export const runDayLabel = (dateKey: string): string => {
+  const [, month, day] = dateKey.split("-").map(Number);
+  return `${day} ${MONTHS[month - 1] ?? ""}`.trim();
+};
+
 /** "Day 2 of 7": how far the running league week has come. */
 export const istWeekDayLabel = (now: Date = new Date()): string =>
   `Day ${istWeekday(now)} of 7`;

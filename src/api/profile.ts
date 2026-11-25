@@ -4,7 +4,7 @@ import {
   getRegistration,
   upsertRegistration,
 } from "../db/registration.model.js";
-import { syncGameDisplayName } from "../db/game.model.js";
+import { getRecentRunsForUser, syncGameDisplayName } from "../db/game.model.js";
 import { invalidateStudentContext } from "../services/library/entitlement.js";
 import { getTgUserRoll } from "../db/student.model.js";
 import {
@@ -40,6 +40,15 @@ profileRouter.get("/profile", async (req: Request, res: Response) => {
     }
     const resolved = { userId: identity.userId, user: identity.user };
 
+    // The profile's "Your runs" list. A database without the league tables
+    // (or a read hiccup) must still open the profile, so this is best effort.
+    const runs = await getRecentRunsForUser(Number(resolved.userId), 10).catch(
+      (e) => {
+        logger.debug("[profile] recent runs skipped:", e?.message ?? e);
+        return [];
+      },
+    );
+
     const registration = await getRegistration(resolved.userId);
     const student = registration
       ? await getStudentCached(registration.roll_no).catch(() => null)
@@ -53,6 +62,7 @@ profileRouter.get("/profile", async (req: Request, res: Response) => {
         stale: true,
         registration,
         student: null,
+        runs,
       });
       return;
     }
@@ -62,11 +72,11 @@ profileRouter.get("/profile", async (req: Request, res: Response) => {
     // so the form stays empty and the roll only fills on an explicit tap.
     if (!registration) {
       const lastLookup = await getTgUserRoll(resolved.userId).catch(() => null);
-      res.json({ found: false, lastLookup, suggestion: lastLookup });
+      res.json({ found: false, lastLookup, suggestion: lastLookup, runs });
       return;
     }
 
-    res.json({ found: true, registration, student });
+    res.json({ found: true, registration, student, runs });
   } catch (e) {
     logger.error("[profile] GET failed:", e);
     res.status(500).json({ error: "Internal Server Error" });

@@ -104,6 +104,9 @@ public status page for service health.
 - **Live leaderboard** — the attendance register ranks students by attendance
   or mid-term marks, filtered by year, branch and section. `/leaderboard` and
   the button on any card open it as a page in the app.
+- **Your runs** — the profile keeps your last ten daily runs: the day, how
+  many were right, the run score and the season points. When the home banner
+  says "Run done", it takes you straight to that list.
 - **Library** — read your semester's syllabus units as paged documents,
   watermarked for the signed-in reader. Download a watermarked PDF, or open
   the shelf on a computer with a one-time link from the bot. The shelf is

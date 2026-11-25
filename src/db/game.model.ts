@@ -971,6 +971,53 @@ export const listAttemptsForUser = async (
   return result.rows.map(attemptFromRow);
 };
 
+/** One finished daily run as the profile shows it. */
+export interface RecentRun {
+  id: number;
+  dayKey: string;
+  score: number;
+  points: number;
+  correct: number;
+  total: number;
+  streak: number;
+  finishedAt: string | null;
+}
+
+/**
+ * The caller's finished daily runs, newest first.
+ *
+ * Only `five` runs with status `done` count: a duel is a match, not a run, and
+ * an active attempt has no final score yet. Correctness is read from the saved
+ * answers, so the profile can say "8 of 10" without loading the questions.
+ */
+export const getRecentRunsForUser = async (
+  userId: number,
+  limit = 10,
+): Promise<RecentRun[]> => {
+  const result = await turso.execute({
+    sql: `SELECT id, day_key, score, points, streak, answers, question_ids,
+                 finished_at
+          FROM game_attempts
+          WHERE user_id = ? AND game = 'five' AND status = 'done'
+          ORDER BY day_key DESC, id DESC
+          LIMIT ?`,
+    args: [userId, Math.max(1, Math.min(50, Math.trunc(limit)))],
+  });
+  return result.rows.map((row) => {
+    const answers = jsonArray<AttemptAnswer>(row.answers, []);
+    return {
+      id: num(row.id),
+      dayKey: text(row.day_key),
+      score: num(row.score),
+      points: num(row.points),
+      correct: answers.filter((answer) => answer.correct).length,
+      total: jsonArray<number>(row.question_ids, []).length,
+      streak: num(row.streak),
+      finishedAt: nullableText(row.finished_at),
+    };
+  });
+};
+
 /** How many attempts the account has in the store, for the truncation note. */
 export const countAttemptsForUser = async (userId: number): Promise<number> => {
   const result = await turso.execute({

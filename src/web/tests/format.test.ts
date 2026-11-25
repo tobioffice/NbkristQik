@@ -8,6 +8,7 @@ import {
   istStampFromDb,
   istWeekDayLabel,
   istWeekLabel,
+  runDayLabel,
 } from "../src/format";
 
 describe("formatScore", () => {
@@ -83,6 +84,13 @@ describe("istWeekDayLabel", () => {
     expect(istWeekDayLabel(new Date("2026-11-22T18:30:00Z"))).toBe(
       "Day 1 of 7",
     );
+  });
+});
+
+describe("runDayLabel", () => {
+  it("prints a league day key as a short date", () => {
+    expect(runDayLabel("2026-11-25")).toBe("25 Nov");
+    expect(runDayLabel("2026-01-02")).toBe("2 Jan");
   });
 });
 

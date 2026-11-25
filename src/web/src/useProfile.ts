@@ -3,6 +3,7 @@ import {
   deleteLastLookup,
   getProfile,
   registerRoll,
+  type GameRun,
   type ProfileResponse,
   type StudentInfo,
 } from "./api";
@@ -18,6 +19,8 @@ interface Profile {
   student: StudentInfo | null;
   /** A suggestion for the empty form, not the caller's identity. */
   lastLookup: string | null;
+  /** Finished daily runs, newest first, for the profile's history. */
+  runs: GameRun[];
 }
 
 type ProfileStatus =
@@ -36,6 +39,7 @@ const toProfile = (data: ProfileResponse): Profile => {
       stale: "stale" in data ? Boolean(data.stale) : false,
       student: data.student,
       lastLookup: null,
+      runs: data.runs ?? [],
     };
   }
 
@@ -53,6 +57,7 @@ const toProfile = (data: ProfileResponse): Profile => {
     stale: false,
     student: null,
     lastLookup: unregistered.lastLookup ?? unregistered.suggestion ?? null,
+    runs: "runs" in data ? (data.runs ?? []) : [],
   };
 };
 

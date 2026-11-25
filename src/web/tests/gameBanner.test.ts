@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { GameBannerView } from "../src/components/GameBanner";
 import type { GameLive } from "../src/api";
 import { istWeekLabel } from "../src/format";
-import { bannerContent, BOARD_LINK, PLAY_LINK } from "../src/gameBanner";
+import { bannerContent, PLAY_LINK, PROFILE_LINK } from "../src/gameBanner";
 
 /**
  * The home banner is one link with four states. Server-rendering pins the
@@ -48,7 +48,7 @@ describe("GameBannerView", () => {
     expect(html).toContain('aria-hidden="true"');
   });
 
-  it("offers the board, not a replay, once the run is done", () => {
+  it("offers the reader's runs, not a replay, once the run is done", () => {
     const html = render(
       live({
         me: {
@@ -59,8 +59,8 @@ describe("GameBannerView", () => {
     );
 
     expect(html).toContain("Run done: 2,250 points.");
-    expect(html).toContain(">Board<");
-    expect(html).toContain(`href="${BOARD_LINK}"`);
+    expect(html).toContain(">Your runs<");
+    expect(html).toContain(`href="${PROFILE_LINK}"`);
   });
 
   it("resumes an active run at its question", () => {
@@ -130,8 +130,8 @@ describe("bannerContent", () => {
     );
 
     expect(content).toMatchObject({
-      href: BOARD_LINK,
-      action: "Board",
+      href: PROFILE_LINK,
+      action: "Your runs",
       line: "Run done: 1,480 points.",
     });
   });
