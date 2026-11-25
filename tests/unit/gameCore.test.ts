@@ -6,7 +6,7 @@ import {
   fivePoints,
   formatDuration,
   maskRoll,
-  nextStreak,
+  longestCorrectStreak,
   publicName,
   sectionRefOf,
   streakMultiplier,
@@ -83,19 +83,34 @@ describe("scoring", () => {
     expect(answerPoints(false, 0)).toBe(0);
   });
 
-  it("caps the streak bonus at 1.5x", () => {
+  it("caps the run-of-correct bonus at 1.5x", () => {
+    expect(streakMultiplier(0)).toBe(1);
     expect(streakMultiplier(1)).toBe(1);
     expect(streakMultiplier(2)).toBeCloseTo(1.1);
     expect(streakMultiplier(6)).toBeCloseTo(1.5);
-    expect(streakMultiplier(30)).toBeCloseTo(1.5);
+    expect(streakMultiplier(10)).toBeCloseTo(1.5);
+    expect(fivePoints(600, 0)).toBe(600);
     expect(fivePoints(600, 2)).toBe(660);
   });
 
-  it("resets a streak after a missed day", () => {
-    expect(nextStreak(null, "2026-11-15", 0)).toBe(1);
-    expect(nextStreak("2026-11-14", "2026-11-15", 3)).toBe(4);
-    expect(nextStreak("2026-11-13", "2026-11-15", 3)).toBe(1);
-    expect(nextStreak("2026-11-15", "2026-11-15", 3)).toBe(3);
+  it("counts the longest run of correct answers in a run", () => {
+    const answers = (...correct: boolean[]) =>
+      correct.map((value) => ({
+        option: 0,
+        correct: value,
+        ms: 1000,
+        points: value ? 100 : 0,
+      }));
+
+    expect(longestCorrectStreak(answers())).toBe(0);
+    expect(longestCorrectStreak(answers(true, true, true))).toBe(3);
+    expect(
+      longestCorrectStreak(answers(true, false, true, true, true, true)),
+    ).toBe(4);
+    expect(longestCorrectStreak(answers(false, true, false, true))).toBe(1);
+    expect(
+      longestCorrectStreak(answers(true, true, true, true, true, true)),
+    ).toBe(6);
   });
 
   it("names the duel winner without paying a run's points", () => {
@@ -252,9 +267,9 @@ describe("the cards", () => {
     expect(card.text).toContain("7 of 10 correct");
     expect(card.text).toContain("<b>900</b> run score");
     expect(card.text).toContain("<b>990</b> season points");
-    expect(card.text).toContain("+90 streak");
+    expect(card.text).toContain("+90 streak bonus");
     expect(card.text).toContain("#7 of 143 today");
-    expect(card.text).toContain("2-day streak");
+    expect(card.text).toContain("2 correct in a row");
     expect(card.text).toContain("4 CSE C · <b>#5</b> of 12 this week");
     expect(card.rich).toContain("<table");
     expect(card.rich).toContain("Run score");
@@ -278,7 +293,7 @@ describe("the cards", () => {
     expect(card.text).toContain("First today");
     expect(card.text).toContain("Played today. Back tomorrow.");
     expect(card.text).toContain("No section on record");
-    expect(card.text).not.toContain("1-day streak");
+    expect(card.text).not.toContain("1 correct in a row");
     expect(card.rich).toContain("Played today. Back tomorrow.");
   });
 

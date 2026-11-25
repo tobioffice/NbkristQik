@@ -287,8 +287,8 @@ question the browser showed; a stale browser (or a second tab) gets
 question by accident. A malformed body is `400`, another account's attempt is
 `404`.
 
-The last answer finishes the run on the server (streak and season points
-included) and returns `state: "done"` with the result; a duplicate tap after
+The last answer finishes the run on the server (its longest run of correct
+answers and season points included) and returns `state: "done"` with the result; a duplicate tap after
 the finish answers the same result with `alreadyPlayed: true`. `feedback`
 reports the previous answer only, never the correct option.
 
@@ -597,12 +597,13 @@ exist; the store prunes attempts after 180 days) and a summary across them:
 score), `bestPoints`, `correct`, `answered`, `accuracy` and `avgMs`.
 
 Each attempt carries its game (`five` or `duel`), status, day/week/season,
-score, points, streak, start/finish timestamps and `durationMs`, plus a
+score, points, streak (the longest run of consecutive correct answers, read
+from the saved answers), start/finish timestamps and `durationMs`, plus a
 `questions` array in the order shown: `prompt`, `options`, `correctIndex`,
 `chosenIndex`, `correct`, `ms` (time from the question appearing to the tap)
 and `points`. An unanswered question in an active run has null
 `chosenIndex`/`correct`/`ms`/`points`. The drawer sorts this client-side by
-best run, best points or recent, and filters by game, date range and whether
+best single-run score, best points or recent, and filters by game, date range and whether
 the run contains mistakes.
 
 ### League
@@ -652,7 +653,8 @@ requests / 15 min per account.
 | `POST` | `/api/register` | Validate + upsert `{rollNo, displayName?}`; 400 on bad format, 404 + `suggestions` on a roll missing from college records, 403 when the roll's verified owner has turned on the registration lock |
 
 `runs` is the caller's recent finished daily runs, newest first, ten at most:
-`{ id, dayKey, score, points, correct, total, streak, finishedAt }`. Only
+`{ id, dayKey, score, points, correct, total, streak, finishedAt }`, where
+`streak` is the longest run of consecutive correct answers. Only
 completed daily runs appear; a duel is a match, not a run, and an active
 attempt has no final figure. The profile prints this as "Your runs"; the query
 is best effort, so a database without the league tables still answers the

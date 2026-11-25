@@ -100,7 +100,7 @@ export const questionCard = ({
   return { text: lines.join("\n"), markup };
 };
 
-/** The finished Five, with the day rank, streak and section place. */
+/** The finished Five, with the day rank, correct-answer streak and section place. */
 export const fiveResultCard = ({
   attempt,
   rank,
@@ -125,7 +125,7 @@ export const fiveResultCard = ({
       )}</b> run score`,
       `<b>${formatNumber(
         attempt.points,
-      )}</b> season points · +${formatNumber(bonus)} streak`,
+      )}</b> season points · +${formatNumber(bonus)} streak bonus`,
     );
   } else {
     lines.push(
@@ -136,7 +136,8 @@ export const fiveResultCard = ({
   }
 
   const today = total <= 1 ? "First today" : `#${rank} of ${total} today`;
-  const streak = attempt.streak > 1 ? ` · ${attempt.streak}-day streak` : "";
+  const streak =
+    attempt.streak > 1 ? ` · ${attempt.streak} correct in a row` : "";
   lines.push(`${today}${streak}`);
 
   if (section) {
@@ -163,11 +164,16 @@ export const fiveResultCard = ({
     rows.push(
       ["Run score", `<b>${formatNumber(attempt.score)}</b>`],
       ["Season points", `<b>${formatNumber(attempt.points)}</b>`],
-      ["Streak bonus", `+${formatNumber(bonus)} · ${attempt.streak} days`],
+      [
+        "Streak bonus",
+        `+${formatNumber(bonus)} · ${attempt.streak} correct in a row`,
+      ],
     );
   } else {
     rows.push(["Points", `<b>${formatNumber(attempt.points)}</b>`]);
-    if (attempt.streak > 1) rows.push(["Streak", `${attempt.streak} days`]);
+    if (attempt.streak > 1) {
+      rows.push(["Best streak", `${attempt.streak} correct in a row`]);
+    }
   }
   rows.push(["Today", total <= 1 ? "First" : `<b>#${rank}</b> of ${total}`]);
   if (section) {

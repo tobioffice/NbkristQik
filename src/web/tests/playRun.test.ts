@@ -124,7 +124,7 @@ describe("PlayRunView", () => {
     expect(html).toContain("Season points");
     expect(html).toContain("1,254");
     expect(html).toContain("#12 of 84");
-    expect(html).toContain("3 days");
+    expect(html).toContain("3 correct in a row");
     expect(html).toContain("4 CSE A · #2 of 9");
     expect(html).toContain("See the board");
     expect(html).toContain("Home");
@@ -145,7 +145,7 @@ describe("PlayRunView", () => {
     });
 
     expect(html).toContain("First");
-    expect(html).not.toContain("1 days");
+    expect(html).not.toContain("1 correct in a row");
     expect(html).toContain("No section on record.");
   });
 

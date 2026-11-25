@@ -2016,7 +2016,9 @@ export const panelJs = `(function () {
       var progress = attempt.status === "done"
         ? attempt.correctCount + "/" + attempt.questionCount + " correct"
         : attempt.answered + " of " + attempt.questionCount + " answered";
-      var meta = '<span class="badge">' + game + "</span>" + progress +
+      var streak =
+        attempt.streak > 1 ? " \u00b7 " + attempt.streak + " in a row" : "";
+      var meta = '<span class="badge">' + game + "</span>" + progress + streak +
         " \u00b7 " + fmt(attempt.points) + " pts" +
         (attempt.durationMs != null ? " \u00b7 " + quizDuration(attempt.durationMs) : "") +
         (attempt.status === "done" ? "" : " \u00b7 In progress");
@@ -2048,13 +2050,14 @@ export const panelJs = `(function () {
     host.innerHTML =
       '<div class="dstats">' +
       '<div class="stat"><div class="n">' + fmt(summary.attempts) + '</div><div class="l">attempts</div></div>' +
-      '<div class="stat"><div class="n">' + fmt(summary.bestScore) + '</div><div class="l">best run</div></div>' +
+      '<div class="stat"><div class="n">' + fmt(summary.bestScore) + '</div><div class="l">best score</div></div>' +
       '<div class="stat"><div class="n">' + fmt(summary.bestPoints) + '</div><div class="l">best points</div></div>' +
       '<div class="stat"><div class="n">' + fmt(summary.accuracy) + '%</div><div class="l">accuracy</div></div>' +
       "</div>" +
+      '<div class="qnote" style="margin:2px 0 10px">Score is the raw 10-question total; points add the bonus for the longest run of correct answers, so they can be higher.</div>' +
       '<div class="qcontrols">' +
       quizSeg("qsort", "Sort attempts", [
-        { value: "score", label: "Best run" },
+        { value: "score", label: "Best score" },
         { value: "points", label: "Best points" },
         { value: "recent", label: "Recent" },
       ], "score") +

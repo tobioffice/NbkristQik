@@ -7,12 +7,10 @@ import {
   getAttempt,
   getAttemptForRound,
   getFiveRank,
-  getGamePlayer,
   getOrCreateDailyRound,
   getQuestionsByIds,
   getSectionWeek,
   getSeenQuestionIds,
-  setPlayerStreak,
 } from "../db/game.model.js";
 import { logger } from "../config/logger.js";
 import { trackActivity } from "../services/tracker.js";
@@ -20,7 +18,11 @@ import { fiveResultCard } from "./cards.js";
 import { seasonKey } from "./config.js";
 import { sendOrEdit, showQuestion } from "./play.js";
 import { loadPlayer, sendRegistrationPrompt } from "./player.js";
-import { fivePoints, nextStreak, QUESTIONS_PER_RUN } from "./scoring.js";
+import {
+  fivePoints,
+  longestCorrectStreak,
+  QUESTIONS_PER_RUN,
+} from "./scoring.js";
 import { pickFreshQuestionIds } from "./selection.js";
 import { istStamp } from "./time.js";
 import type { GameAttempt } from "./types.js";
@@ -166,21 +168,15 @@ export interface FiveFinish {
 /**
  * Close a finished run, without sending anything.
  *
- * The streak belongs to the attempt's own day, not to the clock at the moment
- * the last answer lands: a run that starts before midnight and ends after it
- * must still count for the day it began.
+ * The streak is the longest run of correct answers in this attempt, read from
+ * the saved answers. It decides the seasonal bonus on top of the run score.
  */
 export const finishFiveRun = async (
   attempt: GameAttempt,
 ): Promise<FiveFinish> => {
   if (attempt.status !== "active") return { attempt, finished: false };
 
-  const player = await getGamePlayer(attempt.userId);
-  const streak = nextStreak(
-    player?.lastFive ?? null,
-    attempt.dayKey,
-    player?.streak ?? 0,
-  );
+  const streak = longestCorrectStreak(attempt.answers);
   const points = fivePoints(attempt.score, streak);
   const finishedAt = new Date().toISOString();
 
@@ -192,15 +188,6 @@ export const finishFiveRun = async (
     questionCount: attempt.questionIds.length,
     finishedAt,
   });
-
-  if (finished) {
-    await setPlayerStreak({
-      userId: attempt.userId,
-      streak,
-      bestStreak: Math.max(player?.bestStreak ?? 0, streak),
-      lastFive: attempt.dayKey,
-    });
-  }
 
   const fresh = await getAttempt(attempt.id);
   if (!fresh) {

@@ -301,7 +301,7 @@ single question, one pick, then the next question.
   white, wrapping. Disabled at 55% while an answer is on the way. Options are
   never colour-coded before the answer; the server holds the correct one.
 - **Result:** page title "Run done" with "8 of 10 correct."; a profile-style
-  group of rows (Run score, Season points, Today, Streak, Section) with tabular
+  group of rows (Run score, Season points, Today, Best streak, Section) with tabular
   values, the no-section and already-played hints under it, then the filled
   "See the board" action and a surface "Home" beside it.
 - **States:** no roll gets "Save your roll to play" with a filled "Open

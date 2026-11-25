@@ -174,8 +174,11 @@ exhausted bank falls back to the questions seen longest ago (the bot logs a
 warning when that happens).
 
 League rules: one run attempt per account per IST day; each question closes
-after 10 seconds and a late tap scores nothing; a player's run never repeats a
-question they have already seen while the bank can afford it; duels last 48
+after 10 seconds and a late tap scores nothing; a correct answer pays 100 plus
+up to 50 for speed, and the longest run of consecutive correct answers in a run
+adds up to a 1.5× bonus on its season points (six or more in a row); a player's
+run never repeats a question they have already seen while the bank can afford
+it; duels last 48
 hours and replay the challenger's paper in a different order; only the best ten
 verified players per section count on the weekly board; channel names are a
 verified student's roll (masked when the owner hid the leaderboard) or an

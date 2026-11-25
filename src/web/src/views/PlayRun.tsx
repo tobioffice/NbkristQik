@@ -197,7 +197,10 @@ export const PlayRunView = ({
                 }
               />
               {result.streak > 1 ? (
-                <ResultRow label="Streak" value={`${result.streak} days`} />
+                <ResultRow
+                  label="Best streak"
+                  value={`${result.streak} correct in a row`}
+                />
               ) : null}
               {result.section ? (
                 <ResultRow

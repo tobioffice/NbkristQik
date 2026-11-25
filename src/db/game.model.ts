@@ -1,7 +1,11 @@
 import { turso } from "./db.js";
 import { logger } from "../config/logger.js";
 import { STARTER_QUESTIONS } from "../games/questions.js";
-import { DAILY_POOL_SIZE, QUESTIONS_PER_RUN } from "../games/scoring.js";
+import {
+  DAILY_POOL_SIZE,
+  longestCorrectStreak,
+  QUESTIONS_PER_RUN,
+} from "../games/scoring.js";
 import type {
   AttemptAnswer,
   BoardPlayer,
@@ -1012,7 +1016,7 @@ export const getRecentRunsForUser = async (
       points: num(row.points),
       correct: answers.filter((answer) => answer.correct).length,
       total: jsonArray<number>(row.question_ids, []).length,
-      streak: num(row.streak),
+      streak: longestCorrectStreak(answers),
       finishedAt: nullableText(row.finished_at),
     };
   });

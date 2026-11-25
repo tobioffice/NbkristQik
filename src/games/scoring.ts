@@ -1,5 +1,4 @@
-import type { SectionRef } from "./types.js";
-import { previousDateKey } from "./time.js";
+import type { AttemptAnswer, SectionRef } from "./types.js";
 import { BRANCHES } from "../constants/index.js";
 
 /**
@@ -27,24 +26,38 @@ export const answerPoints = (correct: boolean, elapsedMs: number): number => {
   return CORRECT_POINTS + bonus;
 };
 
-/** 1.0 on day one, +10% per extra streak day, capped at 1.5x. */
+/**
+ * The longest run of consecutive correct answers in one attempt.
+ *
+ * This is the streak the game pays for: six or more right in a row reach the
+ * maximum bonus. A wrong or timed-out answer ends the current run.
+ */
+export const longestCorrectStreak = (
+  answers: readonly AttemptAnswer[],
+): number => {
+  let best = 0;
+  let current = 0;
+  for (const answer of answers) {
+    if (!answer.correct) {
+      current = 0;
+      continue;
+    }
+    current += 1;
+    if (current > best) best = current;
+  }
+  return best;
+};
+
+/** 1.0 with no run, +10% per extra correct answer in a row, capped at 1.5x. */
 export const streakMultiplier = (streak: number): number =>
   1 + Math.min(Math.max(streak - 1, 0), 5) * 0.1;
 
-/** The season points a finished Five run is worth. */
+/**
+ * The season points a finished Five run is worth: its score times the bonus
+ * for the longest run of correct answers in that attempt.
+ */
 export const fivePoints = (baseScore: number, streak: number): number =>
   Math.round(baseScore * streakMultiplier(streak));
-
-/** The next streak value for a run finished on `today`. */
-export const nextStreak = (
-  lastFive: string | null,
-  today: string,
-  current: number,
-): number => {
-  if (lastFive === today) return Math.max(current, 1);
-  if (lastFive === previousDateKey(today)) return Math.max(current, 0) + 1;
-  return 1;
-};
 
 export type DuelWinner = "challenger" | "opponent" | "draw";
 

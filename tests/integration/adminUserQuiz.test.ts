@@ -74,7 +74,7 @@ beforeAll(async () => {
                section_key, section_label, question_ids, answers, idx, score,
                points, streak, duel_id, status, started_at, shown_at, finished_at)
             VALUES (?, ?, '2026-11-25', '2026-W48', 'S1', ?, '26KB105555',
-                    '2|CSE|I', '2 CSE I', ?, ?, ?, ?, ?, 1, NULL, ?, ?, ?, ?)`,
+                    '2|CSE|I', '2 CSE I', ?, ?, ?, ?, ?, 7, NULL, ?, ?, ?, ?)`,
       args: [
         attempt.game,
         attempt.roundKey,
@@ -166,6 +166,8 @@ describe("GET admin /api/users/:id/quiz", () => {
       questionCount: 2,
       answered: 1,
       correctCount: 1,
+      // computed from the answers, not the stored 7
+      streak: 1,
       durationMs: null,
       finishedAt: null,
     });
@@ -196,6 +198,7 @@ describe("GET admin /api/users/:id/quiz", () => {
       questionCount: 2,
       answered: 2,
       correctCount: 1,
+      streak: 1,
       durationMs: 600_000,
     });
     expect(done.questions[0]).toMatchObject({

@@ -6,6 +6,7 @@ import {
   getQuestionsByIds,
   listAttemptsForUser,
 } from "../../db/game.model.js";
+import { longestCorrectStreak } from "../../games/scoring.js";
 import { logger } from "../../config/logger.js";
 import { cached } from "./cache.js";
 import type { RequireAdmin } from "./auth.js";
@@ -205,7 +206,7 @@ const buildQuizPayload = async (userId: number) => {
       season: attempt.season,
       score: attempt.score,
       points: attempt.points,
-      streak: attempt.streak,
+      streak: longestCorrectStreak(attempt.answers),
       questionCount: attempt.questionIds.length,
       answered,
       correctCount,
