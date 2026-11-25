@@ -44,7 +44,7 @@ interface PublicPlayer {
   /** Verified: the roll. Otherwise: chosen name, Telegram name, or handle. */
   name: string;
   points: number;
-  /** Finished runs this week, including duels. */
+  /** Finished daily runs this week; a duel is a match, not a run. */
   plays: number;
 }
 
@@ -98,7 +98,7 @@ gamesRouter.get("/games/board", async (req: Request, res: Response) => {
     });
 
     // Anonymous callers share one payload, so it may sit in a cache briefly;
-    // the boards only move when a run or a duel finishes.
+    // the boards only move when a daily run finishes.
     res.set("Cache-Control", "public, max-age=30");
     res.json({
       success: true,

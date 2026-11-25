@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   getChannelBoard: vi.fn(),
   saveChannelBoard: vi.fn(async (_state: Record<string, unknown>) => undefined),
   clearChannelBoard: vi.fn(async (_slot: string) => undefined),
+  getDayPlayers: vi.fn(),
   getWeekPlayers: vi.fn(),
   getWeekSections: vi.fn(),
 }));
@@ -42,6 +43,7 @@ vi.mock("../../src/db/game.model.js", () => ({
   getChannelBoard: mocks.getChannelBoard,
   saveChannelBoard: mocks.saveChannelBoard,
   clearChannelBoard: mocks.clearChannelBoard,
+  getDayPlayers: mocks.getDayPlayers,
   getWeekPlayers: mocks.getWeekPlayers,
   getWeekSections: mocks.getWeekSections,
 }));
@@ -58,10 +60,11 @@ const {
   repostLiveBoard,
   syncLiveBoard,
 } = await import("../../src/games/channel.js");
-const { weekLabel } = await import("../../src/games/cards.js");
+const { dayLabel, weekLabel } = await import("../../src/games/cards.js");
 const { istStamp } = await import("../../src/games/time.js");
 
 const label = weekLabel(istStamp().monday);
+const today = dayLabel(istStamp().date);
 
 const gamepostCommand = mocks.command.mock.calls.find(
   ([name]) => name === "gamepost",
@@ -69,6 +72,16 @@ const gamepostCommand = mocks.command.mock.calls.find(
 
 const board = {
   label,
+  dayLabel: today,
+  dayPlayers: [
+    {
+      userId: 3,
+      rollNo: "23KB1A0701",
+      displayName: "Ravi",
+      points: 420,
+      plays: 1,
+    },
+  ],
   players: [
     {
       userId: 1,
@@ -97,6 +110,8 @@ beforeEach(() => {
   mocks.clearChannelBoard.mockClear();
   mocks.getChannelBoard.mockReset();
   mocks.getChannelBoard.mockResolvedValue(null);
+  mocks.getDayPlayers.mockReset();
+  mocks.getDayPlayers.mockResolvedValue(board.dayPlayers);
   mocks.getWeekPlayers.mockReset();
   mocks.getWeekPlayers.mockResolvedValue(board.players);
   mocks.getWeekSections.mockReset();
@@ -113,8 +128,12 @@ describe("syncLiveBoard", () => {
       rich_message: { html: string };
     };
     expect(sent.chat_id).toBe("@test_channel");
-    expect(sent.rich_message.html).toContain("<b>Students</b>");
+    expect(sent.rich_message.html).toContain("League board");
+    expect(sent.rich_message.html).toContain(`<b>Today · ${today}</b>`);
+    expect(sent.rich_message.html).toContain("<b>This week</b>");
     expect(sent.rich_message.html).toContain("<b>Section Wars</b>");
+    expect(sent.rich_message.html).toContain("Ravi");
+    expect(sent.rich_message.html).toContain("420");
     expect(sent.rich_message.html).toContain("2,100");
     expect(sent.rich_message.html).toContain("4 runs");
     expect(sent.rich_message.html).toContain("4,820");
@@ -139,6 +158,27 @@ describe("syncLiveBoard", () => {
     expect(mocks.sendRichMessage).not.toHaveBeenCalled();
     expect(mocks.editMessageText).not.toHaveBeenCalled();
     expect(mocks.saveChannelBoard).not.toHaveBeenCalled();
+  });
+
+  it("edits the board when the IST day rolls over", async () => {
+    // The stored snapshot still carries yesterday's day label: the daily
+    // table must reset even if no weekly number moved.
+    mocks.getDayPlayers.mockResolvedValue([]);
+    const yesterday = { ...board, dayLabel: "1 Jan", dayPlayers: [] };
+    mocks.getChannelBoard.mockResolvedValue({
+      ...stored,
+      snapshot: liveBoardSnapshot(yesterday),
+    });
+
+    expect(await syncLiveBoard()).toBe("edited");
+
+    const edit = mocks.editMessageText.mock.calls[0][0] as {
+      rich_message: { html: string };
+    };
+    expect(edit.rich_message.html).toContain(`<b>Today · ${today}</b>`);
+    expect(edit.rich_message.html).toContain(
+      "No one has played today yet. Be the first.",
+    );
   });
 
   it("edits the same message when the numbers moved", async () => {

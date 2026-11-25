@@ -24,7 +24,7 @@ interface LeaguePlayer {
   username: string | null;
   sectionLabel: string | null;
   points: number;
-  /** Finished runs this week, including duels. */
+  /** Finished daily runs this week; a duel is a match, not a run. */
   plays: number;
   verified: boolean;
   hidden: boolean;
@@ -58,7 +58,8 @@ const queryLeague = async (dayKey: string) => {
                      SUM(s.points) AS points,
                      (SELECT COUNT(*) FROM game_attempts a
                        WHERE a.user_id = s.user_id AND a.season = ?
-                         AND a.week_key = ? AND a.status = 'done') AS plays,
+                         AND a.week_key = ? AND a.status = 'done'
+                         AND a.game = 'five') AS plays,
                      MAX(CASE WHEN c.roll_no IS NULL THEN 0 ELSE 1 END) AS verified,
                      MAX(CASE WHEN c.roll_no IS NULL THEN 0
                               ELSE COALESCE(c.hide_leaderboard, 0) END) AS hidden,
@@ -68,7 +69,7 @@ const queryLeague = async (dayKey: string) => {
               LEFT JOIN game_players p ON p.user_id = s.user_id
               LEFT JOIN botusers u ON u.user_id = s.user_id
               LEFT JOIN roll_claims c ON UPPER(c.roll_no) = UPPER(s.roll_no)
-              WHERE s.season = ? AND s.week_key = ?
+              WHERE s.season = ? AND s.week_key = ? AND s.source <> 'duel'
               GROUP BY s.user_id
               ORDER BY points DESC, s.user_id ASC
               LIMIT ?`,
@@ -77,20 +78,20 @@ const queryLeague = async (dayKey: string) => {
       getWeekSections(season, stamp.week, 100),
       turso.execute({
         sql: `SELECT COUNT(DISTINCT user_id) AS n FROM game_scores
-              WHERE season = ? AND week_key = ?`,
+              WHERE season = ? AND week_key = ? AND source <> 'duel'`,
         args: [season, stamp.week],
       }),
       turso.execute({
         sql: `SELECT COUNT(DISTINCT s.user_id) AS n
               FROM game_scores s
               JOIN roll_claims c ON UPPER(c.roll_no) = UPPER(s.roll_no)
-              WHERE s.season = ? AND s.week_key = ?`,
+              WHERE s.season = ? AND s.week_key = ? AND s.source <> 'duel'`,
         args: [season, stamp.week],
       }),
       turso.execute({
         sql: `SELECT COUNT(*) AS runs, COUNT(DISTINCT user_id) AS users
               FROM game_attempts
-              WHERE day_key = ? AND status = 'done'`,
+              WHERE day_key = ? AND status = 'done' AND game = 'five'`,
         args: [dayKey],
       }),
     ]);

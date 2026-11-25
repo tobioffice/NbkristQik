@@ -7,11 +7,13 @@ import { commandArgs } from "../bot/commands/args.js";
 import {
   clearChannelBoard,
   getChannelBoard,
+  getDayPlayers,
   getWeekPlayers,
   getWeekSections,
   saveChannelBoard,
 } from "../db/game.model.js";
 import {
+  dayLabel,
   LIVE_BOARD_ROWS,
   liveBoardCard,
   weekLabel,
@@ -26,37 +28,49 @@ import type { BoardPlayer, BoardSection } from "./types.js";
 /**
  * The channel's single live board.
  *
- * One message, edited in place: this week's student and section tables. The
- * minute tick recomputes the rows and edits only when the data fingerprint
- * changed, so a quiet week leaves the channel quiet. The message id and the
- * last fingerprint live in `game_channel_board`, so a restart edits the same
- * message instead of posting a second one.
+ * One message, edited in place: today's student board and the week's student
+ * and section tables. The minute tick recomputes the rows and edits only when
+ * the data fingerprint changed, so a quiet day leaves the channel quiet. The
+ * message id and the last fingerprint live in `game_channel_board`, so a
+ * restart edits the same message instead of posting a second one.
  */
 
 const BOARD_SLOT = "live";
-/** Bumped when the card's markup changes, so a deploy refreshes the message. */
-const BOARD_FORMAT = 5;
+/** Bumped when the card's markup or its rules change, so a deploy refreshes
+ * the message (6: duels no longer count as runs or add points; 7: the card
+ * carries today's board too). */
+const BOARD_FORMAT = 7;
 
 export interface LiveBoard {
+  /** The week's label, e.g. "Week of 17 Nov". */
   label: string;
+  /** Today's date label, e.g. "25 Nov"; changes at IST midnight. */
+  dayLabel: string;
+  /** Today's top daily runs. */
+  dayPlayers: BoardPlayer[];
+  /** This week's top players. */
   players: BoardPlayer[];
   sections: BoardSection[];
 }
 
-/** This week's rows, already ordered by the database. */
+/** Today's and this week's rows, already ordered by the database. */
 export const readLiveBoard = async (): Promise<LiveBoard> => {
   const stamp = istStamp();
   const season = seasonKey();
-  const [players, sections] = await Promise.all([
+  const [dayPlayers, players, sections] = await Promise.all([
+    getDayPlayers(stamp.date, LIVE_BOARD_ROWS),
     getWeekPlayers(season, stamp.week, LIVE_BOARD_ROWS),
     getWeekSections(season, stamp.week, LIVE_BOARD_ROWS),
   ]);
 
   // Verified owners are named by their roll; everyone else by their chosen
-  // name or Telegram profile, so the card needs those identities.
+  // name or Telegram profile, so both player tables need those identities.
+  const resolved = await withBoardIdentities([...dayPlayers, ...players]);
   return {
     label: weekLabel(stamp.monday),
-    players: await withBoardIdentities(players),
+    dayLabel: dayLabel(stamp.date),
+    dayPlayers: resolved.slice(0, dayPlayers.length),
+    players: resolved.slice(dayPlayers.length),
     sections,
   };
 };
@@ -69,6 +83,11 @@ export const liveBoardSnapshot = (board: LiveBoard): string =>
   JSON.stringify({
     version: BOARD_FORMAT,
     label: board.label,
+    dayLabel: board.dayLabel,
+    dayPlayers: board.dayPlayers.map((player) => [
+      boardName(player),
+      player.points,
+    ]),
     players: board.players.map((player) => [
       boardName(player),
       player.points,

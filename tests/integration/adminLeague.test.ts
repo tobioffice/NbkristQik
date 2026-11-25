@@ -97,14 +97,21 @@ beforeAll(async () => {
       args: [userId, rollNo, displayName, sectionKey, sectionLabel],
     });
 
-  const run = (userId: number, rollNo: string) =>
+  const run = (userId: number, rollNo: string, game = "five") =>
     client.execute({
       sql: `INSERT INTO game_attempts
               (game, round_key, day_key, week_key, season, user_id, roll_no,
                question_ids, idx, score, points, streak, status, started_at, finished_at)
-            VALUES ('five', ?, ?, ?, 'S1', ?, ?, '[]', 10, 400, 400, 0,
+            VALUES (?, ?, ?, ?, 'S1', ?, ?, '[]', 10, 400, 400, 0,
                     'done', datetime('now'), datetime('now'))`,
-      args: [`five-${stamp.date}`, stamp.date, stamp.week, userId, rollNo],
+      args: [
+        game,
+        `${game}-${stamp.date}-${userId}`,
+        stamp.date,
+        stamp.week,
+        userId,
+        rollNo,
+      ],
     });
 
   // 1: verified and hidden, in 3 CSE F. 2: unverified scorer, same section.
@@ -128,6 +135,17 @@ beforeAll(async () => {
   });
   await run(1, "24KB1A05X0");
   await run(2, "26KB104120");
+  // A duel attempt is a match, not a run: it must not raise a play count.
+  await run(1, "24KB1A05X0", "duel");
+  // A legacy duel award must not put a player on the board or move a section.
+  await client.execute({
+    sql: `INSERT INTO game_scores
+            (season, week_key, day_key, user_id, roll_no, section_key,
+             section_label, source, ref, points)
+          VALUES ('S1', ?, ?, 4, '23KB1A05D4', '3|CSE|F', '3 CSE F', 'duel',
+                  'd4', 500)`,
+    args: [stamp.week, stamp.date],
+  });
 
   const login = await request(app)
     .post(`${BASE}/login`)

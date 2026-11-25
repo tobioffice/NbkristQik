@@ -98,22 +98,10 @@ describe("scoring", () => {
     expect(nextStreak("2026-11-15", "2026-11-15", 3)).toBe(3);
   });
 
-  it("splits duel points by the result", () => {
-    expect(duelOutcome(700, 600)).toEqual({
-      winner: "challenger",
-      challengerPoints: 200,
-      opponentPoints: 75,
-    });
-    expect(duelOutcome(600, 700)).toEqual({
-      winner: "opponent",
-      challengerPoints: 75,
-      opponentPoints: 200,
-    });
-    expect(duelOutcome(650, 650)).toEqual({
-      winner: "draw",
-      challengerPoints: 125,
-      opponentPoints: 125,
-    });
+  it("names the duel winner without paying a run's points", () => {
+    expect(duelOutcome(700, 600)).toEqual({ winner: "challenger" });
+    expect(duelOutcome(600, 700)).toEqual({ winner: "opponent" });
+    expect(duelOutcome(650, 650)).toEqual({ winner: "draw" });
   });
 
   it("builds a section from the portal's packed year", () => {
@@ -378,9 +366,19 @@ describe("the cards", () => {
     expect(card.rich).toContain('<td align="right">5 runs</td>');
   });
 
-  it("renders the live board as two tables, students then sections", () => {
+  it("renders today, the week's students and the sections", () => {
     const card = liveBoardCard({
       label: "Week of 10 Nov",
+      dayLabel: "10 Nov",
+      dayPlayers: [
+        {
+          userId: 9,
+          rollNo: "23KB1A0999",
+          displayName: "Ravi",
+          points: 512,
+          plays: 1,
+        },
+      ],
       players: [
         {
           userId: 1,
@@ -403,19 +401,24 @@ describe("the cards", () => {
       updatedAt: "4:12 pm",
     });
 
-    expect(card.rich).toContain("<b>Weekly board · Week of 10 Nov</b>");
-    expect(card.rich).toContain("<b>Students</b>");
+    expect(card.rich).toContain("<b>League board · Week of 10 Nov</b>");
+    expect(card.rich).toContain("<b>Today · 10 Nov</b>");
+    expect(card.rich).toContain("<b>This week</b>");
     expect(card.rich).toContain("<b>Section Wars</b>");
     expect(card.rich).toContain('<th align="left">Player</th>');
     expect(card.rich).toContain('<th align="right">Runs</th>');
     expect(card.rich).toContain('<th align="left">Section</th>');
+    expect(card.rich).toContain("Ravi");
+    expect(card.rich).toContain("<b>512</b>");
     expect(card.rich).toContain("&lt;Asha&gt;");
     expect(card.rich).toContain("23KB1A0•••");
     expect(card.rich).toContain("<b>2,100</b>");
     expect(card.rich).toContain("4 runs");
     expect(card.rich).toContain("<b>4,820</b>");
     expect(card.rich).toContain("Updated 4:12 pm IST");
-    expect(card.text).toContain("<b>Students</b>");
+    expect(card.text).toContain("<b>Today · 10 Nov</b>");
+    expect(card.text).toContain("1. Ravi — <b>512</b>");
+    expect(card.text).toContain("<b>This week</b>");
     expect(card.text).toContain("<b>Section Wars</b>");
     expect(card.text).toContain("23KB1A0•••");
     expect(card.text).toContain("<b>2,100</b> · 4 runs");
@@ -424,6 +427,8 @@ describe("the cards", () => {
   it("names verified rows by roll and unverified rows by identity", () => {
     const card = liveBoardCard({
       label: "Week of 10 Nov",
+      dayLabel: "10 Nov",
+      dayPlayers: [],
       players: [
         {
           userId: 1,
@@ -465,6 +470,14 @@ describe("the cards", () => {
   it("shows only the top three rows of each table", () => {
     const card = liveBoardCard({
       label: "Week of 10 Nov",
+      dayLabel: "10 Nov",
+      dayPlayers: [1, 2, 3, 4, 5].map((index) => ({
+        userId: 100 + index,
+        rollNo: `23KB1A09${index}0`,
+        displayName: `Today ${index}`,
+        points: 900 - index * 100,
+        plays: 1,
+      })),
       players: [1, 2, 3, 4, 5].map((index) => ({
         userId: index,
         rollNo: `23KB1A05${index}0`,
@@ -481,10 +494,14 @@ describe("the cards", () => {
       updatedAt: "4:12 pm",
     });
 
+    expect(card.rich).toContain("Today 3");
+    expect(card.rich).not.toContain("Today 4");
     expect(card.rich).toContain("Player 3");
     expect(card.rich).not.toContain("Player 4");
     expect(card.rich).toContain("Section 3");
     expect(card.rich).not.toContain("Section 4");
+    expect(card.text).toContain("Today 3");
+    expect(card.text).not.toContain("Today 4");
     expect(card.text).toContain("Player 3");
     expect(card.text).not.toContain("Player 4");
   });
@@ -492,23 +509,27 @@ describe("the cards", () => {
   it("writes the empty live board as one line", () => {
     const card = liveBoardCard({
       label: "Week of 10 Nov",
+      dayLabel: "10 Nov",
+      dayPlayers: [],
       players: [],
       sections: [],
       updatedAt: "4:12 pm",
     });
 
     expect(card.rich).toContain(
-      "No one has played this week yet. Be the first.",
+      "No one has played yet today or this week. Be the first.",
     );
     expect(card.rich).not.toContain("<table");
     expect(card.text).toContain(
-      "No one has played this week yet. Be the first.",
+      "No one has played yet today or this week. Be the first.",
     );
   });
 
   it("keeps the live board on URL buttons only", () => {
     const card = liveBoardCard({
       label: "Week of 10 Nov",
+      dayLabel: "10 Nov",
+      dayPlayers: [],
       players: [],
       sections: [],
       updatedAt: "4:12 pm",
@@ -532,6 +553,8 @@ describe("the cards", () => {
   it("says when one side of the board has no rows yet", () => {
     const card = liveBoardCard({
       label: "Week of 10 Nov",
+      dayLabel: "10 Nov",
+      dayPlayers: [],
       players: [
         {
           userId: 1,
@@ -545,8 +568,10 @@ describe("the cards", () => {
       updatedAt: "4:12 pm",
     });
 
-    expect(card.rich).toContain("<b>Students</b>");
+    expect(card.rich).toContain("<b>This week</b>");
+    expect(card.rich).toContain("No one has played today yet. Be the first.");
     expect(card.rich).toContain("No section has scored this week yet.");
+    expect(card.text).toContain("No one has played today yet. Be the first.");
     expect(card.text).toContain("No section has scored this week yet.");
   });
 });

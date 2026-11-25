@@ -27,12 +27,13 @@ reports `journal_mode = memory` instead of `wal`, which is expected.
 
 ## Schema versioning
 
-The schema version lives in `PRAGMA user_version` and is currently **11**
+The schema version lives in `PRAGMA user_version` and is currently **12**
 (`SCHEMA_VERSION` in `src/db/init.ts`). Version 5 added `roll_claims` and
 `email_verifications` for college-email verification; version 6 split the
 single hide switch into three independent options; version 9 added
 `report_attachments`; version 10 added the question-paper collection; version
-11 added the chat regulation tables and the seeded blocked-word list.
+11 added the chat regulation tables and the seeded blocked-word list; version
+12 added the `game_scores` day index the channel's daily board reads.
 
 - `0` means a fresh or pre-versioning database. Every table is created first,
   then the version is stamped, so a crash mid-init leaves version 0 and the

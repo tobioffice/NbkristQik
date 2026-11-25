@@ -57,10 +57,12 @@ import { logger } from "../config/logger.js";
  * report_attachments, the screenshots filed with a report message. Version 10
  * adds the question-paper collection: one paper row plus one row per page.
  * Version 11 adds chat regulation: the settings, the blocked-word list, the
- * muted/banned users, the message-id trail and the action log. Every table is
- * CREATE IF NOT EXISTS, so an older database only needs the stamp.
+ * muted/banned users, the message-id trail and the action log. Version 12 adds
+ * the day index on game_scores that the channel's live daily board reads.
+ * Every table is CREATE IF NOT EXISTS, so an older database only needs the
+ * stamp.
  */
-export const SCHEMA_VERSION = 11;
+export const SCHEMA_VERSION = 12;
 
 /** Reads the database's user_version, treating a missing row as 0. */
 const readSchemaVersion = async (): Promise<number> => {

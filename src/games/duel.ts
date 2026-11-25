@@ -1,6 +1,5 @@
 import { bot } from "../bot/bot.js";
 import {
-  addScore,
   claimDuelOpponent,
   createAttempt,
   createDuel,
@@ -258,10 +257,12 @@ export const startDuel = async ({
 };
 
 /**
- * Close the opponent's run and pay both sides once.
+ * Close the opponent's run and settle the duel once.
  *
- * The conditional duel update is the lock: two quick finishes cannot both
- * write a winner, and the unique score key makes a retry harmless.
+ * A duel is a match, not a run: the opponent's attempt is closed for the
+ * duel's bookkeeping but it awards no season points and never joins the
+ * weekly boards. The conditional duel update is the lock, so two quick
+ * finishes cannot both write a winner.
  */
 export const finishDuelAttempt = async ({
   attempt,
@@ -295,10 +296,10 @@ export const finishDuelAttempt = async ({
     return;
   }
 
-  // The last answer ended the run whichever way the duel is going. Close the
-  // attempt before the duel row: a run left "active" here never counts as a
-  // play, and a later tap on the challenge would resume into a question that
-  // no longer exists.
+  // The last answer ended the match whichever way the duel is going. Close the
+  // attempt before the duel row: an attempt left "active" here could never be
+  // resumed cleanly, and a later tap on the challenge would show a question
+  // that no longer exists.
   await finishAttempt({
     id: attempt.id,
     score: attempt.score,
@@ -345,34 +346,6 @@ export const finishDuelAttempt = async ({
   }
 
   if (closed) {
-    const stamp = istStamp();
-    const season = seasonKey();
-
-    await addScore({
-      season,
-      weekKey: stamp.week,
-      dayKey: stamp.date,
-      userId: fresh.challengerId,
-      rollNo: fresh.challengerRoll,
-      sectionKey: fresh.challengerSectionKey,
-      sectionLabel: fresh.challengerSectionLabel,
-      source: "duel",
-      ref: `d${fresh.id}`,
-      points: outcome.challengerPoints,
-    });
-    await addScore({
-      season,
-      weekKey: stamp.week,
-      dayKey: stamp.date,
-      userId: attempt.userId,
-      rollNo: attempt.rollNo,
-      sectionKey: attempt.sectionKey,
-      sectionLabel: attempt.sectionLabel,
-      source: "duel",
-      ref: `d${fresh.id}`,
-      points: outcome.opponentPoints,
-    });
-
     trackActivity({
       userId: attempt.userId,
       chatType: "private",

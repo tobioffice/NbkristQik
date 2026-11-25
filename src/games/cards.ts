@@ -468,27 +468,51 @@ export const privateLinkCard = ({
 export const LIVE_BOARD_ROWS = 3;
 
 /**
- * The channel's one live board: this week's students and sections.
+ * The channel's one live board: today's students, then the week's students and
+ * sections.
  *
- * Rendered as a rich message with two real tables, with the text card as the
- * fallback for a client that refuses rich. `updatedAt` is the IST clock of
- * the last data change, not the clock now, so an unchanged board can sit
- * untouched and still say when it last moved.
+ * The daily table is the newcomer's way in: a player who starts today can be
+ * on it before the weekly board moves. Rendered as a rich message with real
+ * tables, with the text card as the fallback for a client that refuses rich.
+ * `updatedAt` is the IST clock of the last data change, not the clock now, so
+ * an unchanged board can sit untouched and still say when it last moved.
  */
 export const liveBoardCard = ({
   label,
+  dayLabel,
   players,
+  dayPlayers,
   sections,
   updatedAt,
 }: {
   label: string;
+  dayLabel: string;
   players: BoardPlayer[];
+  dayPlayers: BoardPlayer[];
   sections: BoardSection[];
   updatedAt: string;
 }): Card => {
+  const dayRows = dayPlayers.slice(0, LIVE_BOARD_ROWS);
   const playerRows = players.slice(0, LIVE_BOARD_ROWS);
   const sectionRows = sections.slice(0, LIVE_BOARD_ROWS);
-  const empty = playerRows.length === 0 && sectionRows.length === 0;
+  const empty =
+    dayRows.length === 0 && playerRows.length === 0 && sectionRows.length === 0;
+
+  const richDay =
+    dayRows.length > 0
+      ? richTable(
+          [
+            { label: "#", align: "left" },
+            { label: "Player", align: "left" },
+            { label: "Points", align: "right" },
+          ],
+          dayRows.map((player, index) => [
+            String(index + 1),
+            nameCell(player),
+            `<b>${formatNumber(player.points)}</b>`,
+          ]),
+        )
+      : "<p>No one has played today yet. Be the first.</p>";
 
   const richPlayers =
     playerRows.length > 0
@@ -524,15 +548,18 @@ export const liveBoardCard = ({
         )
       : "<p>No section has scored this week yet.</p>";
 
-  const title = `<p><b>Weekly board · ${escapeHtml(label)}</b></p>`;
+  const title = `<p><b>League board · ${escapeHtml(label)}</b></p>`;
 
   const rich = empty
-    ? [title, "<p>No one has played this week yet. Be the first.</p>"].join(
-        "\n",
-      )
+    ? [
+        title,
+        "<p>No one has played yet today or this week. Be the first.</p>",
+      ].join("\n")
     : [
         title,
-        "<p><b>Students</b></p>",
+        `<p><b>Today · ${escapeHtml(dayLabel)}</b></p>`,
+        richDay,
+        "<p><b>This week</b></p>",
         richPlayers,
         "<p><b>Section Wars</b></p>",
         richSections,
@@ -541,14 +568,25 @@ export const liveBoardCard = ({
 
   const text = empty
     ? [
-        `<b>Weekly board · ${escapeHtml(label)}</b>`,
+        `<b>League board · ${escapeHtml(label)}</b>`,
         "",
-        "No one has played this week yet. Be the first.",
+        "No one has played yet today or this week. Be the first.",
       ].join("\n")
     : [
-        `<b>Weekly board · ${escapeHtml(label)}</b>`,
+        `<b>League board · ${escapeHtml(label)}</b>`,
         "",
-        "<b>Students</b>",
+        `<b>Today · ${escapeHtml(dayLabel)}</b>`,
+        ...dayRows.map(
+          (player, index) =>
+            `${index + 1}. ${nameCell(player)} — <b>${formatNumber(
+              player.points,
+            )}</b>`,
+        ),
+        ...(dayRows.length === 0
+          ? ["No one has played today yet. Be the first."]
+          : []),
+        "",
+        "<b>This week</b>",
         ...playerRows.map(
           (player, index) =>
             `${index + 1}. ${nameCell(player)} — <b>${formatNumber(

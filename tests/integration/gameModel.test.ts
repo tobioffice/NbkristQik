@@ -10,6 +10,7 @@ import {
   finishDuel,
   getAttempt,
   getChannelBoard,
+  getDayPlayers,
   getDuel,
   getDuelByAttempt,
   getDuelRecord,
@@ -396,7 +397,7 @@ describe("weekly boards", () => {
       });
     }
 
-    // every finished run in the week counts as a play, including duels;
+    // every finished daily run in the week counts as a play; a duel attempt,
     // an active run and a run from another week do not.
     const attempt = async (userId: number, roundKey: string, done = true) =>
       turso.execute({
@@ -453,12 +454,12 @@ describe("weekly boards", () => {
 
     const players = await getWeekPlayers(SEASON, WEEK, 5);
     expect(players.map((entry) => entry.points)).toEqual([300, 200, 100]);
-    expect(players.map((entry) => entry.plays)).toEqual([2, 2, 0]);
+    expect(players.map((entry) => entry.plays)).toEqual([2, 1, 0]);
 
     // the board pages without a cap; the count is the full week's field
     const secondPage = await getWeekPlayers(SEASON, WEEK, 2, 1);
     expect(secondPage.map((entry) => entry.points)).toEqual([200, 100]);
-    expect(secondPage.map((entry) => entry.plays)).toEqual([2, 0]);
+    expect(secondPage.map((entry) => entry.plays)).toEqual([1, 0]);
     expect(await getWeekPlayerCount(SEASON, WEEK)).toBe(3);
 
     expect(await getPlayerWeek(SEASON, WEEK, 301)).toEqual({
@@ -471,6 +472,65 @@ describe("weekly boards", () => {
       rank: null,
       players: 3,
     });
+  });
+
+  it("builds today's board from today's daily runs only", async () => {
+    for (const userId of [900, 901, 902, 903]) await player(userId);
+    const score = (
+      userId: number,
+      dayKey: string,
+      points: number,
+      source = "five",
+    ) =>
+      addScore({
+        season: SEASON,
+        weekKey: WEEK,
+        dayKey,
+        userId,
+        rollNo: `23KB1A${String(userId).padStart(4, "0")}`,
+        sectionKey: "4|CSE|C",
+        sectionLabel: "4 CSE C",
+        source: source as "five" | "duel",
+        ref: `a${userId}-${dayKey}`,
+        points,
+      });
+
+    await score(900, DAY, 300);
+    await score(901, DAY, 500);
+    // yesterday's run is not today's board
+    await score(902, "2026-11-14", 900);
+    // a legacy duel award is not a run
+    await score(903, DAY, 900, "duel");
+
+    // one finished daily run and one duel for 900: only the run is a play
+    const attempt = async (game: string, roundKey: string) =>
+      turso.execute({
+        sql: `INSERT INTO game_attempts
+                (game, round_key, day_key, week_key, season, user_id, roll_no,
+                 question_ids, status, started_at, finished_at)
+              VALUES (?, ?, ?, ?, ?, 900, '23KB1A0900', '[]', 'done', ?, ?)`,
+        args: [
+          game,
+          roundKey,
+          DAY,
+          WEEK,
+          SEASON,
+          "2026-11-15T03:00:00.000Z",
+          "2026-11-15T03:05:00.000Z",
+        ],
+      });
+    await attempt("five", "five-900");
+    await attempt("duel", "duel-900");
+
+    const board = await getDayPlayers(DAY, 10);
+    expect(
+      board.map((entry) => [entry.userId, entry.points, entry.plays]),
+    ).toEqual([
+      [901, 500, 0],
+      [900, 300, 1],
+    ]);
+
+    expect(await getDayPlayers(DAY, 1)).toHaveLength(1);
   });
 
   it("gives the leading section's top players their week's run count", async () => {
@@ -518,8 +578,57 @@ describe("weekly boards", () => {
     expect(
       top.map((entry) => [entry.rollNo, entry.points, entry.plays]),
     ).toEqual([
-      ["23KB1A0700", 240, 2],
+      // the duel attempt is a match, so only the daily run is a play
+      ["23KB1A0700", 240, 1],
       ["23KB1A0701", 120, 1],
+    ]);
+  });
+
+  it("keeps legacy duel awards off the weekly boards", async () => {
+    // The old duel path paid both sides through `game_scores`; those rows must
+    // not put a duel-only player on the board or move a section's points.
+    await player(800);
+    await addScore({
+      season: SEASON,
+      weekKey: WEEK,
+      dayKey: DAY,
+      userId: 800,
+      rollNo: "23KB1A0800",
+      sectionKey: "4|CSE|C",
+      sectionLabel: "4 CSE C",
+      source: "duel",
+      ref: "d800",
+      points: 200,
+    });
+
+    await player(801);
+    await addScore({
+      season: SEASON,
+      weekKey: WEEK,
+      dayKey: DAY,
+      userId: 801,
+      rollNo: "23KB1A0801",
+      sectionKey: "4|CSE|C",
+      sectionLabel: "4 CSE C",
+      source: "five",
+      ref: "a801",
+      points: 300,
+    });
+    await claim("23KB1A0801");
+
+    const players = await getWeekPlayers(SEASON, WEEK, 5);
+    expect(
+      players.map((entry) => [entry.userId, entry.points, entry.plays]),
+    ).toEqual([[801, 300, 0]]);
+
+    expect(await getWeekPlayerCount(SEASON, WEEK)).toBe(1);
+    expect(await getPlayerWeek(SEASON, WEEK, 800)).toEqual({
+      points: 0,
+      rank: null,
+      players: 1,
+    });
+    expect(await getWeekSections(SEASON, WEEK, 5)).toEqual([
+      { key: "4|CSE|C", label: "4 CSE C", points: 300, players: 1 },
     ]);
   });
 });

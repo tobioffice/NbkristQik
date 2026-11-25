@@ -146,10 +146,12 @@ GAME_CHANNEL_POSTS=on
 ```
 
 With `GAME_CHANNEL_POSTS=on` and the bot an admin in `PROD_CHANNEL`, the bot
-keeps exactly one message in the channel: the live board. It holds the
-week's top three students and top three sections; the minute tick edits it in
+keeps exactly one message in the channel: the live board. It holds today's top
+three students first — a newcomer can reach it on their first run — then the
+week's top three students and top three sections. The minute tick edits it in
 place only when a number or a name actually changed, and an unchanged board
-is never touched. The message id and the last data fingerprint are stored in
+is never touched. At IST midnight the day label changes, so the today table
+resets to the new day's play. The message id and the last data fingerprint are stored in
 `game_channel_board`, so a restart edits the same message instead of posting
 a second one. If the stored message was deleted by hand, the next change
 posts a fresh one. The board's buttons open today's run, the full league board page
@@ -180,9 +182,14 @@ verified student's roll (masked when the owner hid the leaderboard) or an
 unverified player's chosen display name, Telegram name or @username, never the
 portal name.
 
+A duel is a match, not a run: it settles a win, loss or draw for `/duel`'s
+record and awards no season points, so it never appears on a player or section
+board. The weekly boards read daily-run awards only, and a legacy duel award
+from an older week is ignored.
+
 Every player table — the channel board, the `/league` card, the Mini App board
-and the admin League tab — prints the player's runs this week next to their
-points. A run is one finished attempt: today's quiz or a duel.
+and the admin League tab — prints the player's daily runs this week next to
+their points. A run is one finished daily quiz attempt; a duel is not one.
 
 ## Production deployment
 

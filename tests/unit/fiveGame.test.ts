@@ -9,9 +9,12 @@ import {
   getDuelByAttempt,
   getGamePlayer,
   getOrCreateDailyRound,
+  getPlayerWeek,
+  getWeekPlayers,
   initGameTables,
   upsertGamePlayer,
 } from "../../src/db/game.model.js";
+import { seasonKey } from "../../src/games/config.js";
 import { DAILY_POOL_SIZE, QUESTIONS_PER_RUN } from "../../src/games/scoring.js";
 import { istStamp } from "../../src/games/time.js";
 
@@ -401,6 +404,24 @@ describe("the Five flow", () => {
     await sendDuelRecord({ chatId: 900, userId: 42 });
     expect(lastSent()?.text).toContain("1 win");
     expect(lastSent()?.text).toContain("0 losses");
+
+    // A duel is a match, not a run: no duel award is written, the opponent
+    // never joins the weekly board, and the challenger's play count is the
+    // daily run alone.
+    const duelAwards = await turso.execute(
+      "SELECT COUNT(*) AS n FROM game_scores WHERE source = 'duel'",
+    );
+    expect(Number(duelAwards.rows[0]?.n)).toBe(0);
+
+    const stamp = istStamp();
+    const board = await getWeekPlayers(seasonKey(), stamp.week, 10);
+    expect(board.find((entry) => entry.userId === 42)?.plays).toBe(1);
+    expect(board.find((entry) => entry.userId === 43)).toBeUndefined();
+    expect(await getPlayerWeek(seasonKey(), stamp.week, 43)).toEqual({
+      points: 0,
+      rank: null,
+      players: 1,
+    });
   });
 });
 

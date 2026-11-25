@@ -22,7 +22,10 @@ import type {
  * check so two fast taps cannot record the same question twice.
  *
  * Season points live in `game_scores`, one row per award, with a unique key on
- * (source, ref, user_id). A retry or a double callback cannot pay twice.
+ * (source, ref, user_id). A retry or a double callback cannot pay twice. Only
+ * a finished daily run awards points; a duel is a match, not a run, so duel
+ * awards are excluded from every leaderboard read (and none are written any
+ * more, but old weeks may still hold some).
  */
 
 const num = (value: unknown): number => Number(value ?? 0);
@@ -171,6 +174,11 @@ export const initGameTables = async (): Promise<void> => {
   await turso.execute(`
     CREATE INDEX IF NOT EXISTS idx_game_scores_user
       ON game_scores (season, week_key, user_id);
+  `);
+  // The channel's live board reads the current IST day every minute.
+  await turso.execute(`
+    CREATE INDEX IF NOT EXISTS idx_game_scores_day
+      ON game_scores (day_key, source);
   `);
   await turso.execute(`
     CREATE TABLE IF NOT EXISTS game_channel_board (
@@ -922,10 +930,11 @@ export const getWeekPlayers = async (
                  SUM(s.points) AS points,
                  (SELECT COUNT(*) FROM game_attempts a
                    WHERE a.user_id = s.user_id AND a.season = ?
-                     AND a.week_key = ? AND a.status = 'done') AS plays
+                     AND a.week_key = ? AND a.status = 'done'
+                     AND a.game = 'five') AS plays
           FROM game_scores s
           LEFT JOIN game_players p ON p.user_id = s.user_id
-          WHERE s.season = ? AND s.week_key = ?
+          WHERE s.season = ? AND s.week_key = ? AND s.source <> 'duel'
           GROUP BY s.user_id
           ORDER BY points DESC, s.user_id ASC
           LIMIT ? OFFSET ?`,
@@ -947,6 +956,35 @@ export const getWeekPlayers = async (
   }));
 };
 
+/** One day's player board: today's daily runs, best first. */
+export const getDayPlayers = async (
+  dayKey: string,
+  limit = 3,
+): Promise<BoardPlayer[]> => {
+  const result = await turso.execute({
+    sql: `SELECT s.user_id, MAX(s.roll_no) AS roll_no,
+                 MAX(p.display_name) AS display_name,
+                 SUM(s.points) AS points,
+                 (SELECT COUNT(*) FROM game_attempts a
+                   WHERE a.user_id = s.user_id AND a.day_key = ?
+                     AND a.status = 'done' AND a.game = 'five') AS plays
+          FROM game_scores s
+          LEFT JOIN game_players p ON p.user_id = s.user_id
+          WHERE s.day_key = ? AND s.source <> 'duel'
+          GROUP BY s.user_id
+          ORDER BY points DESC, s.user_id ASC
+          LIMIT ?`,
+    args: [dayKey, dayKey, Math.max(1, Math.min(100, limit))],
+  });
+  return result.rows.map((row) => ({
+    userId: num(row.user_id),
+    rollNo: text(row.roll_no),
+    displayName: nullableText(row.display_name),
+    points: num(row.points),
+    plays: num(row.plays),
+  }));
+};
+
 /** How many players have scored this week, for a page's "of N" line. */
 export const getWeekPlayerCount = async (
   season: string,
@@ -955,7 +993,7 @@ export const getWeekPlayerCount = async (
   const result = await turso.execute({
     sql: `SELECT COUNT(*) AS n FROM (
             SELECT user_id FROM game_scores
-            WHERE season = ? AND week_key = ?
+            WHERE season = ? AND week_key = ? AND source <> 'duel'
             GROUP BY user_id
           )`,
     args: [season, weekKey],
@@ -981,6 +1019,7 @@ export const getWeekSections = async (
             SELECT s.section_key, s.user_id, SUM(s.points) AS pts
             FROM game_scores s
             WHERE s.season = ? AND s.week_key = ? AND s.section_key IS NOT NULL
+              AND s.source <> 'duel'
               AND EXISTS (
                 SELECT 1 FROM roll_claims c
                 WHERE UPPER(c.roll_no) = UPPER(s.roll_no)
@@ -995,7 +1034,7 @@ export const getWeekSections = async (
           ), labels AS (
             SELECT section_key, MAX(section_label) AS section_label
             FROM game_scores
-            WHERE season = ? AND week_key = ?
+            WHERE season = ? AND week_key = ? AND source <> 'duel'
             GROUP BY section_key
           )
           SELECT r.section_key AS section_key,
@@ -1035,10 +1074,12 @@ export const getSectionTopPlayers = async (
                  SUM(s.points) AS points,
                  (SELECT COUNT(*) FROM game_attempts a
                    WHERE a.user_id = s.user_id AND a.season = ?
-                     AND a.week_key = ? AND a.status = 'done') AS plays
+                     AND a.week_key = ? AND a.status = 'done'
+                     AND a.game = 'five') AS plays
           FROM game_scores s
           LEFT JOIN game_players p ON p.user_id = s.user_id
           WHERE s.season = ? AND s.week_key = ? AND s.section_key = ?
+            AND s.source <> 'duel'
             AND EXISTS (
               SELECT 1 FROM roll_claims c
               WHERE UPPER(c.roll_no) = UPPER(s.roll_no)
@@ -1073,7 +1114,8 @@ export const getPlayerWeek = async (
   const pointsResult = await turso.execute({
     sql: `SELECT COALESCE(SUM(points), 0) AS points
           FROM game_scores
-          WHERE season = ? AND week_key = ? AND user_id = ?`,
+          WHERE season = ? AND week_key = ? AND user_id = ?
+            AND source <> 'duel'`,
     args: [season, weekKey, userId],
   });
   const points = num(pointsResult.rows[0]?.points);
@@ -1081,7 +1123,7 @@ export const getPlayerWeek = async (
   const totals = await turso.execute({
     sql: `SELECT COUNT(*) AS n FROM (
             SELECT user_id FROM game_scores
-            WHERE season = ? AND week_key = ?
+            WHERE season = ? AND week_key = ? AND source <> 'duel'
             GROUP BY user_id
           )`,
     args: [season, weekKey],
@@ -1094,7 +1136,7 @@ export const getPlayerWeek = async (
     sql: `SELECT COUNT(*) AS n FROM (
             SELECT user_id, SUM(points) AS pts
             FROM game_scores
-            WHERE season = ? AND week_key = ?
+            WHERE season = ? AND week_key = ? AND source <> 'duel'
             GROUP BY user_id
           ) WHERE pts > ?`,
     args: [season, weekKey, points],

@@ -94,7 +94,7 @@ describe("initDatabase", () => {
 
   it("stamps user_version on a previously unversioned database", async () => {
     expect(await pragmaNumber("PRAGMA user_version")).toBe(SCHEMA_VERSION);
-    expect(SCHEMA_VERSION).toBe(11);
+    expect(SCHEMA_VERSION).toBe(12);
 
     // the screenshots table ships with v9, even on an older database
     const attachments = await turso.execute(

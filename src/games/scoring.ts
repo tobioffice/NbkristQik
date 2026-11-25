@@ -19,10 +19,6 @@ export const QUESTIONS_PER_RUN = 10;
 /** A larger daily pool, so two players rarely draw the same ten. */
 export const DAILY_POOL_SIZE = QUESTIONS_PER_RUN * 3;
 
-export const DUEL_WIN_POINTS = 200;
-export const DUEL_LOSS_POINTS = 75;
-export const DUEL_DRAW_POINTS = 125;
-
 /** Points for one answer. */
 export const answerPoints = (correct: boolean, elapsedMs: number): number => {
   if (!correct || elapsedMs > QUESTION_LIMIT_MS) return 0;
@@ -52,30 +48,20 @@ export const nextStreak = (
 
 export type DuelWinner = "challenger" | "opponent" | "draw";
 
-export interface DuelOutcome {
-  winner: DuelWinner;
-  challengerPoints: number;
-  opponentPoints: number;
-}
-
-/** Who won a duel and what each side earns. */
+/**
+ * Who won a duel.
+ *
+ * A duel settles a match between two players; it is not a run. It therefore
+ * earns no season points and never appears on the weekly boards. The card
+ * shows the scores and the verdict, and `/duel` keeps the win/loss record.
+ */
 export const duelOutcome = (
   challengerScore: number,
   opponentScore: number,
-): DuelOutcome => {
-  if (challengerScore === opponentScore) {
-    return {
-      winner: "draw",
-      challengerPoints: DUEL_DRAW_POINTS,
-      opponentPoints: DUEL_DRAW_POINTS,
-    };
-  }
-
-  const challengerWon = challengerScore > opponentScore;
+): { winner: DuelWinner } => {
+  if (challengerScore === opponentScore) return { winner: "draw" };
   return {
-    winner: challengerWon ? "challenger" : "opponent",
-    challengerPoints: challengerWon ? DUEL_WIN_POINTS : DUEL_LOSS_POINTS,
-    opponentPoints: challengerWon ? DUEL_LOSS_POINTS : DUEL_WIN_POINTS,
+    winner: challengerScore > opponentScore ? "challenger" : "opponent",
   };
 };
 

@@ -82,7 +82,8 @@ export interface BoardPlayer {
   rollNo: string;
   displayName: string | null;
   points: number;
-  /** Finished runs this week, including duels; the board's "played" count. */
+  /** Finished daily runs this week; the board's "played" count. A duel is a
+   * match, not a run, so it adds nothing here. */
   plays: number;
   /** True when the owner hid the leaderboard row; only its roll is masked. */
   hidden?: boolean;

@@ -51,7 +51,7 @@ deployment that forgets to set it does not inherit the shortcut.
 |---|---|---|
 | `GET /api/leaderboard` | allowed; `name` is `null`, search matches rolls only | names; search matches rolls and names |
 | `GET /api/config` | allowed; both flags `false` | flags reflect the caller |
-| `GET /api/games/board` | allowed; a verified student's roll (masked when they hid the leaderboard), else chosen display name, Telegram name or @username. Each player row carries `points` and `plays` (finished runs this week, the daily quiz and duels). `page`/`limit` page the player board (default 50, cap 100) and the payload carries the full count and `hasMorePlayers` | same payload |
+| `GET /api/games/board` | allowed; a verified student's roll (masked when they hid the leaderboard), else chosen display name, Telegram name or @username. Each player row carries `points` and `plays` (finished daily runs this week; a duel is a match and adds neither a run nor any points). `page`/`limit` page the player board (default 50, cap 100) and the payload carries the full count and `hasMorePlayers` | same payload |
 | `GET /api/games/live` | allowed; `me` is `null` | `me` carries whether a roll is saved and today's run state (`open`, `playing`, `done`) |
 | `POST /api/games/five/start`, `POST /api/games/five/answer` | `401` | the daily run; `start` may create today's attempt and `answer` is checked against the question on screen |
 | `GET /api/me` | `401` | allowed |
