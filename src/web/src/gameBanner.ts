@@ -11,8 +11,8 @@ import type { GameLive } from "./api";
 
 /** The in-app play screen; it resumes an active run or shows the result. */
 export const PLAY_LINK = "#/play";
-/** The profile screen, where a finished run's history is listed. */
-export const PROFILE_LINK = "#/";
+/** The runs page, where a finished run opens question by question. */
+export const RUNS_LINK = "#/runs";
 
 const formatPoints = (value: number): string => value.toLocaleString("en-IN");
 
@@ -50,7 +50,7 @@ export const bannerContent = (live: GameLive | null): BannerContent => {
 
   if (run?.state === "done") {
     return {
-      href: PROFILE_LINK,
+      href: RUNS_LINK,
       action: "Your runs",
       line: `Run done: ${formatPoints(run.points ?? 0)} points.`,
     };

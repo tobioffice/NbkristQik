@@ -559,6 +559,47 @@ export const getGameLive = async (
   return readJson<GameLive>(res);
 };
 
+// ---------- the caller's run history ----------
+
+/** One question of a finished run, with the answer given. */
+export interface GameRunQuestion {
+  index: number;
+  prompt: string;
+  options: string[];
+  correctIndex: number | null;
+  chosenIndex: number | null;
+  correct: boolean | null;
+  /** Time from the question appearing to the tap, in milliseconds. */
+  ms: number | null;
+  points: number | null;
+}
+
+/** A finished daily run with every question, for the runs page. */
+export interface GameRunDetail extends GameRun {
+  durationMs: number | null;
+  questions: GameRunQuestion[];
+}
+
+export interface GameRunsResponse {
+  success: true;
+  runs: GameRunDetail[];
+}
+
+export const buildGameRunsUrl = (identity: ApiIdentity): string =>
+  withQuery("/api/games/runs", devIdentityParams(identity));
+
+/** The signed-in caller's finished runs, newest first, with their questions. */
+export const getGameRuns = async (
+  identity: ApiIdentity,
+  signal?: AbortSignal,
+): Promise<GameRunsResponse> => {
+  const res = await fetchWithTimeout(buildGameRunsUrl(identity), {
+    headers: authHeaders(identity.initData),
+    signal,
+  });
+  return readJson<GameRunsResponse>(res);
+};
+
 // ---------- the daily run ----------
 
 /** The current question as the play screen shows it. */

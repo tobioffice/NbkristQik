@@ -9,12 +9,11 @@ import { haptic } from "../telegram";
  * into today's run.
  *
  * The whole banner is one link. A run in play or not yet started opens the
- * play screen inside this app; a finished run leads to the profile's run
- * history (and scrolls to it when the profile is already on screen). The
- * banner paints before its answer lands, so the fallback copy is a real
- * invitation for every caller (the play screen resumes a run, shows a finished
- * one, or asks for a roll), and the height is reserved so the page does not
- * jump under the reader.
+ * play screen inside this app; a finished run opens the runs page, where every
+ * question and answer from the run is listed. The banner paints before its
+ * answer lands, so the fallback copy is a real invitation for every caller
+ * (the play screen resumes a run, shows a finished one, or asks for a roll),
+ * and the height is reserved so the page does not jump under the reader.
  */
 
 const FlagIcon = () => (
@@ -58,12 +57,6 @@ export const GameBannerView = ({ live }: { live: GameLive | null }) => {
 
   const onClick = () => {
     haptic.tap();
-    // The profile already carries the run list; a finished banner scrolls the
-    // reader down to it instead of leaving the link as a no-op on this page.
-    if (live?.me?.run?.state === "done" && typeof document !== "undefined") {
-      const runs = document.getElementById("runs");
-      if (runs) runs.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
   };
 
   return (

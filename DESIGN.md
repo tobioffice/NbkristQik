@@ -376,10 +376,26 @@ The saved profile is a read-only group, not a permanently open form:
   11/500 secondary "pts" unit. No avatar, no rank badge, no colour coding.
 - Newest first, ten at most. With none, one 12/16 secondary line ("No runs yet.")
   and the accent "Play today's run" link, never an empty group.
+- The count in the group head opens the runs page; each row deep-links to
+  `#/runs/<id>`, so the run the reader tapped is the one that starts open.
 - The home banner's finished state says "Run done: N points." and its trailing
-  action is "Your runs"; it opens the profile and scrolls to this group. The
-  action never says "Board" — the league board is one tap away in the result
-  screen and the channel.
+  action is "Your runs"; it opens the runs page (`#/runs`), never the league
+  board. The board is one tap away in the result screen and the channel.
+
+### Runs page
+
+- The hidden `#/runs` page, opened by the banner and by the profile's runs.
+  `#/runs/<id>` opens that run; plain `#/runs` opens the newest.
+  Page head "Your runs", one 13/18 note ("Every finished daily run, newest
+  first. Tap a run for its questions."), then one card per run with an 8px
+  gap.
+- Closed card: the IST day 15/600 over a 12/16 secondary line (correct count,
+  run score, best run of correct answers, duration), season points 15/600
+  tabular at the right with a small "pts" unit. The newest card starts open.
+- Open card: each question is a 14/19 prompt over a 12/16 line — Correct/Wrong
+  in green/red text, the option chosen (`chose B. …`), the time (or "timeout")
+  and the points paid. When wrong, a quiet second line prints the correct
+  option. Separators are 1px ground rules; no table, badges or colour fields.
 
 ### Issue reports
 

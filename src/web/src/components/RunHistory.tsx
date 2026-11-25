@@ -17,9 +17,9 @@ export const RunHistory = ({ runs }: { runs: GameRun[] }) => (
     <div className="run-head">
       <h3 className="run-title">Your runs</h3>
       {runs.length > 0 ? (
-        <span className="run-count">
+        <a className="run-count link-btn" href="#/runs">
           {runs.length} {runs.length === 1 ? "run" : "runs"}
-        </span>
+        </a>
       ) : null}
     </div>
 
@@ -34,7 +34,7 @@ export const RunHistory = ({ runs }: { runs: GameRun[] }) => (
     ) : (
       <div className="run-group">
         {runs.map((run) => (
-          <div className="run-row" key={run.id}>
+          <a className="run-row" href={`#/runs/${run.id}`} key={run.id}>
             <span className="run-row__body">
               <span className="run-row__title">{runDayLabel(run.dayKey)}</span>
               <span className="run-row__meta">
@@ -46,7 +46,7 @@ export const RunHistory = ({ runs }: { runs: GameRun[] }) => (
               {formatNumber(run.points)}
               <span className="run-row__unit"> pts</span>
             </span>
-          </div>
+          </a>
         ))}
       </div>
     )}

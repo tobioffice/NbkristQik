@@ -41,6 +41,7 @@ const Leaderboard = lazy(() => import("./Leaderboard"));
 const PapersPage = lazy(() => import("./views/Papers"));
 const GamesBoard = lazy(() => import("./views/GamesBoard"));
 const PlayRun = lazy(() => import("./views/PlayRun"));
+const Runs = lazy(() => import("./views/Runs"));
 const VerifyRoll = lazy(() => import("./views/VerifyRoll"));
 
 /**
@@ -139,6 +140,7 @@ const BAND_SUB: Record<Section, string> = {
   rank: "Leaderboard",
   games: "Section Wars",
   play: "Today's run",
+  runs: "Your runs",
   verify: "Verification",
   library: "Library",
   profile: "Student profile",
@@ -278,6 +280,9 @@ export default function AppShell() {
                   {route.section === "rank" && <Leaderboard showBand={false} />}
                   {route.section === "games" && <GamesBoard />}
                   {route.section === "play" && <PlayRun />}
+                  {route.section === "runs" && (
+                    <Runs selectedRun={route.run ?? null} />
+                  )}
                   {route.section === "verify" && <VerifyRoll />}
                   {route.section === "papers" && <PapersSection />}
                   {route.section === "library" && libraryAllowed && (

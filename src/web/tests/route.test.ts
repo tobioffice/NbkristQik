@@ -32,6 +32,14 @@ describe("the hash router", () => {
     expect(parseRouteHash("#/games").section).toBe("games");
     // the hidden daily run, opened by the home banner
     expect(parseRouteHash("#/play").section).toBe("play");
+    // the run history, opened by the home banner's finished state
+    expect(parseRouteHash("#/runs").section).toBe("runs");
+    expect(parseRouteHash("#/runs/204")).toEqual({
+      section: "runs",
+      issue: null,
+      mine: false,
+      run: "204",
+    });
     // the hidden verification page, opened by the channel's Verify button
     expect(parseRouteHash("#/verify").section).toBe("verify");
     expect(parseRouteHash("#/papers").section).toBe("papers");
@@ -74,6 +82,8 @@ describe("the hash router", () => {
       { section: "rank", issue: null, mine: false },
       { section: "games", issue: null, mine: false },
       { section: "play", issue: null, mine: false },
+      { section: "runs", issue: null, mine: false },
+      { section: "runs", issue: null, mine: false, run: "204" },
       { section: "verify", issue: null, mine: false },
       { section: "papers", issue: null, mine: false },
       { section: "library", issue: null, mine: false },

@@ -53,6 +53,7 @@ deployment that forgets to set it does not inherit the shortcut.
 | `GET /api/config` | allowed; both flags `false` | flags reflect the caller |
 | `GET /api/games/board` | allowed; a verified student's roll (masked when they hid the leaderboard), else chosen display name, Telegram name or @username. Each player row carries `points` and `plays` (finished daily runs this week; a duel is a match and adds neither a run nor any points). `page`/`limit` page the player board (default 50, cap 100) and the payload carries the full count and `hasMorePlayers` | same payload |
 | `GET /api/games/live` | allowed; `me` is `null` | `me` carries whether a roll is saved and today's run state (`open`, `playing`, `done`) |
+| `GET /api/games/runs` | `401` | the caller's finished daily runs, question by question |
 | `POST /api/games/five/start`, `POST /api/games/five/answer` | `401` | the daily run; `start` may create today's attempt and `answer` is checked against the question on screen |
 | `GET /api/me` | `401` | allowed |
 | `/api/profile`, `/api/register`, `/api/report`, `/api/thread/*`, `/api/rank/share`, `/api/rank/card`, `/api/rank/card/send`, `POST /api/papers` | `401` | allowed |
@@ -227,6 +228,48 @@ invalid one is `401`, like `/api/games/board`.
   the day's question round, so it stays cheap on every home visit.
 - Anonymous answers are `Cache-Control: public, max-age=30`; signed-in answers
   are `private, no-store`.
+
+### `GET /api/games/runs`
+
+The runs page's read: the signed-in caller's finished daily runs, newest
+first, twenty at most. A Telegram identity is required; an anonymous or
+invalid request is `401`. Only completed `five` runs appear — a duel is a
+match, not a run, and an active attempt has no final figures.
+
+```json
+{
+  "success": true,
+  "runs": [
+    {
+      "id": 204,
+      "dayKey": "2026-11-25",
+      "score": 1030,
+      "points": 1442,
+      "streak": 5,
+      "correct": 8,
+      "total": 10,
+      "finishedAt": "2026-11-25T10:10:00.000Z",
+      "durationMs": 47000,
+      "questions": [
+        {
+          "index": 1,
+          "prompt": "Which one is correct?",
+          "options": ["Right", "Wrong", "Also wrong", "Still wrong"],
+          "correctIndex": 0,
+          "chosenIndex": 0,
+          "correct": true,
+          "ms": 4200,
+          "points": 150
+        }
+      ]
+    }
+  ]
+}
+```
+
+`streak` is the longest run of consecutive correct answers in that run;
+`ms` is the time from the question appearing to the tap. The correct option is
+safe to include because the run is over. Answers are `private, no-store`.
 
 ### `POST /api/games/five/start`
 

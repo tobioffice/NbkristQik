@@ -30,6 +30,8 @@ describe("RunHistory", () => {
     expect(html).toContain("1,450");
     expect(html).toContain("pts");
     expect(html).toContain('id="runs"');
+    expect(html).toContain('href="#/runs/1"');
+    expect(html).toContain('href="#/runs"');
   });
 
   it("keeps the newest run first and pluralises the count", () => {
@@ -40,6 +42,8 @@ describe("RunHistory", () => {
 
     expect(html.indexOf("25 Nov")).toBeLessThan(html.indexOf("24 Nov"));
     expect(html).toContain("2 runs");
+    expect(html).toContain('href="#/runs/2"');
+    expect(html).toContain('href="#/runs/1"');
   });
 
   it("invites today's run when there are none", () => {

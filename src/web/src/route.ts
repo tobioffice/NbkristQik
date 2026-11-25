@@ -18,6 +18,7 @@ export type Section =
   | "rank"
   | "games"
   | "play"
+  | "runs"
   | "verify"
   | "papers"
   | "issues"
@@ -29,6 +30,8 @@ export interface Route {
   issue: string | null;
   /** True for #/issues: the reporter's own list. */
   mine: boolean;
+  /** The opened run, for #/runs/<id>. */
+  run?: string | null;
 }
 
 /** The first screen: the roll form, the one thing the bot cannot do faster. */
@@ -49,6 +52,7 @@ const SECTIONS: Section[] = [
   "rank",
   "games",
   "play",
+  "runs",
   "verify",
   "papers",
   "issues",
@@ -66,7 +70,14 @@ export const parseRoutePath = (path: string): Route => {
   const parts = path.split("/").filter(Boolean);
   const head = parts[0];
   if (!head || !isSection(head)) return HOME_ROUTE;
-  if (head !== "issues") return { section: head, issue: null, mine: false };
+  if (head !== "issues") {
+    return {
+      section: head,
+      issue: null,
+      mine: false,
+      ...(head === "runs" && parts[1] ? { run: decodePart(parts[1]) } : {}),
+    };
+  }
 
   const second = parts[1];
   // The section's home is the reports list; a new report has its own address.
@@ -76,6 +87,15 @@ export const parseRoutePath = (path: string): Route => {
     return { section: "issues", issue: null, mine: true };
   if (second === "new") return { section: "issues", issue: null, mine: false };
   return { section: "issues", issue: decodeIssue(second), mine: false };
+};
+
+/** A path segment that may carry an encoded id; a broken one is kept as typed. */
+const decodePart = (raw: string): string => {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
 };
 
 /** A Telegram-supplied issue id can be escaped; a broken one is kept as typed. */
@@ -98,6 +118,9 @@ export const parseRouteHash = (hash: string): Route =>
 /** The address that names a route. */
 export const hashFor = (route: Route): string => {
   if (route.section === "profile") return "#/";
+  if (route.section === "runs" && route.run) {
+    return `#/runs/${encodeURIComponent(route.run)}`;
+  }
   if (route.section !== "issues") return `#/${route.section}`;
   if (route.issue) return `#/issues/${encodeURIComponent(route.issue)}`;
   return route.mine ? "#/issues" : "#/issues/new";

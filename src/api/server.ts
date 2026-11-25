@@ -49,6 +49,7 @@ import { paperRouter } from "./papers.js";
 import { getRankCard } from "../services/rankCardStore.js";
 import { gamesRouter } from "./games.js";
 import { gameLiveRouter } from "./gameLive.js";
+import { gameRunsRouter } from "./gameRuns.js";
 import { gamesPlayRouter } from "./gamesPlay.js";
 import { rankRouter } from "./rank.js";
 import { verificationRouter } from "./verification.js";
@@ -366,6 +367,9 @@ app.use("/api", gamesRouter);
 // The home banner's view of the league: today's run for the signed-in caller.
 // Mounted beside the board so both answer under /api/games/*.
 app.use("/api", gameLiveRouter);
+
+// The signed-in caller's own run history, question by question.
+app.use("/api", gameRunsRouter);
 
 // The daily run itself, played inside the Mini App. The bot keeps its own
 // chat copy; both surfaces read and write the same attempt row.

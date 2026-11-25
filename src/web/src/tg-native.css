@@ -2647,6 +2647,11 @@ body {
   background: var(--tg-bg);
 }
 
+.sheet--tg a.run-row {
+  text-decoration: none;
+  color: inherit;
+}
+
 .sheet--tg .run-row {
   display: flex;
   align-items: center;
@@ -2691,6 +2696,137 @@ body {
   font-size: 11px;
   line-height: 16px;
   font-weight: 500;
+  color: var(--tg-secondary);
+}
+
+/* ---------- one run, question by question ---------- */
+
+.sheet--tg .runs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sheet--tg .run-card {
+  background: var(--tg-surface);
+  border-radius: var(--tg-radius);
+  overflow: hidden;
+}
+
+.sheet--tg .run-card__head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 32px 10px 14px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.sheet--tg .run-card__head::-webkit-details-marker {
+  display: none;
+}
+
+.sheet--tg .run-card__head::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  top: 24px;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--tg-secondary);
+  border-bottom: 1.5px solid var(--tg-secondary);
+  transform: rotate(45deg);
+}
+
+.sheet--tg .run-card[open] .run-card__head::after {
+  transform: rotate(-135deg);
+}
+
+.sheet--tg .run-card__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sheet--tg .run-card__day {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--tg-text);
+}
+
+.sheet--tg .run-card__meta {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--tg-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sheet--tg .run-card__points {
+  flex: none;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--tg-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.sheet--tg .run-card__unit {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--tg-secondary);
+}
+
+.sheet--tg .run-card__questions {
+  border-top: 1px solid var(--tg-bg);
+}
+
+.sheet--tg .answer-row {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--tg-bg);
+}
+
+.sheet--tg .answer-row:last-child {
+  border-bottom: 0;
+}
+
+.sheet--tg .answer-prompt {
+  margin: 0;
+  font-size: 14px;
+  line-height: 19px;
+  color: var(--tg-text);
+}
+
+.sheet--tg .answer-meta {
+  margin: 3px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--tg-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sheet--tg .answer-ok {
+  color: var(--tg-good);
+  font-weight: 600;
+}
+
+.sheet--tg .answer-bad {
+  color: var(--tg-danger);
+  font-weight: 600;
+}
+
+.sheet--tg .answer-quiet {
+  color: var(--tg-secondary);
+}
+
+.sheet--tg .answer-fix {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 16px;
   color: var(--tg-secondary);
 }
 
