@@ -204,6 +204,30 @@ ${panelCss}
       </table>
     </div>
     <div class="empty" id="league-players-empty" style="display:none">No one has played this week.</div>
+
+    <div class="section-head" style="margin:22px 0 10px">
+      <h2>Duels</h2>
+      <span class="hint" id="league-duel-hint">a match, not a run: no points or board places</span>
+    </div>
+    <div class="statline">
+      <div class="stat"><div class="n" id="league-duel-open">&ndash;</div><div class="l">open challenges</div></div>
+      <div class="stat"><div class="n" id="league-duel-finished">&ndash;</div><div class="l">finished this week</div></div>
+      <div class="stat"><div class="n" id="league-duel-today">&ndash;</div><div class="l">challenges today</div></div>
+      <div class="stat"><div class="n" id="league-duel-players">&ndash;</div><div class="l">duelists this week</div></div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Challenger</th><th>Opponent</th><th>Result</th>
+            <th class="num">Scores</th><th>Status</th><th>When</th>
+          </tr>
+        </thead>
+        <tbody id="league-duel-rows"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="league-duels-empty" style="display:none">No duels yet.</div>
+
     <div class="toolbar" style="margin-top:14px">
       <button class="btn-ghost" id="leaguerefresh">Refresh</button>
     </div>

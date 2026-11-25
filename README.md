@@ -116,9 +116,10 @@ public status page for service health.
 
 **For the maintainer**
 
-- **Admin panel** — overview, student search, live activity feed, report
-  threads, question-paper processing, chat regulation and 90-day health, behind
-  a secret path and a password.
+- **Admin panel** — overview, student search with a quiz-history drill-down
+  (every attempt and question, with timing, answers and sorting), live activity
+  feed, report threads, question-paper processing, chat regulation and 90-day
+  health, behind a secret path and a password.
 - **Chat regulation** — in the chit-chat group the bot removes explicit or
   18+ messages and mutes the sender. The blocked-word list, mute length and
   switches live in the panel's Chat view, and replying to a member's message

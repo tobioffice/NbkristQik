@@ -1,5 +1,11 @@
 import type { Express, Request, Response } from "express";
 import { turso } from "../../db/db.js";
+import {
+  countAttemptsForUser,
+  getDuelRecord,
+  getQuestionsByIds,
+  listAttemptsForUser,
+} from "../../db/game.model.js";
 import { logger } from "../../config/logger.js";
 import { cached } from "./cache.js";
 import type { RequireAdmin } from "./auth.js";
@@ -85,8 +91,18 @@ const queryUserDetail = async (userId: number, res: Response) => {
     return;
   }
 
+  // Supplementary: a fresh database (or a test fixture) without the league
+  // tables must still open a student's drawer.
+  let duel = { wins: 0, losses: 0, draws: 0 };
+  try {
+    duel = await getDuelRecord(userId);
+  } catch (e) {
+    logger.debug("[admin] duel record read skipped:", e);
+  }
+
   res.json({
     profile: mapUserRow(row),
+    duel,
     recent: recent.rows.map((r) => ({
       action: String(r.action),
       chatType: String(r.chat_type),
@@ -98,6 +114,145 @@ const queryUserDetail = async (userId: number, res: Response) => {
       count: Number(r.n),
     })),
   });
+};
+
+/** One answered question as the drawer's quiz section shows it. */
+interface QuizQuestionView {
+  index: number;
+  id: number;
+  prompt: string;
+  options: string[];
+  correctIndex: number | null;
+  chosenIndex: number | null;
+  correct: boolean | null;
+  /** Time from the question appearing to the tap, in milliseconds. */
+  ms: number | null;
+  points: number | null;
+}
+
+interface QuizAttemptView {
+  id: number;
+  game: "five" | "duel";
+  status: "active" | "done";
+  roundKey: string;
+  dayKey: string;
+  weekKey: string;
+  season: string;
+  score: number;
+  points: number;
+  streak: number;
+  questionCount: number;
+  answered: number;
+  correctCount: number;
+  durationMs: number | null;
+  startedAt: string;
+  finishedAt: string | null;
+  questions: QuizQuestionView[];
+}
+
+/** The newest attempts one drawer will show; the count says if more exist. */
+const QUIZ_ATTEMPT_LIMIT = 200;
+
+/**
+ * Every quiz attempt for one account, with each question, the option chosen,
+ * whether it was right, how long it took and what it was worth.
+ *
+ * Stored answers are indexed against the attempt's question ids, so a missing
+ * question row (retired bank entry) still shows the attempt with a placeholder
+ * rather than dropping the row. The summary is computed across every attempt,
+ * not just the newest page.
+ */
+const buildQuizPayload = async (userId: number) => {
+  const [attempts, attemptTotal] = await Promise.all([
+    listAttemptsForUser(userId, QUIZ_ATTEMPT_LIMIT),
+    countAttemptsForUser(userId),
+  ]);
+
+  const questionIds = [...new Set(attempts.flatMap((a) => a.questionIds))];
+  const questions = await getQuestionsByIds(questionIds);
+  const byId = new Map(questions.map((q) => [q.id, q]));
+
+  let bestScore = 0;
+  let bestPoints = 0;
+  let correctTotal = 0;
+  let answeredTotal = 0;
+  let msTotal = 0;
+
+  const rows: QuizAttemptView[] = attempts.map((attempt) => {
+    const answered = attempt.answers.length;
+    const correctCount = attempt.answers.filter((a) => a.correct).length;
+    correctTotal += correctCount;
+    answeredTotal += answered;
+    for (const answer of attempt.answers) msTotal += answer.ms;
+
+    if (attempt.status === "done") {
+      bestScore = Math.max(bestScore, attempt.score);
+      bestPoints = Math.max(bestPoints, attempt.points);
+    }
+
+    const durationMs =
+      attempt.finishedAt == null
+        ? null
+        : Date.parse(attempt.finishedAt) - Date.parse(attempt.startedAt);
+
+    return {
+      id: attempt.id,
+      game: attempt.game,
+      status: attempt.status,
+      roundKey: attempt.roundKey,
+      dayKey: attempt.dayKey,
+      weekKey: attempt.weekKey,
+      season: attempt.season,
+      score: attempt.score,
+      points: attempt.points,
+      streak: attempt.streak,
+      questionCount: attempt.questionIds.length,
+      answered,
+      correctCount,
+      durationMs:
+        durationMs != null && Number.isFinite(durationMs) && durationMs >= 0
+          ? durationMs
+          : null,
+      startedAt: attempt.startedAt,
+      finishedAt: attempt.finishedAt,
+      questions: attempt.questionIds.map((id, index) => {
+        const question = byId.get(id);
+        const answer = attempt.answers[index] ?? null;
+        return {
+          index: index + 1,
+          id,
+          prompt: question?.prompt ?? "This question is no longer in the bank.",
+          options: question?.options ?? [],
+          correctIndex: question ? question.correct : null,
+          chosenIndex: answer ? answer.option : null,
+          correct: answer ? answer.correct : null,
+          ms: answer ? answer.ms : null,
+          points: answer ? answer.points : null,
+        };
+      }),
+    };
+  });
+
+  return {
+    attemptTotal,
+    truncated: attemptTotal > rows.length,
+    summary: {
+      attempts: rows.length,
+      completed: rows.filter((a) => a.status === "done").length,
+      dailyRuns: rows.filter((a) => a.game === "five").length,
+      duels: rows.filter((a) => a.game === "duel").length,
+      bestScore,
+      bestPoints,
+      correct: correctTotal,
+      answered: answeredTotal,
+      accuracy:
+        answeredTotal > 0
+          ? Math.round((correctTotal / answeredTotal) * 1000) / 10
+          : 0,
+      avgMs: answeredTotal > 0 ? Math.round(msTotal / answeredTotal) : null,
+    },
+    attempts: rows,
+  };
 };
 
 /** Mounts GET {base}/api/users and GET {base}/api/users/:id. */
@@ -147,6 +302,27 @@ export const registerUsersRoutes = (
         await queryUserDetail(userId, res);
       } catch (e) {
         logger.error("[admin] user detail failed:", e);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
+    },
+  );
+
+  // ---- one student's quiz history: every attempt and every question ----
+  app.get(
+    `${base}/api/users/:id/quiz`,
+    requireAdmin,
+    async (req: Request, res: Response) => {
+      try {
+        const userId = Number(req.params.id);
+        if (!Number.isInteger(userId) || userId <= 0) {
+          res.status(400).json({ error: "Bad user id" });
+          return;
+        }
+        const data = await buildQuizPayload(userId);
+        res.set("Cache-Control", "no-store");
+        res.json(data);
+      } catch (e) {
+        logger.error("[admin] user quiz read failed:", e);
         res.status(500).json({ error: "Internal Server Error" });
       }
     },

@@ -12,6 +12,9 @@ import {
   getChannelBoard,
   getDayPlayers,
   getDuel,
+  getDuelBoardStats,
+  countAttemptsForUser,
+  listAttemptsForUser,
   getDuelByAttempt,
   getDuelRecord,
   getFiveRank,
@@ -19,6 +22,7 @@ import {
   getOrCreateDailyRound,
   getWeekPlayerCount,
   getPlayerWeek,
+  getRecentDuels,
   getSectionTopPlayers,
   getSectionWeek,
   getSeenQuestionIds,
@@ -152,6 +156,47 @@ describe("attempts", () => {
       (_, index) => index + 1,
     ),
     startedAt: "2026-11-15T03:00:00.000Z",
+  });
+
+  it("lists one player's attempts newest first and counts them", async () => {
+    const first = await createAttempt({
+      ...newAttempt(),
+      roundKey: `five-${DAY}-first`,
+      startedAt: "2026-11-15T03:00:00.000Z",
+    });
+    await finishAttempt({
+      id: first,
+      score: 500,
+      points: 500,
+      streak: 1,
+      questionCount: QUESTIONS_PER_RUN,
+      finishedAt: "2026-11-15T03:10:00.000Z",
+    });
+    const second = await createAttempt({
+      ...newAttempt(),
+      roundKey: `five-${DAY}-second`,
+      startedAt: "2026-11-16T03:00:00.000Z",
+    });
+    await finishAttempt({
+      id: second,
+      score: 700,
+      points: 700,
+      streak: 2,
+      questionCount: QUESTIONS_PER_RUN,
+      finishedAt: "2026-11-16T03:10:00.000Z",
+    });
+    const other = await createAttempt({
+      ...newAttempt(),
+      roundKey: `five-${DAY}-other`,
+      userId: 22,
+      rollNo: "23KB1A0022",
+      startedAt: "2026-11-15T04:00:00.000Z",
+    });
+
+    const mine = await listAttemptsForUser(21);
+    expect(mine.map((attempt) => attempt.id)).toEqual([second, first]);
+    expect(await countAttemptsForUser(21)).toBe(2);
+    expect((await listAttemptsForUser(22)).map((a) => a.id)).toEqual([other]);
   });
 
   it("creates once per round and resumes the same row", async () => {
@@ -746,6 +791,69 @@ describe("duels", () => {
     expect(duel?.status).toBe("done");
     expect(duel?.opponentScore).toBe(700);
     expect(duel?.winnerId).toBe(602);
+  });
+
+  it("summarises the duel queue for the admin view", async () => {
+    const now = Date.now();
+    const inAnHour = new Date(now + 60 * 60 * 1000).toISOString();
+
+    const openId = await createDuel({
+      ...newDuel(),
+      challengerId: 701,
+      challengerRoll: "23KB1A0701",
+      challengerAttemptId: 9101,
+      expiresAt: inAnHour,
+    });
+    // Still marked open in the table, but past its expiry: the queue counts
+    // it as gone, the same way the start path treats it.
+    const staleId = await createDuel({
+      ...newDuel(),
+      challengerId: 702,
+      challengerRoll: "23KB1A0702",
+      challengerAttemptId: 9102,
+      expiresAt: new Date(now - 60 * 60 * 1000).toISOString(),
+    });
+    const doneId = await createDuel({
+      ...newDuel(),
+      challengerId: 703,
+      challengerRoll: "23KB1A0703",
+      challengerAttemptId: 9103,
+      expiresAt: inAnHour,
+    });
+    await claimDuelOpponent({
+      duelId: doneId,
+      userId: 704,
+      rollNo: "23KB1A0704",
+      displayName: "Asha",
+    });
+    await finishDuel({
+      id: doneId,
+      opponentId: 704,
+      opponentRoll: "23KB1A0704",
+      opponentName: "Asha",
+      opponentScore: 500,
+      winnerId: 703,
+      finishedAt: new Date(now).toISOString(),
+    });
+
+    expect(await getDuelBoardStats(SEASON, WEEK, DAY)).toEqual({
+      open: 1,
+      finishedWeek: 1,
+      expiredWeek: 0,
+      today: 3,
+      players: 4,
+    });
+
+    const recent = await getRecentDuels(10);
+    expect(recent.map((duel) => duel.id)).toEqual([doneId, staleId, openId]);
+    expect(recent[0]).toMatchObject({
+      status: "done",
+      winnerId: 703,
+      opponentId: 704,
+      opponentName: "Asha",
+      opponentScore: 500,
+    });
+    expect(recent[2]).toMatchObject({ status: "open", opponentId: null });
   });
 
   it("counts wins, losses and draws from both sides", async () => {

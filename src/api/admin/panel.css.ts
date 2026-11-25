@@ -608,4 +608,60 @@ td .surfn { display: inline-block; min-width: 28px; text-align: right; }
 .chatstate.bad { color: var(--danger); }
 .btn-ghost:disabled { color: var(--text-3); cursor: default; }
 .btn-ghost:disabled:hover { background: var(--surface); }
+
+/* ---------- quiz history (student drawer) ---------- */
+.qcontrols { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 10px; }
+.qcontrols .seg { flex: none; }
+.qfilter {
+  font-size: 12px; line-height: 16px; font-weight: 600;
+  color: var(--text-2); background: var(--surface);
+  border-radius: 8px; padding: 8px 10px;
+}
+.qfilter:hover { background: var(--surface-hover); color: var(--text); }
+.qfilter[aria-pressed="true"] { background: var(--surface-active); color: var(--text); }
+.qcount {
+  font-size: 12px; line-height: 16px; color: var(--text-2);
+  margin-bottom: 8px; font-variant-numeric: tabular-nums;
+}
+.qnote {
+  font-size: 12px; line-height: 16px; color: var(--text-3);
+  margin-top: 8px;
+}
+.qlist {
+  display: flex; flex-direction: column; gap: 1px;
+  background: var(--ground); border-radius: 8px; overflow: hidden;
+}
+.qattempt { background: var(--surface); }
+.qattempt summary {
+  cursor: pointer; list-style: none;
+  padding: 10px 32px 10px 12px;
+  position: relative;
+}
+.qattempt summary::-webkit-details-marker { display: none; }
+.qattempt summary::after {
+  content: ""; position: absolute; right: 14px; top: 20px;
+  width: 7px; height: 7px;
+  border-right: 1.5px solid var(--text-2);
+  border-bottom: 1.5px solid var(--text-2);
+  transform: rotate(45deg);
+}
+.qattempt[open] summary::after { transform: rotate(-135deg); }
+.qattempt summary:hover { background: var(--surface-hover); }
+.qattempt[open] summary { background: var(--surface-hover); }
+.qhead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.qwhen { font-size: 12px; line-height: 16px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.qscore { font-size: 14px; line-height: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.qmeta {
+  margin-top: 3px; font-size: 12px; line-height: 16px;
+  color: var(--text-2); font-variant-numeric: tabular-nums;
+}
+.qmeta .badge { margin-right: 6px; }
+.qquestions { border-top: 1px solid var(--ground); }
+.qrow { padding: 9px 12px; border-bottom: 1px solid var(--ground); }
+.qrow:last-child { border-bottom: none; }
+.qprompt { font-size: 13px; line-height: 18px; color: var(--text); }
+.qanswer { font-size: 12px; line-height: 16px; color: var(--text-2); margin-top: 3px; }
+.qok { color: var(--good); font-weight: 600; }
+.qbad { color: var(--danger); font-weight: 600; }
+.qcorrect { font-size: 12px; line-height: 16px; color: var(--text-2); margin-top: 2px; }
 `;

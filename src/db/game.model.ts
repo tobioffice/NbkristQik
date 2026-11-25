@@ -956,6 +956,30 @@ export const getWeekPlayers = async (
   }));
 };
 
+/** Every stored quiz attempt for one account, newest first. */
+export const listAttemptsForUser = async (
+  userId: number,
+  limit = 200,
+): Promise<GameAttempt[]> => {
+  const result = await turso.execute({
+    sql: `SELECT ${ATTEMPT_COLUMNS} FROM game_attempts
+          WHERE user_id = ?
+          ORDER BY COALESCE(finished_at, started_at) DESC, id DESC
+          LIMIT ?`,
+    args: [userId, Math.max(1, Math.min(500, Math.trunc(limit)))],
+  });
+  return result.rows.map(attemptFromRow);
+};
+
+/** How many attempts the account has in the store, for the truncation note. */
+export const countAttemptsForUser = async (userId: number): Promise<number> => {
+  const result = await turso.execute({
+    sql: `SELECT COUNT(*) AS n FROM game_attempts WHERE user_id = ?`,
+    args: [userId],
+  });
+  return num(result.rows[0]?.n);
+};
+
 /** One day's player board: today's daily runs, best first. */
 export const getDayPlayers = async (
   dayKey: string,
@@ -1178,6 +1202,81 @@ export const getDuelRecord = async (
     losses: num(result.rows[0]?.losses),
     draws: num(result.rows[0]?.draws),
   };
+};
+
+/** The duel figures the admin panel's League view shows. */
+export interface DuelBoardStats {
+  /** Open challenges that have not expired yet. */
+  open: number;
+  /** Duels settled this week. */
+  finishedWeek: number;
+  /** Challenges that expired this week. */
+  expiredWeek: number;
+  /** Duels created today, whatever their state. */
+  today: number;
+  /** Distinct accounts in a duel this week (challengers and opponents). */
+  players: number;
+}
+
+/**
+ * The duel side of the admin League view.
+ *
+ * A duel awards no points and never joins the weekly boards, so it is counted
+ * here instead: the open queue, this week's settled and expired matches, the
+ * day's challenges, and how many distinct people duelled this week.
+ */
+export const getDuelBoardStats = async (
+  season: string,
+  weekKey: string,
+  dayKey: string,
+): Promise<DuelBoardStats> => {
+  const [counts, players] = await turso.batch(
+    [
+      {
+        sql: `SELECT
+                COALESCE(SUM(CASE WHEN status = 'open'
+                  AND expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+                  THEN 1 ELSE 0 END), 0) AS open,
+                COALESCE(SUM(CASE WHEN status = 'done'
+                  AND season = ? AND week_key = ? THEN 1 ELSE 0 END), 0) AS finished_week,
+                COALESCE(SUM(CASE WHEN status = 'expired'
+                  AND season = ? AND week_key = ? THEN 1 ELSE 0 END), 0) AS expired_week,
+                COALESCE(SUM(CASE WHEN day_key = ? THEN 1 ELSE 0 END), 0) AS today
+              FROM game_duels`,
+        args: [season, weekKey, season, weekKey, dayKey],
+      },
+      {
+        sql: `SELECT COUNT(*) AS n FROM (
+                SELECT challenger_id AS user_id FROM game_duels
+                WHERE season = ? AND week_key = ?
+                UNION
+                SELECT opponent_id AS user_id FROM game_duels
+                WHERE season = ? AND week_key = ? AND opponent_id IS NOT NULL
+              )`,
+        args: [season, weekKey, season, weekKey],
+      },
+    ],
+    "read",
+  );
+
+  return {
+    open: num(counts.rows[0]?.open),
+    finishedWeek: num(counts.rows[0]?.finished_week),
+    expiredWeek: num(counts.rows[0]?.expired_week),
+    today: num(counts.rows[0]?.today),
+    players: num(players.rows[0]?.n),
+  };
+};
+
+/** The newest duels, for the admin panel's recent-matches table. */
+export const getRecentDuels = async (limit = 20): Promise<GameDuel[]> => {
+  const result = await turso.execute({
+    sql: `SELECT ${DUEL_COLUMNS} FROM game_duels
+          ORDER BY id DESC
+          LIMIT ?`,
+    args: [Math.max(1, Math.min(100, Math.trunc(limit)))],
+  });
+  return result.rows.map(duelFromRow);
 };
 
 export interface ChannelBoardState {

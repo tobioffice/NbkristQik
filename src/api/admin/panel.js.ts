@@ -8,6 +8,11 @@ export const panelJs = `(function () {
     "roll_lookup": "Roll lookup", "attendance": "Attendance", "midmarks": "Mid marks",
     "bunk": "Bunk plan",
     "command:start": "/start", "command:help": "/help", "command:leaderboard": "/leaderboard",
+    "command:quiz": "/quiz", "command:league": "/league", "command:duel": "/duel",
+    "game:five_start": "Five started", "game:five_resume": "Five resumed",
+    "game:five_finish": "Five finished",
+    "game:duel_create": "Duel challenge", "game:duel_start": "Duel started",
+    "game:duel_finish": "Duel finished",
     "report": "Report to admin", "report_followup": "Thread follow-up"
   };
   var SURFACES = [
@@ -46,7 +51,11 @@ export const panelJs = `(function () {
   // IST (Asia/Kolkata) in the browser, in 12-hour AM/PM format
   var istTimeFmt = null, istDateFmt = null;
   var parseUtc = function (utcStr) {
-    return Date.parse(String(utcStr).replace(" ", "T") + "Z");
+    var raw = String(utcStr);
+    // SQLite rows are "YYYY-MM-DD HH:MM:SS" (no zone); a few columns are
+    // written as ISO strings, so trust an explicit zone when one is present.
+    if (/Z$/.test(raw) || /[+-]\\d{2}:\\d{2}$/.test(raw)) return Date.parse(raw);
+    return Date.parse(raw.replace(" ", "T") + "Z");
   };
   var istTime = function (utcStrOrMs) {
     var t =
@@ -132,6 +141,11 @@ export const panelJs = `(function () {
   var drawerIssue = null;
   var threadCache = {};
   var userCache = {};
+  var userQuizCache = {};
+  var quizLoadingKey = null;
+  var quizState = null;
+  var quizAttemptsById = {};
+  var QUIZ_CACHE_MS = 60000;
   var STALE_MS = { overview: 60000, students: 30000, verified: 20000, league: 30000, library: 30000, reports: 60000, chat: 15000, papers: 30000, live: 0, health: 300000 };
   var isStale = function (name) {
     return !lastLoad[name] || Date.now() - lastLoad[name] > STALE_MS[name];
@@ -435,6 +449,62 @@ export const panelJs = `(function () {
   $("verifiedrefresh").addEventListener("click", function () { loadVerified(); });
 
   /* ---------- league boards ---------- */
+  // One duelist as a name over their roll, the same shape as the players table.
+  var duelWho = function (person) {
+    var name = person.name || person.rollNo || ("ID " + person.userId);
+    return '<div class="who"><span class="name">' + esc(name) +
+      '</span><span class="handle">' + esc(person.rollNo) + "</span></div>";
+  };
+
+  var renderDuels = function (duels) {
+    var stats = duels.stats || {};
+    $("league-duel-open").textContent = fmt(stats.open);
+    $("league-duel-finished").textContent = fmt(stats.finishedWeek);
+    $("league-duel-today").textContent = fmt(stats.today);
+    $("league-duel-players").textContent = fmt(stats.players);
+    $("league-duel-hint").textContent = "a match, not a run: no points or board places" +
+      (stats.expiredWeek > 0 ? " · " + fmt(stats.expiredWeek) + " expired this week" : "");
+
+    var recent = duels.recent || [];
+    var rows = "";
+    for (var i = 0; i < recent.length; i++) {
+      var duel = recent[i];
+      var challenger = duel.challenger;
+      var opponent = duel.opponent;
+      var result = "&ndash;";
+      if (duel.status === "done") {
+        if (duel.winner === "draw") result = "Draw";
+        else if (duel.winner === "challenger") result = esc(challenger.name || challenger.rollNo) + " won";
+        else if (opponent) result = esc(opponent.name || opponent.rollNo) + " won";
+      } else if (duel.status === "open") {
+        result = opponent
+          ? '<span class="dim">In progress</span>'
+          : '<span class="dim">Waiting for a friend</span>';
+      } else {
+        result = '<span class="dim">Expired</span>';
+      }
+      var status = duel.status === "open"
+        ? '<span class="badge">Open</span>'
+        : duel.status === "done"
+          ? '<span class="badge">Finished</span>'
+          : '<span class="dim">Expired</span>';
+      var scores = fmt(challenger.score) +
+        (opponent ? " · " + fmt(opponent.score) : " · &ndash;");
+      var when = clockOrAgo(duel.finishedAt || duel.createdAt);
+      rows += "<tr>" +
+        '<td class="dim mono">' + esc(String(duel.id)) + "</td>" +
+        "<td>" + duelWho(challenger) + "</td>" +
+        "<td>" + (opponent ? duelWho(opponent) : '<span class="dim">not accepted</span>') + "</td>" +
+        "<td>" + result + "</td>" +
+        '<td class="num mono">' + scores + "</td>" +
+        "<td>" + status + "</td>" +
+        '<td class="dim">' + esc(when) + "</td>" +
+        "</tr>";
+    }
+    $("league-duel-rows").innerHTML = rows;
+    $("league-duels-empty").style.display = recent.length ? "none" : "block";
+  };
+
   var loadLeague = function () {
     if (inflight.league) return;
     inflight.league = true;
@@ -490,6 +560,8 @@ export const panelJs = `(function () {
       var trs = $("league-player-rows").querySelectorAll("tr");
       for (var t = 0; t < trs.length; t++)
         trs[t].addEventListener("click", function () { openDrawer(this.dataset.uid); });
+
+      renderDuels(d.duels || {});
     }).catch(function () {}).then(function () { inflight.league = false; });
   };
   $("leaguerefresh").addEventListener("click", function () { loadLeague(); });
@@ -1813,6 +1885,259 @@ export const panelJs = `(function () {
     }).then(function () { inflight.user = false; });
   };
 
+  /* ---------- quiz history (student drawer) ---------- */
+  var quizDuration = function (ms) {
+    if (ms == null) return "\u2014";
+    var secs = Math.round(ms / 1000);
+    if (secs < 60) return secs + "s";
+    var mins = Math.floor(secs / 60);
+    var rest = secs % 60;
+    return mins + "m " + (rest < 10 ? "0" : "") + rest + "s";
+  };
+
+  var quizLetter = function (index) {
+    return index == null ? "\u2014" : String.fromCharCode(65 + index);
+  };
+
+  var quizOptionText = function (question, index) {
+    return question.options && question.options[index] != null
+      ? question.options[index]
+      : "";
+  };
+
+  var quizAnswerTime = function (ms) {
+    if (ms == null) return "";
+    if (ms > 10000) return "timeout";
+    return (ms / 1000).toFixed(1) + "s";
+  };
+
+  var renderQuizQuestions = function (attempt) {
+    var html = "";
+    for (var i = 0; i < attempt.questions.length; i++) {
+      var q = attempt.questions[i];
+      var answered = q.chosenIndex !== null && q.chosenIndex !== undefined;
+      var tag = !answered
+        ? '<span class="dim">Not answered</span>'
+        : q.correct
+          ? '<span class="qok">Correct</span>'
+          : '<span class="qbad">Wrong</span>';
+      var line = tag;
+      if (answered) {
+        line += " \u00b7 chose " + quizLetter(q.chosenIndex) + ". " +
+          esc(quizOptionText(q, q.chosenIndex));
+      }
+      if (q.ms !== null && q.ms !== undefined) line += " \u00b7 " + quizAnswerTime(q.ms);
+      if (q.points !== null && q.points !== undefined) {
+        line += " \u00b7 " + fmt(q.points) + " pts";
+      }
+      var fix = "";
+      if (
+        answered && q.correct === false &&
+        q.correctIndex !== null && q.correctIndex !== undefined
+      ) {
+        fix = '<div class="qcorrect">Correct: ' + quizLetter(q.correctIndex) +
+          ". " + esc(quizOptionText(q, q.correctIndex)) + "</div>";
+      }
+      html += '<div class="qrow"><div class="qprompt">' + q.index + ". " +
+        esc(q.prompt) + '</div><div class="qanswer">' + line + "</div>" +
+        fix + "</div>";
+    }
+    return html || '<div class="empty">No questions recorded.</div>';
+  };
+
+  var quizSeg = function (attr, label, options, current) {
+    var html = '<div class="seg seg-sm" data-' + attr + ' role="group" aria-label="' +
+      esc(label) + '">';
+    for (var i = 0; i < options.length; i++) {
+      var option = options[i];
+      html += '<button type="button" data-value="' + option.value +
+        '" aria-pressed="' + String(option.value === current) + '">' +
+        esc(option.label) + "</button>";
+    }
+    return html + "</div>";
+  };
+
+  var quizPress = function (seg, button) {
+    var buttons = seg.querySelectorAll("button");
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].setAttribute("aria-pressed", buttons[i] === button ? "true" : "false");
+    }
+  };
+
+  var quizVisible = function (attempt) {
+    if (quizState.game !== "all" && attempt.game !== quizState.game) return false;
+    if (quizState.range === "today" && attempt.dayKey !== istDate(Date.now())) {
+      return false;
+    }
+    if (quizState.range === "7d") {
+      var cutoff = istDate(Date.now() - 6 * 86400000);
+      if (attempt.dayKey < cutoff) return false;
+    }
+    if (quizState.mistakes) {
+      var wrong = false;
+      for (var i = 0; i < attempt.questions.length; i++) {
+        if (attempt.questions[i].correct === false) {
+          wrong = true;
+          break;
+        }
+      }
+      if (!wrong) return false;
+    }
+    return true;
+  };
+
+  var quizSort = function (rows) {
+    var copy = rows.slice();
+    if (quizState.sort === "recent") return copy;
+    copy.sort(function (a, b) {
+      var av = quizState.sort === "score" ? a.score : a.points;
+      var bv = quizState.sort === "score" ? b.score : b.points;
+      if (bv !== av) return bv - av;
+      return String(b.finishedAt || b.startedAt).localeCompare(
+        String(a.finishedAt || a.startedAt),
+      );
+    });
+    return copy;
+  };
+
+  var renderQuizList = function () {
+    var list = $("dqlist");
+    var count = $("dqcount");
+    if (!list || !quizState) return;
+    var rows = quizSort(quizState.data.attempts.filter(quizVisible));
+    quizAttemptsById = {};
+    var html = "";
+    for (var i = 0; i < rows.length; i++) {
+      var attempt = rows[i];
+      quizAttemptsById[String(attempt.id)] = attempt;
+      var at = attempt.finishedAt || attempt.startedAt;
+      var when = istDate(parseUtc(at)).slice(5) + " \u00b7 " + istTime(at);
+      var game = attempt.game === "duel" ? "Duel" : "Daily quiz";
+      var progress = attempt.status === "done"
+        ? attempt.correctCount + "/" + attempt.questionCount + " correct"
+        : attempt.answered + " of " + attempt.questionCount + " answered";
+      var meta = '<span class="badge">' + game + "</span>" + progress +
+        " \u00b7 " + fmt(attempt.points) + " pts" +
+        (attempt.durationMs != null ? " \u00b7 " + quizDuration(attempt.durationMs) : "") +
+        (attempt.status === "done" ? "" : " \u00b7 In progress");
+      html += '<details class="qattempt" data-att="' + attempt.id + '">' +
+        '<summary><div class="qhead"><span class="qwhen">' + esc(when) +
+        '</span><span class="qscore">' + fmt(attempt.score) + "</span></div>" +
+        '<div class="qmeta">' + meta + "</div></summary>" +
+        '<div class="qquestions"></div></details>';
+    }
+    list.innerHTML = html || '<div class="empty">No attempts match.</div>';
+    if (count) count.textContent = rows.length + " of " +
+      quizState.data.attempts.length + " attempts";
+    var details = list.querySelectorAll("details.qattempt");
+    for (var d = 0; d < details.length; d++) {
+      details[d].addEventListener("toggle", function () {
+        if (!this.open || this.dataset.loaded === "1") return;
+        this.dataset.loaded = "1";
+        var attempt = quizAttemptsById[this.dataset.att];
+        var body = this.querySelector(".qquestions");
+        if (attempt && body) body.innerHTML = renderQuizQuestions(attempt);
+      });
+    }
+  };
+
+  var renderUserQuiz = function (userId, data) {
+    var host = $("dquiz");
+    if (!host) return;
+    var summary = data.summary || {};
+    host.innerHTML =
+      '<div class="dstats">' +
+      '<div class="stat"><div class="n">' + fmt(summary.attempts) + '</div><div class="l">attempts</div></div>' +
+      '<div class="stat"><div class="n">' + fmt(summary.bestScore) + '</div><div class="l">best run</div></div>' +
+      '<div class="stat"><div class="n">' + fmt(summary.bestPoints) + '</div><div class="l">best points</div></div>' +
+      '<div class="stat"><div class="n">' + fmt(summary.accuracy) + '%</div><div class="l">accuracy</div></div>' +
+      "</div>" +
+      '<div class="qcontrols">' +
+      quizSeg("qsort", "Sort attempts", [
+        { value: "score", label: "Best run" },
+        { value: "points", label: "Best points" },
+        { value: "recent", label: "Recent" },
+      ], "score") +
+      quizSeg("qgame", "Filter by game", [
+        { value: "all", label: "All" },
+        { value: "five", label: "Quiz" },
+        { value: "duel", label: "Duel" },
+      ], "all") +
+      quizSeg("qrange", "Filter by date", [
+        { value: "all", label: "All time" },
+        { value: "7d", label: "7 days" },
+        { value: "today", label: "Today" },
+      ], "all") +
+      '<button type="button" class="qfilter" id="dqmistakes" aria-pressed="false">Mistakes only</button>' +
+      "</div>" +
+      '<div class="qcount" id="dqcount"></div>' +
+      '<div class="qlist" id="dqlist"></div>' +
+      (data.truncated
+        ? '<div class="qnote">Showing the newest ' + fmt(data.attempts.length) +
+          " of " + fmt(data.attemptTotal) + " attempts; older runs are pruned after 180 days.</div>"
+        : "");
+
+    quizState = {
+      userId: userId,
+      data: data,
+      sort: "score",
+      game: "all",
+      range: "all",
+      mistakes: false,
+    };
+
+    host.onclick = function (e) {
+      var button = e.target && e.target.closest ? e.target.closest("button") : null;
+      if (!button || !quizState) return;
+      var seg = button.parentNode;
+      var value = button.dataset.value;
+      if (seg.hasAttribute("data-qsort")) {
+        quizState.sort = value;
+        quizPress(seg, button);
+      } else if (seg.hasAttribute("data-qgame")) {
+        quizState.game = value;
+        quizPress(seg, button);
+      } else if (seg.hasAttribute("data-qrange")) {
+        quizState.range = value;
+        quizPress(seg, button);
+      } else if (button.id === "dqmistakes") {
+        quizState.mistakes = !quizState.mistakes;
+        button.setAttribute("aria-pressed", String(quizState.mistakes));
+      } else {
+        return;
+      }
+      renderQuizList();
+    };
+
+    renderQuizList();
+  };
+
+  var loadUserQuiz = function (userId) {
+    var host = $("dquiz");
+    if (!host) return;
+    var key = String(userId);
+    var cached = userQuizCache[key];
+    if (cached && Date.now() - cached.at < QUIZ_CACHE_MS) {
+      renderUserQuiz(userId, cached.data);
+      return;
+    }
+    if (quizLoadingKey === key) return;
+    quizLoadingKey = key;
+    host.innerHTML = '<div class="sk sk-pulse" style="height:64px"></div>';
+    api("users/" + userId + "/quiz").then(function (d) {
+      userQuizCache[key] = { at: Date.now(), data: d };
+      if (drawerIssue === "user:" + userId && $("dquiz")) {
+        renderUserQuiz(userId, d);
+      }
+    }).catch(function () {
+      if (drawerIssue === "user:" + userId && $("dquiz")) {
+        $("dquiz").innerHTML = '<div class="empty">Could not load quiz attempts.</div>';
+      }
+    }).then(function () {
+      if (quizLoadingKey === key) quizLoadingKey = null;
+    });
+  };
+
   var renderUserDrawer = function (d) {
       var p = d.profile;
       var name = p.firstName || p.username || "ID " + p.userId;
@@ -1825,6 +2150,10 @@ export const panelJs = `(function () {
         '<div class="stat"><div class="n">' + fmt(p.privateActions) + '</div><div class="l">private</div></div>' +
         '<div class="stat"><div class="n">' + fmt(p.channelActions) + '</div><div class="l">channel</div></div>' +
         "</div>" +
+        '<div class="dim" style="font-size:12.5px; margin-top:-4px">duels ' +
+        fmt(d.duel ? d.duel.wins : 0) + "–" + fmt(d.duel ? d.duel.losses : 0) + "–" +
+        fmt(d.duel ? d.duel.draws : 0) + " (won–lost–drawn)</div>" +
+        '<h4>Quiz attempts</h4><div id="dquiz"></div>' +
         '<h4>Last 30 days</h4><div class="dmini" id="dmini"></div>' +
         '<div class="dim" style="font-size:12.5px">first seen ' + istDate(parseUtc(p.firstSeen)) + " " + istTime(parseUtc(p.firstSeen)) + " · last seen " + ago(p.lastSeen) + "</div>" +
         '<h4>Recent activity</h4><div class="dfeed">';
@@ -1838,6 +2167,7 @@ export const panelJs = `(function () {
       html += "</div>";
       $("drawer").innerHTML = html;
       $("dclose").addEventListener("click", closeDrawer);
+      loadUserQuiz(p.userId);
 
       var mini = $("dmini");
       var byDay2 = {};

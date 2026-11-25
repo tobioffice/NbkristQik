@@ -571,11 +571,13 @@ checking the lock is read-only, and a successful login clears the counter.
 | `GET` | `{base}` | Panel UI |
 | `GET` | `{base}/api/overview` | Totals, 30-day and 30-hour series, surfaces, top actions |
 | `GET` | `{base}/api/users` | Searchable/sortable student table |
-| `GET` | `{base}/api/users/:id` | Profile + recent activity + 30-day shape |
+| `GET` | `{base}/api/users/:id` | Profile + recent activity + 30-day shape + duel record |
+| `GET` | `{base}/api/users/:id/quiz` | One student's quiz attempts with every question, chosen option, correctness, timing and points |
 | `GET` | `{base}/api/recent` | Live activity feed |
 | `GET` | `{base}/api/papers` | Question-paper intake: newest first, with uploader, subject, exam, note and page count |
 | `GET` | `{base}/api/paper-images/:name` | One stored paper page; admin session only |
 | `DELETE` | `{base}/api/papers/:id` | Remove a paper and every page file |
+| `GET` | `{base}/api/league` | The week's player and section boards, plus the duel queue and recent matches |
 | `GET` | `{base}/api/health` | Uptime health (same data as `/api/status`) |
 | `GET` | `{base}/api/moderation` | Chat rule, blocked words, muted/banned users, counts and recent actions |
 | `POST` | `{base}/api/moderation/settings` | Save the rule switches and mute length |
@@ -585,6 +587,35 @@ checking the lock is read-only, and a successful login clears the counter.
 | `POST` | `{base}/api/moderation/users/:id/:action` | Ban, mute, kick, purge, unban or unmute one user in the regulated chat |
 
 Day and hour groupings use IST (`+330 minutes`); storage stays UTC.
+
+### Student quiz history
+
+`GET {base}/api/users/:id/quiz` backs the student drawer's quiz section. It
+returns the newest 200 stored attempts (`truncated` says whether older ones
+exist; the store prunes attempts after 180 days) and a summary across them:
+`attempts`, `completed`, `dailyRuns`, `duels`, `bestScore` (highest single-run
+score), `bestPoints`, `correct`, `answered`, `accuracy` and `avgMs`.
+
+Each attempt carries its game (`five` or `duel`), status, day/week/season,
+score, points, streak, start/finish timestamps and `durationMs`, plus a
+`questions` array in the order shown: `prompt`, `options`, `correctIndex`,
+`chosenIndex`, `correct`, `ms` (time from the question appearing to the tap)
+and `points`. An unanswered question in an active run has null
+`chosenIndex`/`correct`/`ms`/`points`. The drawer sorts this client-side by
+best run, best points or recent, and filters by game, date range and whether
+the run contains mistakes.
+
+### League
+
+`GET {base}/api/league` is the operator's view of the weekly boards: every
+scorer with roll, section, verification and privacy state, the verified-only
+Section Wars table, and the week's counts. Its `duels` block is the only place
+duels appear, because a duel is a match and never reaches a board: `stats`
+carries `open` (unexpired challenges), `finishedWeek`, `expiredWeek`, `today`
+(challenges created today) and `players` (distinct duelists this week);
+`recent` carries the newest 20 matches with both sides, scores, winner
+(`challenger`, `opponent`, `draw` or null) and timestamps. Results are cached
+for 20 seconds in memory.
 
 ### Chat regulation
 

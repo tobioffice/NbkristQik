@@ -135,6 +135,30 @@ beforeAll(async () => {
   });
   await run(1, "24KB1A05X0");
   await run(2, "26KB104120");
+
+  // Two matches for the duel panel: one waiting for a friend, one settled.
+  const inAnHour = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  await client.execute({
+    sql: `INSERT INTO game_duels
+            (challenger_id, challenger_roll, challenger_name, challenger_score,
+             challenger_attempt_id, question_ids, day_key, week_key, season,
+             status, expires_at)
+          VALUES (1, '24KB1A05X0', 'Reddy', 840, 55001, '[]', ?, ?, 'S1',
+                  'open', ?)`,
+    args: [stamp.date, stamp.week, inAnHour],
+  });
+  await client.execute({
+    sql: `INSERT INTO game_duels
+            (challenger_id, challenger_roll, challenger_name, challenger_score,
+             challenger_attempt_id, question_ids, day_key, week_key, season,
+             status, opponent_id, opponent_roll, opponent_name, opponent_score,
+             winner_id, finished_at, expires_at)
+          VALUES (2, '26KB104120', 'Jasmitha', 895, 55002, '[]', ?, ?, 'S1',
+                  'done', 3, '23KB1A05E4', 'Vishnu', 848, 2,
+                  datetime('now'), ?)`,
+    args: [stamp.date, stamp.week, inAnHour],
+  });
+
   // A duel attempt is a match, not a run: it must not raise a play count.
   await run(1, "24KB1A05X0", "duel");
   // A legacy duel award must not put a player on the board or move a section.
@@ -211,6 +235,68 @@ describe("GET admin /api/league", () => {
       points: 848,
       plays: 0,
       verified: false,
+    });
+  });
+
+  it("shows the duel queue and recent matches", async () => {
+    const res = await request(app)
+      .get(`${BASE}/api/league`)
+      .set("Cookie", cookie);
+
+    expect(res.status).toBe(200);
+    expect(res.body.duels.stats).toEqual({
+      open: 1,
+      finishedWeek: 1,
+      expiredWeek: 0,
+      today: 2,
+      players: 3,
+    });
+
+    const recent = res.body.duels.recent as {
+      status: string;
+      winner: string | null;
+      challenger: {
+        userId: number;
+        rollNo: string;
+        name: string | null;
+        score: number;
+      };
+      opponent: {
+        userId: number;
+        rollNo: string;
+        name: string | null;
+        score: number;
+      } | null;
+    }[];
+    expect(recent).toHaveLength(2);
+
+    const done = recent.find((duel) => duel.status === "done");
+    expect(done).toMatchObject({
+      winner: "challenger",
+      challenger: {
+        userId: 2,
+        rollNo: "26KB104120",
+        name: "Jasmitha",
+        score: 895,
+      },
+      opponent: {
+        userId: 3,
+        rollNo: "23KB1A05E4",
+        name: "Vishnu",
+        score: 848,
+      },
+    });
+
+    const open = recent.find((duel) => duel.status === "open");
+    expect(open).toMatchObject({
+      winner: null,
+      challenger: {
+        userId: 1,
+        rollNo: "24KB1A05X0",
+        name: "Reddy",
+        score: 840,
+      },
+      opponent: null,
     });
   });
 
