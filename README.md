@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/images/icon.png" alt="NbkristQik icon" width="128" height="128" />
+<img src="assets/images/icon-animated.svg" alt="NbkristQik icon" width="128" height="128" />
 
 # NbkristQik
 
