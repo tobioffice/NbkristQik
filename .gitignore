@@ -20,3 +20,5 @@ src/web/dist-library
 # the native PDF stamp is built, not committed
 /bin
 native/pdfstamp/target
+# local previews / screenshots - not committed
+.preview/
