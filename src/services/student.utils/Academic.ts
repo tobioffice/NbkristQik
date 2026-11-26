@@ -63,6 +63,20 @@ const MAX_RETRY_ATTEMPTS = 2;
  */
 const sectionFlights = new Map<string, Promise<string>>();
 
+/**
+ * How long to skip the portal after a connect-level failure.
+ *
+ * A portal host that is down costs two connect timeouts per request (about
+ * 3 s each here). The bot handles updates one at a time, so during an outage
+ * those seconds stack every other user's message behind them and their
+ * buttons expire before the handler ever reads them. Serving the section's
+ * saved copy immediately keeps the queue moving. getFreshResponse (the uptime
+ * canary) never consults this window, and any successful response clears it,
+ * so a recovery is picked up as soon as the portal answers again.
+ */
+const PORTAL_COOLDOWN_MS = 60_000;
+let portalDownUntil = 0;
+
 /** Compact age for the one-line freshness stamp: "4h", "2d", "<1m". */
 const formatAge = (updatedAt?: string | null): string | null => {
   if (!updatedAt) return null;
@@ -133,17 +147,36 @@ export class Academic implements IAcademic {
    * Fetches response from college server with retry logic
    */
   async getResponse(command: "mid" | "att", retryCount = 0): Promise<string> {
+    // Serving the saved copy during the cooldown is not just cheaper: it is
+    // what keeps a portal outage from turning into a bot backlog.
+    if (retryCount === 0 && Date.now() < portalDownUntil) {
+      const cached = await this.getFallbackResponse(command);
+      if (cached) {
+        this.markCached("fallback", "1h", cached.updatedAt);
+        return cached.content;
+      }
+    }
+
     try {
       return await this.fetchFresh(command, retryCount);
     } catch (error) {
-      // Transient network failure? retry once with 1.5s backoff before
-      // falling back to the section-level cached response
-      if (this.isTransientNetworkError(error) && retryCount < 1) {
+      // Retry only when a connection existed and the exchange failed. An
+      // unreachable host will not answer 1.5 s later, and the wait is what
+      // holds every queued update behind this one.
+      if (this.isRetryableNetworkError(error) && retryCount < 1) {
         logger.warn(
           `[Academic] Transient network error (${error instanceof AxiosError ? error.code : "unknown"}), retrying in 1.5s...`,
         );
         await new Promise((r) => setTimeout(r, 1500));
         return this.getResponse(command, retryCount + 1);
+      }
+
+      if (this.isTransientNetworkError(error)) {
+        portalDownUntil = Date.now() + PORTAL_COOLDOWN_MS;
+        logger.warn(
+          `[Academic] Portal unreachable (${error instanceof AxiosError ? error.code : "unknown"}); ` +
+            `serving saved copies for ${Math.round(PORTAL_COOLDOWN_MS / 1000)}s`,
+        );
       }
 
       return this.handleRequestError(error, command);
@@ -201,6 +234,9 @@ export class Academic implements IAcademic {
 
       const responseData = response.data;
 
+      // The host answered, so the outage cooldown is over.
+      portalDownUntil = 0;
+
       // Check if session expired (login page returned)
       if (this.isLoginPage(responseData)) {
         logger.debug("[Academic] Session expired, renewing...");
@@ -231,6 +267,18 @@ export class Academic implements IAcademic {
         sectionFlights.delete(key);
       }
     }
+  }
+
+  private isRetryableNetworkError(error: unknown): boolean {
+    // Only a dropped or timed-out exchange is worth one more attempt: the
+    // host was answering, so the next attempt can succeed. Unreachable or
+    // unknown-host errors mean no path exists, and waiting cannot fix that.
+    return (
+      error instanceof AxiosError &&
+      (error.code === "ECONNABORTED" ||
+        error.code === "ETIMEDOUT" ||
+        error.code === "ECONNRESET")
+    );
   }
 
   private isTransientNetworkError(error: unknown): boolean {
@@ -323,8 +371,9 @@ export class Academic implements IAcademic {
     error: unknown,
     command: "mid" | "att",
   ): Promise<string> {
-    // Re-throw custom errors
-    if (error instanceof AcademicError) {
+    // Re-throw custom errors, except the one a dead portal produces: the
+    // saved copy is exactly what it exists for.
+    if (error instanceof AcademicError && !(error instanceof ServerDownError)) {
       throw error;
     }
 

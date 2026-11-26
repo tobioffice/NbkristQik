@@ -2,7 +2,7 @@ import axios from "axios";
 import crypto from "crypto";
 import { urls, headers as header, BASE_URL } from "../../constants/index.js";
 import { N_USERNAME, N_PASSWORD } from "../../config/environmentals.js";
-import { InvalidCredentialsError } from "./academicErrors.js";
+import { InvalidCredentialsError, ServerDownError } from "./academicErrors.js";
 import { logger } from "../../config/logger.js";
 
 const LOGIN_URL = urls.login;
@@ -95,6 +95,14 @@ export const renewSession = (): Promise<void> => {
         "[Academic] Failed to renew session:",
         error instanceof Error ? error.message : error,
       );
+      // A portal that is down is not a credential problem. Reporting it as
+      // one skips the saved-copy path and tells the student their password
+      // is wrong, which is both false and unactionable. Duck-typed because
+      // unit tests stub axios with a partial module.
+      const axiosLike = error as { isAxiosError?: boolean; response?: unknown };
+      if (axiosLike?.isAxiosError === true && !axiosLike.response) {
+        throw new ServerDownError();
+      }
       throw new InvalidCredentialsError();
     }
   })();
